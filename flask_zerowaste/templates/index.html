@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Zero Waste - Inicio</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    primary: "#00E096", 
+                    "primary-hover": "#00C281",
+                    secondary: "#064E3B", 
+                    "forest-dark": "#022C22",
+                    "surface-light": "#ECFDF5", 
+                    "surface-dark": "#062C25",
+                    "text-light": "#064E3B",
+                    "text-dark": "#D1FAE5",
+                    accent: "#34D399",
+                },
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                    display: ['Montserrat', 'sans-serif'],
+                },
+                fontSize: {
+                    'huge': '5rem',
+                    'massive': '6.5rem',
+                },
+                maxWidth: {
+                    'desktop': '1440px',
+                }
+            },
+        },
+    };
+</script>
+<style>
+    .glass-panel {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+        display: none;
+    }
+    .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .slide-enter {
+        opacity: 0;
+        transform: translateY(20px);
+        animation: slideIn 0.5s forwards ease-out;
+    }
+    @keyframes slideIn {
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes shimmer {
+        0% { transform: translateY(-100%); }
+        100% { transform: translateY(100%); }
+    }
+    .fade-out {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    .fade-in {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    .tooltip-panel {
+        opacity: 0;
+        transform: translateX(-20px);
+        transition: all 0.3s ease-out;
+        pointer-events: none;
+    }
+    .tooltip-panel.active {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: all;
+    }
+    .carousel-container {
+        overflow: hidden;
+        white-space: nowrap;
+    }
+    .carousel-track {
+        display: flex;
+        transition: transform 0.5s ease-in-out;
+    }
+    .vertical-progress-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 9999px;
+        background-color: rgba(255, 255, 255, 0.4);
+        transition: all 0.3s ease;
+    }
+    .vertical-progress-bar {
+        width: 6px;
+        height: 40px;
+        border-radius: 9999px;
+        background-color: #00E096;
+        box-shadow: 0 0 15px rgba(0, 224, 150, 0.6);
+        transition: all 0.5s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .vertical-progress-bar::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(255,255,255,0.3);
+        transform: translateY(-100%);
+        animation: shimmer 2s infinite;
+    }
+    .hero-text-shadow {
+        text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+    }
+</style>
+</head>
+<body class="bg-surface-light dark:bg-surface-dark text-text-light dark:text-text-dark font-sans transition-colors duration-300">
+
+<header id="smart-header" class="sticky top-0 z-50 bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md shadow-sm border-b border-emerald-100 dark:border-emerald-900 py-3 transition-transform duration-300 transform translate-y-0">
+<div class="max-w-desktop mx-auto px-6 lg:px-10">
+<div class="flex justify-between items-center h-24">
+<div class="flex items-center gap-4 group cursor-pointer">
+
+<img alt="Zero Waste Logo" class="h-16 w-auto object-contain drop-shadow-sm transition-transform group-hover:scale-105"  src="/static/img/logo.png"/>
+
+<div class="flex flex-col">
+<span class="font-display font-extrabold text-2xl tracking-tighter text-secondary dark:text-primary">ZERO WASTE</span>
+</div>
+</div>
+<nav class="hidden lg:flex space-x-12 items-center">
+<a class="text-primary dark:text-primary font-bold text-lg transition-colors flex items-center gap-2 relative group" href="index.html">
+                    Inicio
+                    <span class="absolute -bottom-1 left-0 w-full h-0.5 bg-primary transition-all"></span>
+</a>
+<a class="text-secondary dark:text-emerald-100 hover:text-primary font-bold text-lg transition-colors flex items-center gap-2 relative group" href="#">
+                    Foro
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+</a>
+<a class="text-secondary dark:text-emerald-100 hover:text-primary font-bold text-lg transition-colors flex items-center gap-2 relative group" href="#">
+                    Acerca de
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+</a>
+</nav>
+<div class="hidden lg:flex items-center space-x-6">
+<button class="p-3 rounded-full text-secondary hover:bg-emerald-100 dark:text-emerald-200 dark:hover:bg-emerald-900 transition-colors" onclick="document.documentElement.classList.toggle('dark')">
+<span class="material-symbols-outlined dark:hidden text-2xl">dark_mode</span>
+<span class="material-symbols-outlined hidden dark:block text-2xl">light_mode</span>
+</button>
+<div class="relative group">
+<button class="flex items-center justify-center w-12 h-12 rounded-full overflow-hidden border-2 border-secondary dark:border-emerald-400 hover:border-primary transition-colors focus:outline-none">
+
+<img alt="User Avatar" class="w-full h-full object-cover" src="/static/img/VICPERFIL.jpg"/>
+
+</button>
+<div class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50">
+<a class="block px-6 py-3 text-sm font-semibold text-secondary dark:text-emerald-100 hover:bg-surface-light dark:hover:bg-emerald-900/50 hover:text-primary transition-colors first:rounded-t-xl" href="#">
+                            Ver perfil
+                        </a>
+<div class="h-px bg-gray-100 dark:bg-emerald-900 mx-2"></div>
+<a class="block px-6 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors last:rounded-b-xl" href="login.html">
+                            Cerrar sesión
+                        </a>
+</div>
+</div>
+<a class="bg-secondary hover:bg-forest-dark text-white px-8 py-3.5 rounded-full font-bold text-base shadow-lg hover:shadow-emerald-900/20 transition-all transform hover:-translate-y-1" href="#">
+                Mapa
+                </a>
+<a class="bg-gradient-to-r from-primary to-emerald-400 hover:from-primary-hover hover:to-emerald-500 text-white px-8 py-3.5 rounded-full font-bold text-base shadow-lg hover:shadow-emerald-400/50 transition-all transform hover:-translate-y-1" href="#">
+                Contacto
+                </a>
+</div>
+<div class="lg:hidden flex items-center">
+<button class="text-secondary dark:text-primary hover:text-primary-hover focus:outline-none">
+<span class="material-symbols-outlined text-4xl">menu</span>
+</button>
+</div>
+</div>
+</div>
+</header>
+
+<section class="relative min-h-[85vh] flex items-center overflow-hidden bg-forest-dark group/hero" id="hero-section">
+<div class="absolute inset-0 z-0">
+
+<img alt="Background image" class="w-full h-full object-cover opacity-100 scale-105 transition-all duration-1000 ease-in-out" id="hero-bg-image" src="/static/img/nature_texture.png"/>
+
+<div class="absolute inset-0 bg-gradient-to-r from-forest-dark/90 via-forest-dark/60 to-forest-dark/30 mix-blend-multiply"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-forest-dark via-transparent to-transparent opacity-90"></div>
+</div>
+<div class="relative z-10 max-w-desktop mx-auto px-6 lg:px-10 w-full pt-10 pb-20">
+<div class="max-w-4xl relative">
+<div class="absolute left-[300px] top-[400px] z-40 tooltip-panel" id="tips-tooltip">
+<div class="w-80 bg-white/10 backdrop-blur-md border border-primary/30 p-5 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.3)] relative">
+<div class="absolute -left-2 top-6 w-4 h-4 bg-white/10 border-l border-t border-primary/30 rotate-45 transform backdrop-blur-md"></div>
+<div class="flex items-center justify-between mb-3 border-b border-white/10 pb-2">
+<span class="text-primary font-bold text-sm tracking-wider uppercase flex items-center gap-2">
+<span class="material-symbols-outlined text-lg">lightbulb</span> Tips del tema
+            </span>
+<button class="text-white/50 hover:text-white" onclick="document.getElementById('tips-tooltip').classList.remove('active')">
+<span class="material-symbols-outlined text-sm">close</span>
+</button>
+</div>
+<ul class="space-y-3" id="tips-list">
+</ul>
+</div>
+</div>
+<div class="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-panel border-primary/40 text-primary text-base font-bold mb-8 transition-all hover:bg-white/10">
+<span class="flex h-3 w-3 rounded-full bg-primary shadow-[0_0_10px_rgba(0,224,150,0.8)] animate-pulse"></span>
+<span id="trend-tag">TENDENCIA EN ECOLOGÍA</span>
+</div>
+<h1 class="font-display text-5xl md:text-7xl lg:text-8xl font-black leading-[1.1] mb-8 tracking-tight text-white hero-text-shadow transition-all duration-500 transform translate-y-0 opacity-100 text-left" id="hero-title">
+                Reciclar plástico: <br/>
+<span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-300 to-primary">10 consejos</span> para reducir.
+            </h1>
+<p class="text-xl lg:text-2xl text-emerald-50 mb-12 leading-relaxed max-w-2xl font-medium hero-text-shadow transition-all duration-500 transform translate-y-0 opacity-100 text-left" id="hero-desc">
+                Pequeños cambios diarios generan un impacto global masivo. Descubre cómo tu hogar puede ser parte de la solución Zero Waste hoy mismo.
+            </p>
+<div class="flex flex-wrap gap-6">
+<button class="bg-primary hover:bg-white hover:text-secondary text-secondary px-10 py-5 rounded-full font-extrabold text-xl shadow-[0_10px_30px_rgba(0,224,150,0.4)] transition-all flex items-center gap-3 group transform hover:scale-105" onclick="showTips()">
+<span class="material-symbols-outlined filled">lightbulb</span>
+                    Tips del tema
+                </button>
+</div>
+</div>
+</div>
+
+<div class="absolute right-10 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-6 z-20 items-center">
+<button class="text-white/40 hover:text-white hover:scale-110 transition-all p-2 rounded-full border border-transparent hover:border-white/20 hover:bg-white/10" onclick="changeSlide(-1); resetAutoPlay();">
+<span class="material-symbols-outlined text-3xl">keyboard_arrow_up</span>
+</button>
+<div class="flex flex-col gap-4 items-center py-2" id="slider-dots">
+<div class="vertical-progress-bar cursor-pointer" onclick="goToSlide(0); resetAutoPlay();"></div>
+<div class="vertical-progress-dot cursor-pointer hover:scale-150 bg-white/20 hover:bg-white/60" onclick="goToSlide(1); resetAutoPlay();"></div>
+<div class="vertical-progress-dot cursor-pointer hover:scale-150 bg-white/20 hover:bg-white/60" onclick="goToSlide(2); resetAutoPlay();"></div>
+<div class="vertical-progress-dot cursor-pointer hover:scale-150 bg-white/20 hover:bg-white/60" onclick="goToSlide(3); resetAutoPlay();"></div>
+</div>
+<button class="text-white/40 hover:text-white hover:scale-110 transition-all p-2 rounded-full border border-transparent hover:border-white/20 hover:bg-white/10" onclick="changeSlide(1); resetAutoPlay();">
+<span class="material-symbols-outlined text-3xl">keyboard_arrow_down</span>
+</button>
+</div>
+</section>
+
+<script>
+    const slides = [
+        {
+            title: 'Reciclar plástico: <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-300 to-primary">10 consejos</span> para reducir.',
+            desc: 'Pequeños cambios diarios generan un impacto global masivo. Descubre cómo tu hogar puede ser parte de la solución Zero Waste hoy mismo.',
+            bg: '/static/img/plasticos.png',
+            tips: [
+                'Usa bolsas de tela reutilizables.',
+                'Compra productos a granel.',
+                'Evita los envases de un solo uso.',
+                'Reutiliza frascos de vidrio.'
+            ]
+        },
+        {
+            title: 'Ahorro de agua: <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-300 to-primary">Vitalidad</span> para el futuro.',
+            desc: 'El agua es un recurso finito. Aprende técnicas simples de recolección y reutilización para disminuir tu huella hídrica drásticamente.',
+            bg: '/static/img/aguah.png',
+            tips: [
+                'Cierra el grifo al cepillarte.',
+                'Recoge agua de lluvia para plantas.',
+                'Repara goteras inmediatamente.',
+                'Usa la lavadora con carga completa.'
+            ]
+        },
+        {
+            title: 'Energía Solar: <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-300 to-primary">Potencia</span> renovable.',
+            desc: 'La transición a energías limpias comienza en casa. Conoce los beneficios de los paneles solares y cómo aprovechar la luz natural.',
+            bg: '/static/img/solar.png',
+            tips: [
+                'Abre cortinas para luz natural.',
+                'Cambia a bombillas LED.',
+                'Desconecta aparatos sin uso.',
+                'Considera cargadores solares.'
+            ]
+        },
+        {
+            title: 'Compostaje Urbano: <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-300 to-primary">Nutrientes</span> circulares.',
+            desc: 'Transforma tus desechos orgánicos en vida. Guía práctica para iniciar tu propia compostera en apartamento o casa.',
+            bg: '/static/img/composta.png',
+            tips: [
+                'Separa cáscaras de frutas.',
+                'Evita restos de carne o lácteos.',
+                'Manten la mezcla húmeda.',
+                'Usa lombrices rojas californianas.'
+            ]
+        }
+    ];
+    let currentSlide = 0;
+    const titleEl = document.getElementById('hero-title');
+    const descEl = document.getElementById('hero-desc');
+    const bgEl = document.getElementById('hero-bg-image');
+    const dotsContainer = document.getElementById('slider-dots');
+    const heroSection = document.getElementById('hero-section');
+    const tooltipPanel = document.getElementById('tips-tooltip');
+    const tipsList = document.getElementById('tips-list');
+    
+    let slideInterval;
+    let resumeTimeout;
+    const SLIDE_DURATION = 5000; 
+    const RESUME_DELAY = 1000;   
+
+    function showTips() {
+        const currentTips = slides[currentSlide].tips;
+        tipsList.innerHTML = '';
+        currentTips.forEach(tip => {
+            const li = document.createElement('li');
+            li.className = 'text-white/80 text-sm flex items-start gap-2';
+            li.innerHTML = '<span class="text-primary mt-1">•</span>' + tip;
+            tipsList.appendChild(li);
+        });
+        tooltipPanel.classList.toggle('active');
+    }
+
+    function updateSlide() {
+        tooltipPanel.classList.remove('active');
+        titleEl.classList.add('opacity-0', '-translate-y-4');
+        descEl.classList.add('opacity-0', '-translate-y-4');
+        setTimeout(() => {
+            titleEl.innerHTML = slides[currentSlide].title;
+            descEl.textContent = slides[currentSlide].desc;
+            bgEl.src = slides[currentSlide].bg;
+            
+            titleEl.classList.remove('opacity-0', '-translate-y-4');
+            descEl.classList.remove('opacity-0', '-translate-y-4');
+            
+            dotsContainer.innerHTML = ''; 
+            slides.forEach((_, index) => {
+                const dot = document.createElement('div');
+                dot.onclick = () => { goToSlide(index); resetAutoPlay(); };
+                if (index === currentSlide) {
+                    dot.className = "vertical-progress-bar cursor-pointer";
+                } else {
+                    dot.className = "vertical-progress-dot cursor-pointer hover:scale-150 bg-white/20 hover:bg-white/60";
+                }
+                dotsContainer.appendChild(dot);
+            });
+        }, 300);
+    }
+
+    function changeSlide(direction) {
+        currentSlide += direction;
+        if (currentSlide >= slides.length) currentSlide = 0;
+        if (currentSlide < 0) currentSlide = slides.length - 1;
+        updateSlide();
+    }
+
+    function goToSlide(index) {
+        currentSlide = index;
+        updateSlide();
+    }
+
+    function startAutoPlay() {
+        stopAutoPlay(); 
+        slideInterval = setInterval(() => {
+            changeSlide(1);
+        }, SLIDE_DURATION);
+    }
+
+    function stopAutoPlay() {
+        clearInterval(slideInterval);
+    }
+
+    function resetAutoPlay() {
+        stopAutoPlay();
+        if (!heroSection.matches(':hover')) {
+            clearTimeout(resumeTimeout);
+            resumeTimeout = setTimeout(startAutoPlay, RESUME_DELAY);
+        }
+    }
+
+    startAutoPlay();
+    
+    heroSection.addEventListener('mouseenter', () => {
+        stopAutoPlay();
+        clearTimeout(resumeTimeout);
+    });
+    heroSection.addEventListener('mouseleave', () => {
+        clearTimeout(resumeTimeout);
+        resumeTimeout = setTimeout(startAutoPlay, RESUME_DELAY);
+    });
+</script>
+
+<div class="bg-secondary text-white py-10 border-t border-white/10 relative z-20">
+<div class="max-w-desktop mx-auto px-6 lg:px-10 flex justify-center text-center">
+<h2 class="font-display text-xl lg:text-3xl font-extrabold uppercase tracking-[0.25em] text-primary text-left">Clasifica y reduce para un futuro más verde</h2>
+</div>
+</div>
+
+<section class="py-24 lg:py-32 bg-white dark:bg-forest-dark relative overflow-hidden">
+<div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-emerald-50 to-transparent dark:from-emerald-900/20 pointer-events-none"></div>
+<div class="max-w-desktop mx-auto px-6 lg:px-10 relative z-10">
+<div class="grid lg:grid-cols-12 gap-12 items-center">
+<div class="lg:col-span-6 h-[500px] lg:h-[600px] relative rounded-[2.5rem] overflow-hidden shadow-2xl group border-8 border-white dark:border-white/5">
+
+<img alt="Recycling center worker handling cardboard" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="/static/img/qrocapita.jpg"/>
+
+<div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
+<div class="absolute top-8 left-8 bg-primary text-secondary text-sm font-black px-6 py-2.5 rounded-full uppercase tracking-wider shadow-lg">
+                    Noticia Local
+                </div>
+</div>  
+<div class="lg:col-span-6 pl-0 lg:pl-10">
+<div class="flex items-center gap-3 text-base text-primary font-bold mb-6 tracking-wide uppercase">
+<span class="material-symbols-outlined text-2xl">calendar_today</span>
+                    Lunes 8 de Enero de 2024
+                </div>
+<h3 class="font-display text-4xl lg:text-6xl font-black text-secondary dark:text-white mb-8 leading-[1.1] text-left">
+                    Querétaro recicla <br/> <span class="text-primary underline decoration-4 underline-offset-8 decoration-primary/30">2.4 kg per cápita</span> al día
+                </h3>
+<p class="text-gray-600 dark:text-emerald-100 text-xl lg:text-2xl leading-relaxed mb-12 font-medium text-justify">
+                    En Querétaro se ha incrementado el porcentaje de reciclaje de los residuos hasta llegar al 30% de los 2.4 kilos per cápita que se generan diariamente, afirmó el presidente de la Asociación Nacional de Reciclaje.
+                </p>
+<a class="inline-flex items-center gap-3 text-secondary dark:text-primary font-black text-lg group hover:text-primary dark:hover:text-white transition-colors p-4 hover:bg-gray-50 dark:hover:bg-white/5 rounded-2xl text-left" href="noticia-queretaro.html">
+    <span class="border-b-2 border-current pb-1">Leer artículo completo</span>
+    <span class="material-symbols-outlined text-3xl transition-transform group-hover:translate-x-2">arrow_right_alt</span>
+</a>
+</div>
+</div>
+</div>
+</section>
+
+<section class="py-24 bg-surface-light dark:bg-secondary/30 border-y border-emerald-100 dark:border-emerald-900/50">
+<div class="max-w-desktop mx-auto px-6 lg:px-10">
+    <div class="relative overflow-hidden py-10 -my-10 px-2" id="stats-carousel-container">
+        <div class="flex items-center transition-transform duration-700 ease-in-out" id="stats-track">
+        </div>
+    </div>
+</div>
+</section>
+<script>
+    const statsData = [
+        { icon: 'recycling', value: '25%', label: 'TASA DE RECICLAJE' },
+        { icon: 'groups', value: '+1.5K', label: 'VOLUNTARIOS' },
+        { icon: 'forest', value: '+20K', label: 'ÁRBOLES PLANTADOS' },
+        { icon: 'map', value: '13', label: 'MUNICIPIOS DE QUERÉTARO' }
+    ];
+    const track = document.getElementById('stats-track');
+    const container = document.getElementById('stats-carousel-container');
+    let statsInterval;
+    let carouselIndex = 0;
+    const itemsPerView = 3; 
+
+    function createCard(stat) {
+        return `
+            <div class="flex-none w-full md:w-1/2 lg:w-1/3 px-4">
+                <div class="h-full flex flex-col items-center justify-center text-center p-10 rounded-[2.5rem] bg-white dark:bg-forest-dark shadow-xl hover:-translate-y-3 transition-all duration-300 border border-emerald-50 dark:border-emerald-800 group relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-emerald-500"></div>
+                    <div class="w-20 h-20 flex-shrink-0 mx-auto bg-primary/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-primary transition-colors duration-300">
+                        <span class="material-symbols-outlined text-5xl text-primary group-hover:text-secondary transition-colors duration-300">${stat.icon}</span>
+                    </div>
+                    <div class="text-5xl lg:text-6xl font-black text-secondary dark:text-white mb-3">${stat.value}</div>
+                    <div class="text-base font-bold text-gray-400 uppercase tracking-widest leading-relaxed">${stat.label}</div>
+                </div>
+            </div>
+        `;
+    }
+
+    statsData.forEach(stat => { track.innerHTML += createCard(stat); });
+    statsData.forEach(stat => { track.innerHTML += createCard(stat); });
+
+    function moveCarousel() {
+        carouselIndex++;
+        let currentItemsVisible = 1;
+        if (window.innerWidth >= 1024) currentItemsVisible = 3;
+        else if (window.innerWidth >= 768) currentItemsVisible = 2;
+        const itemWidthPercent = 100 / currentItemsVisible;
+        const translateValue = -(carouselIndex * itemWidthPercent);
+        
+        track.style.transform = `translateX(${translateValue}%)`;
+        track.style.transition = 'transform 0.7s ease-in-out';
+        
+        if (carouselIndex >= statsData.length) {
+            setTimeout(() => {
+                track.style.transition = 'none';
+                carouselIndex = 0;
+                track.style.transform = `translateX(0)`;
+            }, 700); 
+        }
+    }
+
+    function startStatsCarousel() {
+        stopStatsCarousel(); 
+        statsInterval = setInterval(moveCarousel, 3000);
+    }
+    
+    function stopStatsCarousel() {
+        clearInterval(statsInterval);
+    }
+
+    startStatsCarousel();
+    container.addEventListener('mouseenter', stopStatsCarousel);
+    container.addEventListener('mouseleave', startStatsCarousel);
+    window.addEventListener('resize', () => {
+        carouselIndex = 0;
+        track.style.transition = 'none';
+        track.style.transform = `translateX(0)`;
+    });
+</script>
+
+<footer class="bg-secondary text-white relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary to-forest-dark z-0"></div>
+<div class="max-w-desktop mx-auto px-6 lg:px-10 py-24 relative z-10">
+<div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16">
+<div class="flex flex-col gap-8 max-w-lg">
+<div class="flex items-center gap-5">
+<div class="bg-white/10 p-5 rounded-2xl glass-panel border border-white/20">
+
+<img alt="Zero Waste Logo White" class="h-20 rounded-lg" src="/static/img/logo_texture.png"/>
+
+</div>
+<div>
+<h4 class="font-display font-black text-4xl mb-2 tracking-tight">ZERO WASTE</h4>
+<p class="text-primary font-bold text-xl">Clasifica y reduce para un futuro más verde.</p>
+</div>
+</div>
+<p class="text-emerald-100/80 text-xl leading-relaxed header text-justify">
+                    Únete a nuestra comunidad y se parte del
+cambio. Cada pequeña acción cuenta para preservar
+nuestro planeta.
+                </p>
+</div>
+<div class="flex flex-col items-start lg:items-end gap-8">
+<h5 class="font-display font-bold uppercase tracking-widest text-sm text-primary">Síguenos en redes</h5>
+<div class="flex gap-4">
+<a class="glass-panel hover:bg-primary hover:text-secondary p-4 rounded-full transition-all group" href="https://www.instagram.com/zerowaste_upq?igsh=MXBqZDlmemZyNzRubQ==">
+    <svg class="w-8 h-8 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path>
+    </svg>
+</a>
+<a class="glass-panel hover:bg-primary hover:text-secondary p-4 rounded-full transition-all group" href="https://youtube.com/@zerowaste-f5?si=Rsd7PkUrGQzNEoNG" target="_blank" rel="noopener noreferrer">
+<svg class="w-8 h-8 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+</a>
+</div>
+</div>
+</div>
+<div class="mt-20 pt-10 border-t border-white/10 text-center text-base text-emerald-100/60 font-medium">
+<p>© 2026 Zero Waste. Todos los derechos reservados.</p>
+</div>
+</div>
+</footer>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const header = document.getElementById("smart-header");
+        let lastScrollY = window.scrollY;
+
+        window.addEventListener("scroll", () => {
+            if (window.scrollY > lastScrollY && window.scrollY > 80) {
+                header.classList.add("-translate-y-full");
+            } else {
+                header.classList.remove("-translate-y-full");
+            }
+            lastScrollY = Math.max(0, window.scrollY); 
+        });
+    });
+</script>
+
+</body></html>

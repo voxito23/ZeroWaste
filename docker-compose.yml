@@ -1,0 +1,15 @@
+services:
+  cliente:
+    build: ./flask_zerowaste
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./flask_zerowaste:/app
+
+  admin:
+    build: ./laravel_zerowaste
+    ports:
+      - "8001:80"
+    volumes:
+      - ./laravel_zerowaste:/var/www/html
+      - /var/www/html/vendor 
