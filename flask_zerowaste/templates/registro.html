@@ -6,17 +6,20 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
 <script>
     tailwind.config = {
         darkMode: "class",
         theme: {
             extend: {
                 colors: {
-                    primary: "#00E096", 
+                    primary: "#00E096",
                     "primary-hover": "#00C281",
-                    secondary: "#064E3B", 
+                    secondary: "#064E3B",
                     "forest-dark": "#022C22",
-                    "surface-light": "#ECFDF5", 
+                    "surface-light": "#ECFDF5",
                     "surface-dark": "#062C25",
                     "text-light": "#064E3B",
                     "text-dark": "#D1FAE5",
@@ -25,10 +28,6 @@
                 fontFamily: {
                     sans: ['Inter', 'sans-serif'],
                     display: ['Montserrat', 'sans-serif'],
-                },
-                fontSize: {
-                    'huge': '5rem',
-                    'massive': '6.5rem',
                 },
                 maxWidth: {
                     'desktop': '1440px',
@@ -47,152 +46,226 @@
         -webkit-backdrop-filter: blur(10px);
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
-    .profile-dropdown {
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(10px);
-        transition: all 0.2s ease-in-out;
-    }
-    .group:focus-within .profile-dropdown {
-        opacity: 1;
-        visibility: visible;
-        transform: translateY(0);
-    }
+
     .btn-loading {
         pointer-events: none;
         opacity: 0.8;
+    }
+
+    .cropper-view-box, .cropper-face {
+        border-radius: 50%;
+    }
+
+    .theme-toggle-btn {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    .theme-toggle-btn:hover {
+        background: rgba(6, 78, 59, 0.08);
+        transform: translateY(-1px) scale(1.04);
+    }
+
+    .dark .theme-toggle-btn:hover {
+        background: rgba(209, 250, 229, 0.10);
+    }
+
+    .theme-toggle-icon-light {
+        color: #0f766e;
+        font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .theme-toggle-icon-dark {
+        color: #d1fae5;
+        font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+
+    .auth-card {
+        transition: transform 0.55s cubic-bezier(.22,1,.36,1), opacity 0.45s ease, filter 0.45s ease;
+        will-change: transform, opacity, filter;
+    }
+
+    .page-enter {
+        opacity: 0;
+        transform: translateX(72px) scale(0.985);
+        filter: blur(4px);
+    }
+
+    .page-enter-active {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+    }
+
+    .page-exit-left {
+        opacity: 0;
+        transform: translateX(-90px) scale(0.985);
+        filter: blur(4px);
+    }
+
+    .page-exit-right {
+        opacity: 0;
+        transform: translateX(90px) scale(0.985);
+        filter: blur(4px);
     }
 </style>
 </head>
 <body class="bg-surface-light dark:bg-surface-dark text-text-light dark:text-text-dark font-sans transition-colors duration-300 flex flex-col min-h-screen">
 
-<header id="smart-header" class="sticky top-0 z-50 bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md shadow-sm border-b border-emerald-100 dark:border-emerald-900 py-3 transition-transform duration-300 transform translate-y-0">
+<header id="smart-header" class="sticky top-0 z-50 bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md shadow-sm border-b border-emerald-100 dark:border-emerald-900 py-1.5 transition-transform duration-300 transform translate-y-0">
 <div class="max-w-desktop mx-auto px-6 lg:px-10">
-<div class="flex justify-between items-center h-24">
-<div class="flex items-center gap-4 group cursor-pointer">
-<img alt="Zero Waste Logo" class="h-16 w-auto object-contain drop-shadow-sm transition-transform group-hover:scale-105" src="/static/img/logo.png"/>
-<div class="flex flex-col">
-<span class="font-display font-extrabold text-2xl tracking-tighter text-secondary dark:text-primary">ZERO WASTE</span>
-</div>
-</div>
-<div class="flex items-center space-x-6">
-<button class="p-3 rounded-full text-secondary hover:bg-emerald-100 dark:text-emerald-200 dark:hover:bg-emerald-900 transition-colors" onclick="document.documentElement.classList.toggle('dark')">
-<span class="material-symbols-outlined dark:hidden text-2xl">dark_mode</span>
-<span class="material-symbols-outlined hidden dark:block text-2xl">light_mode</span>
-</button>
-</div>
+<div class="flex justify-between items-center h-16">
+    <div class="flex items-center gap-4 group cursor-pointer">
+        <img alt="Zero Waste Logo" class="h-10 w-auto object-contain drop-shadow-sm transition-transform group-hover:scale-105" src="/static/img/logo.png"/>
+        <div class="flex flex-col">
+            <span class="font-display font-extrabold text-xl tracking-tighter text-secondary dark:text-primary">ZERO WASTE</span>
+        </div>
+    </div>
+
+    <div class="flex items-center space-x-6">
+        <button class="theme-toggle-btn p-2 rounded-full transition-all duration-300" onclick="document.documentElement.classList.toggle('dark')">
+            <span class="material-symbols-outlined text-2xl theme-toggle-icon-light dark:hidden">dark_mode</span>
+            <span class="material-symbols-outlined hidden dark:block text-2xl theme-toggle-icon-dark">light_mode</span>
+        </button>
+    </div>
 </div>
 </div>
 </header>
 
-<main class="grow flex items-center justify-center bg-white dark:bg-forest-dark relative">
-<div class="w-full max-w-desktop h-auto min-h-[800px] flex rounded-4xl overflow-hidden shadow-2xl my-8 bg-white dark:bg-surface-dark border border-emerald-50 dark:border-emerald-900 mx-6 lg:mx-10">
-<div class="hidden lg:block w-1/2 relative">
+<main class="grow flex items-center justify-center bg-white dark:bg-forest-dark relative py-6">
+<div id="auth-shell" class="auth-card page-enter w-full max-w-[1180px] min-h-[680px] flex rounded-[2.5rem] overflow-hidden shadow-2xl bg-white dark:bg-surface-dark border border-emerald-50 dark:border-emerald-900 mx-6 lg:mx-10">
+    <!-- FORMULARIO IZQUIERDA EN REGISTRO -->
+    <div class="w-full lg:w-1/2 p-8 md:p-12 flex flex-col justify-center relative bg-white dark:bg-forest-dark order-2 lg:order-1">
+        <div class="max-w-md mx-auto w-full">
+            <div class="text-center mb-7">
+                <h1 class="font-display font-black text-3xl md:text-4xl text-secondary dark:text-white mb-2">Crea tu cuenta</h1>
+                <p class="text-gray-500 dark:text-gray-400">Únete a nosotros para empezar a reciclar</p>
+            </div>
 
-<img alt="Environmental landscape" class="absolute inset-0 w-full h-full object-cover" src="/static/img/fondo-verde2.jpg"/>
+            <div id="general-error" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md shadow-sm text-sm font-medium transition-all"></div>
 
-<div class="absolute inset-0 bg-secondary/40 mix-blend-multiply"></div>
-<div class="absolute inset-0 bg-gradient-to-r from-secondary/80 to-transparent flex flex-col justify-end p-16">
-<div class="text-white max-w-md">
-<h2 class="font-display font-bold text-4xl mb-4 leading-tight">Construyendo un futuro más limpio.</h2>
-<p class="text-lg opacity-90">Únete a nuestra comunidad y sé parte del cambio global hacia la sostenibilidad.</p>
-</div>
-</div>
-</div>
-<div class="w-full lg:w-1/2 p-8 md:p-16 flex flex-col justify-center relative bg-white dark:bg-forest-dark">
-<div class="max-w-md mx-auto w-full">
-<div class="text-center mb-10">
-<div class="inline-block p-4 rounded-full bg-surface-light dark:bg-emerald-900/30 mb-6">
+            <form id="register-form" class="space-y-4" onsubmit="validateRegister(event)">
+                <div class="flex flex-col items-center justify-center mb-3">
+                    <div class="relative w-24 h-24 rounded-full overflow-hidden border-4 border-emerald-100 bg-gray-100 cursor-pointer group shadow-md" onclick="document.getElementById('foto_input').click()">
+                        <img id="avatar-preview" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Perfil" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span class="material-symbols-outlined text-white">photo_camera</span>
+                        </div>
+                    </div>
+                    <span class="text-xs text-gray-500 mt-2 font-medium">Añadir foto de perfil</span>
+                    <input type="file" id="foto_input" accept=".jpg, .jpeg, .png" class="hidden" onchange="openCropper(event)">
+                </div>
 
-<img alt="Zero Waste Sprout Logo" class="h-12 w-auto" src="/static/img/logo.png"/>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="name">Nombre completo</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">person</span>
+                        </div>
+                        <input class="block w-full pl-11 pr-4 py-3 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium" id="name" name="nombre" placeholder="Tu Nombre Completo" type="text"/>
+                    </div>
+                </div>
 
-</div>
-<h1 class="font-display font-black text-3xl md:text-4xl text-secondary dark:text-white mb-3">Crea tu cuenta</h1>
-<p class="text-gray-500 dark:text-gray-400 text-lg">Únete a nosotros para empezar a reciclar</p>
-</div>
-<form id="register-form" class="space-y-6" onsubmit="handleRegistration(event)">
-<div class="space-y-2">
-<label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="name">Nombre completo</label>
-<div class="relative group">
-<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-<span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">person</span>
-</div>
-<input class="block w-full pl-11 pr-4 py-4 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 transition-all font-medium" id="name" placeholder="Victor Osvaldo Rodriguez Hernandez" required="" type="text"/>
-</div>
-</div>
-<div class="space-y-2">
-<label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="email">Email</label>
-<div class="relative group">
-<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-<span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">mail</span>
-</div>
-<input class="block w-full pl-11 pr-4 py-4 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 transition-all font-medium" id="email" placeholder="victor.rodriguez@gmail.com" required="" type="email"/>
-</div>
-</div>
-<div class="space-y-2">
-<label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="password">Contraseña</label>
-<div class="relative group">
-<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-<span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">lock</span>
-</div>
-<input class="block w-full pl-11 pr-4 py-4 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 transition-all font-medium" id="password" placeholder="••••••••" required="" type="password"/>
-<div class="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer">
-<span class="material-symbols-outlined text-gray-400 hover:text-secondary dark:hover:text-white transition-colors text-xl">visibility</span>
-</div>
-</div>
-</div>
-<button id="submit-btn" class="w-full flex justify-center items-center gap-2 py-4 px-4 border border-transparent rounded-xl shadow-lg shadow-emerald-400/30 text-base font-bold text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform hover:-translate-y-1 mt-4 relative overflow-hidden" type="submit">
-    <span id="btn-text">Registrarse</span>
-    <svg id="btn-spinner" class="hidden animate-spin-slow h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-    </svg>
-</button>
-</form>
-<div class="mt-8 text-center">
-<p class="text-gray-600 dark:text-gray-400">
-    ¿Ya tienes cuenta? 
-    <a class="font-bold text-secondary dark:text-emerald-200 hover:text-primary dark:hover:text-primary transition-colors ml-1" href="login.html">
-        Inicia sesión
-    </a>
-</p>
-</div>
-<div class="mt-10 relative">
-<div class="absolute inset-0 flex items-center">
-<div class="w-full border-t border-gray-200 dark:border-emerald-800"></div>
-</div>
-</div>
-</div>
-</div>
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="email">Email</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">mail</span>
+                        </div>
+                        <input class="block w-full pl-11 pr-4 py-3 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium" id="email" name="email" placeholder="correo@ejemplo.com" type="email"/>
+                    </div>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="password">Contraseña</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">lock</span>
+                        </div>
+                        <input class="block w-full pl-11 pr-4 py-3 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium" id="password" name="password" placeholder="••••••••" type="password"/>
+                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer" onclick="togglePassword('password', 'eye-icon-reg')">
+                            <span id="eye-icon-reg" class="material-symbols-outlined text-gray-400 hover:text-secondary dark:hover:text-white transition-colors text-xl">visibility</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="submit-btn" class="w-full flex justify-center items-center gap-2 py-4 px-4 rounded-xl shadow-lg shadow-emerald-400/30 font-bold text-white bg-primary hover:bg-primary-hover transition-all transform hover:-translate-y-1 mt-5" type="submit">
+                    <span id="btn-text">Registrarse</span>
+                    <svg id="btn-spinner" class="hidden animate-spin-slow h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-gray-600 dark:text-gray-400">
+                    ¿Ya tienes cuenta?
+                    <a class="font-bold text-secondary dark:text-emerald-200 hover:text-primary ml-1" href="/login" onclick="goWithSlide(event, '/login', 'left')">Inicia sesión</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- IMAGEN DERECHA EN REGISTRO -->
+    <div class="hidden lg:block w-1/2 relative order-1 lg:order-2">
+        <img alt="Environmental landscape" class="absolute inset-0 w-full h-full object-cover" src="/static/img/fondo-verde2.jpg"/>
+        <div class="absolute inset-0 bg-secondary/40 mix-blend-multiply"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-secondary/80 to-transparent flex flex-col justify-end p-14">
+            <div class="text-white max-w-md">
+                <h2 class="font-display font-bold text-4xl mb-4 leading-tight">
+                    Construyendo <span class="text-primary dark:text-emerald-300">un futuro</span> más limpio.
+                </h2>
+                <p class="text-lg opacity-90">Únete a nuestra comunidad y sé parte del cambio global hacia la sostenibilidad.</p>
+            </div>
+        </div>
+    </div>
 </div>
 </main>
 
+<div id="cropper-modal" class="fixed inset-0 z-[100] hidden bg-black bg-opacity-80 flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+        <h3 class="text-xl font-bold text-secondary mb-4 text-center">Ajusta tu foto</h3>
+        <p class="text-sm text-gray-500 text-center mb-4">Arrastra para mover o usa la rueda para acercar/alejar.</p>
+
+        <div class="w-full h-64 bg-gray-100 mb-6 relative rounded-lg overflow-hidden">
+            <img id="image-to-crop" src="" alt="Edición" class="max-w-full block">
+        </div>
+
+        <div class="flex justify-between gap-4">
+            <button type="button" class="w-1/2 py-3 font-bold text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-xl transition" onclick="closeCropper()">Cancelar</button>
+            <button type="button" class="w-1/2 py-3 font-bold text-white bg-primary hover:bg-primary-hover rounded-xl transition" onclick="cropImage()">Recortar y Guardar</button>
+        </div>
+    </div>
+</div>
+
 <footer class="bg-secondary text-white relative overflow-hidden mt-auto">
 <div class="absolute inset-0 bg-gradient-to-r from-secondary to-forest-dark z-0"></div>
-<div class="max-w-desktop mx-auto px-6 lg:px-10 py-12 relative z-10">
-<div class="flex flex-col lg:flex-row justify-between items-center gap-8">
-<div class="flex flex-col md:flex-row items-center gap-5">
-<div class="bg-white/10 p-3 rounded-2xl glass-panel border border-white/20">
+<div class="max-w-desktop mx-auto px-6 lg:px-10 py-6 relative z-10">
+<div class="flex flex-col md:flex-row justify-between items-center gap-4">
+    <div class="flex items-center gap-4">
+        <div class="bg-white/10 p-2 rounded-xl glass-panel border border-white/20">
+            <img alt="Zero Waste Logo White" class="h-8 rounded-lg" src="/static/img/logo_texture.png"/>
+        </div>
+        <div>
+            <h4 class="font-display font-black text-lg tracking-tight">ZERO WASTE</h4>
+            <p class="text-primary font-bold text-xs">Clasifica y reduce para un futuro más verde.</p>
+        </div>
+    </div>
 
-<img alt="Zero Waste Logo White" class="h-20 rounded-lg" src="/static/img/logo_texture.png"/>
+    <div class="flex gap-3">
+        <a class="glass-panel hover:bg-primary hover:text-secondary p-2 rounded-full transition-all group" href="https://www.instagram.com/zerowaste_upq?igsh=MXBqZDlmemZyNzRubQ==">
+            <svg class="w-4 h-4 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path></svg>
+        </a>
+        <a class="glass-panel hover:bg-primary hover:text-secondary p-2 rounded-full transition-all group" href="https://youtube.com/@zerowaste-f5?si=Rsd7PkUrGQzNEoNG" target="_blank" rel="noopener noreferrer">
+            <svg class="w-4 h-4 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+        </a>
+    </div>
+</div>
 
-</div>
-<div class="text-center md:text-left">
-<h4 class="font-display font-black text-2xl tracking-tight">ZERO WASTE</h4>
-<p class="text-primary font-bold text-sm">Clasifica y reduce para un futuro más verde.</p>
-</div>
-</div>
-<div class="flex gap-4">
-<a class="glass-panel hover:bg-primary hover:text-secondary p-3 rounded-full transition-all group" href="https://www.instagram.com/zerowaste_upq?igsh=MXBqZDlmemZyNzRubQ==">
-    <svg class="w-5 h-5 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path></svg>
-</a>
-<a class="glass-panel hover:bg-primary hover:text-secondary p-3 rounded-full transition-all group" href="https://youtube.com/@zerowaste-f5?si=Rsd7PkUrGQzNEoNG" target="_blank" rel="noopener noreferrer">
-<svg class="w-5 h-5 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-</a>
-</div>
-</div>
-<div class="mt-8 pt-6 border-t border-white/10 text-center text-sm text-emerald-100/60 font-medium">
-<p>© 2026 Zero Waste. Todos los derechos reservados.</p>
+<div class="mt-4 pt-4 border-t border-white/10 text-center text-xs text-emerald-100/60 font-medium">
+    <p>© 2026 Zero Waste. Todos los derechos reservados.</p>
 </div>
 </div>
 </footer>
@@ -200,7 +273,12 @@
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         const header = document.getElementById("smart-header");
+        const shell = document.getElementById("auth-shell");
         let lastScrollY = window.scrollY;
+
+        requestAnimationFrame(() => {
+            shell.classList.add("page-enter-active");
+        });
 
         window.addEventListener("scroll", () => {
             if (window.scrollY > lastScrollY && window.scrollY > 80) {
@@ -208,27 +286,165 @@
             } else {
                 header.classList.remove("-translate-y-full");
             }
-            lastScrollY = Math.max(0, window.scrollY); 
+            lastScrollY = Math.max(0, window.scrollY);
         });
     });
 
-    function handleRegistration(event) {
+    function goWithSlide(event, url, direction) {
         event.preventDefault();
+        const shell = document.getElementById('auth-shell');
+        shell.classList.remove('page-enter', 'page-enter-active');
+        shell.classList.add(direction === 'right' ? 'page-exit-right' : 'page-exit-left');
+        setTimeout(() => {
+            window.location.href = url;
+        }, 430);
+    }
+
+    let cropper;
+    let croppedBlob = null;
+
+    function openCropper(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
+            showError("Solo se permiten imágenes en formato JPG o PNG.");
+            event.target.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('image-to-crop').src = e.target.result;
+            document.getElementById('cropper-modal').classList.remove('hidden');
+
+            if (cropper) { cropper.destroy(); }
+
+            cropper = new Cropper(document.getElementById('image-to-crop'), {
+                aspectRatio: 1,
+                viewMode: 1,
+                dragMode: 'move',
+                autoCropArea: 0.9,
+                restore: false,
+                guides: false,
+                center: false,
+                highlight: false,
+                cropBoxMovable: false,
+                cropBoxResizable: false,
+                toggleDragModeOnDblclick: false,
+            });
+        }
+        reader.readAsDataURL(file);
+    }
+
+    function closeCropper() {
+        document.getElementById('cropper-modal').classList.add('hidden');
+        document.getElementById('foto_input').value = "";
+        if (cropper) { cropper.destroy(); cropper = null; }
+    }
+
+    function cropImage() {
+        if (!cropper) return;
+
+        const canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
+
+        canvas.toBlob(function(blob) {
+            croppedBlob = blob;
+            const url = URL.createObjectURL(blob);
+            document.getElementById('avatar-preview').src = url;
+            closeCropper();
+        }, 'image/jpeg', 0.9);
+    }
+
+    function togglePassword(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.textContent = 'visibility_off';
+        } else {
+            input.type = 'password';
+            icon.textContent = 'visibility';
+        }
+    }
+
+    function showError(msg) {
+        const errorBox = document.getElementById('general-error');
+        errorBox.textContent = msg;
+        errorBox.classList.remove('hidden');
+    }
+
+    function validateRegister(event) {
+        event.preventDefault();
+        const form = document.getElementById('register-form');
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const errorBox = document.getElementById('general-error');
+
+        errorBox.classList.add('hidden');
+        errorBox.textContent = "";
+
+        if (!croppedBlob) {
+            showError('Por favor, selecciona una foto de perfil.');
+            return;
+        }
+
+        if (!name || name.length <= 10) {
+            showError('El nombre completo debe tener más de 10 caracteres.');
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+            showError('Por favor, ingresa un correo electrónico válido.');
+            return;
+        }
+
+        if (!password || password.length < 6) {
+            showError('La contraseña debe tener al menos 6 caracteres.');
+            return;
+        }
 
         const btn = document.getElementById('submit-btn');
         const btnText = document.getElementById('btn-text');
         const spinner = document.getElementById('btn-spinner');
 
-        btn.classList.add('btn-loading'); 
+        btn.classList.add('btn-loading');
         btnText.textContent = "Procesando...";
         spinner.classList.remove('hidden');
 
-        setTimeout(() => {
-            btnText.textContent = "¡Registrado!";
-            spinner.classList.add('hidden');
+        const formData = new FormData(form);
+        formData.append('foto_perfil', croppedBlob, 'perfil.jpg');
+
+        fetch('/handle_registro', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                btnText.textContent = "¡Registrado!";
+                spinner.classList.add('hidden');
+                btn.classList.remove('btn-loading');
+                btn.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
+
+                setTimeout(() => {
+                    window.location.href = data.redirect;
+                }, 1500);
+            } else {
+                btn.classList.remove('btn-loading');
+                btnText.textContent = "Registrarse";
+                spinner.classList.add('hidden');
+                showError(data.error);
+            }
+        })
+        .catch(error => {
             btn.classList.remove('btn-loading');
-            btn.classList.add('bg-emerald-500', 'hover:bg-emerald-600'); 
-        }, 2000);
+            btnText.textContent = "Registrarse";
+            spinner.classList.add('hidden');
+            showError("Hubo un problema al conectar con el servidor.");
+        });
     }
 </script>
 

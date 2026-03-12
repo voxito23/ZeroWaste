@@ -1,15 +1,37 @@
+version: '3.8'
+
 services:
   cliente:
     build: ./flask_zerowaste
+    container_name: flask_app
+    restart: always
     ports:
       - "5001:5000"
     volumes:
       - ./flask_zerowaste:/app
+    depends_on:
+      - db 
 
   admin:
     build: ./laravel_zerowaste
+    container_name: laravel_admin
+    restart: always
     ports:
       - "8001:80"
     volumes:
       - ./laravel_zerowaste:/var/www/html
-      - /var/www/html/vendor 
+      - /var/www/html/vendor
+    depends_on:
+      - db 
+
+  db:
+    image: mysql:8.0
+    container_name: mysql_db
+    restart: always
+    ports:
+      - "3306:3306" 
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword 
+      MYSQL_DATABASE: zerowaste_db     
+    volumes:
+      - ./mysql_data:/var/lib/mysql

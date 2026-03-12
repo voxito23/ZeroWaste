@@ -7,338 +7,296 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        primary: "#00E096", 
-                        "primary-hover": "#00C281",
-                        secondary: "#064E3B", 
-                        "forest-dark": "#022C22",
-                        "surface-light": "#ECFDF5", 
-                        "surface-dark": "#062C25",
-                        "text-light": "#064E3B",
-                        "text-dark": "#D1FAE5",
-                        accent: "#34D399",
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        display: ['Montserrat', 'sans-serif'],
-                    },
-                    fontSize: {
-                        'huge': '5rem',
-                        'massive': '6.5rem',
-                    },
-                    maxWidth: {
-                        'desktop': '1440px',
-                    }
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    primary: "#00E096", 
+                    "primary-hover": "#00C281",
+                    secondary: "#064E3B", 
+                    "forest-dark": "#022C22",
+                    "surface-light": "#ECFDF5", 
+                    "surface-dark": "#062C25",
+                    "text-light": "#064E3B",
+                    "text-dark": "#D1FAE5",
+                    accent: "#34D399",
                 },
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                    display: ['Montserrat', 'sans-serif'],
+                },
+                fontSize: {
+                    'huge': '5rem',
+                    'massive': '6.5rem',
+                },
+                maxWidth: {
+                    'desktop': '1440px',
+                }
             },
-        };
-    </script>
+        },
+    };
+</script>
 <style>
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-    </style>
+    .glass-panel { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    .no-hyphens { hyphens: none !important; word-break: keep-all !important; overflow-wrap: normal !important; }
+
+    /* CSS DEL HEADER EXACTO AL INDEX */
+    .theme-toggle-btn { background: transparent; border: none; box-shadow: none; }
+    .theme-toggle-btn:hover { background: rgba(6, 78, 59, 0.08); transform: translateY(-1px) scale(1.04); }
+    .dark .theme-toggle-btn { background: transparent; border: none; box-shadow: none; }
+    .dark .theme-toggle-btn:hover { background: rgba(209, 250, 229, 0.10); }
+    .theme-toggle-icon-light { color: #0f766e; font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; text-shadow: 0 0 10px rgba(15, 118, 110, 0.10); }
+    .theme-toggle-icon-dark { color: #d1fae5; font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; text-shadow: 0 0 12px rgba(209, 250, 229, 0.18); }
+    
+    .map-btn-custom { background: #064E3B; color: white; box-shadow: 0 10px 22px rgba(6, 78, 59, 0.20); }
+    .map-btn-custom:hover { background: #022C22; box-shadow: 0 12px 28px rgba(2, 44, 34, 0.28); transform: translateY(-2px) scale(1.02); }
+    .dark .map-btn-custom { background: #065f46; color: #ecfdf5; box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25); }
+    .dark .map-btn-custom:hover { background: #10b981; color: #022C22; box-shadow: 0 12px 28px rgba(16, 185, 129, 0.34); transform: translateY(-2px) scale(1.02); }
+    
+    .contact-btn-custom { background: linear-gradient(to right, #00E096, #34D399); color: white; box-shadow: 0 10px 22px rgba(0, 224, 150, 0.22); }
+    .contact-btn-custom:hover { background: linear-gradient(to right, #059669, #10b981); box-shadow: 0 12px 28px rgba(5, 150, 105, 0.26); transform: translateY(-2px) scale(1.02); }
+    .dark .contact-btn-custom { background: linear-gradient(to right, #00C281, #10b981); color: white; }
+    .dark .contact-btn-custom:hover { background: linear-gradient(to right, #34D399, #6ee7b7); color: #022C22; box-shadow: 0 12px 28px rgba(52, 211, 153, 0.35); transform: translateY(-2px) scale(1.02); }
+
+    /* CSS DEL BANNER ANIMADO CLASIFICA */
+    @keyframes glow-and-scale {
+        0% { background-position: 0% 50%; transform: scale(1); }
+        50% { background-position: 100% 50%; transform: scale(1.05); }
+        100% { background-position: 0% 50%; transform: scale(1); }
+    }
+    .letter-scale-animation {
+        display: inline-block;
+        background: linear-gradient(90deg, #00E096, #D1FAE5, #34D399, #00E096);
+        background-size: 300% 100%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: glow-and-scale 4s ease-in-out infinite;
+    }
+
+    /* Filtro de búsqueda JS */
+    .post-hidden { display: none !important; }
+</style>
 </head>
 <body class="bg-surface-light dark:bg-surface-dark text-text-light dark:text-text-dark font-sans transition-colors duration-300 flex flex-col min-h-screen">
 
-<header id="smart-header" class="sticky top-0 z-50 bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md shadow-sm border-b border-emerald-100 dark:border-emerald-900 py-3 transition-transform duration-300 transform translate-y-0">
+<header id="smart-header" class="fixed top-0 left-0 right-0 z-[100] bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md shadow-sm border-b border-emerald-100 dark:border-emerald-900 py-1.5 transition-transform duration-300 transform translate-y-0 text-left">
 <div class="max-w-desktop mx-auto px-6 lg:px-10">
-<div class="flex justify-between items-center h-24">
-<div class="flex items-center gap-4 group cursor-pointer">
+<div class="flex justify-between items-center h-16 relative">
+    <div class="flex items-center gap-4 group cursor-pointer z-50">
+        <img alt="Zero Waste Logo" class="h-10 w-auto object-contain drop-shadow-sm transition-transform group-hover:scale-105" src="/static/img/logo.png"/>
+        <div class="flex flex-col"><span class="font-display font-extrabold text-xl tracking-tighter text-secondary dark:text-primary">ZERO WASTE</span></div>
+    </div>
     
-<img alt="Zero Waste Logo" class="h-16 w-auto object-contain drop-shadow-sm transition-transform group-hover:scale-105" src="/static/img/logo.png"/>
+    <nav class="hidden lg:flex space-x-12 items-center absolute left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto">
+        <a class="text-secondary dark:text-emerald-100 hover:text-primary dark:hover:text-white font-bold text-base transition-colors flex items-center gap-2 relative group" href="{{ url_for('index') }}">
+            Inicio <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+        </a>
+        <a class="text-primary dark:text-primary font-bold text-base transition-colors flex items-center gap-2 relative group" href="{{ url_for('foro') }}">
+            Foro <span class="absolute -bottom-1 left-0 w-full h-0.5 bg-primary transition-all"></span>
+        </a>
+        <a class="text-secondary dark:text-emerald-100 hover:text-primary dark:hover:text-white font-bold text-base transition-colors flex items-center gap-2 relative group" href="{{ url_for('Acercade') }}">
+            Acerca de <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
+        </a>
+    </nav>
 
-<div class="flex flex-col">
-<span class="font-display font-extrabold text-2xl tracking-tighter text-secondary dark:text-primary">ZERO WASTE</span>
-</div>
-</div>
-<nav class="hidden lg:flex space-x-12 items-center">
-<a class="text-secondary dark:text-emerald-100 hover:text-primary font-bold text-lg transition-colors flex items-center gap-2 relative group" href="index.html">
-                    Inicio
-                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
-</a>
-<a class="text-primary dark:text-primary font-bold text-lg transition-colors flex items-center gap-2 relative group" href="foro.html">
-                    Foro
-                    <span class="absolute -bottom-1 left-0 w-full h-0.5 bg-primary transition-all"></span>
-</a>
-<a class="text-secondary dark:text-emerald-100 hover:text-primary font-bold text-lg transition-colors flex items-center gap-2 relative group" href="sobre-nosotros.html">
-                    Acerca de
-                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all group-hover:w-full"></span>
-</a>
-</nav>
-<div class="hidden lg:flex items-center space-x-6">
-<button class="p-3 rounded-full text-secondary hover:bg-emerald-100 dark:text-emerald-200 dark:hover:bg-emerald-900 transition-colors" onclick="document.documentElement.classList.toggle('dark')">
-<span class="material-symbols-outlined dark:hidden text-2xl">dark_mode</span>
-<span class="material-symbols-outlined hidden dark:block text-2xl">light_mode</span>
-</button>
-<div class="relative group">
-<button class="flex items-center justify-center w-12 h-12 rounded-full overflow-hidden border-2 border-secondary dark:border-emerald-400 hover:border-primary transition-colors focus:outline-none">
+    <div class="hidden lg:flex items-center space-x-5 z-50 pointer-events-auto">
+        <button class="theme-toggle-btn p-2 rounded-full transition-all duration-300" onclick="document.documentElement.classList.toggle('dark')">
+            <span class="material-symbols-outlined text-2xl theme-toggle-icon-light dark:hidden">dark_mode</span>
+            <span class="material-symbols-outlined hidden dark:block text-2xl theme-toggle-icon-dark">light_mode</span>
+        </button>
 
-<img alt="User Avatar" class="w-full h-full object-cover" src="/static/img/VICPERFIL.jpg"/>
+        <div class="relative group">
+            <button class="flex items-center justify-center w-10 h-10 rounded-full overflow-hidden border-2 border-secondary dark:border-emerald-400 focus:outline-none bg-gray-200 transition-transform duration-300 hover:scale-105">
+                <img alt="User Avatar" class="w-full h-full object-cover object-center" src="/static/img/perfiles/{{ session.get('foto_perfil', 'default.png') }}"/>
+            </button>
+            <div class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-right z-50">
+                <a class="block px-6 py-3 text-sm font-semibold text-secondary dark:text-emerald-100 hover:bg-surface-light dark:hover:bg-emerald-900/50 hover:text-primary dark:hover:text-white first:rounded-t-xl transition-colors" href="{{ url_for('perfil') }}"> Ver perfil </a>
+                <div class="h-px bg-gray-100 dark:bg-emerald-900 mx-2"></div>
+                <a class="block px-6 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 last:rounded-b-xl transition-colors" href="{{ url_for('logout') }}"> Cerrar sesión </a>
+            </div>
+        </div>
 
-</button>
-<div class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform origin-top-right z-50">
-<a class="block px-6 py-3 text-sm font-semibold text-secondary dark:text-emerald-100 hover:bg-surface-light dark:hover:bg-emerald-900/50 hover:text-primary transition-colors first:rounded-t-xl" href="#">
-                            Ver perfil
-                        </a>
-<div class="h-px bg-gray-100 dark:bg-emerald-900 mx-2"></div>
-<a class="block px-6 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors last:rounded-b-xl" href="login.html">
-                            Cerrar sesión
-                        </a>
-</div>
-</div>
-<a class="bg-secondary hover:bg-forest-dark text-white px-8 py-3.5 rounded-full font-bold text-base shadow-lg hover:shadow-emerald-900/20 transition-all transform hover:-translate-y-1" href="#">
-                Mapa
-                </a>
-<a class="bg-gradient-to-r from-primary to-emerald-400 hover:from-primary-hover hover:to-emerald-500 text-white px-8 py-3.5 rounded-full font-bold text-base shadow-lg hover:shadow-emerald-400/50 transition-all transform hover:-translate-y-1" href="#">
-                Contacto
-                </a>
-</div>
-<div class="lg:hidden flex items-center">
-<button class="text-secondary dark:text-primary hover:text-primary-hover focus:outline-none">
-<span class="material-symbols-outlined text-4xl">menu</span>
-</button>
-</div>
+        <a class="map-btn-custom px-5 py-2 rounded-full font-bold text-sm transition-all duration-300" href="{{ url_for('mapa') }}">Mapa</a>
+        <a class="contact-btn-custom px-5 py-2 rounded-full font-bold text-sm transition-all duration-300" href="{{ url_for('contacto') }}">Contacto</a>
+    </div>
 </div>
 </div>
 </header>
-<main class="grow">
+
+<main class="grow pt-16">
 <section class="relative min-h-[60vh] flex items-center overflow-hidden bg-forest-dark">
 <div class="absolute inset-0 z-0">
-
-<img alt="Green nature texture" class="w-full h-full object-cover opacity-40 scale-105" src="/static/img/nature_texture.png"/>
-
-<div class="absolute inset-0 bg-gradient-to-r from-forest-dark via-forest-dark/90 to-forest-dark/60"></div>
-<div class="absolute inset-0 bg-gradient-to-t from-forest-dark via-transparent to-transparent"></div>
+    <img alt="Green nature texture" class="w-full h-full object-cover opacity-40 scale-105" src="/static/img/nature_texture.png"/>
+    <div class="absolute inset-0 bg-gradient-to-r from-forest-dark via-forest-dark/90 to-forest-dark/60"></div>
+    <div class="absolute inset-0 bg-gradient-to-t from-forest-dark via-transparent to-transparent"></div>
 </div>
 <div class="relative z-10 max-w-desktop mx-auto px-6 lg:px-10 w-full py-20">
 <div class="max-w-4xl">
-<div class="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-panel border-primary/40 text-primary text-base font-bold mb-8">
-<span class="flex h-3 w-3 rounded-full bg-primary shadow-[0_0_10px_rgba(0,224,150,0.8)] animate-pulse"></span>
-                    COMUNIDAD ACTIVA
-                </div>
-<h1 class="font-display text-5xl md:text-7xl lg:text-7xl font-black leading-[1.1] mb-6 tracking-tight text-white drop-shadow-xl">
-                    Foro de la <span class="text-primary">Comunidad</span>
-</h1>
-<p class="text-xl lg:text-2xl text-emerald-100 mb-12 leading-relaxed max-w-2xl font-medium opacity-90">
-                    Comparte eco-tips, resuelve tus dudas sobre reciclaje y conecta con miles de voluntarios comprometidos con el cambio.
-                </p>
-                
-<div class="flex flex-col md:flex-row gap-4 max-w-3xl">
-    <div class="relative flex-grow flex items-center rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
-        <span class="pl-6 pr-2 flex items-center pointer-events-none text-emerald-300">
-            <span class="material-symbols-outlined font-bold text-3xl">search</span>
-        </span>
-        
-        <input type="text" placeholder="Buscar temas, discusiones o usuarios..." class="w-full bg-transparent py-5 text-secondary placeholder-emerald-200 text-lg font-semibold focus:outline-none focus:ring-0 border-none" />
-
-        <div class="border-l border-gray-200 h-10"></div>
-
-        <button type="button" class="px-8 py-5 font-bold text-xl text-primary hover:text-forest-dark active:text-forest-dark transition-colors duration-200 focus:outline-none">
-            Buscar
-        </button>
+    <div class="inline-flex items-center gap-3 px-5 py-2 rounded-full glass-panel border-primary/40 text-primary text-base font-bold mb-8">
+        <span class="flex h-3 w-3 rounded-full bg-primary shadow-[0_0_10px_rgba(0,224,150,0.8)] animate-pulse"></span>
+        COMUNIDAD ACTIVA
     </div>
-    
-    <button class="bg-primary hover:bg-primary-hover text-secondary px-8 py-5 rounded-full font-extrabold text-lg shadow-[0_10px_30px_rgba(0,224,150,0.4)] transition-all flex items-center justify-center gap-2 whitespace-nowrap">
-        <span class="material-symbols-outlined">add_circle</span>
-        Nuevo Post
-    </button>
-</div>
-
+    <h1 class="font-display text-5xl md:text-7xl lg:text-7xl font-black leading-[1.1] mb-6 tracking-tight text-white drop-shadow-xl">
+        Foro de la <span class="text-primary">Comunidad</span>
+    </h1>
+    <p class="text-xl lg:text-2xl text-emerald-100 mb-12 leading-relaxed max-w-2xl font-medium opacity-90 no-hyphens">
+        Comparte eco-tips, resuelve tus dudas sobre reciclaje y conecta con miles de voluntarios comprometidos con el cambio.
+    </p>
+                
+    <div class="flex flex-col md:flex-row gap-4 max-w-3xl">
+        <div class="relative flex-grow flex items-center rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+            <span class="pl-6 pr-2 flex items-center pointer-events-none text-emerald-300">
+                <span class="material-symbols-outlined font-bold text-3xl">search</span>
+            </span>
+            <input type="text" id="searchInput" onkeyup="filterPosts()" placeholder="Buscar temas, discusiones o usuarios..." class="w-full bg-transparent py-5 text-secondary placeholder-emerald-200 text-lg font-semibold focus:outline-none focus:ring-0 border-none" />
+            <div class="border-l border-gray-200 h-10"></div>
+            <button type="button" onclick="filterPosts()" class="px-8 py-5 font-bold text-xl text-primary hover:text-forest-dark active:text-forest-dark transition-colors duration-200 focus:outline-none">
+                Buscar
+            </button>
+        </div>
+        
+        <a href="{{ url_for('nuevo_post') }}" class="bg-primary hover:bg-primary-hover text-secondary px-8 py-5 rounded-full font-extrabold text-lg shadow-[0_10px_30px_rgba(0,224,150,0.4)] transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+            <span class="material-symbols-outlined">add_circle</span>
+            Nuevo Post
+        </a>
+    </div>
 </div>
 </div>
 </section>
 
-<div class="bg-secondary text-white py-8 border-t border-white/10 relative z-20">
+<div class="bg-secondary text-white py-6 border-t border-white/10 relative z-20 overflow-hidden">
 <div class="max-w-desktop mx-auto px-6 lg:px-10 flex justify-center text-center">
-<h2 class="font-display text-lg lg:text-2xl font-extrabold uppercase tracking-[0.2em] text-white">
-                Clasifica y reduce para un futuro más verde
-            </h2>
+<h2 class="font-display text-lg lg:text-2xl font-extrabold uppercase tracking-[0.25em] letter-scale-animation">
+    Clasifica y reduce para un futuro más verde
+</h2>
 </div>
 </div>
 
 <section class="py-24 bg-white dark:bg-forest-dark relative">
 <div class="max-w-desktop mx-auto px-6 lg:px-10">
 <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
-<div>
-<h3 class="font-display text-4xl font-black text-secondary dark:text-white mb-2">Discusiones Recientes</h3>
-<p class="text-gray-500 dark:text-gray-400 font-medium text-lg">Únete a las conversaciones más populares de la semana</p>
+    <div>
+        <h3 class="font-display text-4xl font-black text-secondary dark:text-white mb-2">Discusiones Recientes</h3>
+        <p class="text-gray-500 dark:text-gray-400 font-medium text-lg" id="result-count">Únete a las conversaciones más populares de la semana</p>
+    </div>
+    <div class="flex gap-3">
+        <button id="btn-popular" onclick="setActiveFilter('popular')" class="filter-btn px-6 py-2 rounded-full bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300 font-bold text-sm hover:bg-gray-200 transition-colors">Populares</button>
+        <button id="btn-recent" onclick="setActiveFilter('recent')" class="filter-btn px-6 py-2 rounded-full bg-secondary text-white font-bold text-sm transition-colors">Recientes</button>
+        <button id="btn-unanswered" onclick="setActiveFilter('unanswered')" class="filter-btn px-6 py-2 rounded-full bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300 font-bold text-sm hover:bg-gray-200 transition-colors">Sin respuesta</button>
+    </div>
 </div>
-<div class="flex gap-3">
-<button class="px-6 py-2 rounded-full bg-secondary text-white font-bold text-sm hover:bg-primary hover:text-secondary transition-colors">Populares</button>
-<button class="px-6 py-2 rounded-full bg-gray-100 text-gray-600 font-bold text-sm hover:bg-gray-200 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10 transition-colors">Recientes</button>
-<button class="px-6 py-2 rounded-full bg-gray-100 text-gray-600 font-bold text-sm hover:bg-gray-200 dark:bg-white/5 dark:text-gray-300 dark:hover:bg-white/10 transition-colors">Sin respuesta</button>
-</div>
-</div>
-<div class="grid gap-8">
+
+<div class="grid gap-8" id="posts-container">
     
-<div class="group bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:border-primary/30 transition-all duration-300 relative overflow-hidden">
-<div class="absolute top-0 left-0 w-2 h-full bg-primary group-hover:bg-emerald-400 transition-colors"></div>
-<div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
-<div class="flex-grow">
-<div class="flex flex-wrap items-center gap-3 mb-4">
-<span class="bg-emerald-100 text-secondary dark:bg-emerald-900/50 dark:text-primary px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
-                                    Compostaje
-                                </span>
-<span class="flex items-center gap-1 text-gray-400 text-sm font-medium">
-<span class="material-symbols-outlined text-base">schedule</span> 2 horas atrás
-                                </span>
-</div>
-<h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-3 group-hover:text-primary transition-colors">
-                                ¿Cómo empezar con el compostaje en un departamento pequeño?
-                            </h4>
-<p class="text-gray-600 dark:text-gray-300 text-lg mb-6 line-clamp-2">
-                                Hola a todos, vivo en un piso sin balcón y me gustaría saber qué opciones tengo para hacer compost sin generar malos olores. He escuchado sobre las vermicomposteras...
-                            </p>
-<div class="flex items-center gap-4">
-<div class="flex items-center gap-3">
-    <img alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" src="/static/img/perfil1.jpg"/>
-    <span class="text-sm font-bold text-secondary dark:text-emerald-100">Maria Anievas</span>
-</div>
-<div class="w-1 h-1 rounded-full bg-gray-300"></div>
-<div class="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm font-medium">
-<span class="material-symbols-outlined text-lg">chat_bubble</span> 24 respuestas
-                                </div>
-</div>
-</div>
-<div class="flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
-<a class="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 rounded-xl bg-gray-50 dark:bg-white/5 text-secondary dark:text-primary font-bold hover:bg-primary hover:text-white transition-all group-hover:translate-x-1" href="#">
-                                Ver discusión
-                                <span class="material-symbols-outlined text-xl">arrow_forward</span>
-</a>
-</div>
-</div>
+<div class="post-card group bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:border-primary/30 transition-all duration-300 relative overflow-hidden" data-category="recent" data-search="compostaje departamento pequeño maria anievas">
+    <div class="absolute top-0 left-0 w-2 h-full bg-primary group-hover:bg-emerald-400 transition-colors"></div>
+    <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
+        <div class="flex-grow">
+            <div class="flex flex-wrap items-center gap-3 mb-4">
+                <span class="bg-emerald-100 text-secondary dark:bg-emerald-900/50 dark:text-primary px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">Compostaje</span>
+                <span class="flex items-center gap-1 text-gray-400 text-sm font-medium"><span class="material-symbols-outlined text-base">schedule</span> 2 horas atrás</span>
+            </div>
+            <h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-3 group-hover:text-primary transition-colors">¿Cómo empezar con el compostaje en un departamento pequeño?</h4>
+            <p class="text-gray-600 dark:text-gray-300 text-lg mb-6 line-clamp-2">Hola a todos, vivo en un piso sin balcón y me gustaría saber qué opciones tengo para hacer compost sin generar malos olores. He escuchado sobre las vermicomposteras...</p>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <img alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" src="/static/img/perfil1.jpg"/>
+                    <span class="text-sm font-bold text-secondary dark:text-emerald-100">Maria Anievas</span>
+                </div>
+                <div class="w-1 h-1 rounded-full bg-gray-300"></div>
+                <div class="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm font-medium"><span class="material-symbols-outlined text-lg">chat_bubble</span> 24 respuestas</div>
+            </div>
+        </div>
+        <div class="flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
+            <a class="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 rounded-xl bg-gray-50 dark:bg-white/5 text-secondary dark:text-primary font-bold hover:bg-primary hover:text-white transition-all group-hover:translate-x-1" href="{{ url_for('ver_post') }}">Ver discusión <span class="material-symbols-outlined text-xl">arrow_forward</span></a>
+        </div>
+    </div>
 </div>
 
-<div class="group bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:border-primary/30 transition-all duration-300 relative overflow-hidden">
-<div class="absolute top-0 left-0 w-2 h-full bg-emerald-600 group-hover:bg-primary transition-colors"></div>
-<div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
-<div class="flex-grow">
-<div class="flex flex-wrap items-center gap-3 mb-4">
-<span class="bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
-                                    Estilo de Vida
-                                </span>
-<span class="flex items-center gap-1 text-gray-400 text-sm font-medium">
-<span class="material-symbols-outlined text-base">schedule</span> 5 horas atrás
-                                </span>
-</div>
-<h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-3 group-hover:text-primary transition-colors">
-                                Guía definitiva: Alternativas al plástico en el supermercado
-                            </h4>
-<p class="text-gray-600 dark:text-gray-300 text-lg mb-6 line-clamp-2">
-                                He recopilado una lista de bolsas reutilizables, frascos y tiendas a granel en la ciudad. ¿Alguien tiene recomendaciones para comprar detergentes sin envase?
-                            </p>
-<div class="flex items-center gap-4">
-<div class="flex items-center gap-3">
-    <img alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" src="/static/img/perfil2.jpg"/>
-    <span class="text-sm font-bold text-secondary dark:text-emerald-100">Carlos R.</span>
-</div>
-<div class="w-1 h-1 rounded-full bg-gray-300"></div>
-<div class="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm font-medium">
-<span class="material-symbols-outlined text-lg">chat_bubble</span> 56 respuestas
-                                </div>
-<div class="flex items-center gap-1 text-primary text-sm font-bold">
-<span class="material-symbols-outlined text-lg">local_fire_department</span> Popular
-                                </div>
-</div>
-</div>
-<div class="flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
-<a class="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 rounded-xl bg-gray-50 dark:bg-white/5 text-secondary dark:text-primary font-bold hover:bg-primary hover:text-white transition-all group-hover:translate-x-1" href="#">
-                                Ver discusión
-                                <span class="material-symbols-outlined text-xl">arrow_forward</span>
-</a>
-</div>
-</div>
+<div class="post-card group bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:border-primary/30 transition-all duration-300 relative overflow-hidden" data-category="popular" data-search="estilo vida plastico supermercado carlos ruiz jimenez">
+    <div class="absolute top-0 left-0 w-2 h-full bg-blue-500 group-hover:bg-primary transition-colors"></div>
+    <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
+        <div class="flex-grow">
+            <div class="flex flex-wrap items-center gap-3 mb-4">
+                <span class="bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">Estilo de Vida</span>
+                <span class="flex items-center gap-1 text-gray-400 text-sm font-medium"><span class="material-symbols-outlined text-base">schedule</span> 5 horas atrás</span>
+            </div>
+            <h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-3 group-hover:text-primary transition-colors">Guía definitiva: Alternativas al plástico en el supermercado</h4>
+            <p class="text-gray-600 dark:text-gray-300 text-lg mb-6 line-clamp-2">He recopilado una lista de bolsas reutilizables, frascos y tiendas a granel en la ciudad. ¿Alguien tiene recomendaciones para comprar detergentes sin envase?</p>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <img alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" src="/static/img/perfil2.jpg"/>
+                    <span class="text-sm font-bold text-secondary dark:text-emerald-100">Carlos Ruiz Jimenez</span>
+                </div>
+                <div class="w-1 h-1 rounded-full bg-gray-300"></div>
+                <div class="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm font-medium"><span class="material-symbols-outlined text-lg">chat_bubble</span> 56 respuestas</div>
+                <div class="flex items-center gap-1 text-primary text-sm font-bold"><span class="material-symbols-outlined text-lg">local_fire_department</span> Popular</div>
+            </div>
+        </div>
+        <div class="flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
+            <a class="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 rounded-xl bg-gray-50 dark:bg-white/5 text-secondary dark:text-primary font-bold hover:bg-primary hover:text-white transition-all group-hover:translate-x-1" href="{{ url_for('ver_post') }}">Ver discusión <span class="material-symbols-outlined text-xl">arrow_forward</span></a>
+        </div>
+    </div>
 </div>
 
-<div class="group bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:border-primary/30 transition-all duration-300 relative overflow-hidden">
-<div class="absolute top-0 left-0 w-2 h-full bg-amber-400 group-hover:bg-primary transition-colors"></div>
-<div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
-<div class="flex-grow">
-<div class="flex flex-wrap items-center gap-3 mb-4">
-<span class="bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
-                                    Reciclaje
-                                </span>
-<span class="flex items-center gap-1 text-gray-400 text-sm font-medium">
-<span class="material-symbols-outlined text-base">schedule</span> 1 día atrás
-                                </span>
-</div>
-<h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-3 group-hover:text-primary transition-colors">
-                                Duda sobre reciclaje de electrónicos viejos (e-waste)
-                            </h4>
-<p class="text-gray-600 dark:text-gray-300 text-lg mb-6 line-clamp-2">
-                                Tengo varios cables, cargadores y un monitor antiguo. No sé si tirarlos o si existe algún punto de recolección específico en la zona norte.
-                            </p>
-<div class="flex items-center gap-4">
-<div class="flex items-center gap-3">
-    <img alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" src="/static/img/perfil3.jpg"/>
-    <span class="text-sm font-bold text-secondary dark:text-emerald-100">Ana Lopez</span>
-</div>
-<div class="w-1 h-1 rounded-full bg-gray-300"></div>
-<div class="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm font-medium">
-<span class="material-symbols-outlined text-lg">chat_bubble</span> 8 respuestas
-                                </div>
-</div>
-</div>
-<div class="flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
-<a class="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 rounded-xl bg-gray-50 dark:bg-white/5 text-secondary dark:text-primary font-bold hover:bg-primary hover:text-white transition-all group-hover:translate-x-1" href="#">
-                                Ver discusión
-                                <span class="material-symbols-outlined text-xl">arrow_forward</span>
-</a>
-</div>
-</div>
+<div class="post-card group bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:border-primary/30 transition-all duration-300 relative overflow-hidden" data-category="unanswered" data-search="reciclaje electronicos e-waste ana gabriela lopez">
+    <div class="absolute top-0 left-0 w-2 h-full bg-amber-400 group-hover:bg-primary transition-colors"></div>
+    <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
+        <div class="flex-grow">
+            <div class="flex flex-wrap items-center gap-3 mb-4">
+                <span class="bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">Reciclaje</span>
+                <span class="flex items-center gap-1 text-gray-400 text-sm font-medium"><span class="material-symbols-outlined text-base">schedule</span> 1 día atrás</span>
+            </div>
+            <h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-3 group-hover:text-primary transition-colors">Duda sobre reciclaje de electrónicos viejos (e-waste)</h4>
+            <p class="text-gray-600 dark:text-gray-300 text-lg mb-6 line-clamp-2">Tengo varios cables, cargadores y un monitor antiguo. No sé si tirarlos o si existe algún punto de recolección específico en la zona norte.</p>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <img alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" src="/static/img/perfil3.jpg"/>
+                    <span class="text-sm font-bold text-secondary dark:text-emerald-100">Ana Gabriela Lopez</span>
+                </div>
+                <div class="w-1 h-1 rounded-full bg-gray-300"></div>
+                <div class="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm font-medium"><span class="material-symbols-outlined text-lg">chat_bubble</span> 0 respuestas</div>
+            </div>
+        </div>
+        <div class="flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
+            <a class="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 rounded-xl bg-gray-50 dark:bg-white/5 text-secondary dark:text-primary font-bold hover:bg-primary hover:text-white transition-all group-hover:translate-x-1" href="{{ url_for('ver_post') }}">Ver discusión <span class="material-symbols-outlined text-xl">arrow_forward</span></a>
+        </div>
+    </div>
 </div>
 
-<div class="group bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:border-primary/30 transition-all duration-300 relative overflow-hidden">
-<div class="absolute top-0 left-0 w-2 h-full bg-purple-500 group-hover:bg-primary transition-colors"></div>
-<div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
-<div class="flex-grow">
-<div class="flex flex-wrap items-center gap-3 mb-4">
-<span class="bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">
-                                    Eventos
-                                </span>
-<span class="flex items-center gap-1 text-gray-400 text-sm font-medium">
-<span class="material-symbols-outlined text-base">schedule</span> 2 días atrás
-                                </span>
+<div class="post-card group bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:border-primary/30 transition-all duration-300 relative overflow-hidden" data-category="popular" data-search="eventos limpieza comunitaria playa ecoteam organizacion">
+    <div class="absolute top-0 left-0 w-2 h-full bg-purple-500 group-hover:bg-primary transition-colors"></div>
+    <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
+        <div class="flex-grow">
+            <div class="flex flex-wrap items-center gap-3 mb-4">
+                <span class="bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider">Eventos</span>
+                <span class="flex items-center gap-1 text-gray-400 text-sm font-medium"><span class="material-symbols-outlined text-base">schedule</span> 2 días atrás</span>
+            </div>
+            <h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-3 group-hover:text-primary transition-colors">Limpieza comunitaria de playa este sábado</h4>
+            <p class="text-gray-600 dark:text-gray-300 text-lg mb-6 line-clamp-2">Organizamos una jornada de limpieza en la playa local. Necesitamos voluntarios para recolectar, clasificar y pesar los residuos. ¡Trae tus guantes!</p>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <img alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" src="/static/img/perfil4.jpg"/>
+                    <span class="text-sm font-bold text-secondary dark:text-emerald-100">EcoTeam Organización</span>
+                </div>
+                <div class="w-1 h-1 rounded-full bg-gray-300"></div>
+                <div class="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm font-medium"><span class="material-symbols-outlined text-lg">chat_bubble</span> 32 respuestas</div>
+                <div class="flex items-center gap-1 text-primary text-sm font-bold"><span class="material-symbols-outlined text-lg">local_fire_department</span> Popular</div>
+            </div>
+        </div>
+        <div class="flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
+            <a class="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 rounded-xl bg-gray-50 dark:bg-white/5 text-secondary dark:text-primary font-bold hover:bg-primary hover:text-white transition-all group-hover:translate-x-1" href="{{ url_for('ver_post') }}">Ver discusión <span class="material-symbols-outlined text-xl">arrow_forward</span></a>
+        </div>
+    </div>
 </div>
-<h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-3 group-hover:text-primary transition-colors">
-                                Limpieza comunitaria de playa este sábado
-                            </h4>
-<p class="text-gray-600 dark:text-gray-300 text-lg mb-6 line-clamp-2">
-                                Organizamos una jornada de limpieza en la playa local. Necesitamos voluntarios para recolectar, clasificar y pesar los residuos. ¡Trae tus guantes!
-                            </p>
-<div class="flex items-center gap-4">
-<div class="flex items-center gap-3">
-    <img alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" src="/static/img/perfil4.jpg"/>
-    <span class="text-sm font-bold text-secondary dark:text-emerald-100">EcoTeam Org</span>
-</div>
-<div class="w-1 h-1 rounded-full bg-gray-300"></div>
-<div class="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm font-medium">
-<span class="material-symbols-outlined text-lg">chat_bubble</span> 32 respuestas
-                                </div>
-</div>
-</div>
-<div class="flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
-<a class="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 rounded-xl bg-gray-50 dark:bg-white/5 text-secondary dark:text-primary font-bold hover:bg-primary hover:text-white transition-all group-hover:translate-x-1" href="#">
-                                Ver discusión
-                                <span class="material-symbols-outlined text-xl">arrow_forward</span>
-</a>
-</div>
-</div>
-</div>
+
 </div>
 
 <div class="flex justify-center mt-12">
-<button class="flex items-center gap-2 px-8 py-4 rounded-full border-2 border-primary text-primary font-bold text-lg hover:bg-primary hover:text-white transition-all">
-                    Cargar más discusiones
-                    <span class="material-symbols-outlined">expand_more</span>
+<button onclick="loadMore()" id="load-btn" class="flex items-center gap-2 px-8 py-4 rounded-full border-2 border-primary text-primary font-bold text-lg hover:bg-primary hover:text-white transition-all">
+    <span id="load-text">Cargar más discusiones</span>
+    <span id="load-icon" class="material-symbols-outlined">expand_more</span>
 </button>
 </div>
 </div>
@@ -347,12 +305,8 @@
 <section class="py-24 bg-surface-light dark:bg-secondary/30 border-y border-emerald-100 dark:border-emerald-900/50">
 <div class="max-w-desktop mx-auto px-6 lg:px-10">
 <div class="flex flex-col items-center mb-16 text-center">
-<h3 class="font-display text-4xl lg:text-5xl font-black text-secondary dark:text-white mb-4">
-                    Próximos Eventos de Querétaro
-                </h3>
-<p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
-                    ¡Participa y marca la diferencia! Encuentra actividades cercanas para aprender, compartir y mejorar nuestro entorno.
-                </p>
+<h3 class="font-display text-4xl lg:text-5xl font-black text-secondary dark:text-white mb-4">Próximos Eventos de Querétaro</h3>
+<p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">¡Participa y marca la diferencia! Encuentra actividades cercanas para aprender, compartir y mejorar nuestro entorno.</p>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -360,27 +314,18 @@
 <div class="bg-white dark:bg-forest-dark rounded-3xl shadow-xl overflow-hidden flex flex-col h-full border border-gray-100 dark:border-emerald-800 transition-transform duration-300 hover:-translate-y-2">
     <div class="relative h-56 overflow-hidden">
         <img alt="Mega Jornada de Acopio" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" src="/static/img/acopio.jpg"/>
-        
         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent z-10 pointer-events-none"></div>
-        <div class="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-secondary shadow-sm z-20">
-            GESTIÓN DE RESIDUOS
-        </div>
+        <div class="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-secondary shadow-sm z-20">GESTIÓN DE RESIDUOS</div>
         <div class="absolute bottom-4 left-5 z-20 text-white flex items-center gap-2 font-bold text-sm">
-            <span class="material-symbols-outlined text-primary text-xl">calendar_month</span>
-            17 Febrero, 2026
+            <span class="material-symbols-outlined text-primary text-xl">calendar_month</span> 17 Febrero, 2026
         </div>
     </div>
     <div class="p-8 flex flex-col flex-grow">
         <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-3 font-medium uppercase tracking-wide">
-            <span class="material-symbols-outlined text-base">location_on</span>
-            Universidad Autónoma de Querétaro
+            <span class="material-symbols-outlined text-base">location_on</span> Universidad Autónoma de Querétaro
         </div>
-        <h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-4">
-            Mega Jornada de Acopio
-        </h4>
-        <p class="text-gray-600 dark:text-gray-300 mb-8 flex-grow leading-relaxed">
-            Entrega directamente tus llantas y electrónicos sin registros previos. El municipio garantiza el reciclaje especializado de forma inmediata.
-        </p>
+        <h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-4">Mega Jornada de Acopio</h4>
+        <p class="text-gray-600 dark:text-gray-300 mb-8 flex-grow leading-relaxed">Entrega directamente tus llantas y electrónicos sin registros previos. El municipio garantiza el reciclaje especializado de forma inmediata.</p>
         <button onclick="unirseEvento(this)" class="w-full py-4 rounded-xl bg-primary text-secondary font-extrabold text-base hover:bg-emerald-400 transition-all flex items-center justify-center gap-2 duration-300">
             <span class="btn-text">Unirse</span>
             <span class="material-symbols-outlined btn-icon">arrow_forward</span>
@@ -391,27 +336,18 @@
 <div class="bg-white dark:bg-forest-dark rounded-3xl shadow-xl overflow-hidden flex flex-col h-full border border-gray-100 dark:border-emerald-800 transition-transform duration-300 hover:-translate-y-2">
     <div class="relative h-56 overflow-hidden">
         <img alt="Programa Ecomunidad" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" src="/static/img/ecomunidad.jpg"/>
-        
         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent z-10 pointer-events-none"></div>
-        <div class="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-secondary shadow-sm z-20">
-            INTERCAMBIO
-        </div>
+        <div class="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-secondary shadow-sm z-20">INTERCAMBIO</div>
         <div class="absolute bottom-4 left-5 z-20 text-white flex items-center gap-2 font-bold text-sm">
-            <span class="material-symbols-outlined text-primary text-xl">calendar_month</span>
-            15 Enero - Febrero, 2026
+            <span class="material-symbols-outlined text-primary text-xl">calendar_month</span> 15 Enero - Febrero, 2026
         </div>
     </div>
     <div class="p-8 flex flex-col flex-grow">
         <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-3 font-medium uppercase tracking-wide">
-            <span class="material-symbols-outlined text-base">location_on</span>
-            Santa Rosa Jáuregui
+            <span class="material-symbols-outlined text-base">location_on</span> Santa Rosa Jáuregui
         </div>
-        <h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-4">
-            Programa "Ecomunidad"
-        </h4>
-        <p class="text-gray-600 dark:text-gray-300 mb-8 flex-grow leading-relaxed">
-            Promueve el reciclaje en zonas alejadas con vales o comida. Recompensa el esfuerzo ciudadano y fortalece la economía local.
-        </p>
+        <h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-4">Programa "Ecomunidad"</h4>
+        <p class="text-gray-600 dark:text-gray-300 mb-8 flex-grow leading-relaxed">Promueve el reciclaje en zonas alejadas con vales o comida. Recompensa el esfuerzo ciudadano y fortalece la economía local.</p>
         <button onclick="unirseEvento(this)" class="w-full py-4 rounded-xl bg-primary text-secondary font-extrabold text-base hover:bg-emerald-400 transition-all flex items-center justify-center gap-2 duration-300">
             <span class="btn-text">Unirse</span>
             <span class="material-symbols-outlined btn-icon">arrow_forward</span>
@@ -422,27 +358,18 @@
 <div class="bg-white dark:bg-forest-dark rounded-3xl shadow-xl overflow-hidden flex flex-col h-full border border-gray-100 dark:border-emerald-800 transition-transform duration-300 hover:-translate-y-2">
     <div class="relative h-56 overflow-hidden">
         <img alt="Centro de Acopio" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" src="/static/img/Alcamare-Qro.jpg"/>
-        
         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent z-10 pointer-events-none"></div>
-        <div class="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-secondary shadow-sm z-20">
-            INTERCAMBIO
-        </div>
+        <div class="absolute top-4 right-4 bg-white px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest text-secondary shadow-sm z-20">INTERCAMBIO</div>
         <div class="absolute bottom-4 left-5 z-20 text-white flex items-center gap-2 font-bold text-sm">
-            <span class="material-symbols-outlined text-primary text-xl">calendar_month</span>
-            21 de febrero, 2026
+            <span class="material-symbols-outlined text-primary text-xl">calendar_month</span> 21 de febrero, 2026
         </div>
     </div>
     <div class="p-8 flex flex-col flex-grow">
         <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-3 font-medium uppercase tracking-wide">
-            <span class="material-symbols-outlined text-base">location_on</span>
-            La Joya
+            <span class="material-symbols-outlined text-base">location_on</span> La Joya
         </div>
-        <h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-4">
-            Centro de Acopio
-        </h4>
-        <p class="text-gray-600 dark:text-gray-300 mb-8 flex-grow leading-relaxed">
-            Recibe materiales limpios y separados en sedes específicas de la ciudad. Este sistema garantiza una gestión de residuos eficiente.
-        </p>
+        <h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-4">Centro de Acopio</h4>
+        <p class="text-gray-600 dark:text-gray-300 mb-8 flex-grow leading-relaxed">Recibe materiales limpios y separados en sedes específicas de la ciudad. Este sistema garantiza una gestión de residuos eficiente.</p>
         <button onclick="unirseEvento(this)" class="w-full py-4 rounded-xl bg-primary text-secondary font-extrabold text-base hover:bg-emerald-400 transition-all flex items-center justify-center gap-2 duration-300">
             <span class="btn-text">Unirse</span>
             <span class="material-symbols-outlined btn-icon">arrow_forward</span>
@@ -457,43 +384,26 @@
 
 <footer class="bg-secondary text-white relative overflow-hidden mt-auto">
 <div class="absolute inset-0 bg-gradient-to-br from-secondary to-forest-dark z-0"></div>
-<div class="max-w-desktop mx-auto px-6 lg:px-10 py-24 relative z-10">
-<div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-16">
-<div class="flex flex-col gap-8 max-w-lg">
-<div class="flex items-center gap-5">
-<div class="bg-white/10 p-5 rounded-2xl glass-panel border border-white/20">
-
-<img alt="Zero Waste Logo White" class="h-20 rounded-lg" src="/static/img/logo_texture.png"/>
-
+<div class="max-w-desktop mx-auto px-6 lg:px-10 py-10 relative z-10">
+<div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-12">
+    <div class="flex flex-col gap-6 max-w-lg">
+        <div class="flex items-center gap-5">
+            <div class="bg-white/10 p-3 rounded-2xl glass-panel border border-white/20"><img alt="Logo" class="h-10 rounded-lg" src="/static/img/logo_texture.png"/></div>
+            <div><h4 class="font-display font-black text-2xl tracking-tight">ZERO WASTE</h4><p class="text-primary font-bold text-sm">Clasifica y reduce para un futuro más verde.</p></div>
+        </div>
+        <p class="text-emerald-100/80 text-lg leading-relaxed text-justify no-hyphens">
+            Únete a nuestra comunidad y se parte del cambio. Cada pequeña acción cuenta para preservar nuestro planeta.
+        </p>
+    </div>
+    <div class="flex flex-col items-start lg:items-end gap-6">
+        <h5 class="font-display font-bold uppercase tracking-widest text-sm text-primary">Síguenos en redes</h5>
+        <div class="flex gap-4">
+            <a class="glass-panel hover:bg-primary hover:text-secondary p-3 rounded-full transition-all group" href="https://www.instagram.com/zerowaste_upq" target="_blank"><svg class="w-6 h-6 fill-current group-hover:scale-110" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path></svg></a>
+            <a class="glass-panel hover:bg-primary hover:text-secondary p-3 rounded-full transition-all group" href="https://youtube.com/@zerowaste" target="_blank"><svg class="w-6 h-6 fill-current group-hover:scale-110" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+        </div>
+    </div>
 </div>
-<div>
-<h4 class="font-display font-black text-4xl mb-2 tracking-tight">ZERO WASTE</h4>
-<p class="text-primary font-bold text-xl">Clasifica y reduce para un futuro más verde.</p>
-</div>
-</div>
-<p class="text-emerald-100/80 text-xl leading-relaxed header text-justify">
-                    Únete a nuestra comunidad y se parte del
-cambio. Cada pequeña acción cuenta para preservar
-nuestro planeta.
-                </p>
-</div>
-<div class="flex flex-col items-start lg:items-end gap-8">
-<h5 class="font-display font-bold uppercase tracking-widest text-sm text-primary">Síguenos en redes</h5>
-<div class="flex gap-4">
-<a class="glass-panel hover:bg-primary hover:text-secondary p-4 rounded-full transition-all group" href="https://www.instagram.com/zerowaste_upq?igsh=MXBqZDlmemZyNzRubQ==" target="_blank" rel="noopener noreferrer">
-    <svg class="w-8 h-8 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path>
-    </svg>
-</a>
-<a class="glass-panel hover:bg-primary hover:text-secondary p-4 rounded-full transition-all group" href="https://youtube.com/@zerowaste-f5?si=Rsd7PkUrGQzNEoNG" target="_blank" rel="noopener noreferrer">
-<svg class="w-8 h-8 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-</a>
-</div>
-</div>
-</div>
-<div class="mt-20 pt-10 border-t border-white/10 text-center text-base text-emerald-100/60 font-medium">
-<p>© 2026 Zero Waste. Todos los derechos reservados.</p>
-</div>
+<div class="mt-8 pt-6 border-t border-white/10 text-center text-sm text-emerald-100/60 font-medium"><p>© 2026 Zero Waste. Todos los derechos reservados.</p></div>
 </div>
 </footer>
 
@@ -501,34 +411,86 @@ nuestro planeta.
     document.addEventListener("DOMContentLoaded", () => {
         const header = document.getElementById("smart-header");
         let lastScrollY = window.scrollY;
-
         window.addEventListener("scroll", () => {
-            if (window.scrollY > lastScrollY && window.scrollY > 80) {
-                header.classList.add("-translate-y-full");
-            } else {
-                header.classList.remove("-translate-y-full");
-            }
+            if (window.scrollY > lastScrollY && window.scrollY > 80) header.classList.add("-translate-y-full");
+            else header.classList.remove("-translate-y-full");
             lastScrollY = Math.max(0, window.scrollY); 
         });
     });
 
     function unirseEvento(btn) {
         if(btn.classList.contains('joined')) return; 
-        
         btn.classList.add('joined');
         btn.classList.remove('bg-primary', 'text-secondary', 'hover:bg-emerald-400');
         btn.classList.add('bg-white', 'text-primary', 'border-2', 'border-primary');
-        
         const textSpan = btn.querySelector('.btn-text');
         const iconSpan = btn.querySelector('.btn-icon');
-        
         textSpan.textContent = '¡Inscrito!';
         iconSpan.textContent = 'check_circle';
         btn.style.transform = 'scale(0.95)';
+        setTimeout(() => { btn.style.transform = 'scale(1)'; }, 150);
+    }
+
+    // JS DE BÚSQUEDA Y FILTRADO DE FORO
+    let currentFilter = 'recent';
+
+    function setActiveFilter(filterType) {
+        currentFilter = filterType;
+        
+        // Estilos botones
+        const buttons = document.querySelectorAll('.filter-btn');
+        buttons.forEach(btn => {
+            btn.classList.remove('bg-secondary', 'text-white');
+            btn.classList.add('bg-gray-100', 'text-gray-600', 'dark:bg-white/5', 'dark:text-gray-300');
+        });
+        
+        const activeBtn = document.getElementById('btn-' + filterType);
+        activeBtn.classList.remove('bg-gray-100', 'text-gray-600', 'dark:bg-white/5', 'dark:text-gray-300');
+        activeBtn.classList.add('bg-secondary', 'text-white');
+
+        filterPosts();
+    }
+
+    function filterPosts() {
+        const searchInput = document.getElementById('searchInput').value.toLowerCase();
+        const posts = document.querySelectorAll('.post-card');
+        let count = 0;
+
+        posts.forEach(post => {
+            const category = post.getAttribute('data-category');
+            const searchData = post.getAttribute('data-search').toLowerCase();
+
+            let matchFilter = false;
+            if (currentFilter === 'recent') matchFilter = true;
+            if (currentFilter === 'popular' && category === 'popular') matchFilter = true;
+            if (currentFilter === 'unanswered' && category === 'unanswered') matchFilter = true;
+
+            const matchSearch = searchData.includes(searchInput);
+
+            if (matchFilter && matchSearch) {
+                post.classList.remove('post-hidden');
+                count++;
+            } else {
+                post.classList.add('post-hidden');
+            }
+        });
+
+        document.getElementById('result-count').textContent = `Mostrando ${count} resultados`;
+    }
+
+    function loadMore() {
+        const btnText = document.getElementById('load-text');
+        const icon = document.getElementById('load-icon');
+        icon.classList.add('animate-spin');
+        icon.textContent = 'refresh';
+        btnText.textContent = 'Cargando BD...';
+
         setTimeout(() => {
-            btn.style.transform = 'scale(1)';
-        }, 150);
+            alert('¡En producción esto llamará a la Base de Datos para traer más posts!');
+            icon.classList.remove('animate-spin');
+            icon.textContent = 'expand_more';
+            btnText.textContent = 'Cargar más discusiones';
+        }, 800);
     }
 </script>
-
 </body></html>
