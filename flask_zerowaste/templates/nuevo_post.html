@@ -175,21 +175,43 @@
                 </div>
 
                 <div class="space-y-3">
-                    <label class="block text-lg font-bold text-secondary dark:text-emerald-100" for="category">
+                    <label class="block text-lg font-bold text-secondary dark:text-emerald-100">
                         Categoría <span class="text-red-500">*</span>
                     </label>
-                    <div class="relative">
-                        <select
-                            class="w-full px-6 py-4 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-4 focus:ring-primary/10 text-lg text-gray-700 dark:text-gray-200 appearance-none cursor-pointer transition-all outline-none"
-                            id="category" name="categoria_id">
-                            <option disabled="" selected="" value="">Selecciona una categoría...</option>
-                            {% for c in categorias %}
-                            <option value="{{ c.id }}">{{ c.nombre }}</option>
-                            {% endfor %}
-                        </select>
-                        <div
-                            class="absolute inset-y-0 right-0 flex items-center px-6 pointer-events-none text-gray-500">
-                        </div>
+                    <input type="hidden" name="categoria_id" id="categoria_id" required>
+                    <div class="relative" id="custom-dropdown">
+                        <button type="button" id="dropdown-btn"
+                            class="w-full px-6 py-4 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-4 focus:ring-primary/10 text-lg text-gray-400 dark:text-gray-500 cursor-pointer transition-all outline-none flex items-center justify-between"
+                            onclick="toggleDropdown()">
+                            <span id="dropdown-label">Selecciona una categoría...</span>
+                            <span class="material-symbols-outlined text-gray-500 transition-transform duration-200" id="dropdown-arrow">expand_more</span>
+                        </button>
+                        <ul id="dropdown-list" class="hidden absolute z-10 mt-2 w-full bg-white dark:bg-forest-dark border border-gray-200 dark:border-emerald-800 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
+                            <!-- ♻️ Reciclaje -->
+                            <li class="flex items-center gap-3 px-6 py-3.5 cursor-pointer hover:bg-primary/10 dark:hover:bg-emerald-900/40 text-secondary dark:text-emerald-100 font-semibold text-base transition-colors first:rounded-t-xl"
+                                data-value="1" onclick="selectCategory(this)">
+                                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                Reciclaje
+                            </li>
+                            <!-- 🌱 Compostaje -->
+                            <li class="flex items-center gap-3 px-6 py-3.5 cursor-pointer hover:bg-primary/10 dark:hover:bg-emerald-900/40 text-secondary dark:text-emerald-100 font-semibold text-base transition-colors"
+                                data-value="2" onclick="selectCategory(this)">
+                                <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Compostaje
+                            </li>
+                            <!-- 🧘 Estilo de Vida -->
+                            <li class="flex items-center gap-3 px-6 py-3.5 cursor-pointer hover:bg-primary/10 dark:hover:bg-emerald-900/40 text-secondary dark:text-emerald-100 font-semibold text-base transition-colors"
+                                data-value="3" onclick="selectCategory(this)">
+                                <svg class="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                                Estilo de Vida
+                            </li>
+                            <!-- ❓ Dudas -->
+                            <li class="flex items-center gap-3 px-6 py-3.5 cursor-pointer hover:bg-primary/10 dark:hover:bg-emerald-900/40 text-secondary dark:text-emerald-100 font-semibold text-base transition-colors last:rounded-b-xl"
+                                data-value="4" onclick="selectCategory(this)">
+                                <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Dudas
+                            </li>
+                        </ul>
                     </div>
                 </div>
 
@@ -262,6 +284,35 @@
         document.getElementById('editor').focus();
     }
 
+    // CUSTOM DROPDOWN JS
+    function toggleDropdown() {
+        const list = document.getElementById('dropdown-list');
+        const arrow = document.getElementById('dropdown-arrow');
+        list.classList.toggle('hidden');
+        arrow.style.transform = list.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+    }
+
+    function selectCategory(li) {
+        const value = li.getAttribute('data-value');
+        const text = li.textContent.trim();
+        document.getElementById('categoria_id').value = value;
+        const label = document.getElementById('dropdown-label');
+        label.textContent = text;
+        label.classList.remove('text-gray-400', 'dark:text-gray-500');
+        label.classList.add('text-secondary', 'dark:text-white');
+        document.getElementById('dropdown-list').classList.add('hidden');
+        document.getElementById('dropdown-arrow').style.transform = 'rotate(0deg)';
+    }
+
+    // Close dropdown on click outside
+    document.addEventListener('click', (e) => {
+        const dropdown = document.getElementById('custom-dropdown');
+        if (dropdown && !dropdown.contains(e.target)) {
+            document.getElementById('dropdown-list').classList.add('hidden');
+            document.getElementById('dropdown-arrow').style.transform = 'rotate(0deg)';
+        }
+    });
+
     function previewPostImage(input) {
         const display = document.getElementById('file-name-display');
         if (input.files && input.files[0]) {
@@ -282,7 +333,7 @@
         textarea.value = editor.innerHTML;
 
         const title = document.getElementById('post-title').value.trim();
-        const category = document.getElementById('category').value;
+        const category = document.getElementById('categoria_id').value;
         const content = editor.innerText.trim();
         const errorDiv = document.getElementById('error-message');
 

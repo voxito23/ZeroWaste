@@ -141,6 +141,9 @@
                         <a href="https://www.google.com/maps/dir/?api=1&destination=${p.latitud},${p.longitud}" target="_blank" class="inline-block bg-primary text-secondary px-4 py-2 rounded-full text-xs font-bold shadow hover:bg-primary-hover transition-colors">
                             📍 Cómo llegar
                         </a>
+                        <a href="{{ url_for('recomendaciones') }}" class="inline-block bg-secondary text-white px-4 py-2 rounded-full text-xs font-bold shadow hover:bg-secondary/80 transition-colors mt-2">
+                            ⭐ Recomendaciones
+                        </a>
                     </div>
                 `);
         });

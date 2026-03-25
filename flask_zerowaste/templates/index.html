@@ -379,12 +379,12 @@
         </button>
 
         <div class="relative group">
-            <button class="flex items-center justify-center w-9 h-9 rounded-full overflow-hidden border-2 border-secondary dark:border-emerald-400 focus:outline-none bg-gray-200">
+            <button class="flex items-center justify-center w-12 h-12 rounded-full overflow-hidden border-2 border-green-500 focus:outline-none bg-gray-200 transition-transform duration-300 hover:scale-105 shadow-sm">
                 {% set avatar = session.get('foto_perfil', session.get('usuario_foto', 'default.png')) %}
                 {% if avatar and avatar.startswith('http') %}
-                <img alt="User Avatar" class="w-full h-full object-cover object-center" src="{{ avatar }}"/>
+                <img alt="User Avatar" class="w-12 h-12 rounded-full object-cover" src="{{ avatar }}"/>
                 {% else %}
-                <img alt="User Avatar" class="w-full h-full object-cover object-center" src="/static/img/perfiles/{{ avatar }}"/>
+                <img alt="User Avatar" class="w-12 h-12 rounded-full object-cover" src="/static/img/perfiles/{{ avatar }}"/>
                 {% endif %}
             </button>
             <div class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-right z-50">
