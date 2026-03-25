@@ -25,7 +25,7 @@
         </button>
 
         <div class="relative group">
-            <button class="flex items-center justify-center w-12 h-12 rounded-full overflow-hidden border-2 border-green-500 focus:outline-none bg-gray-200 transition-transform duration-300 hover:scale-105 shadow-sm" onclick="window.location.href='{{ url_for('perfil') }}'">
+            <button class="flex items-center justify-center w-12 h-12 rounded-full overflow-hidden border-2 border-primary focus:outline-none bg-gray-200 transition-transform duration-300 hover:scale-105 shadow-sm" onclick="window.location.href='{{ url_for('perfil') }}'">
                 {% set avatar = session.get('foto_perfil', session.get('usuario_foto', 'default.png')) %}
                 {% if avatar and avatar.startswith('http') %}
                 <img alt="User Avatar" class="w-12 h-12 rounded-full object-cover" src="{{ avatar }}"/>
