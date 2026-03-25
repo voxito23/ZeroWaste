@@ -1,0 +1,43 @@
+<header id="smart-header" class="fixed top-0 left-0 right-0 z-[100] bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md shadow-sm border-b border-emerald-100 dark:border-emerald-900 py-1.5 transition-transform duration-300 transform translate-y-0 text-left">
+<div class="max-w-desktop mx-auto px-6 lg:px-10">
+<div class="flex justify-between items-center h-16 relative">
+    <div class="flex items-center gap-4 group cursor-pointer z-50" onclick="window.location.href='{{ url_for('index') }}'">
+        <img alt="Zero Waste Logo" class="h-10 w-auto object-contain drop-shadow-sm transition-transform group-hover:scale-105" src="/static/img/logo.png"/>
+        <div class="flex flex-col"><span class="font-display font-extrabold text-xl tracking-tighter text-secondary dark:text-primary">ZERO WASTE</span></div>
+    </div>
+    
+    <nav class="hidden lg:flex space-x-12 items-center absolute left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto">
+        <a class="{{ 'text-primary dark:text-primary' if request.endpoint == 'index' else 'text-secondary dark:text-emerald-100 hover:text-primary dark:hover:text-white' }} font-bold text-base transition-colors flex items-center gap-2 relative group" href="{{ url_for('index') }}">
+            Inicio <span class="absolute -bottom-1 left-0 {{ 'w-full' if request.endpoint == 'index' else 'w-0 group-hover:w-full' }} h-0.5 bg-primary transition-all"></span>
+        </a>
+        <a class="{{ 'text-primary dark:text-primary' if request.endpoint == 'foro' else 'text-secondary dark:text-emerald-100 hover:text-primary dark:hover:text-white' }} font-bold text-base transition-colors flex items-center gap-2 relative group" href="{{ url_for('foro') }}">
+            Foro <span class="absolute -bottom-1 left-0 {{ 'w-full' if request.endpoint == 'foro' else 'w-0 group-hover:w-full' }} h-0.5 bg-primary transition-all"></span>
+        </a>
+        <a class="{{ 'text-primary dark:text-primary' if request.endpoint == 'Acercade' else 'text-secondary dark:text-emerald-100 hover:text-primary dark:hover:text-white' }} font-bold text-base transition-colors flex items-center gap-2 relative group" href="{{ url_for('Acercade') }}">
+            Acerca de <span class="absolute -bottom-1 left-0 {{ 'w-full' if request.endpoint == 'Acercade' else 'w-0 group-hover:w-full' }} h-0.5 bg-primary transition-all"></span>
+        </a>
+    </nav>
+
+    <div class="hidden lg:flex items-center space-x-5 z-50 pointer-events-auto">
+        <button class="theme-toggle-btn p-2 rounded-full transition-all duration-300" onclick="toggleTheme()">
+            <span class="material-symbols-outlined text-2xl theme-toggle-icon-light dark:hidden">dark_mode</span>
+            <span class="material-symbols-outlined hidden dark:block text-2xl theme-toggle-icon-dark">light_mode</span>
+        </button>
+
+        <div class="relative group">
+            <button class="flex items-center justify-center w-10 h-10 rounded-full overflow-hidden border-2 border-secondary dark:border-emerald-400 focus:outline-none bg-gray-200 transition-transform duration-300 hover:scale-105" onclick="window.location.href='{{ url_for('perfil') }}'">
+                <img alt="User Avatar" class="w-full h-full object-cover object-center" src="/static/img/perfiles/{{ session.get('usuario_foto', 'default.png') }}"/>
+            </button>
+            <div class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-right z-50">
+                <a class="block px-6 py-3 text-sm font-semibold text-secondary dark:text-emerald-100 hover:bg-surface-light dark:hover:bg-emerald-900/50 hover:text-primary dark:hover:text-white first:rounded-t-xl transition-colors" href="{{ url_for('perfil') }}"> Ver perfil </a>
+                <div class="h-px bg-gray-100 dark:bg-emerald-900 mx-2"></div>
+                <a class="block px-6 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 last:rounded-b-xl transition-colors" href="{{ url_for('logout') }}"> Cerrar sesión </a>
+            </div>
+        </div>
+
+        <a class="map-btn-custom px-5 py-2 rounded-full font-bold text-sm transition-all duration-300" href="{{ url_for('mapa') }}">Mapa</a>
+        <a class="contact-btn-custom px-5 py-2 rounded-full font-bold text-sm transition-all duration-300" href="{{ url_for('contacto') }}">Contacto</a>
+    </div>
+</div>
+</div>
+</header>

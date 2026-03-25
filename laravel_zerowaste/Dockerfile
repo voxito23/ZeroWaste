@@ -7,6 +7,9 @@ RUN apt-get update && apt-get install -y \
     git \
     unzip \
     libzip-dev \
+    curl \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && docker-php-ext-install pdo pdo_mysql zip
 
 # 2. Habilitar mod_rewrite de Apache
@@ -23,6 +26,9 @@ COPY . /var/www/html
 
 # 6. Instalar las dependencias de Laravel (Esto es lo que crea la carpeta vendor)
 RUN composer install --no-interaction --optimize-autoloader
+
+# 6.5 Compilar assets de Node.js (Vite/Tailwind)
+RUN npm install && npm run build
 
 # 7. Darle permisos a Apache para que pueda escribir en las carpetas de caché y logs de Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache

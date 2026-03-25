@@ -9,8 +9,12 @@ services:
       - "5001:5000"
     volumes:
       - ./flask_zerowaste:/app
+    environment:
+      # Le pasamos la URL de conexión exacta a Flask para que SQLAlchemy no se pierda
+      - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/zerowaste_db
     depends_on:
-      - db 
+      db:
+        condition: service_healthy
 
   admin:
     build: ./laravel_zerowaste
@@ -21,17 +25,45 @@ services:
     volumes:
       - ./laravel_zerowaste:/var/www/html
       - /var/www/html/vendor
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=zerowaste_db
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgrespassword
     depends_on:
-      - db 
+      db:
+        condition: service_healthy
 
   db:
-    image: mysql:8.0
-    container_name: mysql_db
+    image: postgres:16-alpine
+    container_name: postgres_db
     restart: always
     ports:
-      - "3306:3306" 
+      - "5433:5432"
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword 
-      MYSQL_DATABASE: zerowaste_db     
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: zerowaste_db
     volumes:
-      - ./mysql_data:/var/lib/mysql
+      - postgres_data_zerowaste:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d zerowaste_db" ]
+      interval: 5s
+      retries: 5
+      timeout: 5s
+
+  tailwind:
+    image: node:20-alpine
+    container_name: tailwind_builder
+    tty: true
+    stdin_open: true
+    working_dir: /app
+    volumes:
+      - ./flask_zerowaste:/app
+    command: sh -c "npm install && npm run dev:css"
+    restart: always
+
+volumes:
+  postgres_data_zerowaste:

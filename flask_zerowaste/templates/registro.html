@@ -3,9 +3,17 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Zero Waste - Crear Cuenta</title>
+<link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='faviconZeroWaste.svg') }}">
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
+</script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
@@ -113,39 +121,43 @@
 </head>
 <body class="bg-surface-light dark:bg-surface-dark text-text-light dark:text-text-dark font-sans transition-colors duration-300 flex flex-col min-h-screen">
 
-<header id="smart-header" class="sticky top-0 z-50 bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md shadow-sm border-b border-emerald-100 dark:border-emerald-900 py-1.5 transition-transform duration-300 transform translate-y-0">
-<div class="max-w-desktop mx-auto px-6 lg:px-10">
-<div class="flex justify-between items-center h-16">
-    <div class="flex items-center gap-4 group cursor-pointer">
-        <img alt="Zero Waste Logo" class="h-10 w-auto object-contain drop-shadow-sm transition-transform group-hover:scale-105" src="/static/img/logo.png"/>
-        <div class="flex flex-col">
-            <span class="font-display font-extrabold text-xl tracking-tighter text-secondary dark:text-primary">ZERO WASTE</span>
+<header id="smart-header" class="fixed top-0 inset-x-0 z-[9999] bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md shadow-sm border-b border-emerald-100 dark:border-emerald-900 py-1.5 transition-transform duration-300 translate-y-0">
+    <div class="max-w-desktop mx-auto px-6 lg:px-10">
+        <div class="flex justify-between items-center h-16">
+            <div class="flex items-center gap-4 group cursor-pointer" onclick="window.location.href='/'">
+                <img alt="Zero Waste Logo" class="h-10 w-auto object-contain drop-shadow-sm transition-transform group-hover:scale-105" src="/static/img/logo.png"/>
+                <div class="flex flex-col">
+                    <span class="font-display font-extrabold text-xl tracking-tighter text-secondary dark:text-primary">ZERO WASTE</span>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-6">
+                <button class="theme-toggle-btn p-2 rounded-full transition-all duration-300" onclick="document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');">
+                    <span class="material-symbols-outlined text-2xl theme-toggle-icon-light dark:hidden">dark_mode</span>
+                    <span class="material-symbols-outlined hidden dark:block text-2xl theme-toggle-icon-dark">light_mode</span>
+                </button>
+            </div>
         </div>
     </div>
-
-    <div class="flex items-center space-x-6">
-        <button class="theme-toggle-btn p-2 rounded-full transition-all duration-300" onclick="document.documentElement.classList.toggle('dark')">
-            <span class="material-symbols-outlined text-2xl theme-toggle-icon-light dark:hidden">dark_mode</span>
-            <span class="material-symbols-outlined hidden dark:block text-2xl theme-toggle-icon-dark">light_mode</span>
-        </button>
-    </div>
-</div>
-</div>
 </header>
 
-<main class="grow flex items-center justify-center bg-white dark:bg-forest-dark relative py-6">
-<div id="auth-shell" class="auth-card page-enter w-full max-w-[1180px] min-h-[680px] flex rounded-[2.5rem] overflow-hidden shadow-2xl bg-white dark:bg-surface-dark border border-emerald-50 dark:border-emerald-900 mx-6 lg:mx-10">
+<main class="grow min-h-screen flex items-center justify-center bg-white dark:bg-forest-dark relative pt-20 pb-4">
+    <div id="auth-shell" class="auth-card page-enter w-full max-w-4xl flex flex-col lg:flex-row rounded-[2rem] overflow-hidden shadow-2xl bg-white dark:bg-surface-dark border border-emerald-50 dark:border-emerald-900 mx-4 lg:mx-8">
     <!-- FORMULARIO IZQUIERDA EN REGISTRO -->
-    <div class="w-full lg:w-1/2 p-8 md:p-12 flex flex-col justify-center relative bg-white dark:bg-forest-dark order-2 lg:order-1">
+
+    <div class="w-full lg:w-1/2 p-6 md:p-8 flex flex-col justify-center relative bg-white dark:bg-forest-dark order-2 lg:order-1 overflow-y-auto overflow-x-hidden scrollbar-hide" style="-ms-overflow-style: none; scrollbar-width: none;">
+        <style>
+            .scrollbar-hide::-webkit-scrollbar { display: none; }
+        </style>
         <div class="max-w-md mx-auto w-full">
-            <div class="text-center mb-7">
+            <div class="text-center mb-5">
                 <h1 class="font-display font-black text-3xl md:text-4xl text-secondary dark:text-white mb-2">Crea tu cuenta</h1>
                 <p class="text-gray-500 dark:text-gray-400">Únete a nosotros para empezar a reciclar</p>
             </div>
 
-            <div id="general-error" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-md shadow-sm text-sm font-medium transition-all"></div>
+            <div id="general-error" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-3 mb-4 rounded-md shadow-sm text-sm font-medium transition-all"></div>
 
-            <form id="register-form" class="space-y-4" onsubmit="validateRegister(event)">
+            <form id="register-form" class="space-y-3" onsubmit="validateRegister(event)" novalidate>
                 <div class="flex flex-col items-center justify-center mb-3">
                     <div class="relative w-24 h-24 rounded-full overflow-hidden border-4 border-emerald-100 bg-gray-100 cursor-pointer group shadow-md" onclick="document.getElementById('foto_input').click()">
                         <img id="avatar-preview" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Perfil" class="w-full h-full object-cover">
@@ -156,6 +168,7 @@
                     <span class="text-xs text-gray-500 mt-2 font-medium">Añadir foto de perfil</span>
                     <input type="file" id="foto_input" accept=".jpg, .jpeg, .png" class="hidden" onchange="openCropper(event)">
                 </div>
+                <div class="flex justify-center"><span id="error-foto" class="hidden text-red-500 text-sm mt-1 font-medium"></span></div>
 
                 <div class="space-y-1">
                     <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="name">Nombre completo</label>
@@ -163,8 +176,9 @@
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">person</span>
                         </div>
-                        <input class="block w-full pl-11 pr-4 py-3 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium" id="name" name="nombre" placeholder="Tu Nombre Completo" type="text"/>
+                        <input class="block w-full pl-11 pr-4 py-3 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium" id="name" name="nombre" placeholder="Tu Nombre Completo" type="text" required minlength="11"/>
                     </div>
+                    <span id="error-name" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
                 </div>
 
                 <div class="space-y-1">
@@ -173,8 +187,9 @@
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">mail</span>
                         </div>
-                        <input class="block w-full pl-11 pr-4 py-3 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium" id="email" name="email" placeholder="correo@ejemplo.com" type="email"/>
+                        <input class="block w-full pl-11 pr-4 py-3 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium" id="email" name="email" placeholder="correo@ejemplo.com" type="email" required/>
                     </div>
+                    <span id="error-email" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
                 </div>
 
                 <div class="space-y-1">
@@ -188,19 +203,50 @@
                             <span id="eye-icon-reg" class="material-symbols-outlined text-gray-400 hover:text-secondary dark:hover:text-white transition-colors text-xl">visibility</span>
                         </div>
                     </div>
+                    <span id="error-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
                 </div>
 
-                <button id="submit-btn" class="w-full flex justify-center items-center gap-2 py-4 px-4 rounded-xl shadow-lg shadow-emerald-400/30 font-bold text-white bg-primary hover:bg-primary-hover transition-all transform hover:-translate-y-1 mt-5" type="submit">
+                <div class="mt-3 mb-2">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="privacy" name="privacy" type="checkbox" class="w-4 h-4 text-primary bg-gray-50 border-gray-300 rounded focus:ring-primary focus:ring-2 dark:bg-emerald-900/20 dark:border-emerald-800 cursor-pointer transition-colors">
+                        </div>
+                        <div class="ml-2 text-[0.7rem] text-gray-500 dark:text-gray-400 text-justify leading-tight">
+                            <label for="privacy" class="cursor-pointer select-none">
+                                Al registrarte, aceptas nuestro <button type="button" onclick="openPrivacyModal()" class="font-bold text-primary hover:text-primary-hover transition-colors">Aviso de Privacidad</button> y los <button type="button" onclick="openTermsModal()" class="font-bold text-primary hover:text-primary-hover transition-colors">Términos y Condiciones</button> del servicio de ZeroWaste.
+                            </label>
+                        </div>
+                    </div>
+                    <span id="error-privacy" class="hidden text-red-500 text-xs mt-1 font-medium ml-6">Debes aceptar el aviso de privacidad.</span>
+                </div>
+
+                <button id="submit-btn" class="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl shadow-lg shadow-emerald-400/30 font-bold text-white bg-primary hover:bg-primary-hover transition-all transform hover:-translate-y-1 mt-4" type="submit">
                     <span id="btn-text">Registrarse</span>
                     <svg id="btn-spinner" class="hidden animate-spin-slow h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                 </button>
+                
+                <div class="relative flex items-center py-2">
+                    <div class="flex-grow border-t border-gray-200 dark:border-emerald-800/60"></div>
+                    <span class="flex-shrink-0 mx-4 text-gray-400 dark:text-gray-500 text-xs font-bold">O</span>
+                    <div class="flex-grow border-t border-gray-200 dark:border-emerald-800/60"></div>
+                </div>
+                
+                <a href="/login/google" class="w-full flex justify-center items-center gap-3 py-2.5 px-4 mb-2 border border-gray-200 dark:border-emerald-800/60 rounded-xl shadow-sm text-sm font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-emerald-900/20 hover:bg-gray-50 dark:hover:bg-emerald-800/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-all transform hover:-translate-y-1">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    Continuar con Google
+                </a>
             </form>
 
-            <div class="mt-6 text-center">
-                <p class="text-gray-600 dark:text-gray-400">
+            <div class="mt-4 text-center">
+                <p class="text-gray-600 dark:text-gray-400 text-sm">
                     ¿Ya tienes cuenta?
                     <a class="font-bold text-secondary dark:text-emerald-200 hover:text-primary ml-1" href="/login" onclick="goWithSlide(event, '/login', 'left')">Inicia sesión</a>
                 </p>
@@ -212,12 +258,12 @@
     <div class="hidden lg:block w-1/2 relative order-1 lg:order-2">
         <img alt="Environmental landscape" class="absolute inset-0 w-full h-full object-cover" src="/static/img/fondo-verde2.jpg"/>
         <div class="absolute inset-0 bg-secondary/40 mix-blend-multiply"></div>
-        <div class="absolute inset-0 bg-gradient-to-r from-secondary/80 to-transparent flex flex-col justify-end p-14">
+        <div class="absolute inset-0 bg-gradient-to-r from-secondary/80 to-transparent flex flex-col justify-end p-10">
             <div class="text-white max-w-md">
-                <h2 class="font-display font-bold text-4xl mb-4 leading-tight">
+                <h2 class="font-display font-bold text-3xl mb-3 leading-tight">
                     Construyendo <span class="text-primary dark:text-emerald-300">un futuro</span> más limpio.
                 </h2>
-                <p class="text-lg opacity-90">Únete a nuestra comunidad y sé parte del cambio global hacia la sostenibilidad.</p>
+                <p class="text-base opacity-90">Únete a nuestra comunidad y sé parte del cambio global hacia la sostenibilidad.</p>
             </div>
         </div>
     </div>
@@ -236,6 +282,28 @@
         <div class="flex justify-between gap-4">
             <button type="button" class="w-1/2 py-3 font-bold text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-xl transition" onclick="closeCropper()">Cancelar</button>
             <button type="button" class="w-1/2 py-3 font-bold text-white bg-primary hover:bg-primary-hover rounded-xl transition" onclick="cropImage()">Recortar y Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay Animado de Éxito -->
+<div id="success-overlay" class="fixed inset-0 w-screen h-screen flex items-center justify-center z-[9999] bg-white dark:bg-gray-900 hidden flex-col transition-opacity duration-700 opacity-0">
+    <img src="/static/img/logo.png" class="h-24 w-auto animate-bounce mb-4 drop-shadow-md" />
+    <h2 class="font-display font-black text-3xl text-primary drop-shadow-sm tracking-tight" id="overlay-text">¡Cuenta Creada!</h2>
+</div>
+
+<div id="info-modal" class="fixed inset-0 z-[1000] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-2xl p-6 md:p-8 w-full max-w-2xl shadow-2xl overflow-y-auto max-h-[85vh]">
+        <div class="flex justify-between items-center mb-5">
+            <h3 id="modal-title" class="text-2xl font-display font-black text-secondary dark:text-white">Aviso de Privacidad</h3>
+            <button type="button" onclick="closeInfoModal()" class="text-gray-400 hover:text-red-500 transition-colors">
+                <span class="material-symbols-outlined text-3xl">close</span>
+            </button>
+        </div>
+        <div id="modal-body-text" class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed text-justify space-y-4 font-medium">
+        </div>
+        <div class="mt-8 flex justify-end">
+            <button type="button" onclick="closeInfoModal()" class="py-2.5 px-6 font-bold text-white bg-primary hover:bg-primary-hover rounded-xl shadow-md transition-all">Aceptar y Cerrar</button>
         </div>
     </div>
 </div>
@@ -281,13 +349,23 @@
         });
 
         window.addEventListener("scroll", () => {
-            if (window.scrollY > lastScrollY && window.scrollY > 80) {
-                header.classList.add("-translate-y-full");
-            } else {
-                header.classList.remove("-translate-y-full");
-            }
+            if (window.scrollY > lastScrollY && window.scrollY > 80) header.classList.add("-translate-y-full");
+            else header.classList.remove("-translate-y-full");
             lastScrollY = Math.max(0, window.scrollY);
         });
+
+        window.addEventListener("wheel", (e) => {
+            if (e.deltaY > 0 && window.scrollY > 50) header.classList.add("-translate-y-full");
+            else header.classList.remove("-translate-y-full");
+        });
+
+        let touchStartY = 0;
+        window.addEventListener("touchstart", e => { touchStartY = e.touches[0].clientY; }, {passive: true});
+        window.addEventListener("touchmove", e => {
+            const touchEndY = e.touches[0].clientY;
+            if (touchStartY - touchEndY > 10 && window.scrollY > 50) header.classList.add("-translate-y-full");
+            else if (touchEndY - touchStartY > 10) header.classList.remove("-translate-y-full");
+        }, {passive: true});
     });
 
     function goWithSlide(event, url, direction) {
@@ -298,6 +376,22 @@
         setTimeout(() => {
             window.location.href = url;
         }, 430);
+    }
+
+    function openPrivacyModal() {
+        document.getElementById('modal-title').textContent = "Aviso de Privacidad";
+        document.getElementById('modal-body-text').innerHTML = "<p>En ZeroWaste, protegemos tu información personal. Los datos recabados (correo, nombre) se utilizan exclusivamente para gestionar tu perfil, mostrarte puntos de reciclaje cercanos y administrar tu participación en eventos ambientales. No compartimos tu información con terceros sin tu consentimiento expreso, alineándonos a las mejores prácticas de seguridad y protección de datos.</p>";
+        document.getElementById('info-modal').classList.remove('hidden');
+    }
+
+    function openTermsModal() {
+        document.getElementById('modal-title').textContent = "Términos y Condiciones";
+        document.getElementById('modal-body-text').innerHTML = "<p>Al utilizar la plataforma ZeroWaste, te comprometes a hacer un uso responsable, respetando a otros usuarios en el foro y compartiendo información verídica sobre los puntos de reciclaje. ZeroWaste se reserva el derecho de suspender cuentas que violen estas normas o suban contenido inapropiado.</p>";
+        document.getElementById('info-modal').classList.remove('hidden');
+    }
+
+    function closeInfoModal() {
+        document.getElementById('info-modal').classList.add('hidden');
     }
 
     let cropper;
@@ -377,34 +471,78 @@
     function validateRegister(event) {
         event.preventDefault();
         const form = document.getElementById('register-form');
-        const name = document.getElementById('name').value.trim();
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
+        
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const privacyInput = document.getElementById('privacy');
+        
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const privacy = privacyInput.checked;
+        
         const errorBox = document.getElementById('general-error');
 
-        errorBox.classList.add('hidden');
-        errorBox.textContent = "";
+        const errFoto = document.getElementById('error-foto');
+        const errName = document.getElementById('error-name');
+        const errEmail = document.getElementById('error-email');
+        const errPass = document.getElementById('error-password');
+        const errPrivacy = document.getElementById('error-privacy');
+
+        if (errorBox) {
+            errorBox.classList.add('hidden');
+            errorBox.textContent = "";
+        }
+        
+        errFoto.classList.add('hidden');
+        errName.classList.add('hidden');
+        errEmail.classList.add('hidden');
+        errPass.classList.add('hidden');
+        errPrivacy.classList.add('hidden');
+        
+        nameInput.classList.remove('border-red-500', 'focus:border-red-500', 'dark:border-red-500');
+        emailInput.classList.remove('border-red-500', 'focus:border-red-500', 'dark:border-red-500');
+        passwordInput.classList.remove('border-red-500', 'focus:border-red-500', 'dark:border-red-500');
+        privacyInput.classList.remove('border-red-500', 'dark:border-red-500');
+
+        let isValid = true;
 
         if (!croppedBlob) {
-            showError('Por favor, selecciona una foto de perfil.');
-            return;
+            errFoto.textContent = 'Por favor, selecciona una foto de perfil.';
+            errFoto.classList.remove('hidden');
+            isValid = false;
         }
 
         if (!name || name.length <= 10) {
-            showError('El nombre completo debe tener más de 10 caracteres.');
-            return;
+            errName.textContent = 'El nombre completo debe tener más de 10 caracteres.';
+            errName.classList.remove('hidden');
+            nameInput.classList.add('border-red-500', 'focus:border-red-500', 'dark:border-red-500');
+            isValid = false;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email || !emailRegex.test(email)) {
-            showError('Por favor, ingresa un correo electrónico válido.');
-            return;
+            errEmail.textContent = 'El correo debe tener @ y un dominio válido.';
+            errEmail.classList.remove('hidden');
+            emailInput.classList.add('border-red-500', 'focus:border-red-500', 'dark:border-red-500');
+            isValid = false;
         }
 
         if (!password || password.length < 6) {
-            showError('La contraseña debe tener al menos 6 caracteres.');
-            return;
+            errPass.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+            errPass.classList.remove('hidden');
+            passwordInput.classList.add('border-red-500', 'focus:border-red-500', 'dark:border-red-500');
+            isValid = false;
         }
+        
+        if (!privacy) {
+            errPrivacy.classList.remove('hidden');
+            privacyInput.classList.add('border-red-500', 'dark:border-red-500');
+            isValid = false;
+        }
+
+        if (!isValid) return;
 
         const btn = document.getElementById('submit-btn');
         const btnText = document.getElementById('btn-text');
@@ -426,12 +564,16 @@
             if (data.success) {
                 btnText.textContent = "¡Registrado!";
                 spinner.classList.add('hidden');
-                btn.classList.remove('btn-loading');
                 btn.classList.add('bg-emerald-500', 'hover:bg-emerald-600');
+                
+                const overlay = document.getElementById('success-overlay');
+                document.getElementById('overlay-text').textContent = '¡Cuenta Creada!';
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 20);
 
                 setTimeout(() => {
                     window.location.href = data.redirect;
-                }, 1500);
+                }, 1400);
             } else {
                 btn.classList.remove('btn-loading');
                 btnText.textContent = "Registrarse";
