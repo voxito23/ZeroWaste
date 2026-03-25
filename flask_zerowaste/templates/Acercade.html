@@ -54,6 +54,22 @@
     .rotate-y-180-static {
         transform: rotateY(180deg);
     }
+    
+    /* CSS DEL BANNER ANIMADO CLASIFICA */
+    @keyframes glow-and-scale {
+        0% { background-position: 0% 50%; transform: scale(1); }
+        50% { background-position: 100% 50%; transform: scale(1.05); }
+        100% { background-position: 0% 50%; transform: scale(1); }
+    }
+    .letter-scale-animation {
+        display: inline-block;
+        background: linear-gradient(90deg, #00E096, #D1FAE5, #34D399, #00E096);
+        background-size: 300% 100%;
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: glow-and-scale 4s ease-in-out infinite;
+    }
 </style>
 {% endblock %}
 
@@ -88,7 +104,7 @@
 </section>
 <div class="bg-secondary text-white py-8 border-t border-white/10 relative z-20">
 <div class="max-w-desktop mx-auto px-6 lg:px-10 flex justify-center text-center">
-<h2 class="font-display text-lg lg:text-2xl font-extrabold uppercase tracking-[0.2em] text-white">
+<h2 class="font-display text-lg lg:text-2xl font-extrabold uppercase tracking-[0.2em] text-white letter-scale-animation">
             Clasifica y reduce para un futuro más verde
         </h2>
 </div>
@@ -519,17 +535,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const items = Array.from(track.children);
-    let totalOriginals = items.length;
-    
-    // Duplicate exactly once for smooth scroll
-    items.forEach(item => {
-        const clone = item.cloneNode(true);
-        track.appendChild(clone);
-    });
+    let totalOriginals = items.length; // Ensure this is exactly 5 members
+    let defaultDotsArray = Array.from(document.getElementById('carousel-dots').children);
 
     let currentIndex = 0;
     let isTransitioning = false;
-    const dotsArray = Array.from(document.getElementById('carousel-dots').children);
 
     function getVisibleCount() {
         return window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1;
@@ -537,7 +547,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function updateDots() {
         const activeIndex = currentIndex % totalOriginals;
-        dotsArray.forEach((dot, idx) => {
+        defaultDotsArray.forEach((dot, idx) => {
             if(idx === activeIndex) {
                 dot.className = 'w-3 h-3 lg:w-4 lg:h-4 rounded-full bg-primary scale-125 shadow-[0_0_10px_rgba(0,224,150,0.5)] transition-all duration-300';
             } else {
@@ -549,7 +559,9 @@ document.addEventListener("DOMContentLoaded", () => {
     function moveNext() {
         if(isTransitioning) return;
         isTransitioning = true;
-        currentIndex++;
+        
+        currentIndex = (currentIndex + 1) % totalOriginals;
+        updateDots();
         
         const visible = getVisibleCount();
         const itemWidth = 100 / visible;
@@ -557,21 +569,18 @@ document.addEventListener("DOMContentLoaded", () => {
         track.style.transition = 'transform 0.8s cubic-bezier(0.45, 0.05, 0.55, 0.95), filter 0.4s ease-in';
         track.classList.add('carousel-blur');
         
-        track.style.transform = `translateX(-${currentIndex * itemWidth}%)`;
-        updateDots();
+        track.style.transform = `translateX(-${itemWidth}%)`;
         
         setTimeout(() => track.classList.remove('carousel-blur'), 400);
 
-        if (currentIndex === totalOriginals) {
-            setTimeout(() => {
-                track.style.transition = 'none';
-                currentIndex = 0;
-                track.style.transform = `translateX(0)`;
-                isTransitioning = false;
-            }, 800);
-        } else {
-            setTimeout(() => { isTransitioning = false; }, 800);
-        }
+        setTimeout(() => {
+            track.style.transition = 'none';
+            // Loop scroll infinito real moviendo el primer nodo al final
+            track.appendChild(track.firstElementChild);
+            track.style.transform = 'translateX(0)';
+            
+            setTimeout(() => { isTransitioning = false; }, 50);
+        }, 800);
     }
 
     let interval = setInterval(moveNext, 4500);
