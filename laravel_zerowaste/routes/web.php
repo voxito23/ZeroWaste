@@ -13,7 +13,7 @@ Route::get('/', function () {
 })->name('home');
 
 // Dashboard Routes
-Route::prefix('admin')->group(function () {
+Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     Route::get('/usuarios', [UserController::class, 'index'])->name('usuarios.index');

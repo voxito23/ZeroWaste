@@ -80,7 +80,7 @@
                     {% if 'Vidrio' in p.materiales %}<span class="px-3 py-1 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-300 text-xs font-bold border border-gray-100">Vidrio</span>{% endif %}
                     {% if 'Papel' in p.materiales %}<span class="px-3 py-1 rounded-lg bg-gray-50 dark:bg-white/5 text-gray-600 dark:text-gray-300 text-xs font-bold border border-gray-100">Papel</span>{% endif %}
                 </div>
-                <a href="https://www.google.com/maps?q={{ p.latitud }},{{ p.longitud }}" target="_blank" class="mt-4 inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-secondary px-5 py-2.5 rounded-full text-sm font-bold shadow-md hover:shadow-lg transition-all w-full justify-center">
+                <a href="https://www.google.com/maps/search/?api=1&query={{ p.latitud }},{{ p.longitud }}" target="_blank" class="mt-4 inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-secondary px-5 py-2.5 rounded-full text-sm font-bold shadow-md hover:shadow-lg transition-all w-full justify-center">
                     <span class="material-symbols-outlined text-lg">pin_drop</span>
                     📍 Ver en el mapa
                 </a>

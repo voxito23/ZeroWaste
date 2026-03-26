@@ -5,10 +5,11 @@
 <title>Zero Waste - Crear Cuenta</title>
 <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='faviconZeroWaste.svg') }}">
 <script>
-    if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    if (localStorage.getItem('theme') === 'dark') {
         document.documentElement.classList.add('dark');
     } else {
         document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
     }
 </script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>

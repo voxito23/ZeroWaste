@@ -4,6 +4,14 @@
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>Zero Waste - Inicio</title>
 <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='faviconZeroWaste.svg') }}">
+<script>
+    if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+    }
+</script>
 <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -373,7 +381,7 @@
     </nav>
 
     <div class="hidden lg:flex items-center space-x-5 z-50 pointer-events-auto">
-        <button class="theme-toggle-btn p-2 rounded-full transition-all duration-300" onclick="document.documentElement.classList.toggle('dark')">
+        <button class="theme-toggle-btn p-2 rounded-full transition-all duration-300" onclick="document.documentElement.classList.toggle('dark'); localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); window.dispatchEvent(new Event('themeChanged'));">
     <span class="material-symbols-outlined text-2xl theme-toggle-icon-light dark:hidden">dark_mode</span>
     <span class="material-symbols-outlined hidden dark:block text-2xl theme-toggle-icon-dark">light_mode</span>
         </button>

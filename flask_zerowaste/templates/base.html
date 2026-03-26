@@ -6,12 +6,13 @@
     <title>{% block title %}Zero Waste{% endblock %}</title>
     <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='faviconZeroWaste.svg') }}">
 
-    <!-- Script de Persistencia de Tema (Anti-Flash Blanco) -->
+    <!-- Script de Persistencia de Tema (Modo Claro por Defecto) -->
     <script>
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        if (localStorage.getItem('theme') === 'dark') {
             document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
         }
 
         function toggleTheme() {
