@@ -10,7 +10,6 @@ services:
     volumes:
       - ./flask_zerowaste:/app
     environment:
-      # Le pasamos la URL de conexión exacta a Flask para que SQLAlchemy no se pierda
       - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/zerowaste_db
     depends_on:
       db:
@@ -32,6 +31,22 @@ services:
       - DB_DATABASE=zerowaste_db
       - DB_USERNAME=postgres
       - DB_PASSWORD=postgrespassword
+    depends_on:
+      db:
+        condition: service_healthy
+
+  fast_api:
+    build: ./fast_api
+    container_name: fastapi_app
+    restart: always
+    ports:
+      - "6001:6000"
+    volumes:
+      - ./fast_api:/app
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/zerowaste_db
+      - JWT_SECRET_KEY=zerowaste_super_secret_jwt_2026
+      - JWT_EXPIRE_MINUTES=60
     depends_on:
       db:
         condition: service_healthy

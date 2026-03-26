@@ -1,0 +1,266 @@
+"""
+Router del foro — CRUD completo: posts, respuestas y likes.
+"""
+
+from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+
+from app.data.database import get_db
+from app.models.domain_models import (
+    Usuario, Categoria, Foro, RespuestaForo, LikeForo,
+)
+from app.models.schemas import (
+    PostCreate, PostUpdate, PostResponse, PostDetailResponse,
+    RespuestaCreate, RespuestaResponse,
+    LikeResponse, CategoriaResponse, MessageResponse,
+)
+from app.security.jwt_auth import get_current_user
+
+router = APIRouter(prefix="/foro", tags=["Foro"])
+
+
+# ── Categorías ───────────────────────────────────────────────────────────────
+
+@router.get("/categorias", response_model=List[CategoriaResponse], summary="Listar categorías")
+def list_categorias(db: Session = Depends(get_db)):
+    """Devuelve todas las categorías del foro."""
+    return db.query(Categoria).order_by(Categoria.id).all()
+
+
+# ── Posts (CRUD) ─────────────────────────────────────────────────────────────
+
+@router.get("/posts", response_model=List[PostDetailResponse], summary="Listar todos los posts")
+def list_posts(
+    db: Session = Depends(get_db),
+    _current_user: Usuario = Depends(get_current_user),
+):
+    """Devuelve todos los posts del foro con información de autor, categoría, respuestas y likes."""
+    posts = db.query(Foro).order_by(Foro.created_at.desc()).all()
+
+    resultado = []
+    for post in posts:
+        resultado.append(PostDetailResponse(
+            id=post.id,
+            titulo=post.titulo,
+            contenido=post.contenido,
+            categoria_id=post.categoria_id,
+            autor_id=post.autor_id,
+            imagen=post.imagen,
+            created_at=post.created_at,
+            autor_nombre=post.autor_rel.nombre if post.autor_rel else None,
+            categoria_nombre=post.categoria_rel.nombre if post.categoria_rel else None,
+            total_respuestas=len(post.respuestas),
+            total_likes=len(post.likes),
+        ))
+    return resultado
+
+
+@router.get("/posts/{post_id}", response_model=PostDetailResponse, summary="Obtener un post por ID")
+def get_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    _current_user: Usuario = Depends(get_current_user),
+):
+    """Devuelve un post específico con detalles completos."""
+    post = db.query(Foro).filter(Foro.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
+
+    return PostDetailResponse(
+        id=post.id,
+        titulo=post.titulo,
+        contenido=post.contenido,
+        categoria_id=post.categoria_id,
+        autor_id=post.autor_id,
+        imagen=post.imagen,
+        created_at=post.created_at,
+        autor_nombre=post.autor_rel.nombre if post.autor_rel else None,
+        categoria_nombre=post.categoria_rel.nombre if post.categoria_rel else None,
+        total_respuestas=len(post.respuestas),
+        total_likes=len(post.likes),
+    )
+
+
+@router.post(
+    "/posts",
+    response_model=PostResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear un nuevo post",
+)
+def create_post(
+    post_in: PostCreate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    """Crea un nuevo post en el foro. Requiere JWT."""
+    # Validar que la categoría exista
+    cat = db.query(Categoria).filter(Categoria.id == post_in.categoria_id).first()
+    if not cat:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="La categoría seleccionada no existe.",
+        )
+
+    nuevo_post = Foro(
+        titulo=post_in.titulo,
+        contenido=post_in.contenido,
+        categoria_id=post_in.categoria_id,
+        autor_id=current_user.id,
+        imagen=post_in.imagen,
+    )
+    db.add(nuevo_post)
+    db.commit()
+    db.refresh(nuevo_post)
+    return nuevo_post
+
+
+@router.put("/posts/{post_id}", response_model=PostResponse, summary="Editar un post")
+def update_post(
+    post_id: int,
+    datos: PostUpdate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    """Edita un post existente. Solo el autor puede editarlo."""
+    post = db.query(Foro).filter(Foro.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
+    if post.autor_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo el autor puede editar este post.")
+
+    update_data = datos.model_dump(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(post, field, value)
+
+    db.commit()
+    db.refresh(post)
+    return post
+
+
+@router.delete("/posts/{post_id}", response_model=MessageResponse, summary="Eliminar un post")
+def delete_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    """Elimina un post y sus respuestas/likes asociados. Solo el autor puede eliminarlo."""
+    post = db.query(Foro).filter(Foro.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
+    if post.autor_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo el autor puede eliminar este post.")
+
+    # Eliminar respuestas y likes asociados
+    db.query(RespuestaForo).filter(RespuestaForo.post_id == post_id).delete()
+    db.query(LikeForo).filter(LikeForo.post_id == post_id).delete()
+    db.delete(post)
+    db.commit()
+    return MessageResponse(success=True, message="Post eliminado correctamente.")
+
+
+# ── Respuestas ───────────────────────────────────────────────────────────────
+
+@router.get(
+    "/posts/{post_id}/respuestas",
+    response_model=List[RespuestaResponse],
+    summary="Listar respuestas de un post",
+)
+def list_respuestas(
+    post_id: int,
+    db: Session = Depends(get_db),
+    _current_user: Usuario = Depends(get_current_user),
+):
+    """Devuelve todas las respuestas de un post, ordenadas cronológicamente."""
+    respuestas = (
+        db.query(RespuestaForo)
+        .filter(RespuestaForo.post_id == post_id)
+        .order_by(RespuestaForo.created_at.asc())
+        .all()
+    )
+    resultado = []
+    for r in respuestas:
+        resultado.append(RespuestaResponse(
+            id=r.id,
+            post_id=r.post_id,
+            autor_id=r.autor_id,
+            contenido=r.contenido,
+            created_at=r.created_at,
+            autor_nombre=r.autor_rel.nombre if r.autor_rel else None,
+        ))
+    return resultado
+
+
+@router.post(
+    "/posts/{post_id}/respuestas",
+    response_model=RespuestaResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Agregar respuesta a un post",
+)
+def create_respuesta(
+    post_id: int,
+    respuesta_in: RespuestaCreate,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    """Agrega una respuesta a un post. El contenido debe tener más de 10 caracteres."""
+    post = db.query(Foro).filter(Foro.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
+
+    if len(respuesta_in.contenido.strip()) <= 10:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="La respuesta debe tener más de 10 caracteres.",
+        )
+
+    nueva_respuesta = RespuestaForo(
+        post_id=post_id,
+        autor_id=current_user.id,
+        contenido=respuesta_in.contenido,
+    )
+    db.add(nueva_respuesta)
+    db.commit()
+    db.refresh(nueva_respuesta)
+
+    return RespuestaResponse(
+        id=nueva_respuesta.id,
+        post_id=nueva_respuesta.post_id,
+        autor_id=nueva_respuesta.autor_id,
+        contenido=nueva_respuesta.contenido,
+        created_at=nueva_respuesta.created_at,
+        autor_nombre=current_user.nombre,
+    )
+
+
+# ── Likes ────────────────────────────────────────────────────────────────────
+
+@router.post("/posts/{post_id}/like", response_model=LikeResponse, summary="Dar/quitar like a un post")
+def toggle_like(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    """
+    Toggle de like: si ya existe lo quita, si no existe lo agrega.
+    Devuelve la acción realizada y el total actualizado de likes.
+    """
+    post = db.query(Foro).filter(Foro.id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
+
+    like = db.query(LikeForo).filter_by(post_id=post_id, usuario_id=current_user.id).first()
+
+    if like:
+        db.delete(like)
+        action = "unliked"
+    else:
+        nuevo_like = LikeForo(post_id=post_id, usuario_id=current_user.id)
+        db.add(nuevo_like)
+        action = "liked"
+
+    db.commit()
+    total_likes = db.query(LikeForo).filter(LikeForo.post_id == post_id).count()
+
+    return LikeResponse(success=True, action=action, total_likes=total_likes)
