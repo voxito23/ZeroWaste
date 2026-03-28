@@ -3,8 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Zero Waste - Bienvenido</title>
-    
+    <title>ZeroWaste Admin</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('faviconZeroWaste.svg') }}">
+    <link rel="alternate icon" type="image/png" href="{{ asset('faviconZeroWaste.png') }}">
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
@@ -39,17 +40,24 @@
 
     <main class="flex max-w-[335px] w-full flex-col-reverse lg:max-w-4xl lg:flex-row shadow-2xl rounded-3xl overflow-hidden border dark:border-emerald-900/30">
         <div class="flex-1 p-8 lg:p-16 bg-white dark:bg-[#161615] dark:text-[#EDEDEC] transition-colors">
+            <span class="inline-block bg-primary/15 text-secondary dark:text-primary text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Panel de Administración Exclusivo</span>
             <h1 class="text-3xl font-bold mb-2">Hola de nuevo</h1>
             <p class="mb-8 text-gray-500 dark:text-gray-400">Ingresa tus credenciales para gestionar el sistema.</p>
             
-            <form action="{{ route('dashboard') }}" class="space-y-4">
+            <form method="POST" action="{{ route('admin.login') }}" class="space-y-4">
+                @csrf
+                @if ($errors->any())
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-3 rounded-md text-sm">
+                    {{ $errors->first() }}
+                </div>
+                @endif
                 <div class="space-y-1">
                     <label class="text-xs font-bold uppercase tracking-wider text-secondary dark:text-primary">Correo Electrónico</label>
-                    <input type="email" class="w-full p-3 rounded-xl border-gray-200 dark:bg-emerald-900/10 dark:border-emerald-800 dark:text-white focus:ring-primary focus:border-primary" placeholder="victor@zerowaste.mx">
+                    <input type="email" name="email" value="{{ old('email') }}" class="w-full p-3 rounded-xl border-gray-200 dark:bg-emerald-900/10 dark:border-emerald-800 dark:text-white focus:ring-primary focus:border-primary" placeholder="victor@zerowaste.mx" required>
                 </div>
                 <div class="space-y-1">
                     <label class="text-xs font-bold uppercase tracking-wider text-secondary dark:text-primary">Contraseña</label>
-                    <input type="password" class="w-full p-3 rounded-xl border-gray-200 dark:bg-emerald-900/10 dark:border-emerald-800 dark:text-white focus:ring-primary focus:border-primary" placeholder="••••••••">
+                    <input type="password" name="password" class="w-full p-3 rounded-xl border-gray-200 dark:bg-emerald-900/10 dark:border-emerald-800 dark:text-white focus:ring-primary focus:border-primary" placeholder="••••••••" required>
                 </div>
                 <button type="submit" class="w-full py-4 bg-primary hover:bg-emerald-400 text-secondary font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all transform hover:-translate-y-1 mt-4">
                     Iniciar Sesión
@@ -59,7 +67,7 @@
 
         <div class="bg-primary dark:bg-secondary relative w-full lg:w-[380px] shrink-0 flex items-center justify-center p-12 transition-colors">
             <div class="text-white text-center z-10">
-                <h2 class="text-2xl font-bold mb-4 font-['Montserrat']">Querétaro Limpio</h2>
+                <h2 class="text-2xl font-bold mb-4 font-['Montserrat']">ZeroWaste Admin</h2>
                 <p class="text-sm opacity-90">Gestión inteligente de residuos para un futuro sostenible.</p>
             </div>
             <div class="absolute inset-0 opacity-20 flex items-center justify-center">

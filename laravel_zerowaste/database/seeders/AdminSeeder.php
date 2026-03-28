@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Hash;
 class AdminSeeder extends Seeder
 {
     /**
-     * Inserta las 5 cuentas de administrador exclusivas.
+     * Inserta las cuentas de administrador del sistema.
      */
     public function run(): void
     {

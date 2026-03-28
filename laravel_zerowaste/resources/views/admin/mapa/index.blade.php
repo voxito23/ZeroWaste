@@ -8,16 +8,16 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // 1. Inicialización en coordenadas exactas de Santiago de Querétaro
+        // Inicialización del mapa en las coordenadas de Santiago de Querétaro
         var map = L.map('qro-map').setView([20.5881, -100.3899], 13); 
 
-        // 2. Capa gratuita de OpenStreetMap
+        // Capa base de OpenStreetMap
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; OpenStreetMap',
             maxZoom: 20
         }).addTo(map);
 
-        // 3. Estilizamos un ícono personalizado
+        // Configuración del ícono personalizado para los marcadores
         var customIcon = new L.Icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
             shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -26,7 +26,7 @@
             popupAnchor: [1, -34],
         });
 
-        // 4. Recepción y renderización de los Puntos Dinámicos de la BD (zerowaste_db)
+        // Renderización de los puntos de reciclaje desde la base de datos
         let locations = {!! json_encode($locations ?? []) !!};
         
         locations.forEach(loc => {
@@ -50,7 +50,7 @@
 <div class="relative w-full h-[700px] border-2 border-emerald-200 rounded-3xl overflow-hidden shadow-2xl">
     <div id="qro-map" class="w-full h-full z-0"></div>
     
-    <!-- UI Overlay tipo Flask -->
+    <!-- Panel de búsqueda superpuesto -->
     <div class="absolute top-6 left-6 z-[1000] w-80 bg-white/95 backdrop-blur-md p-5 rounded-2xl shadow-xl border border-emerald-50">
         <h2 class="font-bold text-xl text-[#064E3B] mb-2">Puntos Cercanos</h2>
         <p class="text-sm text-gray-500 mb-4">Encuentra dónde reciclar en Qro.</p>

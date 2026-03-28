@@ -29,12 +29,12 @@ for filename in os.listdir(template_dir):
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # Check if already injected
+        # Verificar si el script ya fue inyectado previamente
         if "function toggleTheme()" not in content:
-            # Insert just before </head>
+            # Insertar antes de la etiqueta </head>
             content = content.replace('</head>', dark_mode_script + '</head>')
             
             with open(filepath, 'w', encoding='utf-8') as f:
                 f.write(content)
 
-print("Dark mode script injected.")
+print("Script de modo oscuro inyectado correctamente.")

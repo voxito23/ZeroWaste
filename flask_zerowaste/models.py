@@ -14,9 +14,10 @@ class Usuario(db.Model):
     biografia = db.Column(db.Text, nullable=True)
     ubicacion = db.Column(db.String(100), default='Querétaro')
     intereses = db.Column(db.String(255), nullable=True)
+    is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relaciones
+    # Relaciones con el foro
     posts = db.relationship('Foro', backref='autor_rel', lazy=True)
     respuestas = db.relationship('RespuestaForo', backref='autor_rel', lazy=True)
 
@@ -43,7 +44,7 @@ class CalificacionPunto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     location_id = db.Column(db.Integer, db.ForeignKey('locations.id'), nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
-    estrellas = db.Column(db.Integer, nullable=False) # 1-5
+    estrellas = db.Column(db.Integer, nullable=False) # Escala de 1 a 5
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Evento(db.Model):

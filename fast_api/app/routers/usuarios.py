@@ -15,7 +15,15 @@ from app.security.jwt_auth import get_current_user
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 
 
-@router.get("/me", response_model=UsuarioResponse, summary="Datos del usuario autenticado")
+@router.get(
+    "/me",
+    response_model=UsuarioResponse,
+    summary="Datos del usuario autenticado",
+    responses={
+        401: {"description": "No autorizado"},
+        404: {"description": "No encontrado"},
+    },
+)
 def read_current_user(current_user: Usuario = Depends(get_current_user)):
     """Devuelve los datos del usuario que posee el JWT actual."""
     return current_user

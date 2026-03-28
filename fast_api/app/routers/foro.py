@@ -21,7 +21,7 @@ from app.security.jwt_auth import get_current_user
 router = APIRouter(prefix="/foro", tags=["Foro"])
 
 
-# ── Categorías ───────────────────────────────────────────────────────────────
+# Categorías del foro
 
 @router.get("/categorias", response_model=List[CategoriaResponse], summary="Listar categorías")
 def list_categorias(db: Session = Depends(get_db)):
@@ -29,7 +29,7 @@ def list_categorias(db: Session = Depends(get_db)):
     return db.query(Categoria).order_by(Categoria.id).all()
 
 
-# ── Posts (CRUD) ─────────────────────────────────────────────────────────────
+# Operaciones CRUD de publicaciones
 
 @router.get("/posts", response_model=List[PostDetailResponse], summary="Listar todos los posts")
 def list_posts(
@@ -152,7 +152,7 @@ def delete_post(
     if post.autor_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo el autor puede eliminar este post.")
 
-    # Eliminar respuestas y likes asociados
+    # Eliminar registros dependientes (respuestas y likes)
     db.query(RespuestaForo).filter(RespuestaForo.post_id == post_id).delete()
     db.query(LikeForo).filter(LikeForo.post_id == post_id).delete()
     db.delete(post)
@@ -160,7 +160,7 @@ def delete_post(
     return MessageResponse(success=True, message="Post eliminado correctamente.")
 
 
-# ── Respuestas ───────────────────────────────────────────────────────────────
+# Respuestas a publicaciones
 
 @router.get(
     "/posts/{post_id}/respuestas",
@@ -234,7 +234,7 @@ def create_respuesta(
     )
 
 
-# ── Likes ────────────────────────────────────────────────────────────────────
+# Sistema de likes
 
 @router.post("/posts/{post_id}/like", response_model=LikeResponse, summary="Dar/quitar like a un post")
 def toggle_like(

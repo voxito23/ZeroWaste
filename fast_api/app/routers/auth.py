@@ -45,9 +45,9 @@ def login(
 def registro(usuario_in: UsuarioCreate, db: Session = Depends(get_db)):
     """
     Crea un usuario nuevo con contraseña hasheada.
-    Devuelve los datos del usuario creado (sin token — debe hacer login después).
+    Devuelve los datos del usuario creado. Requiere inicio de sesión posterior.
     """
-    # Validaciones
+    # Validación de datos de entrada
     if len(usuario_in.nombre.strip()) <= 10:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

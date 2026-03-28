@@ -23,13 +23,13 @@ for file_name in files_to_process:
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # Replace Header
+        # Reemplazar bloque de header por inclusión de plantilla
         content = header_pattern.sub("{% include 'includes/header.html' %}", content)
         
-        # Replace Footer
+        # Reemplazar bloque de footer por inclusión de plantilla
         content = footer_pattern.sub("{% include 'includes/footer.html' %}", content)
         
-        # Remove Header scroll JS
+        # Eliminar scripts de scroll vinculados al header
         content = script_pattern_1.sub("", content)
         content = script_pattern_1_singleline.sub("", content)
         content = script_pattern_2.sub("", content)

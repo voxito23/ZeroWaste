@@ -3,7 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zero Waste - @yield('title', 'Admin')</title>
+    <title>ZeroWaste Admin - @yield('title', 'Dashboard')</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('faviconZeroWaste.svg') }}">
+    <link rel="alternate icon" type="image/png" href="{{ asset('faviconZeroWaste.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -20,7 +22,7 @@
 </head>
 <body class="bg-[#ECFDF5] text-[#064E3B] font-sans flex min-h-screen">
 
-    <!-- Sidebar Replicable -->
+    <!-- Barra lateral de navegación -->
     <aside class="w-64 bg-white/95 border-r border-emerald-100 shadow-xl flex flex-col hidden lg:flex">
         <div class="h-24 flex items-center justify-center border-b border-emerald-50">
             <span class="font-extrabold text-2xl text-secondary">ZERO WASTE</span>

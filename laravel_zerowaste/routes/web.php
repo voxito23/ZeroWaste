@@ -7,12 +7,18 @@ use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\MapController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EventoController;
+use App\Http\Controllers\AuthController;
 
 Route::get('/', function () {
     return view('welcome');
-})->name('home');
+})->name('login');
 
-// Dashboard Routes
+Route::redirect('/login', '/');
+Route::redirect('/admin', '/');
+Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login');
+Route::get('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
+
+// Rutas del panel de administración
 Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     

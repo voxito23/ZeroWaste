@@ -9,9 +9,7 @@ from decimal import Decimal
 from pydantic import BaseModel, EmailStr
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-#  TOKEN
-# ═══════════════════════════════════════════════════════════════════════════
+# Esquemas de token JWT
 
 class Token(BaseModel):
     access_token: str
@@ -22,9 +20,7 @@ class TokenData(BaseModel):
     email: Optional[str] = None
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-#  USUARIO
-# ═══════════════════════════════════════════════════════════════════════════
+# Esquemas de usuario
 
 class UsuarioBase(BaseModel):
     nombre: str
@@ -62,9 +58,7 @@ class LoginRequest(BaseModel):
     password: str
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-#  CATEGORIA
-# ═══════════════════════════════════════════════════════════════════════════
+# Esquemas de categoría
 
 class CategoriaResponse(BaseModel):
     id: int
@@ -73,9 +67,7 @@ class CategoriaResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-#  FORO — Posts
-# ═══════════════════════════════════════════════════════════════════════════
+# Esquemas del foro — publicaciones
 
 class PostCreate(BaseModel):
     titulo: str
@@ -110,9 +102,7 @@ class PostDetailResponse(PostResponse):
     total_likes: int = 0
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-#  FORO — Respuestas
-# ═══════════════════════════════════════════════════════════════════════════
+# Esquemas del foro — respuestas
 
 class RespuestaCreate(BaseModel):
     contenido: str
@@ -129,19 +119,15 @@ class RespuestaResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-#  FORO — Likes
-# ═══════════════════════════════════════════════════════════════════════════
+# Esquemas del foro — likes
 
 class LikeResponse(BaseModel):
     success: bool
-    action: str  # "liked" | "unliked"
+    action: str  # Valores posibles: "liked" o "unliked"
     total_likes: int
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-#  MAPA — Puntos
-# ═══════════════════════════════════════════════════════════════════════════
+# Esquemas del mapa — puntos de reciclaje
 
 class PuntoMapaCreate(BaseModel):
     nombre: str
@@ -175,12 +161,10 @@ class PuntoMapaResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-#  MAPA — Calificaciones
-# ═══════════════════════════════════════════════════════════════════════════
+# Esquemas del mapa — calificaciones
 
 class CalificacionCreate(BaseModel):
-    estrellas: int  # 1-5
+    estrellas: int  # Escala de 1 a 5
 
 
 class CalificacionResponse(BaseModel):
@@ -189,9 +173,7 @@ class CalificacionResponse(BaseModel):
     total: int
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-#  EVENTOS
-# ═══════════════════════════════════════════════════════════════════════════
+# Esquemas de eventos
 
 class EventoCreate(BaseModel):
     titulo: str
@@ -226,9 +208,7 @@ class EventoResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ═══════════════════════════════════════════════════════════════════════════
-#  RESPUESTAS GENÉRICAS
-# ═══════════════════════════════════════════════════════════════════════════
+# Esquemas de respuestas genéricas
 
 class MessageResponse(BaseModel):
     """Respuesta genérica para operaciones que retornan un mensaje."""

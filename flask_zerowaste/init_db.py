@@ -61,7 +61,7 @@ def init_database():
 
         db.session.add_all([post1, post2])
         db.session.commit()
-        print("✔ Base de datos inicializada correctamente.")
+        print("Base de datos inicializada correctamente.")
 
 if __name__ == '__main__':
     init_database()

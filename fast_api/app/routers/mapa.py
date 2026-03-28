@@ -1,6 +1,6 @@
 """
 Router del mapa — puntos de reciclaje, calificaciones y recomendaciones.
-Replica la lógica de get_puntos_con_promedio() de Flask.
+Replica la lógica de consulta de puntos del microservicio Flask.
 """
 
 from typing import List
@@ -20,12 +20,12 @@ from app.security.jwt_auth import get_current_user
 router = APIRouter(prefix="/mapa", tags=["Mapa"])
 
 
-# ── Función auxiliar (espejo de Flask) ───────────────────────────────────────
+# Función auxiliar para consultar puntos con promedios
 
 def _get_puntos_con_promedio(db: Session) -> List[PuntoMapaResponse]:
     """
-    Réplica exacta de get_puntos_con_promedio() de Flask.
-    Hace un LEFT JOIN con calificaciones y calcula promedio + total reviews.
+    Consulta todos los puntos de reciclaje con su promedio de calificación.
+    Realiza un LEFT JOIN con calificaciones y calcula promedio y total de reseñas.
     """
     resultados = (
         db.query(
@@ -55,7 +55,7 @@ def _get_puntos_con_promedio(db: Session) -> List[PuntoMapaResponse]:
     return puntos
 
 
-# ── Endpoints ────────────────────────────────────────────────────────────────
+# Endpoints de gestión de puntos de reciclaje
 
 @router.get("/puntos", response_model=List[PuntoMapaResponse], summary="Listar puntos del mapa")
 def list_puntos(db: Session = Depends(get_db)):
@@ -151,7 +151,7 @@ def update_punto(
     db.commit()
     db.refresh(punto)
 
-    # Recalcular promedio
+    # Recalcular promedio de calificaciones
     promedio = db.query(func.avg(CalificacionPunto.estrellas)).filter_by(location_id=punto_id).scalar()
     total = db.query(func.count(CalificacionPunto.id)).filter_by(location_id=punto_id).scalar()
 
@@ -185,7 +185,7 @@ def delete_punto(
     return MessageResponse(success=True, message="Punto eliminado correctamente.")
 
 
-# ── Calificaciones ───────────────────────────────────────────────────────────
+# Calificaciones de puntos de reciclaje
 
 @router.post(
     "/puntos/{punto_id}/calificar",
@@ -238,7 +238,7 @@ def calificar_punto(
     )
 
 
-# ── Recomendaciones IA ───────────────────────────────────────────────────────
+# Recomendaciones basadas en calificaciones
 
 @router.get(
     "/recomendaciones",
@@ -248,6 +248,6 @@ def calificar_punto(
 def recomendaciones(db: Session = Depends(get_db)):
     """
     Devuelve los puntos de reciclaje ordenados por mejor calificación.
-    Réplica del endpoint /api/recomendaciones_ia de Flask.
+    Equivalente al endpoint /api/recomendaciones_ia del microservicio Flask.
     """
     return _get_puntos_con_promedio(db)

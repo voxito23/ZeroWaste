@@ -10,17 +10,16 @@ for filename in os.listdir(template_dir):
         with open(filepath, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        # Remove the CDN tag
+        # Eliminar la etiqueta del CDN de Tailwind
         content = re.sub(r'<script src="https://cdn\.tailwindcss\.com.*"></script>\n?', '', content)
 
-        # Remove the tailwind.config block
+        # Eliminar el bloque de configuración de Tailwind
         content = re.sub(r'<script>\s*tailwind\.config = \{.*?\};\s*</script>\n?', '', content, flags=re.DOTALL)
 
-        # Insert the CSS link right after <title> or </title>
-        # To be safe, insert it right before </head>
+        # Insertar el enlace CSS local antes de </head>
         content = re.sub(r'</head>', css_link.rstrip() + '\n</head>', content)
 
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(content)
 
-print("Tailwind replacement complete.")
+print("Reemplazo de Tailwind CDN completado.")

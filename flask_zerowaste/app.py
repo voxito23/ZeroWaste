@@ -22,7 +22,7 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True)
 app.secret_key = 'super_secreta_zerowaste_2026'
 
-# Configure SQLAlchemy
+# Configuración de SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:postgrespassword@127.0.0.1:5432/zerowaste_db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -32,7 +32,7 @@ with app.app_context():
     db.create_all()
 
 # ==========================================================================
-#  RUTAS DE NAVEGACIÓN BÁSICA
+#  Rutas de navegación básica
 # ==========================================================================
 
 @app.route('/')
@@ -59,7 +59,7 @@ def login_google():
         session['state'] = state
         return redirect(authorization_url)
     except Exception as e:
-        print(f"Directing to dummy Google login due to missing client_secret.json: {e}")
+        print(f"Redirigiendo a inicio de sesión simulado por ausencia de client_secret.json: {e}")
         return redirect(url_for('callback_google_dummy'))
 
 @app.route('/callback/google')
@@ -97,7 +97,7 @@ def callback_google():
         session['usuario_foto'] = usuario.foto_perfil
         return redirect(url_for('index'))
     except Exception as e:
-        print(f"Error in Google callback: {e}")
+        print(f"Error en la autenticación de Google: {e}")
         return redirect(url_for('login', error='google_auth_failed'))
 
 @app.route('/callback/google/dummy')
@@ -144,7 +144,7 @@ def contacto():
 
 
 # ==========================================================================
-#  MAPA E IA
+#  Mapa y recomendaciones
 # ==========================================================================
 
 def get_puntos_con_promedio():
@@ -223,7 +223,7 @@ def recomendaciones_ia():
 
 
 # ==========================================================================
-#  PERFIL
+#  Gestión del perfil de usuario
 # ==========================================================================
 
 @app.route('/perfil')
@@ -295,7 +295,7 @@ def editar_perfil():
 
 
 # ==========================================================================
-#  FORO 
+#  Foro comunitario
 # ==========================================================================
 
 @app.route('/foro')
@@ -400,7 +400,7 @@ def like_post(post_id):
 
 
 # ==========================================================================
-#  AUTENTICACIÓN
+#  Autenticación de usuarios
 # ==========================================================================
 
 @app.route('/logout')
@@ -418,18 +418,17 @@ def handle_login():
 
     usuario = Usuario.query.filter_by(email=email_usuario).first()
 
-    # Si fue creado nativamente con raw SQL no tendrá hash, si sí, sí lo tendrá
-    # Hacemos compatibilidad backward simple
+    # Verificación de contraseña con compatibilidad para registros legacy
     valido = False
     if usuario:
-        # Check against raw password for backward compatibility explicitly asked
+        # Comparación directa para contraseñas sin hash (compatibilidad legacy)
         if usuario.password == password_usuario:
             valido = True
         elif check_password_hash(usuario.password, password_usuario):
             valido = True
 
     if valido:
-        # Configuración de Sesión Permanente (Recordarme)
+        # Configuración de sesión persistente
         remember = request.form.get('remember-me')
         if remember == 'on':
             session.permanent = True
@@ -498,17 +497,17 @@ def handle_registro():
     return jsonify({'success': True, 'redirect': url_for('index')})
 
 # ==========================================================================
-#  MANEJADORES DE ERRORES (404 / 500)
+#  Manejadores de errores HTTP
 # ==========================================================================
 
 @app.errorhandler(404)
 def page_not_found(e):
-    # Pass the error to custom 404 template
+    # Renderiza la plantilla personalizada para error 404
     return render_template('404.html'), 404
 
 @app.errorhandler(500)
 def internal_server_error(e):
-    # Pass the error to custom 500 template
+    # Renderiza la plantilla personalizada para error 500
     return render_template('500.html'), 500
 
 if __name__ == '__main__':

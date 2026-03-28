@@ -1,4 +1,4 @@
-/** @type {import('tailwindcss').Config} */
+/** Configuración de Tailwind CSS para el microservicio Flask — @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: 'class',
   content: [

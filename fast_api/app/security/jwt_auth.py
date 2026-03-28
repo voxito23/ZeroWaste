@@ -1,6 +1,6 @@
 """
 Seguridad JWT — generación, verificación de tokens y dependencia get_current_user.
-Compatible con hashes werkzeug (pbkdf2:sha256) y contraseñas planas (backward compat).
+Compatible 100% con hashes werkzeug (pbkdf2:sha256) generados por Flask.
 """
 
 import os
@@ -10,46 +10,40 @@ from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy.orm import Session
 
 from app.data.database import get_db
 from app.models.domain_models import Usuario
 from app.models.schemas import TokenData
 
-# ── Configuración ────────────────────────────────────────────────────────────
+# Configuración de JWT
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "zerowaste_super_secret_jwt_2026")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
 
-# ── Hashing de contraseñas ──────────────────────────────────────────────────
-# Soportamos los hashes generados por werkzeug (pbkdf2_sha256) y bcrypt
-pwd_context = CryptContext(
-    schemes=["pbkdf2_sha256", "bcrypt"],
-    deprecated="auto",
-)
+# Hashing de contraseñas mediante werkzeug.security (compatibilidad con Flask)
 
-# ── OAuth2 — habilita el candado 🔒 en Swagger UI ───────────────────────────
+# Esquema OAuth2 para autenticación en Swagger UI
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
-# ── Funciones de utilidad ────────────────────────────────────────────────────
+# Funciones auxiliares de autenticación
 
 def hash_password(password: str) -> str:
-    """Genera hash de contraseña con pbkdf2_sha256 (compatible con werkzeug)."""
-    return pwd_context.hash(password)
+    """Genera hash de contraseña con pbkdf2:sha256, compatible con Flask."""
+    return generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
-    Verifica la contraseña.
-    1. Intenta con passlib (pbkdf2_sha256 / bcrypt).
-    2. Si falla, compara en texto plano (backward compat con registros raw).
+    Verifica la contraseña usando werkzeug.security.check_password_hash.
+    Incluye compatibilidad con contraseñas legacy almacenadas sin hash.
     """
     try:
-        return pwd_context.verify(plain_password, hashed_password)
+        return check_password_hash(hashed_password, plain_password)
     except Exception:
-        # Contraseñas legacy guardadas sin hash
+        # Contraseñas legacy almacenadas sin hash
         return plain_password == hashed_password
 
 

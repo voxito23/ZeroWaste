@@ -10,7 +10,7 @@ class MapController extends Controller
     public function index()
     {
         $locations = Location::all();
-        return view('admin.mapa.index', compact('locations')); // Changed view path
+        return view('admin.mapa.index', compact('locations'));
     }
 
     public function create()

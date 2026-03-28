@@ -9,7 +9,7 @@ class Campaign extends Model
 {
     use HasFactory;
 
-    public $timestamps = false; // We use created_at but not updated_at by default in SQLAlchemy
+    public $timestamps = false; // Solo se utiliza created_at, sin updated_at
 
     protected $fillable = [
         'nombre',

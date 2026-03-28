@@ -16,37 +16,35 @@ for filename in files:
         print(f"Skipping {filename}, already extends base.html")
         continue
 
-    # Extract styles
+    # Extraer estilos embebidos
     style_content = ""
     style_match = re.search(r'<style.*?>(.*?)</style>', content, re.DOTALL)
     if style_match:
         style_content = style_match.group(1).strip()
     
-    # Extract scripts BEFORE cutting
+    # Extraer bloques de scripts del archivo
     scripts_content = ""
-    # We want any scripts that appear after the include footer or at the bottom
-    # We will just parse anything between <script> tags that is NOT the tailwind or gfonts one at the top.
+    # Se buscan scripts que no correspondan a Tailwind ni Google Fonts
     
-    # Let's perform the top replacement
+    # Construir el bloque superior con herencia de plantilla
     top_replacement = "{% extends 'base.html' %}\n\n"
     if style_content:
         top_replacement += f"{{% block styles %}}\n<style>\n{style_content}\n</style>\n{{% endblock %}}\n\n"
     
     top_replacement += "{% block content %}\n"
     
-    # We split by {% include 'includes/header.html' %}
+    # Dividir el contenido por la inclusión del header
     parts = content.split("{% include 'includes/header.html' %}")
     if len(parts) > 1:
         content = top_replacement + parts[1]
     
-    # Remove any stray static footer explicitly
+    # Eliminar cualquier bloque de footer estático residual
     content = re.sub(r'<footer.*?</footer>', '', content, flags=re.DOTALL)
     
-    # Handle the bottom inclusion and scripts
-    # Find {% include 'includes/footer.html' %}
+    # Procesar la parte inferior: footer y scripts adicionales
     bottom_parts = content.split("{% include 'includes/footer.html' %}")
     if len(bottom_parts) > 1:
-        # Extract scripts inside the bottom part
+        # Extraer scripts del bloque inferior
         body_content = bottom_parts[1].replace('</body></html>', '').strip()
         body_content = body_content.replace('</body>', '').replace('</html>', '').strip()
         

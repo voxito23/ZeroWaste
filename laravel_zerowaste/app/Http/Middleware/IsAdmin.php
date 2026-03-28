@@ -9,8 +9,8 @@ use Symfony\Component\HttpFoundation\Response;
 class IsAdmin
 {
     /**
-     * Verifica que el usuario autenticado sea administrador.
-     * Si no lo es, devuelve un error 403.
+     * Verifica que el usuario autenticado tenga permisos de administrador.
+     * Devuelve un error 403 si no se cumplen los permisos.
      */
     public function handle(Request $request, Closure $next): Response
     {

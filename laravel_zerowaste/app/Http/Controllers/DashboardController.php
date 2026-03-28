@@ -10,7 +10,7 @@ class DashboardController extends Controller
     public function index()
     {
         $campaignCount = Campaign::count();
-        // Here we could add more statistics to pass to the dashboard
+        // Se pueden agregar más estadísticas para el panel
         return view('admin.dashboard', compact('campaignCount'));
     }
 }

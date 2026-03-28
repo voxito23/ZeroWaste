@@ -1,6 +1,6 @@
 """
 Configuración de la base de datos compartida con Flask y Laravel.
-Se conecta a la MISMA instancia de PostgreSQL — solo lectura de tablas existentes.
+Se conecta a la misma instancia de PostgreSQL mediante SQLAlchemy.
 """
 
 import os

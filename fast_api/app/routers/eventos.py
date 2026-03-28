@@ -1,6 +1,6 @@
 """
-Router de eventos — CRUD completo.
-Expone como API REST los eventos que en Laravel se gestionan por interfaz web.
+Router de eventos — operaciones CRUD.
+Expone como API REST la gestión de eventos del sistema.
 """
 
 from typing import List

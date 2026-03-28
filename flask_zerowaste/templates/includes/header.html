@@ -10,12 +10,14 @@
         <a class="{{ 'text-primary dark:text-primary' if request.endpoint == 'index' else 'text-secondary dark:text-emerald-100 hover:text-primary dark:hover:text-white' }} font-bold text-base transition-colors flex items-center gap-2 relative group" href="{{ url_for('index') }}">
             Inicio <span class="absolute -bottom-1 left-0 {{ 'w-full' if request.endpoint == 'index' else 'w-0 group-hover:w-full' }} h-0.5 bg-primary transition-all"></span>
         </a>
+        {% if session.get('usuario_id') %}
         <a class="{{ 'text-primary dark:text-primary' if request.endpoint == 'foro' else 'text-secondary dark:text-emerald-100 hover:text-primary dark:hover:text-white' }} font-bold text-base transition-colors flex items-center gap-2 relative group" href="{{ url_for('foro') }}">
             Foro <span class="absolute -bottom-1 left-0 {{ 'w-full' if request.endpoint == 'foro' else 'w-0 group-hover:w-full' }} h-0.5 bg-primary transition-all"></span>
         </a>
         <a class="{{ 'text-primary dark:text-primary' if request.endpoint == 'Acercade' else 'text-secondary dark:text-emerald-100 hover:text-primary dark:hover:text-white' }} font-bold text-base transition-colors flex items-center gap-2 relative group" href="{{ url_for('Acercade') }}">
             Acerca de <span class="absolute -bottom-1 left-0 {{ 'w-full' if request.endpoint == 'Acercade' else 'w-0 group-hover:w-full' }} h-0.5 bg-primary transition-all"></span>
         </a>
+        {% endif %}
     </nav>
 
     <div class="hidden lg:flex items-center space-x-5 z-50 pointer-events-auto">
@@ -24,13 +26,14 @@
             <span class="material-symbols-outlined hidden dark:block text-2xl theme-toggle-icon-dark">light_mode</span>
         </button>
 
+        {% if session.get('usuario_id') %}
         <div class="relative group">
             <button class="flex items-center justify-center w-12 h-12 rounded-full overflow-hidden border-2 border-primary focus:outline-none bg-gray-200 transition-transform duration-300 hover:scale-105 shadow-sm" onclick="window.location.href='{{ url_for('perfil') }}'">
                 {% set avatar = session.get('foto_perfil', session.get('usuario_foto', 'default.png')) %}
                 {% if avatar and avatar.startswith('http') %}
-                <img alt="User Avatar" class="w-12 h-12 rounded-full object-cover" src="{{ avatar }}"/>
+                <img alt="User Avatar" class="w-12 h-12 rounded-full object-cover" src="{{ avatar }}" onerror="this.src='{{ url_for('static', filename='img/perfiles/default.png') }}'"/>
                 {% else %}
-                <img alt="User Avatar" class="w-12 h-12 rounded-full object-cover" src="/static/img/perfiles/{{ avatar }}"/>
+                <img alt="User Avatar" class="w-12 h-12 rounded-full object-cover" src="/static/img/perfiles/{{ avatar }}" onerror="this.src='{{ url_for('static', filename='img/perfiles/default.png') }}'"/>
                 {% endif %}
             </button>
             <div class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-right z-50">
@@ -41,6 +44,7 @@
         </div>
 
         <a class="map-btn-custom px-5 py-2 rounded-full font-bold text-sm transition-all duration-300" href="{{ url_for('mapa') }}">Mapa</a>
+        {% endif %}
         <a class="contact-btn-custom px-5 py-2 rounded-full font-bold text-sm transition-all duration-300" href="{{ url_for('contacto') }}">Contacto</a>
     </div>
 </div>

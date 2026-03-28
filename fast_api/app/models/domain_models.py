@@ -13,7 +13,7 @@ from sqlalchemy.orm import relationship
 from app.data.database import Base
 
 
-# ── Usuario ──────────────────────────────────────────────────────────────────
+# Modelo de usuario
 class Usuario(Base):
     __tablename__ = "usuarios"
 
@@ -26,13 +26,14 @@ class Usuario(Base):
     biografia = Column(Text, nullable=True)
     ubicacion = Column(String(100), default="Querétaro")
     intereses = Column(String(255), nullable=True)
+    is_admin = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     posts = relationship("Foro", back_populates="autor_rel")
     respuestas = relationship("RespuestaForo", back_populates="autor_rel")
 
 
-# ── Categoria ────────────────────────────────────────────────────────────────
+# Modelo de categoría
 class Categoria(Base):
     __tablename__ = "categorias"
 
@@ -42,7 +43,7 @@ class Categoria(Base):
     posts = relationship("Foro", back_populates="categoria_rel")
 
 
-# ── PuntoMapa (locations) ────────────────────────────────────────────────────
+# Modelo de punto de reciclaje en el mapa
 class PuntoMapa(Base):
     __tablename__ = "locations"
 
@@ -58,7 +59,7 @@ class PuntoMapa(Base):
     calificaciones = relationship("CalificacionPunto", back_populates="punto")
 
 
-# ── CalificacionPunto ────────────────────────────────────────────────────────
+# Modelo de calificación de punto
 class CalificacionPunto(Base):
     __tablename__ = "calificaciones_puntos"
 
@@ -71,7 +72,7 @@ class CalificacionPunto(Base):
     punto = relationship("PuntoMapa", back_populates="calificaciones")
 
 
-# ── Evento ───────────────────────────────────────────────────────────────────
+# Modelo de evento
 class Evento(Base):
     __tablename__ = "eventos"
 
@@ -85,7 +86,7 @@ class Evento(Base):
     link_unirse = Column(String(255), nullable=True)
 
 
-# ── Foro (posts) ─────────────────────────────────────────────────────────────
+# Modelo de publicación del foro
 class Foro(Base):
     __tablename__ = "posts"
 
@@ -103,7 +104,7 @@ class Foro(Base):
     likes = relationship("LikeForo", back_populates="post_rel")
 
 
-# ── RespuestaForo ────────────────────────────────────────────────────────────
+# Modelo de respuesta del foro
 class RespuestaForo(Base):
     __tablename__ = "respuestas"
 
@@ -117,7 +118,7 @@ class RespuestaForo(Base):
     autor_rel = relationship("Usuario", back_populates="respuestas")
 
 
-# ── LikeForo ─────────────────────────────────────────────────────────────────
+# Modelo de like en el foro
 class LikeForo(Base):
     __tablename__ = "likes_foro"
 
@@ -133,7 +134,7 @@ class LikeForo(Base):
     )
 
 
-# ── Campaign ─────────────────────────────────────────────────────────────────
+# Modelo de campaña
 class Campaign(Base):
     __tablename__ = "campaigns"
 
@@ -145,7 +146,7 @@ class Campaign(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
-# ── Material ─────────────────────────────────────────────────────────────────
+# Modelo de material reciclable
 class Material(Base):
     __tablename__ = "materials"
 

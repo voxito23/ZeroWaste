@@ -5,7 +5,7 @@
 
 @section('content')
 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-    <!-- Form to create new -->
+    <!-- Formulario de registro de material -->
     <div class="md:col-span-1 bg-white rounded-3xl shadow-lg border border-emerald-100 p-8">
         <h2 class="text-xl font-bold mb-6">Agregar Material Nuevo</h2>
         <form action="{{ route('materiales.store') }}" method="POST" class="flex flex-col gap-4">
@@ -37,7 +37,7 @@
         </form>
     </div>
 
-    <!-- Table of existing -->
+    <!-- Tabla de materiales registrados -->
     <div class="md:col-span-2 bg-white rounded-3xl shadow-lg border border-emerald-100 overflow-hidden">
         <table class="w-full text-left">
             <thead class="bg-emerald-50 text-secondary">

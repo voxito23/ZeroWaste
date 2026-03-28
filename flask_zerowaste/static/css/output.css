@@ -783,7 +783,7 @@ input:where([type='file']):focus {
   }
 }
 
-/* Custom classes from login and other files */
+/* Clases personalizadas reutilizables del sistema de diseño */
 
 .glass-panel {
   background: rgba(255, 255, 255, 0.05);

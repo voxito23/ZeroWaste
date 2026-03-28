@@ -2,20 +2,20 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** Habilita la creación de registros mediante factories. */
     use HasFactory, Notifiable;
 
     protected $table = 'usuarios';
 
     /**
-     * The attributes that are mass assignable.
+     * Atributos asignables de forma masiva.
      *
      * @var list<string>
      */
@@ -32,7 +32,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
+     * Atributos ocultos en la serialización.
      *
      * @var list<string>
      */
@@ -42,7 +42,7 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * Definición de casteos de atributos.
      *
      * @return array<string, string>
      */
