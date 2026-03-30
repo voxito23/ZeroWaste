@@ -31,6 +31,7 @@ class Usuario(Base):
 
     posts = relationship("Foro", back_populates="autor_rel")
     respuestas = relationship("RespuestaForo", back_populates="autor_rel")
+    actividades = relationship("Actividad", back_populates="usuario", cascade="all, delete-orphan")
 
 
 # Modelo de categoría
@@ -155,3 +156,16 @@ class Material(Base):
     tipo = Column(String(50), nullable=False)
     unidades_medida = Column(String(20), nullable=False)
     valor_puntos = Column(Integer, default=0)
+
+
+# Modelo de actividad de usuario
+class Actividad(Base):
+    __tablename__ = "actividades"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    tipo = Column(String(50), nullable=False) # ej: "post", "respuesta", "contacto"
+    descripcion = Column(String(255), nullable=False)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+
+    usuario = relationship("Usuario", back_populates="actividades")

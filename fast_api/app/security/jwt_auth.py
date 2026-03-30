@@ -1,12 +1,13 @@
 """
 Seguridad JWT — generación, verificación de tokens y dependencia get_current_user.
-Compatible 100% con hashes werkzeug (pbkdf2:sha256) generados por Flask.
+Compatible con hashes werkzeug (pbkdf2:sha256) de Flask y bcrypt ($2b$/$2y$) de Laravel.
 """
 
 import os
 from datetime import datetime, timedelta
 from typing import Optional
 
+import bcrypt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
@@ -22,8 +23,6 @@ SECRET_KEY = os.getenv("JWT_SECRET_KEY", "zerowaste_super_secret_jwt_2026")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
 
-# Hashing de contraseñas mediante werkzeug.security (compatibilidad con Flask)
-
 # Esquema OAuth2 para autenticación en Swagger UI
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -35,16 +34,38 @@ def hash_password(password: str) -> str:
     return generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
 
 
+def _verify_bcrypt(plain_password: str, hashed_password: str) -> bool:
+    """Verifica contraseña contra hash bcrypt ($2b$ / $2y$) generado por Laravel."""
+    # Laravel usa $2y$, bcrypt de Python espera $2b$; son compatibles.
+    normalized = hashed_password.replace("$2y$", "$2b$", 1)
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"),
+        normalized.encode("utf-8"),
+    )
+
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
-    Verifica la contraseña usando werkzeug.security.check_password_hash.
-    Incluye compatibilidad con contraseñas legacy almacenadas sin hash.
+    Verifica la contraseña contra múltiples formatos de hash:
+      1. bcrypt ($2b$ / $2y$) — hashes de Laravel.
+      2. pbkdf2:sha256 — hashes de werkzeug / Flask.
+      3. Texto plano — contraseñas legacy almacenadas sin hash.
     """
+    # 1. Hash bcrypt (Laravel)
+    if hashed_password.startswith(("$2b$", "$2y$", "$2a$")):
+        try:
+            return _verify_bcrypt(plain_password, hashed_password)
+        except Exception:
+            return False
+
+    # 2. Hash werkzeug / pbkdf2 (Flask)
     try:
         return check_password_hash(hashed_password, plain_password)
     except Exception:
-        # Contraseñas legacy almacenadas sin hash
-        return plain_password == hashed_password
+        pass
+
+    # 3. Contraseñas legacy almacenadas sin hash
+    return plain_password == hashed_password
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -79,3 +100,18 @@ def get_current_user(
         raise credentials_exception
 
     return user
+
+
+def get_current_admin_user(
+    current_user: Usuario = Depends(get_current_user),
+) -> Usuario:
+    """
+    Dependencia de FastAPI: verifica que el usuario autenticado
+    sea administrador (is_admin == True). Lanza HTTP 403 en caso contrario.
+    """
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acceso denegado: Esta acción es exclusiva para administradores de ZeroWaste",
+        )
+    return current_user

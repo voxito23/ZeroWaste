@@ -1,52 +1,189 @@
-<header id="smart-header" class="fixed top-0 left-0 right-0 z-[100] bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md shadow-sm border-b border-emerald-100 dark:border-emerald-900 py-1.5 transition-transform duration-300 transform translate-y-0 text-left">
+<style>
+  /* Header Nav y Botones */
+  /* FASE 3: Transición Fluida y Animación "Pasada de Lanza" */
+  .nav-link-btn {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 600; font-size: 0.95rem;
+    color: var(--text-sec, #475569);
+    padding: 8px 16px; border-radius: 8px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-decoration: none;
+  }
+  .nav-link-btn:hover {
+    color: #121212;
+    background-color: var(--green-primary);
+    border-radius: 8px;
+    /* Resplandor Neón y Rebote Épico */
+    box-shadow: 0 0 15px var(--green-primary), 0 0 35px var(--green-primary); 
+    transform: translateY(-5px) scale(1.1);
+  }
+
+  /* Base de Estado Activo de Fase 2 (Contraste Modo Claro/Oscuro) */
+  .nav-link-btn.active {
+    color: #1b5e20;
+    background-color: #e8f5e9;
+    border-bottom: 2px solid #1b5e20;
+  }
+  .dark .nav-link-btn.active {
+    color: var(--green-primary);
+    background-color: var(--green-bg-light);
+    border-bottom: 2px solid var(--green-primary);
+  }
+  .mobile-menu { display: none; }
+  
+  /* FASE 2: Layout Estético e Imágenes HD */
+  .header-actions { display: flex; align-items: center; gap: 15px; }
+  .profile-pic-desktop {
+    width: 40px; height: 40px;
+    object-fit: cover; object-position: center;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+  }
+
+  /* FASE 3: Compresión Tablets */
+  @media (max-width: 1024px) {
+    .desktop-nav { gap: 10px !important; }
+    .desktop-nav a.nav-link-btn { padding: 6px 12px; font-size: 0.85rem; }
+  }
+
+  /* FASE 3: Acomodo Lateral de Móviles */
+  #mobileNavContainer.menu-open {
+    display: flex !important;
+    flex-direction: column;
+    align-items: center; /* Asegura todo al centro */
+    text-align: center;
+    width: 100%;
+    transition: all 0.3s ease;
+    padding-top: 10px;
+  }
+  .profile-pic-mobile {
+    width: 60px; height: 60px;
+    object-fit: cover; object-position: center;
+    border: 3px solid var(--green-primary);
+    border-radius: 50%;
+  }
+
+  @media (max-width: 768px) {
+    .desktop-nav { display: none !important; }
+    .hamburger-btn { display: block !important; }
+  }
+</style>
+<header id="smart-header" class="fixed top-0 left-0 right-0 z-[100] bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md shadow-sm border-b border-emerald-100 dark:border-emerald-900 py-1 transition-transform duration-300 transform translate-y-0 text-left">
 <div class="max-w-desktop mx-auto px-6 lg:px-10">
 <div class="flex justify-between items-center h-16 relative">
-    <div class="flex items-center gap-4 group cursor-pointer z-50" onclick="window.location.href='{{ url_for('index') }}'">
+    <a href="{{ url_for('index') }}" class="flex items-center gap-4 group z-50 no-underline">
         <img alt="Zero Waste Logo" class="h-10 w-auto object-contain drop-shadow-sm transition-transform group-hover:scale-105" src="/static/img/logo.png"/>
         <div class="flex flex-col"><span class="font-display font-extrabold text-xl tracking-tighter text-secondary dark:text-primary">ZERO WASTE</span></div>
-    </div>
+    </a>
     
-    <nav class="hidden lg:flex space-x-12 items-center absolute left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto">
-        <a class="{{ 'text-primary dark:text-primary' if request.endpoint == 'index' else 'text-secondary dark:text-emerald-100 hover:text-primary dark:hover:text-white' }} font-bold text-base transition-colors flex items-center gap-2 relative group" href="{{ url_for('index') }}">
-            Inicio <span class="absolute -bottom-1 left-0 {{ 'w-full' if request.endpoint == 'index' else 'w-0 group-hover:w-full' }} h-0.5 bg-primary transition-all"></span>
+    <!-- Hamburger Button -->
+    <button class="hamburger-btn hidden text-2xl text-[var(--text-sec)]" onclick="toggleMobileMenu()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <nav class="desktop-nav hidden lg:flex space-x-6 items-center absolute left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto">
+        <a class="nav-link-btn px-3 py-2 flex items-center gap-2 {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
+            <i class='bx bx-home'></i> Inicio
         </a>
         {% if session.get('usuario_id') %}
-        <a class="{{ 'text-primary dark:text-primary' if request.endpoint == 'foro' else 'text-secondary dark:text-emerald-100 hover:text-primary dark:hover:text-white' }} font-bold text-base transition-colors flex items-center gap-2 relative group" href="{{ url_for('foro') }}">
-            Foro <span class="absolute -bottom-1 left-0 {{ 'w-full' if request.endpoint == 'foro' else 'w-0 group-hover:w-full' }} h-0.5 bg-primary transition-all"></span>
+        <a class="nav-link-btn px-3 py-2 flex items-center gap-2 {% if request.endpoint == 'foro' %}active{% endif %}" href="{{ url_for('foro') }}">
+            <i class='bx bx-message-rounded-dots'></i> Foro
         </a>
-        <a class="{{ 'text-primary dark:text-primary' if request.endpoint == 'Acercade' else 'text-secondary dark:text-emerald-100 hover:text-primary dark:hover:text-white' }} font-bold text-base transition-colors flex items-center gap-2 relative group" href="{{ url_for('Acercade') }}">
-            Acerca de <span class="absolute -bottom-1 left-0 {{ 'w-full' if request.endpoint == 'Acercade' else 'w-0 group-hover:w-full' }} h-0.5 bg-primary transition-all"></span>
+        <a class="nav-link-btn px-3 py-2 flex items-center gap-2 {% if request.endpoint == 'Acercade' %}active{% endif %}" href="{{ url_for('Acercade') }}">
+            <i class='bx bx-info-circle'></i> Acerca de
         </a>
         {% endif %}
     </nav>
 
     <div class="hidden lg:flex items-center space-x-5 z-50 pointer-events-auto">
-        <button class="theme-toggle-btn p-2 rounded-full transition-all duration-300" onclick="toggleTheme()">
-            <span class="material-symbols-outlined text-2xl theme-toggle-icon-light dark:hidden">dark_mode</span>
-            <span class="material-symbols-outlined hidden dark:block text-2xl theme-toggle-icon-dark">light_mode</span>
-        </button>
+        {% if session.get('usuario_id') %}
+        <a class="nav-link-btn {% if request.endpoint == 'mapa' %}active{% endif %}" href="{{ url_for('mapa') }}">
+            <i class="fa-solid fa-map-location-dot"></i> Ver Mapa
+        </a>
+        {% endif %}
+        
+        <a class="nav-link-btn {% if request.endpoint == 'contacto' %}active{% endif %}" href="{{ url_for('contacto') }}">
+            <i class='bx bx-envelope'></i> Contacto
+        </a>
 
         {% if session.get('usuario_id') %}
-        <div class="relative group">
-            <button class="flex items-center justify-center w-12 h-12 rounded-full overflow-hidden border-2 border-primary focus:outline-none bg-gray-200 transition-transform duration-300 hover:scale-105 shadow-sm" onclick="window.location.href='{{ url_for('perfil') }}'">
+        <div class="header-actions relative group flex items-center gap-4">
+            <!-- Modo Oscuro Reubicado Inmediatamente al Lado -->
+            <button class="theme-toggle-btn p-2 rounded-full transition-all duration-300" onclick="toggleTheme()">
+                <span class="material-symbols-outlined text-xl theme-toggle-icon-light dark:hidden">dark_mode</span>
+                <span class="material-symbols-outlined hidden dark:block text-xl theme-toggle-icon-dark">light_mode</span>
+            </button>
+
+            <!-- Foto HD de 40px -->
+            <a href="{{ url_for('perfil') }}" class="flex items-center gap-3 bg-transparent border-0 outline-none cursor-pointer">
+                <span class="font-bold text-sm text-secondary dark:text-emerald-100 hidden md:block">{{ session.get('nombre', 'Usuario').split(' ')[0] }}</span>
                 {% set avatar = session.get('foto_perfil', session.get('usuario_foto', 'default.png')) %}
                 {% if avatar and avatar.startswith('http') %}
-                <img alt="User Avatar" class="w-12 h-12 rounded-full object-cover" src="{{ avatar }}" onerror="this.src='{{ url_for('static', filename='img/perfiles/default.png') }}'"/>
+                <img alt="User Avatar" class="profile-pic-desktop shadow-sm transition-transform duration-300 group-hover:scale-105" src="{{ avatar }}" onerror="this.src='/static/img/perfiles/default.png'"/>
                 {% else %}
-                <img alt="User Avatar" class="w-12 h-12 rounded-full object-cover" src="/static/img/perfiles/{{ avatar }}" onerror="this.src='{{ url_for('static', filename='img/perfiles/default.png') }}'"/>
+                <img alt="User Avatar" class="profile-pic-desktop shadow-sm transition-transform duration-300 group-hover:scale-105" src="/static/img/perfiles/{{ avatar }}" onerror="this.src='/static/img/perfiles/default.png'"/>
                 {% endif %}
-            </button>
+            </a>
+            
             <div class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-right z-50">
                 <a class="block px-6 py-3 text-sm font-semibold text-secondary dark:text-emerald-100 hover:bg-surface-light dark:hover:bg-emerald-900/50 hover:text-primary dark:hover:text-white first:rounded-t-xl transition-colors" href="{{ url_for('perfil') }}"> Ver perfil </a>
                 <div class="h-px bg-gray-100 dark:bg-emerald-900 mx-2"></div>
                 <a class="block px-6 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 last:rounded-b-xl transition-colors" href="{{ url_for('logout') }}"> Cerrar sesión </a>
             </div>
         </div>
-
-        <a class="map-btn-custom px-5 py-2 rounded-full font-bold text-sm transition-all duration-300" href="{{ url_for('mapa') }}">Mapa</a>
+        {% else %}
+        <button class="theme-toggle-btn p-2 rounded-full transition-all duration-300" onclick="toggleTheme()">
+            <span class="material-symbols-outlined text-xl theme-toggle-icon-light dark:hidden">dark_mode</span>
+            <span class="material-symbols-outlined hidden dark:block text-xl theme-toggle-icon-dark">light_mode</span>
+        </button>
         {% endif %}
-        <a class="contact-btn-custom px-5 py-2 rounded-full font-bold text-sm transition-all duration-300" href="{{ url_for('contacto') }}">Contacto</a>
     </div>
+</div>
+
+<!-- Mobile Nav Container -->
+<div id="mobileNavContainer" class="mobile-menu bg-white/95 dark:bg-forest-dark/95 border-t border-emerald-100 dark:border-emerald-900 mt-2 p-4 hidden">
+    
+    {% if session.get('usuario_id') %}
+    <!-- FASE 3: Contenedor Usuario (Avatar Gigante y Tema) INCLUIDO en el menú lateral -->
+    <div class="flex flex-col items-center mb-6 pt-4">
+        {% set avatar = session.get('foto_perfil', session.get('usuario_foto', 'default.png')) %}
+        {% if avatar and avatar.startswith('http') %}
+        <img alt="User Avatar" class="profile-pic-mobile shadow-md mb-3" src="{{ avatar }}" onerror="this.src='/static/img/perfiles/default.png'"/>
+        {% else %}
+        <img alt="User Avatar" class="profile-pic-mobile shadow-md mb-3" src="/static/img/perfiles/{{ avatar }}" onerror="this.src='/static/img/perfiles/default.png'"/>
+        {% endif %}
+        <span class="font-bold text-xl text-secondary dark:text-white">{{ session.get('nombre', 'Usuario') }}</span>
+        
+        <button class="theme-toggle-btn p-2 mt-4 rounded-full transition-all duration-300 bg-gray-100 dark:bg-emerald-900" onclick="toggleTheme()">
+            <span class="material-symbols-outlined text-2xl theme-toggle-icon-light dark:hidden">dark_mode</span>
+            <span class="material-symbols-outlined hidden dark:block text-2xl theme-toggle-icon-dark">light_mode</span>
+        </button>
+    </div>
+    <div class="w-full h-px bg-gray-100 dark:bg-emerald-900 mb-4"></div>
+    {% endif %}
+
+    <!-- Enlaces (Usamos 'justify-center w-full' para anclarlos) -->
+    <a href="{{ url_for('index') }}" class="w-full justify-center py-3 px-4 rounded-lg flex items-center gap-3 font-semibold {% if request.endpoint == 'index' %}active{% else %}text-secondary dark:text-gray-200{% endif %}">
+        <i class='bx bx-home'></i> Inicio
+    </a>
+    {% if session.get('usuario_id') %}
+    <a href="{{ url_for('foro') }}" class="w-full justify-center py-3 px-4 rounded-lg flex items-center gap-3 font-semibold mt-2 {% if request.endpoint == 'foro' %}active{% else %}text-secondary dark:text-gray-200{% endif %}">
+        <i class='bx bx-message-rounded-dots'></i> Foro
+    </a>
+    <a href="{{ url_for('mapa') }}" class="w-full justify-center py-3 px-4 rounded-lg flex items-center gap-3 font-semibold mt-2 {% if request.endpoint == 'mapa' %}active{% else %}text-secondary dark:text-gray-200{% endif %}">
+        <i class="fa-solid fa-map-location-dot"></i> Mapa
+    </a>
+    {% endif %}
+    <a href="{{ url_for('contacto') }}" class="w-full justify-center py-3 px-4 rounded-lg flex items-center gap-3 font-semibold mt-2 {% if request.endpoint == 'contacto' %}active{% else %}text-secondary dark:text-gray-200{% endif %}">
+        <i class='bx bx-envelope'></i> Contacto
+    </a>
+    <a href="{{ url_for('perfil') }}" class="w-full justify-center py-3 px-4 rounded-lg flex items-center gap-3 font-semibold mt-2 {% if request.endpoint == 'perfil' %}active{% else %}text-secondary dark:text-gray-200{% endif %}">
+        <i class='bx bx-user'></i> Ver mi perfil
+    </a>
 </div>
 </div>
 </header>
+<script>
+  function toggleMobileMenu() {
+    document.getElementById('mobileNavContainer').classList.toggle('menu-open');
+  }
+</script>

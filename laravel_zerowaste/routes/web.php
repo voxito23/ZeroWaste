@@ -19,7 +19,7 @@ Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login
 Route::get('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
 
 // Rutas del panel de administración
-Route::prefix('admin')->middleware(['auth', 'is_admin'])->group(function () {
+Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     Route::get('/usuarios', [UserController::class, 'index'])->name('usuarios.index');

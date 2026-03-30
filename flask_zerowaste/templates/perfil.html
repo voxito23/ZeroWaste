@@ -23,6 +23,74 @@
     .contact-btn-custom:hover { background: linear-gradient(to right, #059669, #10b981); box-shadow: 0 12px 28px rgba(5, 150, 105, 0.26); transform: translateY(-2px) scale(1.02); }
     .dark .contact-btn-custom { background: linear-gradient(to right, #00C281, #10b981); color: white; }
     .dark .contact-btn-custom:hover { background: linear-gradient(to right, #34D399, #6ee7b7); color: #022C22; box-shadow: 0 12px 28px rgba(52, 211, 153, 0.35); transform: translateY(-2px) scale(1.02); }
+
+    .intereses-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+    
+    /* FASE 1: Ocultar input feo del navegador e inyectar estética */
+    input[name="intereses"] {
+      opacity: 0;
+      position: absolute;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+    
+    .interes-pill {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 10px 18px; border-radius: 50px;
+        background-color: var(--bg-main); border: 2px solid var(--border-color);
+        color: var(--text-sec); cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: 'Inter', 'Roboto', sans-serif; font-weight: 600; font-size: 0.9rem; user-select: none;
+    }
+    .interes-pill:hover {
+        transform: scale(1.05); border-color: var(--green-primary); color: var(--green-primary);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.15); 
+    }
+    
+    /* Estado Seleccionado Orgánico */
+    input[name="intereses"]:checked + .interes-pill {
+        background-color: var(--green-bg-light); 
+        border-color: var(--green-primary); 
+        color: var(--green-primary);
+        transform: scale(1.05); 
+        box-shadow: 0 4px 15px rgba(46, 125, 50, 0.25); /* Ligero box-shadow verde #2e7d32 */
+    }
+    /* FASE 3: Intereses Multicolor Animados */
+    .intereses-grid label:nth-child(3n+1) .interes-pill i { color: #10b981; transition: transform 0.3s; }
+    .intereses-grid label:nth-child(3n+2) .interes-pill i { color: #0ea5e9; transition: transform 0.3s; }
+    .intereses-grid label:nth-child(3n) .interes-pill i { color: #f59e0b; transition: transform 0.3s; }
+    
+    .intereses-grid label:hover .interes-pill i,
+    .intereses-grid label input:checked + .interes-pill i {
+        transform: scale(1.2) rotate(5deg);
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    @keyframes bounceIcon { 0%, 100% { transform: scale(1.2) rotate(5deg) translateY(0); } 50% { transform: scale(1.2) rotate(5deg) translateY(-3px); } }
+
+    /* FASE 4: Corrección de Tarjetas Perfil (Líneas Cortadas) */
+    .tarjeta-perfil {
+        width: 100%;                  
+        box-sizing: border-box; /* Previene el colapso del padding al fondo */
+        padding: 24px;
+        margin: 0;              
+        background-color: var(--bg-card);
+        border: 2px solid var(--border-color);
+        border-radius: 20px;
+        overflow: hidden; /* Corta mágicamente cualquier línea que desborde de la tarjeta */
+        position: relative;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+    }
+
+    @media screen and (max-width: 768px) {
+      .header-nav { flex-wrap: wrap; height: auto; padding: 15px; }
+      .user-badge-right { width: 100%; justify-content: space-between; margin-top: 15px; margin-left: 0; }
+      .hero-profile-flex { flex-direction: column !important; align-items: center !important; text-align: center; }
+      .hero-profile-flex h1, .hero-profile-flex p, .hero-profile-flex div { justify-content: center; }
+      .grid, .grid-cols-12 { display: flex !important; flex-direction: column !important; gap: 20px; }
+      .col-span-12, .col-span-5, .col-span-7 { width: 100% !important; max-width: 100% !important; }
+      .intereses-grid { justify-content: center; }
+    }
 </style>
 {% endblock %}
 
@@ -31,16 +99,17 @@
 
 <main class="flex-grow py-8 md:py-12 text-left pt-24">
 <div class="max-w-desktop mx-auto px-6 lg:px-10 space-y-8">
-<section class="bg-white dark:bg-emerald-900/20 rounded-[2.5rem] p-8 md:p-12 shadow-xl border border-gray-100 dark:border-emerald-800/50 relative overflow-hidden">
+<section class="bg-white dark:bg-emerald-900/20 rounded-[2.5rem] p-10 md:p-16 shadow-xl border border-gray-100 dark:border-emerald-800/50 relative overflow-hidden">
 <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-surface-light to-white dark:from-emerald-900/40 dark:to-transparent z-0"></div>
-<div class="relative z-10 flex flex-col md:flex-row items-start md:items-end gap-8">
-<div class="relative group">
-<div class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-forest-dark shadow-xl overflow-hidden bg-gray-100 dark:bg-gray-700">
+<div class="relative z-10 flex flex-col md:flex-row items-start md:items-end gap-12 md:gap-16 hero-profile-flex">
+<div class="relative group mx-auto md:mx-0">
+<div class="w-32 h-32 md:w-40 md:h-40 rounded-full border-4 border-white dark:border-forest-dark shadow-xl overflow-hidden bg-gray-100 dark:bg-gray-700 mx-auto">
     <img alt="Perfil" class="w-full h-full object-cover" src="/static/img/perfiles/{{ session.get('foto_perfil', 'VICPERFIL.jpg') }}"/>
 </div>
-<button class="absolute bottom-2 right-2 bg-primary hover:bg-primary-hover text-secondary p-2.5 rounded-full shadow-lg transition-transform hover:scale-110 focus:outline-none" title="Cargar imagen">
+<label for="foto_perfil_rapido" class="absolute bottom-2 right-2 bg-primary hover:bg-primary-hover text-secondary p-2.5 rounded-full shadow-lg transition-transform hover:scale-110 focus:outline-none cursor-pointer" title="Cargar imagen">
 <span class="material-symbols-outlined text-xl font-bold">photo_camera</span>
-</button>
+</label>
+<input type="file" id="foto_perfil_rapido" accept="image/*" hidden>
 </div>
 <div class="flex-1 w-full">
 <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
@@ -105,7 +174,7 @@
 </div>
 
 <div class="lg:col-span-7 space-y-6">
-<div class="bg-white dark:bg-emerald-900/10 rounded-3xl p-8 border border-gray-100 dark:border-emerald-800/50 shadow-sm h-full">
+<div class="bg-white dark:bg-emerald-900/10 rounded-3xl p-8 border border-gray-100 dark:border-emerald-800/50 shadow-sm h-full tarjeta-perfil">
 <div class="flex items-center justify-between mb-8">
 <div class="flex items-center gap-3">
 <div class="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-orange-600 dark:text-orange-400">
@@ -115,24 +184,29 @@
 </div>
 <button class="text-sm font-bold text-primary hover:underline">Ver todo</button>
 </div>
-<div class="space-y-8 relative">
-<div class="absolute left-3 top-2 bottom-6 w-0.5 bg-gray-100 dark:bg-emerald-800"></div>
-<div class="relative pl-10">
-<div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-white dark:bg-forest-dark border-2 border-primary flex items-center justify-center z-10"><div class="w-2 h-2 bg-primary rounded-full"></div></div>
-<div class="bg-surface-light/50 dark:bg-emerald-900/20 p-5 rounded-2xl hover:bg-surface-light dark:hover:bg-emerald-900/40 transition-colors cursor-pointer group">
-<div class="flex justify-between items-start mb-2"><span class="text-xs font-bold text-primary uppercase tracking-wider">Proyecto</span><span class="text-xs text-gray-400">En curso</span></div>
-<h4 class="font-bold text-secondary dark:text-white mb-2 group-hover:text-primary transition-colors text-lg">Actualización en el sistema ZeroWaste</h4>
-<p class="text-base text-gray-500 dark:text-gray-400 font-medium">Optimizando el algoritmo de clasificación de materiales para el foro.</p>
-</div>
-</div>
-<div class="relative pl-10">
-<div class="absolute left-0 top-1 w-6 h-6 rounded-full bg-white dark:bg-forest-dark border-2 border-gray-200 dark:border-emerald-700 flex items-center justify-center z-10"></div>
-<div class="bg-surface-light/50 dark:bg-emerald-900/20 p-5 rounded-2xl hover:bg-surface-light dark:hover:bg-emerald-900/40 transition-colors cursor-pointer group">
-<div class="flex justify-between items-start mb-2"><span class="text-xs font-bold text-blue-500 uppercase tracking-wider">Mapa</span><span class="text-xs text-gray-400">Ayer</span></div>
-<h4 class="font-bold text-secondary dark:text-white mb-2 group-hover:text-primary transition-colors text-lg">Consultaste puntos de reciclaje en Querétaro</h4>
-<p class="text-base text-gray-500 dark:text-gray-400 italic">Búsqueda realizada cerca del Centro Histórico.</p>
-</div>
-</div>
+
+<div class="activity-feed relative pl-2">
+    {% if not actividades %}
+        <div class="empty-state text-center p-4">
+            <i class="fas fa-seedling text-4xl text-green-500 block mb-3 opacity-70"></i>
+            <p class="text-gray-600">Aún no hay actividad reciente. ¡Participa en el foro o el mapa para sumar puntos ecology!</p>
+        </div>
+    {% else %}
+        <!-- Línea conectora visual opcional -->
+        <div class="absolute left-3 top-2 bottom-6 w-0.5 bg-gray-100 dark:bg-emerald-800"></div>
+        {% for actividad in actividades[:2] %}
+            <div class="relative pl-8 mb-6">
+                <!-- Punto en la línea de tiempo -->
+                <div class="absolute left-[-1.25rem] top-1 w-6 h-6 rounded-full bg-white dark:bg-forest-dark border-2 border-primary flex items-center justify-center z-10"><div class="w-2 h-2 bg-primary rounded-full"></div></div>
+                
+                <div class="bg-surface-light/50 dark:bg-emerald-900/20 p-5 rounded-2xl hover:bg-surface-light dark:hover:bg-emerald-900/40 transition-colors cursor-pointer group">
+                    <span class="activity-date text-xs text-gray-500 block mb-1 font-bold">{{ actividad.fecha_creacion.strftime('%d %b, %Y') }}</span>
+                    <h4 class="font-bold text-secondary dark:text-white mb-2 group-hover:text-primary transition-colors text-lg">{{ actividad.tipo | capitalize }}</h4>
+                    <p class="text-base text-gray-500 dark:text-gray-400 font-medium">{{ actividad.descripcion }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
 </div>
 </div>
 </div>
@@ -188,17 +262,50 @@
                 </div>
 
                 <div class="space-y-2 mb-8">
-                    <label class="text-sm font-bold text-secondary dark:text-emerald-100">Intereses (Separados por coma)</label>
-                    <input type="text" name="intereses" value="{{ session.get('intereses', 'Programación, Anime, Sostenibilidad') }}" placeholder="Ej: Reciclaje, Tecnología, Naturaleza" class="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 text-secondary dark:text-white outline-none">
+                    <label class="text-sm font-bold text-secondary dark:text-emerald-100">Intereses Ecológicos</label>
+                    <div class="intereses-grid">
+                        <label><input type="checkbox" name="intereses" value="Reciclaje de Plásticos" hidden><div class="interes-pill"><i class="fa-solid fa-recycle"></i> Reciclaje de Plásticos</div></label>
+                        <label><input type="checkbox" name="intereses" value="Compostaje" hidden><div class="interes-pill"><i class="fa-solid fa-leaf"></i> Compostaje</div></label>
+                        <label><input type="checkbox" name="intereses" value="Estilo Zero Waste" hidden><div class="interes-pill"><i class="fa-solid fa-trash-slash"></i> Estilo Zero Waste</div></label>
+                        <label><input type="checkbox" name="intereses" value="Movilidad Sostenible" hidden><div class="interes-pill"><i class="fa-solid fa-bicycle"></i> Movilidad Sostenible</div></label>
+                        <label><input type="checkbox" name="intereses" value="Moda Circular" hidden><div class="interes-pill"><i class="fa-solid fa-tshirt"></i> Moda Circular</div></label>
+                        <label><input type="checkbox" name="intereses" value="Huertos Urbanos" hidden><div class="interes-pill"><i class="fa-solid fa-seedling"></i> Huertos Urbanos</div></label>
+                        <label><input type="checkbox" name="intereses" value="Energías Renovables" hidden><div class="interes-pill"><i class="fa-solid fa-solar-panel"></i> Energías Renovables</div></label>
+                        <label><input type="checkbox" name="intereses" value="Green Tech / Programación" hidden><div class="interes-pill"><i class="fa-solid fa-laptop-code"></i> Green Tech / Programación</div></label>
+                        <label><input type="checkbox" name="intereses" value="Cine y Documentales" hidden><div class="interes-pill"><i class="fa-solid fa-film"></i> Cine y Documentales</div></label>
+                    </div>
+                    <p id="error-intereses" class="text-red-500 font-bold text-sm hidden mt-3"></p>
                 </div>
 
                 <div class="flex justify-end gap-4">
                     <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="px-6 py-3 rounded-full text-secondary dark:text-gray-300 font-bold hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">Cancelar</button>
-                    <button type="submit" class="px-8 py-3 rounded-full bg-primary text-secondary font-extrabold hover:bg-primary-hover shadow-lg transition-all transform hover:-translate-y-1 flex items-center gap-2">
+                    <button type="button" onclick="mostrarConfirmacion()" class="px-8 py-3 rounded-full bg-primary text-secondary font-extrabold hover:bg-primary-hover shadow-lg transition-all transform hover:-translate-y-1 flex items-center gap-2">
                         <span class="material-symbols-outlined text-lg">save</span> Guardar Cambios
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmación Pro -->
+<div id="confirmModal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="cerrarConfirmacion()"></div>
+    <div class="relative bg-white dark:bg-forest-dark rounded-3xl border border-gray-100 dark:border-emerald-800 p-8 shadow-2xl max-w-sm w-full text-center">
+        <!-- Contenido normal -->
+        <div id="confirmContent">
+            <span class="material-symbols-outlined text-5xl text-orange-400 mb-4 block">help</span>
+            <h3 class="font-display font-black text-2xl text-secondary dark:text-emerald-50 mb-3">¿Estás seguro de editar tu perfil?</h3>
+            <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Esta acción actualizará tu información pública de inmediato.</p>
+            <div class="flex justify-center gap-4">
+                <button type="button" onclick="cerrarConfirmacion()" class="font-bold text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 py-2 px-4 rounded-full transition-colors">Cancelar</button>
+                <button type="button" onclick="ejecutarGuardadoPro()" class="font-bold bg-primary text-secondary hover:bg-primary-hover py-2 px-6 rounded-full transition-colors">Sí, guardar</button>
+            </div>
+        </div>
+        <!-- Contenido de éxito oculto -->
+        <div id="successContent" class="hidden py-4">
+            <span class="material-symbols-outlined text-6xl text-primary animate-bounce block mb-2">check_circle</span>
+            <h3 class="font-bold text-xl text-secondary dark:text-emerald-50">¡Guardado con éxito!</h3>
         </div>
     </div>
 </div>
@@ -226,6 +333,112 @@
         
         // Si todo es correcto, oculta el error y deja que el formulario envíe a Flask
         errorDiv.classList.add('hidden');
+    }
+
+    // Funcionalidad Subir Foto de Perfil Rápida mediante Fetch
+    document.getElementById('foto_perfil_rapido').addEventListener('change', async function() {
+        if (!this.files || this.files.length === 0) return;
+        
+        const formData = new FormData();
+        formData.append('foto_perfil', this.files[0]);
+
+        try {
+            // Se envía la petición al backend donde luego gestionas guardarlo
+            const requestOptions = {
+                method: 'PUT',
+                body: formData
+            };
+            
+            const response = await fetch('/api/usuarios/me/foto', requestOptions);
+            
+            if (response.ok) {
+                const data = await response.json();
+                document.querySelector('.profile-image').src = `/static/img/perfiles/${data.foto_perfil}`;
+            } else {
+                alert('Hubo un error al guardar la foto en el servidor.');
+            }
+        } catch (error) {
+            console.error("Fetch Error: ", error);
+            alert('Error de red al intentar actualizar la imagen.');
+        }
+    });
+
+    // Límite de Checkboxes sin Alert
+    const maximasOpciones = 5;
+    const intereseCheckboxes = document.querySelectorAll('input[name="intereses"]');
+    const errorIntereses = document.getElementById('error-intereses');
+
+    intereseCheckboxes.forEach(chk => {
+        chk.addEventListener('change', function(evento) {
+            const marcados = document.querySelectorAll('input[name="intereses"]:checked').length;
+            if (marcados > maximasOpciones) {
+                this.checked = false; 
+                evento.preventDefault();
+                errorIntereses.textContent = `Máximo ${maximasOpciones} intereses permitidos.`;
+                errorIntereses.classList.remove('hidden');
+                setTimeout(() => errorIntereses.classList.add('hidden'), 3000);
+            }
+        });
+    });
+
+    // Lógica para Modales y Guardado Pro al Backend (FastAPI Endpoint)
+    function mostrarConfirmacion() {
+        const nombreInput = document.getElementById('edit-nombre').value.trim();
+        const errorDiv = document.getElementById('edit-error');
+
+        // Validación
+        if (nombreInput.length <= 10) {
+            errorDiv.textContent = 'El nombre completo debe tener más de 10 caracteres.';
+            errorDiv.classList.remove('hidden');
+            return;
+        }
+        errorDiv.classList.add('hidden');
+
+        const modal = document.getElementById('confirmModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function cerrarConfirmacion() {
+        const modal = document.getElementById('confirmModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    async function ejecutarGuardadoPro() {
+        // Collect checkboxes into a comma-separated string (or JSON) to match FastAPI
+        const marcados = document.querySelectorAll('input[name="intereses"]:checked');
+        const listaIntereses = Array.from(marcados).map(c => c.value).join(', ');
+
+        // Create form data from the editProfileForm
+        const form = document.getElementById('editProfileForm');
+        const formData = new FormData(form);
+        formData.append('intereses', listaIntereses);
+
+        // Optional: If we just want to submit standard to Flask instead: form.submit()
+        // But the prompt says send to FastAPI endpoint: /api/usuarios/perfil/actualizar
+        const formObj = {
+            method: 'PUT',
+            body: formData
+        };
+
+        try {
+            await fetch('/api/usuarios/perfil/actualizar', formObj);
+            
+            // Animacion final
+            document.getElementById('confirmContent').classList.add('hidden');
+            document.getElementById('successContent').classList.remove('hidden');
+            
+            setTimeout(() => {
+                cerrarConfirmacion();
+                window.location.reload();
+            }, 1000);
+
+        } catch(error) {
+            console.error('Error al guardar en backend', error);
+            // Si quieres volver a intentar con form tradicional:
+            // form.submit();
+        }
     }
 </script>
 {% endblock %}

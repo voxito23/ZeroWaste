@@ -23,6 +23,20 @@
     .dark .contact-btn-custom { background: linear-gradient(to right, #00C281, #10b981); color: white; }
     .dark .contact-btn-custom:hover { background: linear-gradient(to right, #34D399, #6ee7b7); color: #022C22; box-shadow: 0 12px 28px rgba(52, 211, 153, 0.35); transform: translateY(-2px) scale(1.02); }
 
+    /* FASE 3: Nuevo Post */
+    .btn-nuevo-post {
+        background: transparent; border: none; font-weight: bold;
+        text-decoration: none; border-bottom: 2px solid transparent;
+        color: white; /* In header hero it should be white or secondary depending on theme */
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .btn-nuevo-post:hover {
+        color: #00FF7F;
+        border-bottom: 2px solid #00FF7F;
+        transform: translateY(-2px);
+        text-shadow: 0 0 10px rgba(0,255,127,0.4);
+    }
+
     /* CSS DEL BANNER ANIMADO CLASIFICA */
     @keyframes glow-and-scale {
         0% { background-position: 0% 50%; transform: scale(1); }
@@ -73,18 +87,18 @@
                 
     <div class="flex flex-col md:flex-row gap-4 max-w-3xl">
         <div class="relative flex-grow flex items-center rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
-            <span class="pl-6 pr-2 flex items-center pointer-events-none text-emerald-300">
+            <span class="pl-6 pr-2 flex items-center pointer-events-none text-[#0f9d58]">
                 <span class="material-symbols-outlined font-bold text-3xl">search</span>
             </span>
-            <input type="text" id="searchInput" onkeyup="filterPosts()" placeholder="Buscar temas, discusiones o usuarios..." class="w-full bg-transparent py-5 text-secondary placeholder-emerald-200 text-lg font-semibold focus:outline-none focus:ring-0 border-none" />
+            <input type="text" id="searchInput" onkeyup="filterPosts()" placeholder="Buscar temas, discusiones o usuarios..." class="w-full bg-transparent py-5 text-[#0f9d58] placeholder-[#0f9d58] text-lg font-semibold focus:outline-none focus:ring-0 border-none" />
             <div class="border-l border-gray-200 h-10"></div>
-            <button type="button" onclick="filterPosts()" class="px-8 py-5 font-bold text-xl text-primary hover:text-forest-dark active:text-forest-dark transition-colors duration-200 focus:outline-none">
+            <button type="button" onclick="filterPosts()" class="px-8 py-5 font-bold text-xl text-[#0f9d58] hover:text-forest-dark active:text-forest-dark transition-colors duration-200 focus:outline-none">
                 Buscar
             </button>
         </div>
         
-        <a href="{{ url_for('nuevo_post') }}" class="bg-primary hover:bg-primary-hover text-secondary px-8 py-5 rounded-full font-extrabold text-lg shadow-[0_10px_30px_rgba(0,224,150,0.4)] transition-all flex items-center justify-center gap-2 whitespace-nowrap">
-            <span class="material-symbols-outlined">add_circle</span>
+        <a href="{{ url_for('nuevo_post') }}" class="btn-nuevo-post px-8 py-5 text-lg flex items-center justify-center gap-2 whitespace-nowrap">
+            <span class="material-symbols-outlined text-2xl">add_circle</span>
             Nuevo Post
         </a>
     </div>

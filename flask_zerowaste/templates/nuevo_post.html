@@ -109,6 +109,18 @@
         box-shadow: 0 12px 28px rgba(52, 211, 153, 0.35);
         transform: translateY(-2px) scale(1.02);
     }
+
+    /* TAREA 4: Editor de Texto */
+    .btn-active {
+        background-color: #d1fae5 !important;
+        color: #059669 !important;
+        border-color: #34d399 !important;
+    }
+    .dark .btn-active {
+        background-color: rgba(16, 185, 129, 0.2) !important;
+        color: #6ee7b7 !important;
+        border-color: #059669 !important;
+    }
 </style>
 {% endblock %}
 
@@ -187,30 +199,13 @@
                             <span class="material-symbols-outlined text-gray-500 transition-transform duration-200" id="dropdown-arrow">expand_more</span>
                         </button>
                         <ul id="dropdown-list" class="hidden absolute z-10 mt-2 w-full bg-white dark:bg-forest-dark border border-gray-200 dark:border-emerald-800 rounded-xl shadow-2xl max-h-64 overflow-y-auto">
-                            <!-- ♻️ Reciclaje -->
-                            <li class="flex items-center gap-3 px-6 py-3.5 cursor-pointer hover:bg-primary/10 dark:hover:bg-emerald-900/40 text-secondary dark:text-emerald-100 font-semibold text-base transition-colors first:rounded-t-xl"
-                                data-value="1" onclick="selectCategory(this)">
-                                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                Reciclaje
+                            {% for categoria in categorias %}
+                            <li class="flex items-center gap-3 px-6 py-3.5 cursor-pointer hover:bg-primary/10 dark:hover:bg-emerald-900/40 text-secondary dark:text-emerald-100 font-semibold text-base transition-colors {% if loop.first %}first:rounded-t-xl{% endif %} {% if loop.last %}last:rounded-b-xl{% endif %}"
+                                data-value="{{ categoria.id }}" onclick="selectCategory(this)">
+                                <span class="material-symbols-outlined text-primary">label</span>
+                                {{ categoria.nombre }}
                             </li>
-                            <!-- 🌱 Compostaje -->
-                            <li class="flex items-center gap-3 px-6 py-3.5 cursor-pointer hover:bg-primary/10 dark:hover:bg-emerald-900/40 text-secondary dark:text-emerald-100 font-semibold text-base transition-colors"
-                                data-value="2" onclick="selectCategory(this)">
-                                <svg class="w-5 h-5 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                Compostaje
-                            </li>
-                            <!-- 🧘 Estilo de Vida -->
-                            <li class="flex items-center gap-3 px-6 py-3.5 cursor-pointer hover:bg-primary/10 dark:hover:bg-emerald-900/40 text-secondary dark:text-emerald-100 font-semibold text-base transition-colors"
-                                data-value="3" onclick="selectCategory(this)">
-                                <svg class="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
-                                Estilo de Vida
-                            </li>
-                            <!-- ❓ Dudas -->
-                            <li class="flex items-center gap-3 px-6 py-3.5 cursor-pointer hover:bg-primary/10 dark:hover:bg-emerald-900/40 text-secondary dark:text-emerald-100 font-semibold text-base transition-colors last:rounded-b-xl"
-                                data-value="4" onclick="selectCategory(this)">
-                                <svg class="w-5 h-5 text-amber-500 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                Dudas
-                            </li>
+                            {% endfor %}
                         </ul>
                     </div>
                 </div>
@@ -222,25 +217,16 @@
                     <div
                         class="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden bg-white dark:bg-black/20 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 transition-all focus-within:shadow-md">
                         <!-- Toolbar -->
-                        <div
-                            class="flex flex-wrap items-center gap-1 p-2 bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-gray-700">
-                            <button
-                                class="p-2 rounded hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors bg-white dark:bg-transparent shadow-sm dark:shadow-none border border-gray-200 dark:border-transparent mr-1"
-                                title="Negrita" type="button" onclick="formatDoc('bold')"><span
-                                    class="material-symbols-outlined text-xl">format_bold</span></button>
-                            <button
-                                class="p-2 rounded hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors bg-white dark:bg-transparent shadow-sm dark:shadow-none border border-gray-200 dark:border-transparent mr-1"
-                                title="Cursiva" type="button" onclick="formatDoc('italic')"><span
-                                    class="material-symbols-outlined text-xl">format_italic</span></button>
-                            <button
-                                class="p-2 rounded hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors bg-white dark:bg-transparent shadow-sm dark:shadow-none border border-gray-200 dark:border-transparent mr-2"
-                                title="Subrayado" type="button" onclick="formatDoc('underline')"><span
-                                    class="material-symbols-outlined text-xl">format_underlined</span></button>
+                        <div class="flex flex-wrap items-center gap-1 p-2 bg-gray-50 dark:bg-white/5 border-b border-gray-200 dark:border-gray-700">
+                            <button class="editor-btn p-2 rounded hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors bg-white dark:bg-transparent shadow-sm dark:shadow-none border border-gray-200 dark:border-transparent mr-1"
+                                title="Negrita" type="button" onclick="formatDoc('bold', this)"><span class="material-symbols-outlined text-xl">format_bold</span></button>
+                            <button class="editor-btn p-2 rounded hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors bg-white dark:bg-transparent shadow-sm dark:shadow-none border border-gray-200 dark:border-transparent mr-1"
+                                title="Cursiva" type="button" onclick="formatDoc('italic', this)"><span class="material-symbols-outlined text-xl">format_italic</span></button>
+                            <button class="editor-btn p-2 rounded hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors bg-white dark:bg-transparent shadow-sm dark:shadow-none border border-gray-200 dark:border-transparent mr-2"
+                                title="Subrayado" type="button" onclick="formatDoc('underline', this)"><span class="material-symbols-outlined text-xl">format_underlined</span></button>
                             <div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-2"></div>
-                            <button
-                                class="p-2 rounded hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors bg-white dark:bg-transparent shadow-sm dark:shadow-none border border-gray-200 dark:border-transparent ml-2"
-                                title="Lista con viñetas" type="button" onclick="formatDoc('insertUnorderedList')"><span
-                                    class="material-symbols-outlined text-xl">format_list_bulleted</span></button>
+                            <button class="editor-btn p-2 rounded hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300 transition-colors bg-white dark:bg-transparent shadow-sm dark:shadow-none border border-gray-200 dark:border-transparent ml-2"
+                                title="Lista con viñetas" type="button" onclick="formatDoc('insertUnorderedList', this)"><span class="material-symbols-outlined text-xl">format_list_bulleted</span></button>
                         </div>
 
                         <!-- Editor -->
@@ -264,10 +250,23 @@
                     </button>
                 </div>
             </form>
-
         </div>
     </div>
 </main>
+
+<!-- Modal Confirmación Post -->
+<div id="confirmPostModal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="cerrarPost()"></div>
+    <div class="relative bg-white dark:bg-forest-dark rounded-3xl border border-gray-100 dark:border-emerald-800 p-8 shadow-2xl max-w-sm w-full text-center">
+        <span class="material-symbols-outlined text-5xl text-emerald-400 mb-4 block animate-bounce">rocket_launch</span>
+        <h3 class="font-display font-black text-2xl text-secondary dark:text-emerald-50 mb-3">¿Deseas publicar este post en la comunidad?</h3>
+        <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Tu idea estará visible para todos los usuarios ecológicos.</p>
+        <div class="flex justify-center gap-4">
+            <button type="button" onclick="cerrarPost()" class="font-bold text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 py-2 px-4 rounded-full transition-colors">Revisar de nuevo</button>
+            <button type="button" onclick="confirmarPublicacion()" class="font-bold bg-primary text-secondary hover:bg-primary-hover py-2 px-6 rounded-full transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-sm">check</span> Publicar</button>
+        </div>
+    </div>
+</div>
 
 
 {% endblock %}
@@ -275,11 +274,12 @@
 {% block scripts %}
 <script>
 
-    function formatDoc(cmd, value = null) {
-        if (cmd === 'insertUnorderedList') {
-            document.execCommand('insertUnorderedList', false, null);
-        } else {
-            document.execCommand(cmd, false, value);
+    function formatDoc(cmd, btn = null) {
+        document.execCommand(cmd, false, null);
+        
+        // Toggle btn-active class visually
+        if (btn && (cmd === 'bold' || cmd === 'italic' || cmd === 'underline')) {
+            btn.classList.toggle('btn-active');
         }
         document.getElementById('editor').focus();
     }
@@ -364,8 +364,23 @@
             return;
         }
 
-        // Si pasa todas las pruebas, se oculta el error y el form se envía a Flask
+        // Si pasa las pruebas, detenemos el envío tradicional y mostramos el modal PRO
+        event.preventDefault();
         errorDiv.classList.add('hidden');
+        document.getElementById('confirmPostModal').classList.remove('hidden');
+        document.getElementById('confirmPostModal').classList.add('flex');
+    }
+
+    function cerrarPost() {
+        const modal = document.getElementById('confirmPostModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function confirmarPublicacion() {
+        // Enviar form nativamente al servidor Flask
+        const form = document.getElementById('new-post-form');
+        form.submit();
     }
 
     // Configurar placeholder en el div editable

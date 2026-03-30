@@ -31,6 +31,19 @@ class UsuarioCreate(UsuarioBase):
     password: str
     foto_perfil: Optional[str] = "perfil_default.png"
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "nombre": "Juan Pérez",
+                    "email": "juan@gmail.com",
+                    "password": "Contraseña123",
+                    "foto_perfil": "perfil_default.png",
+                }
+            ]
+        }
+    }
+
 
 class UsuarioUpdate(BaseModel):
     nombre: Optional[str] = None
@@ -39,6 +52,21 @@ class UsuarioUpdate(BaseModel):
     biografia: Optional[str] = None
     intereses: Optional[str] = None
     foto_perfil: Optional[str] = None
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "nombre": "Juan Pérez Actualizado",
+                    "ubicacion": "Querétaro, México",
+                    "titulo_perfil": "Activista Ambiental",
+                    "biografia": "Apasionado por el medio ambiente y el reciclaje.",
+                    "intereses": "Reciclaje, Compostaje, Energía Solar",
+                    "foto_perfil": "perfil_juan.png",
+                }
+            ]
+        }
+    }
 
 
 class UsuarioResponse(UsuarioBase):
@@ -56,6 +84,17 @@ class UsuarioResponse(UsuarioBase):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "email": "admin@zerowaste.com",
+                    "password": "Contraseña123",
+                }
+            ]
+        }
+    }
 
 
 # Esquemas de categoría
@@ -75,12 +114,38 @@ class PostCreate(BaseModel):
     categoria_id: int
     imagen: Optional[str] = None
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "titulo": "Tips para compostar en casa",
+                    "contenido": "Hoy quiero compartir mi experiencia compostando residuos orgánicos en un departamento pequeño.",
+                    "categoria_id": 1,
+                    "imagen": "compostaje_tips.jpg",
+                }
+            ]
+        }
+    }
+
 
 class PostUpdate(BaseModel):
     titulo: Optional[str] = None
     contenido: Optional[str] = None
     categoria_id: Optional[int] = None
     imagen: Optional[str] = None
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "titulo": "Tips actualizados para compostar en casa",
+                    "contenido": "Actualización: Después de 3 meses, aquí están mis resultados con el compostaje.",
+                    "categoria_id": 1,
+                    "imagen": "compostaje_resultados.jpg",
+                }
+            ]
+        }
+    }
 
 
 class PostResponse(BaseModel):
@@ -106,6 +171,16 @@ class PostDetailResponse(PostResponse):
 
 class RespuestaCreate(BaseModel):
     contenido: str
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "contenido": "¡Excelente post! Yo uso un bote de 20 litros y funciona perfecto.",
+                }
+            ]
+        }
+    }
 
 
 class RespuestaResponse(BaseModel):
@@ -137,6 +212,21 @@ class PuntoMapaCreate(BaseModel):
     tipo: str
     materiales: Optional[str] = None
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "nombre": "Centro de Reciclaje Querétaro Norte",
+                    "direccion": "Av. Universidad 500, Col. Centro, Querétaro",
+                    "latitud": 20.5937,
+                    "longitud": -100.3906,
+                    "tipo": "Centro de acopio",
+                    "materiales": "PET, Cartón, Vidrio, Aluminio",
+                }
+            ]
+        }
+    }
+
 
 class PuntoMapaUpdate(BaseModel):
     nombre: Optional[str] = None
@@ -145,6 +235,21 @@ class PuntoMapaUpdate(BaseModel):
     longitud: Optional[Decimal] = None
     tipo: Optional[str] = None
     materiales: Optional[str] = None
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "nombre": "Centro de Reciclaje Querétaro Norte (Actualizado)",
+                    "direccion": "Av. Universidad 500, Col. Centro, Querétaro, QRO",
+                    "latitud": 20.5937,
+                    "longitud": -100.3906,
+                    "tipo": "Centro de acopio municipal",
+                    "materiales": "PET, Cartón, Vidrio, Aluminio, Electrónicos",
+                }
+            ]
+        }
+    }
 
 
 class PuntoMapaResponse(BaseModel):
@@ -166,6 +271,16 @@ class PuntoMapaResponse(BaseModel):
 class CalificacionCreate(BaseModel):
     estrellas: int  # Escala de 1 a 5
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "estrellas": 4,
+                }
+            ]
+        }
+    }
+
 
 class CalificacionResponse(BaseModel):
     success: bool
@@ -184,6 +299,22 @@ class EventoCreate(BaseModel):
     imagen: Optional[str] = None
     link_unirse: Optional[str] = None
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "titulo": "Limpieza del Parque Querétaro 2026",
+                    "fecha_inicio": "2026-05-15T09:00:00",
+                    "ubicacion": "Parque Querétaro 2000, Querétaro",
+                    "descripcion": "Jornada comunitaria de limpieza y reforestación en el parque principal.",
+                    "categoria": "Limpieza",
+                    "imagen": "limpieza_parque.jpg",
+                    "link_unirse": "https://zerowaste.com/eventos/limpieza-parque",
+                }
+            ]
+        }
+    }
+
 
 class EventoUpdate(BaseModel):
     titulo: Optional[str] = None
@@ -193,6 +324,22 @@ class EventoUpdate(BaseModel):
     categoria: Optional[str] = None
     imagen: Optional[str] = None
     link_unirse: Optional[str] = None
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "titulo": "Limpieza del Parque Querétaro 2026 (Reprogramado)",
+                    "fecha_inicio": "2026-06-01T10:00:00",
+                    "ubicacion": "Parque Querétaro 2000, Querétaro",
+                    "descripcion": "Evento reprogramado. Jornada comunitaria de limpieza y reforestación.",
+                    "categoria": "Limpieza",
+                    "imagen": "limpieza_parque_v2.jpg",
+                    "link_unirse": "https://zerowaste.com/eventos/limpieza-parque-v2",
+                }
+            ]
+        }
+    }
 
 
 class EventoResponse(BaseModel):

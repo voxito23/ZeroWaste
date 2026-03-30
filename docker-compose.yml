@@ -9,6 +9,7 @@ services:
       - "5001:5000"
     volumes:
       - ./flask_zerowaste:/app
+      - perfiles_compartidos:/app/static/img/perfiles
     environment:
       - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/zerowaste_db
     depends_on:
@@ -45,6 +46,7 @@ services:
       - "6001:6000"
     volumes:
       - ./fast_api:/app
+      - perfiles_compartidos:/app/static/img/perfiles
     environment:
       - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/zerowaste_db
       - JWT_SECRET_KEY=zerowaste_super_secret_jwt_2026
@@ -84,3 +86,4 @@ services:
 
 volumes:
   postgres_data_zerowaste:
+  perfiles_compartidos:

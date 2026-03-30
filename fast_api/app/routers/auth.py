@@ -2,14 +2,19 @@
 Router de autenticación — login y registro con JWT.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+import os
+import uuid
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.data.database import get_db
 from app.models.domain_models import Usuario
-from app.models.schemas import Token, UsuarioCreate, UsuarioResponse, MessageResponse
+from app.models.schemas import Token, UsuarioResponse, MessageResponse
 from app.security.jwt_auth import verify_password, hash_password, create_access_token
+
+UPLOAD_DIR = "/app/static/img/perfiles"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
@@ -32,6 +37,13 @@ def login(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # --- Validación de rol inyectada ---
+    if not usuario.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acceso denegado: Solo los administradores pueden generar tokens e iniciar sesión en esta API."
+        )
+
     access_token = create_access_token(data={"sub": usuario.email})
     return Token(access_token=access_token)
 
@@ -40,41 +52,68 @@ def login(
     "/registro",
     response_model=UsuarioResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Registrar un nuevo usuario",
+    summary="Registrar un nuevo usuario mediante Form Data y carga de imagen obligatoria",
 )
-def registro(usuario_in: UsuarioCreate, db: Session = Depends(get_db)):
+def registro(
+    nombre: str = Form(..., example="Juan Pérez"),
+    email: str = Form(..., example="correo@ejemplo.com"),
+    password: str = Form(..., example="Password123!"),
+    foto_perfil: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
     """
-    Crea un usuario nuevo con contraseña hasheada.
-    Devuelve los datos del usuario creado. Requiere inicio de sesión posterior.
+    Crea un usuario nuevo con contraseña hasheada, exigiendo una carga de archivo físico (multipart/form-data).
     """
-    # Validación de datos de entrada
-    if len(usuario_in.nombre.strip()) <= 10:
+    # A) Validación de Correo Único (ANTES de guardar archivos)
+    existe = db.query(Usuario).filter(Usuario.email == email).first()
+    if existe:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Error: El correo ingresado ya está registrado en ZeroWaste."
+        )
+
+    # Validaciones de longitud
+    if len(nombre.strip()) <= 10:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="El nombre completo debe tener más de 10 caracteres.",
         )
 
-    if len(usuario_in.password) < 6:
+    if len(password) < 6:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="La contraseña debe tener al menos 6 caracteres.",
         )
 
-    existe = db.query(Usuario).filter(Usuario.email == usuario_in.email).first()
-    if existe:
+    # B) Guardado de Imagen en la Nueva Ruta
+    extension = foto_perfil.filename.split(".")[-1] if "." in foto_perfil.filename else "png"
+    nombre_archivo_unico = f"{uuid.uuid4().hex}.{extension}"
+    ruta_destino = f"{UPLOAD_DIR}/{nombre_archivo_unico}"
+
+    # Asegurar que el directorio padre exista antes de escribir el archivo
+    os.makedirs(os.path.dirname(ruta_destino), exist_ok=True)
+
+    try:
+        with open(ruta_destino, "wb") as buffer:
+            buffer.write(foto_perfil.file.read())
+    except Exception:
         raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="El correo electrónico ya está registrado.",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Ocurrió un error al guardar la imagen de perfil en el servidor."
         )
 
+    # Mapeo explícito de la variable "nombre" junto con el resto de los campos
     nuevo_usuario = Usuario(
-        nombre=usuario_in.nombre,
-        email=usuario_in.email,
-        password=hash_password(usuario_in.password),
-        foto_perfil=usuario_in.foto_perfil or "perfil_default.png",
+        nombre=nombre,
+        email=email,
+        password=hash_password(password),
+        foto_perfil=nombre_archivo_unico,
     )
+    
     db.add(nuevo_usuario)
     db.commit()
+    
+    # db.refresh devuelve la instancia sincronizada y mapeada desde la DB nativa
     db.refresh(nuevo_usuario)
 
     return nuevo_usuario

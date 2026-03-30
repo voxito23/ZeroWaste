@@ -258,7 +258,11 @@ def editar_perfil():
     ubicacion = request.form.get('ubicacion')
     titulo_perfil = request.form.get('titulo_perfil')
     biografia = request.form.get('biografia')
-    intereses = request.form.get('intereses')
+    
+    # CRÍTICO: Recibir múltiples checkboxes
+    intereses_lista = request.form.getlist('intereses')
+    intereses = ", ".join(intereses_lista) if intereses_lista else ""
+
     foto_perfil_file = request.files.get('foto_perfil')
     
     if not nombre or not nombre.strip():
@@ -284,12 +288,13 @@ def editar_perfil():
             session['foto_perfil'] = nombre_foto
 
         db.session.commit()
+        db.session.refresh(usuario) # <--- Asegura que los datos se recarguen de la BD
         
-        session['nombre'] = nombre
-        session['ubicacion'] = ubicacion
-        session['titulo_perfil'] = titulo_perfil
-        session['biografia'] = biografia
-        session['intereses'] = intereses
+        session['nombre'] = usuario.nombre
+        session['ubicacion'] = usuario.ubicacion
+        session['titulo_perfil'] = usuario.titulo_perfil
+        session['biografia'] = usuario.biografia
+        session['intereses'] = usuario.intereses
 
     return redirect(url_for('perfil'))
 

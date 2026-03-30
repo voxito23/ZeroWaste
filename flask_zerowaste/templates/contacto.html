@@ -24,6 +24,26 @@
     .contact-btn-custom:hover { background: linear-gradient(to right, #059669, #10b981); box-shadow: 0 12px 28px rgba(5, 150, 105, 0.26); transform: translateY(-2px) scale(1.02); }
     .dark .contact-btn-custom { background: linear-gradient(to right, #00C281, #10b981); color: white; }
     .dark .contact-btn-custom:hover { background: linear-gradient(to right, #34D399, #6ee7b7); color: #022C22; box-shadow: 0 12px 28px rgba(52, 211, 153, 0.35); transform: translateY(-2px) scale(1.02); }
+
+    .contacto-wrapper {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2.5rem;
+        border-radius: 20px;
+        background-color: var(--bg-card);
+        box-shadow: 0 4px 25px rgba(0,0,0,0.1);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 3rem;
+        align-items: start;
+    }
+    @media (max-width: 768px) {
+        .contacto-wrapper {
+            grid-template-columns: 1fr;
+            padding: 1.5rem;
+            gap: 2rem;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -32,113 +52,119 @@
 
 <main class="flex-grow pt-28 pb-24 mt-20 mb-10 bg-surface-light dark:bg-surface-dark transition-colors duration-300 relative">
 <div class="max-w-desktop mx-auto px-6 lg:px-10">
-    
-    <div class="w-full flex flex-col lg:flex-row rounded-[2.5rem] overflow-hidden shadow-2xl bg-white dark:bg-forest-dark border border-emerald-50 dark:border-emerald-900 text-left">
-        <div class="hidden lg:block w-1/2 relative min-h-[600px] lg:min-h-[800px]">
-            <img alt="Environmental landscape" class="absolute inset-0 w-full h-full object-cover" src="/static/img/nature_texture.png"/>
-            <div class="absolute inset-0 bg-secondary/60 mix-blend-multiply"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-secondary/90 via-secondary/40 to-transparent flex flex-col justify-end p-16">
-                <div class="text-white max-w-md">
-                    <h2 class="font-display font-bold text-4xl mb-4 leading-tight">Estamos para escucharte.</h2>
-                    <p class="text-lg text-justify opacity-90 no-hyphens">Tu opinión es vital para hacer crecer nuestra comunidad verde. Estamos aquí para resolver tus dudas y apoyarte en cada paso hacia un estilo de vida más sostenible.</p>
-                </div>
+    <div class="contacto-wrapper">
+        <!-- Columna Izquierda: Formulario -->
+        <div class="flex flex-col form-col">
+            <div class="mb-8">
+                <h1 class="font-display font-black text-3xl md:text-4xl text-secondary dark:text-white mb-2">Contáctanos</h1>
+                <p class="text-gray-500 dark:text-gray-400 text-lg">Envíanos un mensaje y te responderemos pronto</p>
             </div>
-        </div>
-        
-        <div class="w-full lg:w-1/2 p-8 md:p-16 flex flex-col justify-center relative bg-white dark:bg-forest-dark">
-            <div class="max-w-md mx-auto w-full">
-                <div class="text-center mb-8">
-                    <div class="inline-block p-4 rounded-full bg-surface-light dark:bg-emerald-900/30 mb-6">
-                        <img alt="Zero Waste Sprout Logo" class="h-12 w-auto" src="/static/img/logo.png"/>
+            
+            <form id="contact-form" class="space-y-5" onsubmit="handleContact(event)">
+                <div id="contact-error" class="hidden mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md text-sm font-bold"></div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="name">Nombre completo</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">person</span>
+                        </div>
+                        <input class="block w-full pl-11 pr-4 py-4 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 transition-all font-medium outline-none" id="name" name="nombre" value="{{ session.get('nombre', '') }}" placeholder="Ej: Victor Osvaldo Rodriguez" type="text" required minlength="11"/>
                     </div>
-                    <h1 class="font-display font-black text-3xl md:text-4xl text-secondary dark:text-white mb-3">Contáctanos</h1>
-                    <p class="text-gray-500 dark:text-gray-400 text-lg">Envíanos un mensaje y te responderemos pronto</p>
+                    <span id="error-name" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
                 </div>
                 
-                <form id="contact-form" class="space-y-5" onsubmit="handleContact(event)">
-                    <div id="contact-error" class="hidden mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md text-sm font-bold"></div>
-
-                    <div class="space-y-2">
-                        <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="name">Nombre completo</label>
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">person</span>
-                            </div>
-                            <input class="block w-full pl-11 pr-4 py-4 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 transition-all font-medium outline-none" id="name" name="nombre" value="{{ session.get('nombre', '') }}" placeholder="Ej: Victor Osvaldo Rodriguez" type="text" required minlength="11"/>
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="email">Email</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">mail</span>
                         </div>
-                        <span id="error-name" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+                        <input class="block w-full pl-11 pr-4 py-4 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 transition-all font-medium outline-none" id="email" name="email" value="{{ session.get('email', '') }}" placeholder="correo@ejemplo.com" type="email" required/>
                     </div>
-                    
-                    <div class="space-y-2">
-                        <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="email">Email</label>
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">mail</span>
-                            </div>
-                            <input class="block w-full pl-11 pr-4 py-4 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 transition-all font-medium outline-none" id="email" name="email" value="{{ session.get('email', '') }}" placeholder="correo@ejemplo.com" type="email" required/>
-                        </div>
-                        <span id="error-email" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
-                    </div>
-                    
-                    <div class="space-y-2">
-                        <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="location">Ubicación del punto (opcional)</label>
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">location_on</span>
-                            </div>
-                            <input class="block w-full pl-11 pr-4 py-4 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 transition-all font-medium outline-none" id="location" name="ubicacion" placeholder="Querétaro, México" type="text"/>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-2">
-                        <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="message">Mensaje</label>
-                        <div class="relative group">
-                            <div class="absolute top-4 left-0 pl-4 flex items-start pointer-events-none">
-                                <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">chat_bubble</span>
-                            </div>
-                            <textarea class="block w-full pl-11 pr-4 py-4 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 transition-all font-medium resize-none outline-none" id="message" name="mensaje" placeholder="¿En qué podemos ayudarte?" rows="4"></textarea>
-                        </div>
-                        <span id="error-message" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
-                    </div>
-                    
-                    <button class="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg shadow-emerald-400/30 text-base font-bold text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform hover:-translate-y-1 mt-4" type="submit">
-                        Enviar mensaje
-                    </button>
-                </form>
-
-                <div class="hidden text-center py-12 animate-in fade-in duration-500" id="success-message">
-                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30 mb-6">
-                        <span class="material-symbols-outlined text-5xl text-primary">check_circle</span>
-                    </div>
-                    <h2 class="font-display font-bold text-2xl text-secondary dark:text-white mb-3">¡Mensaje enviado con éxito!</h2>
-                    <p class="text-gray-500 dark:text-gray-400 text-lg max-w-xs mx-auto">Gracias por contactarnos. Te responderemos lo antes posible.</p>
-                    <button class="mt-8 text-sm font-bold text-primary hover:text-primary-hover transition-colors flex items-center gap-2 mx-auto" onclick="window.location.reload()">
-                        <span class="material-symbols-outlined text-lg">arrow_back</span> Volver al formulario
-                    </button>
+                    <span id="error-email" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
                 </div>
-
-                <div class="mt-10 pt-8 border-t border-gray-100 dark:border-emerald-900/50">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="flex flex-col items-center text-center group">
-                            <div class="w-10 h-10 rounded-full bg-surface-light dark:bg-emerald-900/30 flex items-center justify-center mb-3 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-800/40 transition-all">
-                                <span class="material-symbols-outlined text-secondary dark:text-primary text-xl font-bold">location_on</span>
-                            </div>
-                            <p class="text-[10px] text-gray-500 dark:text-gray-400 font-black uppercase tracking-widest leading-tight">Querétaro, Méx.</p>
+                
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="location">Ubicación del punto</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">location_on</span>
                         </div>
-                        <div class="flex flex-col items-center text-center group">
-                            <div class="w-10 h-10 rounded-full bg-surface-light dark:bg-emerald-900/30 flex items-center justify-center mb-3 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-800/40 transition-all">
-                                <span class="material-symbols-outlined text-secondary dark:text-primary text-xl font-bold">call</span>
-                            </div>
-                            <p class="text-[10px] text-gray-500 dark:text-gray-400 font-black uppercase tracking-widest leading-tight">+52 442 123 4567</p>
-                        </div>
-                        <div class="flex flex-col items-center text-center group">
-                            <div class="w-10 h-10 rounded-full bg-surface-light dark:bg-emerald-900/30 flex items-center justify-center mb-3 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-800/40 transition-all">
-                                <span class="material-symbols-outlined text-secondary dark:text-primary text-xl font-bold">mail</span>
-                            </div>
-                            <p class="text-[10px] text-gray-500 dark:text-gray-400 font-black uppercase tracking-widest leading-tight">hola@zerowaste.org</p>
-                        </div>
+                        <input class="block w-full pl-11 pr-4 py-4 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 transition-all font-medium outline-none" id="location" name="ubicacion" placeholder="Querétaro, México" type="text"/>
                     </div>
                 </div>
+                
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="message">Mensaje</label>
+                    <div class="relative group">
+                        <div class="absolute top-4 left-0 pl-4 flex items-start pointer-events-none">
+                            <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">chat_bubble</span>
+                        </div>
+                        <textarea class="block w-full pl-11 pr-4 py-4 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 transition-all font-medium resize-none outline-none" id="message" name="mensaje" placeholder="¿En qué podemos ayudarte?" rows="4"></textarea>
+                    </div>
+                    <span id="error-message" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+                </div>
+                
+                <button class="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg shadow-emerald-400/30 text-base font-bold text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform hover:-translate-y-1 mt-4" type="submit">
+                    Enviar mensaje
+                </button>
+            </form>
+
+            <div class="hidden text-center py-12 animate-in fade-in duration-500" id="success-message">
+                <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30 mb-6">
+                    <span class="material-symbols-outlined text-5xl text-primary">check_circle</span>
+                </div>
+                <h2 class="font-display font-bold text-2xl text-secondary dark:text-white mb-3">¡Mensaje enviado con éxito!</h2>
+                <p class="text-gray-500 dark:text-gray-400 text-lg max-w-xs mx-auto">Gracias por contactarnos. Te responderemos lo antes posible.</p>
+                <button class="mt-8 text-sm font-bold text-primary hover:text-primary-hover transition-colors flex items-center gap-2 mx-auto" onclick="window.location.reload()">
+                    <span class="material-symbols-outlined text-lg">arrow_back</span> Volver al formulario
+                </button>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Info -->
+        <div class="flex flex-col bg-surface-light dark:bg-emerald-900/10 p-8 rounded-2xl border border-emerald-50 dark:border-emerald-800/50 justify-center">
+            <div class="text-center mb-8">
+                <div class="inline-block p-4 rounded-full bg-white dark:bg-emerald-900/30 mb-4 shadow-sm">
+                    <img alt="Zero Waste Sprout Logo" class="h-16 w-auto" src="/static/img/logo.png"/>
+                </div>
+                <h2 class="font-display font-bold text-2xl text-secondary dark:text-white">Zero Waste MX</h2>
+            </div>
+            
+            <div class="flex flex-col gap-6">
+                <div class="flex items-center gap-4 group">
+                    <div class="w-12 h-12 rounded-full bg-white dark:bg-emerald-900/40 flex items-center justify-center group-hover:bg-primary/20 transition-all shadow-sm">
+                        <span class="material-symbols-outlined text-primary text-2xl">location_on</span>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Sede Central</p>
+                        <p class="text-base font-bold text-secondary dark:text-white">Querétaro, Qro, México</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 group">
+                    <div class="w-12 h-12 rounded-full bg-white dark:bg-emerald-900/40 flex items-center justify-center group-hover:bg-primary/20 transition-all shadow-sm">
+                        <span class="material-symbols-outlined text-primary text-2xl">call</span>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Teléfono</p>
+                        <p class="text-base font-bold text-secondary dark:text-white">+52 442 123 4567</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4 group">
+                    <div class="w-12 h-12 rounded-full bg-white dark:bg-emerald-900/40 flex items-center justify-center group-hover:bg-primary/20 transition-all shadow-sm">
+                        <span class="material-symbols-outlined text-primary text-2xl">mail</span>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Correo Directo</p>
+                        <p class="text-base font-bold text-secondary dark:text-white">hola@zerowaste.org</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-10 pt-8 border-t border-emerald-100 dark:border-emerald-800/50 flex justify-center gap-6">
+                <a href="https://www.instagram.com/zerowastemx_" target="_blank" rel="noopener noreferrer" class="w-12 h-12 rounded-full bg-white dark:bg-emerald-900/40 flex items-center justify-center text-secondary dark:text-white hover:text-[#E1306C] dark:hover:text-[#E1306C] hover:-translate-y-2 hover:shadow-[0_10px_20px_rgba(225,48,108,0.3)] dark:hover:shadow-[0_10px_20px_rgba(225,48,108,0.4)] transition-all duration-300"><i class='bx bxl-instagram text-2xl'></i></a>
+                <a href="https://www.youtube.com/@zerowastemx" target="_blank" rel="noopener noreferrer" class="w-12 h-12 rounded-full bg-white dark:bg-emerald-900/40 flex items-center justify-center text-secondary dark:text-white hover:text-[#FF0000] dark:hover:text-[#FF0000] hover:-translate-y-2 hover:shadow-[0_10px_20px_rgba(255,0,0,0.3)] dark:hover:shadow-[0_10px_20px_rgba(255,0,0,0.4)] transition-all duration-300"><i class='bx bxl-youtube text-2xl'></i></a>
             </div>
         </div>
     </div>

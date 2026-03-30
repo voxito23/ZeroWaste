@@ -207,19 +207,7 @@
                         </div>
                     </div>
 
-                    <div class="mt-3 mb-2">
-                        <div class="flex items-start">
-                            <div class="flex items-center h-5">
-                                <input id="privacy" name="privacy" type="checkbox" class="w-4 h-4 text-primary bg-gray-50 border-gray-300 rounded focus:ring-primary focus:ring-2 dark:bg-emerald-900/20 dark:border-emerald-800 cursor-pointer transition-colors">
-                            </div>
-                            <div class="ml-2 text-[0.7rem] text-gray-500 dark:text-gray-400 text-justify leading-tight">
-                                <label for="privacy" class="cursor-pointer select-none">
-                                    Al continuar, aceptas nuestro <button type="button" onclick="openPrivacyModal()" class="font-bold text-primary hover:text-primary-hover transition-colors">Aviso de Privacidad</button> y los <button type="button" onclick="openTermsModal()" class="font-bold text-primary hover:text-primary-hover transition-colors">Términos y Condiciones</button> del servicio de ZeroWaste.
-                                </label>
-                            </div>
-                        </div>
-                        <span id="error-privacy" class="hidden text-red-500 text-xs mt-1 font-medium ml-6">Debes aceptar el aviso de privacidad.</span>
-                    </div>
+
 
                     <button id="submit-btn" class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-emerald-400/30 text-base font-bold text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform hover:-translate-y-1 relative overflow-hidden" type="submit">
                         <span id="btn-text">Iniciar sesión</span>
@@ -392,15 +380,11 @@
         const form = document.getElementById('login-form');
         const emailInput = document.getElementById('email');
         const passwordInput = document.getElementById('password');
-        const privacyInput = document.getElementById('privacy');
-        
         const email = emailInput.value.trim();
         const password = passwordInput.value;
-        const privacy = privacyInput.checked;
         
         const errEmail = document.getElementById('error-email');
         const errPass = document.getElementById('error-password');
-        const errPrivacy = document.getElementById('error-privacy');
         const errorBox = document.getElementById('general-error');
 
         if (errorBox) {
@@ -410,11 +394,9 @@
         
         errEmail.classList.add('hidden');
         errPass.classList.add('hidden');
-        errPrivacy.classList.add('hidden');
         
         emailInput.classList.remove('border-red-500', 'focus:border-red-500', 'dark:border-red-500');
         passwordInput.classList.remove('border-red-500', 'focus:border-red-500', 'dark:border-red-500');
-        privacyInput.classList.remove('border-red-500', 'dark:border-red-500');
 
         let isValid = true;
 
@@ -433,11 +415,7 @@
             isValid = false;
         }
         
-        if (!privacy) {
-            errPrivacy.classList.remove('hidden');
-            privacyInput.classList.add('border-red-500', 'dark:border-red-500');
-            isValid = false;
-        }
+
         
         if (!isValid) return;
 

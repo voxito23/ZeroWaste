@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.data.database import get_db
 from app.models.domain_models import Usuario, Evento
 from app.models.schemas import EventoCreate, EventoUpdate, EventoResponse, MessageResponse
-from app.security.jwt_auth import get_current_user
+from app.security.jwt_auth import get_current_user, get_current_admin_user
 
 router = APIRouter(prefix="/eventos", tags=["Eventos"])
 
@@ -40,9 +40,9 @@ def get_evento(evento_id: int, db: Session = Depends(get_db)):
 def create_evento(
     evento_in: EventoCreate,
     db: Session = Depends(get_db),
-    _current_user: Usuario = Depends(get_current_user),
+    _current_admin: Usuario = Depends(get_current_admin_user),
 ):
-    """Crea un nuevo evento. Requiere JWT."""
+    """Crea un nuevo evento. Exclusivo para administradores."""
     nuevo_evento = Evento(
         titulo=evento_in.titulo,
         fecha_inicio=evento_in.fecha_inicio,
