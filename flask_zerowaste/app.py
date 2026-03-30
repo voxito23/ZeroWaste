@@ -265,7 +265,9 @@ def perfil():
             'post_titulo': post.titulo
         })
 
-    return render_template('perfil.html', mis_posts=mis_posts, mis_respuestas=mis_respuestas)
+    actividades = Actividad.query.filter_by(usuario_id=usuario.id).order_by(Actividad.fecha_creacion.desc()).limit(10).all()
+
+    return render_template('perfil.html', mis_posts=mis_posts, mis_respuestas=mis_respuestas, actividades=actividades)
 
 @app.route('/editar_perfil', methods=['POST'])
 def editar_perfil():
@@ -444,7 +446,7 @@ def like_post(post_id):
     db.session.commit()
     total_likes = LikeForo.query.filter_by(post_id=post_id).count()
 
-    return jsonify({'success': True, 'action': action, 'likes': total_likes})
+    return jsonify({'success': True, 'action': action, 'likes': total_likes, 'total': total_likes, 'liked': action == 'liked'})
 
 
 # ==========================================================================
@@ -588,7 +590,7 @@ def vista_recomendaciones_ia():
             "Descubre eventos locales de sustentabilidad este mes y asiste con tus amigos."
         ]
 
-    return render_template('recomendaciones.html', sentimiento=sentimiento, recomendaciones_ia=msgs)
+    return render_template('recomendaciones.html', sentimiento=sentimiento, recomendaciones_ia=msgs, puntos=get_puntos_con_promedio())
 
 # ==========================================================================
 #  Manejadores de errores HTTP

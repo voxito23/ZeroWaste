@@ -50,7 +50,7 @@
 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-secondary to-primary"></div>
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
 <div class="flex items-center gap-4">
-    <img alt="{{ post.autor_rel.nombre }}" class="w-14 h-14 rounded-full border-2 border-emerald-50 object-cover shadow-sm" src="{{ post.autor_rel.foto_perfil if 'http' in post.autor_rel.foto_perfil|string else url_for('static', filename='img/perfiles/' ~ post.autor_rel.foto_perfil) if post.autor_rel.foto_perfil else url_for('static', filename='img/default.png') }}"/>
+    <img alt="{{ post.autor_rel.nombre }}" class="w-14 h-14 rounded-full border-2 border-emerald-50 object-cover shadow-sm" src="{{ post.autor_rel.foto_perfil if 'http' in post.autor_rel.foto_perfil|string else url_for('static', filename='img/perfiles/' ~ post.autor_rel.foto_perfil) if post.autor_rel.foto_perfil else url_for('static', filename='img/perfiles/perfil_default.png') }}"/>
 <div>
 <h3 class="font-bold text-secondary dark:text-white text-lg leading-tight">{{ post.autor_rel.nombre }}</h3>
 <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -85,7 +85,11 @@
 <div class="flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-gray-100 dark:border-white/10">
 <div class="flex items-center gap-4">
 <button id="btn-like-{{ post.id }}" data-post="{{ post.id }}" data-user="{{ session.get('usuario_id', 0) }}" onclick="toggleLike(this.dataset.post, this.dataset.user)" class="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors font-bold group">
-<span class="material-symbols-outlined text-xl transition-colors {{ 'text-rose-500 fill-current' if liked else 'text-gray-400 group-hover:text-rose-400' }}">favorite</span>
+{% if liked %}
+<span class="material-symbols-outlined text-xl transition-colors text-rose-500" style="font-variation-settings: 'FILL' 1;">favorite</span>
+{% else %}
+<span class="material-symbols-outlined text-xl transition-colors text-gray-400 group-hover:text-rose-400" style="font-variation-settings: 'FILL' 0;">favorite</span>
+{% endif %}
 <span id="contador-like-{{ post.id }}">{{ likes_count }}</span> Likes
 </button>
 </div>
@@ -203,10 +207,9 @@
         errorDiv.classList.add('hidden');
     }
 
-    // Toggle Like usando FastAPI
+    // Toggle Like usando Flask (misma app, misma BD)
     async function toggleLike(postId, usuarioId) {
-        if (!usuarioId) {
-            alert("Debes iniciar sesión para dar like.");
+        if (!usuarioId || usuarioId === '0') {
             return;
         }
 
@@ -214,8 +217,10 @@
         const contador = document.getElementById(`contador-like-${postId}`);
         
         try {
-            // Se asume FastAPI en localhost puerto 8000
-            const res = await fetch(`http://localhost:8000/api/v1/posts/${postId}/like?usuario_id=${usuarioId}`, { method: 'POST' });
+            const res = await fetch(`/like_post/${postId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
             
             if (!res.ok) throw new Error("Error en respuesta");
             
@@ -223,10 +228,12 @@
             
             contador.textContent = data.total;
             if (data.liked) {
-                btnIcon.classList.add('text-rose-500', 'fill-current');
+                btnIcon.classList.add('text-rose-500');
+                btnIcon.style.fontVariationSettings = "'FILL' 1";
                 btnIcon.classList.remove('text-gray-400');
             } else {
-                btnIcon.classList.remove('text-rose-500', 'fill-current');
+                btnIcon.classList.remove('text-rose-500');
+                btnIcon.style.fontVariationSettings = "'FILL' 0";
                 btnIcon.classList.add('text-gray-400');
             }
         } catch (error) {

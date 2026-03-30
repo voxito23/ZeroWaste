@@ -1,6 +1,0 @@
-CONTAINER ID   IMAGE                COMMAND                  CREATED       STATUS                          PORTS                                         NAMES
-54d6bd1e6218   zerowaste-admin      "docker-php-entrypoi…"   2 hours ago   Up 2 hours                      0.0.0.0:8001->80/tcp, [::]:8001->80/tcp       laravel_admin
-f05d127baa80   zerowaste-cliente    "python app.py"          2 hours ago   Restarting (1) 51 seconds ago                                                 flask_app
-50018261f041   zerowaste-fast_api   "uvicorn app.main:ap…"   2 hours ago   Up 2 hours                      0.0.0.0:6001->6000/tcp, [::]:6001->6000/tcp   fastapi_app
-b4861e9134dc   postgres:16-alpine   "docker-entrypoint.s…"   2 days ago    Up 2 hours (healthy)            0.0.0.0:5433->5432/tcp, [::]:5433->5432/tcp   postgres_db
-2c5689198b3a   node:20-alpine       "docker-entrypoint.s…"   2 days ago    Up 2 hours                                                                    tailwind_builder

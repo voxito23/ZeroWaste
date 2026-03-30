@@ -1,0 +1,30 @@
+
+   INFO  Seeding database.  
+
+
+   Illuminate\Database\QueryException 
+
+  SQLSTATE[42703]: Undefined column: 7 ERROR:  column "updated_at" of relation "usuarios" does not exist
+LINE 1: update "usuarios" set "password" = $1, "updated_at" = $2 whe...
+                                               ^ (Connection: pgsql, Host: db, Port: 5432, Database: zerowaste_db, SQL: update "usuarios" set "password" = $2y$12$cH7nU7VE/XWD/wypThCjBOPeQ4GewudhQoDfoIlQVH5Dum7qGHNia, "updated_at" = 2026-03-30 06:42:50 where "id" = 10)
+
+  at vendor/laravel/framework/src/Illuminate/Database/Connection.php:838
+    834▕             $exceptionType = $this->isUniqueConstraintError($e)
+    835▕                 ? UniqueConstraintViolationException::class
+    836▕                 : QueryException::class;
+    837▕ 
+  ➜ 838▕             throw new $exceptionType(
+    839▕                 $this->getNameWithReadWriteType(),
+    840▕                 $query,
+    841▕                 $this->prepareBindings($bindings),
+    842▕                 $e,
+
+      [2m+16 vendor frames [22m
+
+  17  database/seeders/AdminSeeder.php:50
+      Illuminate\Database\Eloquent\Model::__callStatic("updateOrCreate")
+      [2m+23 vendor frames [22m
+
+  41  artisan:16
+      Illuminate\Foundation\Application::handleCommand(Object(Symfony\Component\Console\Input\ArgvInput))
+

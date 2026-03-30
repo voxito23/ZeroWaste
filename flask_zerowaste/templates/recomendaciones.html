@@ -198,14 +198,16 @@
 {% endblock %}
 
 {% block scripts %}
+<script id="sentimiento-data" type="application/json">
+{{ sentimiento | default({}) | tojson | safe }}
+</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     // ═══════════════════════════════════════════
     //  Chart.js — Análisis de Sentimiento NLP
     // ═══════════════════════════════════════════
-    const rawSentimiento = '{{ sentimiento | default({}) | tojson | safe }}';
-    const datosSentimiento = JSON.parse(rawSentimiento);
+    const datosSentimiento = JSON.parse(document.getElementById('sentimiento-data').textContent);
 
     const pos = datosSentimiento.POS || 0;
     const neu = datosSentimiento.NEU || 0;

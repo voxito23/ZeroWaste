@@ -171,38 +171,4 @@ class Evento(Base):
     tipo_etiqueta = Column(String(50), nullable=True)
     imagen_url = Column(String(255), nullable=True)
 
-# SEEDER BÁSICO DE EVENTOS, FORO Y CATEGORÍAS
-def seed_database(db: Session):
-    categorias_nombres = ['Compostaje', 'Estilo de Vida', 'Reciclaje', 'Eventos', 'Dudas']
-    for nombre in categorias_nombres:
-        if not db.query(Categoria).filter_by(nombre=nombre).first():
-            db.add(Categoria(nombre=nombre))
-    db.commit()
 
-    if not db.query(Evento).first():
-        eventos_seed = [
-            Evento(titulo="Mega Jornada de Acopio", lugar="Parque Bicentenario, Qro.", fecha_inicio=datetime.utcnow() + timedelta(days=2), fecha_fin=datetime.utcnow() + timedelta(days=2, hours=5), descripcion="Trae tus electrónicos y plásticos PET para reciclaje masivo.", tipo_etiqueta="Acopio", imagen_url="acopio.png"),
-            Evento(titulo="Programa Ecomunidad", lugar="Centro Cívico, Querétaro", fecha_inicio=datetime.utcnow() + timedelta(days=5), fecha_fin=datetime.utcnow() + timedelta(days=5, hours=3), descripcion="Talleres de sostenibilidad y composta comunitaria para vecinos.", tipo_etiqueta="Educación", imagen_url="ecomunidad.png"),
-            Evento(titulo="Reforestación Autóctona", lugar="Cerro del Tambor, Qro", fecha_inicio=datetime.utcnow() + timedelta(days=10), fecha_fin=datetime.utcnow() + timedelta(days=10, hours=4), descripcion="Unidos para rescatar áreas verdes con árboles endémicos.", tipo_etiqueta="Voluntariado", imagen_url="reforestacion.png")
-        ]
-        db.add_all(eventos_seed)
-        db.commit()
-
-    if not db.query(Foro).first():
-        posts_seed = [
-            Foro(titulo="¿Cómo empezar con el compostaje en departamento?", contenido="Quiero iniciar pero tengo poco espacio.", categoria_id=1, autor_id=1),
-            Foro(titulo="Guía de reciclaje en el centro", contenido="Chicos, les comparto los centros de acopio activos.", categoria_id=3, autor_id=1),
-            Foro(titulo="Alternativas al vidrio en el súper", contenido="Me ha costado mucho dejar de comprar empaques plásticos.", categoria_id=2, autor_id=1)
-        ]
-        db.add_all(posts_seed)
-        db.commit()
-
-    if not db.query(PuntoMapa).first():
-        puntos_seed = [
-            PuntoMapa(nombre="Punto Verde Alameda", latitud=20.5881, longitud=-100.3899, direccion="Alameda Hidalgo, Centro Histórico, Querétaro", materiales="PET, Cartón, Vidrio, Aluminio", tipo="Centro Principal"),
-            PuntoMapa(nombre="Centro de Acopio UAQ", latitud=20.5932, longitud=-100.4127, direccion="Universidad Autónoma de Querétaro, Campus Centro", materiales="PET, Papel, Cartón, Electrónicos", tipo="Centro Principal"),
-            PuntoMapa(nombre="Tierra Com", latitud=20.6185, longitud=-100.4052, direccion="Col. Álamos, Querétaro", materiales="Orgánicos, Composta, Residuos de jardín", tipo="Contenedor Público"),
-            PuntoMapa(nombre="Recicla Qro", latitud=20.6340, longitud=-100.4480, direccion="Blvd. B. Quintana, Col. Arboledas", materiales="Plástico, Vidrio, Metal, Textiles", tipo="Centro Principal")
-        ]
-        db.add_all(puntos_seed)
-        db.commit()
