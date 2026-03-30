@@ -81,6 +81,13 @@
     'Eventos': 'border-violet-400 dark:border-violet-500',
     'Dudas': 'border-rose-400 dark:border-rose-500'
 } %}
+{% set bg_cat = {
+    'Reciclaje': 'bg-amber-400 dark:bg-amber-500',
+    'Compostaje': 'bg-emerald-400 dark:bg-emerald-500',
+    'Reducción de residuos': 'bg-cyan-400 dark:bg-cyan-500',
+    'Eventos': 'bg-violet-400 dark:bg-violet-500',
+    'Dudas': 'bg-rose-400 dark:bg-rose-500'
+} %}
 {% set glow_cat = {
     'Reciclaje': 'dark:shadow-[0_0_15px_rgba(251,191,36,0.3)]',
     'Compostaje': 'dark:shadow-[0_0_15px_rgba(52,211,153,0.3)]',
@@ -103,7 +110,7 @@
     'Dudas': 'border-rose-500 bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 dark:border-rose-400'
 } %}
 <article class="bg-white dark:bg-white/5 border-2 {{ colores_cat[post.categoria_rel.nombre] | default('border-gray-300 dark:border-gray-600') }} rounded-[2rem] p-8 md:p-10 shadow-xl {{ glow_cat[post.categoria_rel.nombre] | default('') }} relative overflow-hidden">
-<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>
+<div class="absolute top-0 left-0 w-full h-[2px] {{ bg_cat[post.categoria_rel.nombre] | default('bg-gray-300 dark:bg-gray-600') }}"></div>
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
 <div class="flex items-center gap-4">
     <img alt="{{ post.autor_rel.nombre }}" class="w-14 h-14 rounded-full border-2 border-emerald-50 object-cover shadow-sm" src="{{ post.autor_rel.foto_perfil if 'http' in post.autor_rel.foto_perfil|string else url_for('static', filename='img/perfiles/' ~ post.autor_rel.foto_perfil) if post.autor_rel.foto_perfil else url_for('static', filename='img/perfiles/perfil_default.png') }}"/>
