@@ -16,7 +16,7 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 CLIENT_SECRETS_FILE = "client_secret.json"
 SCOPES = ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile', 'openid']
 
-from models import db, Usuario, Categoria, PuntoMapa, CalificacionPunto, Evento, Foro, RespuestaForo, LikeForo, Actividad
+from models import db, Usuario, Categoria, PuntoMapa, CalificacionPunto, Evento, Foro, RespuestaForo, LikeForo, Actividad, Campaign
 from utils.analisis import analizar_sentimiento_comunidad
 
 app = Flask(__name__)
@@ -60,6 +60,24 @@ def login():
 @app.route('/registro')
 def registro():
     return render_template('registro.html')
+
+# -- Rutas de Artículos Educativos (APA 7) --
+@app.route('/tema/reciclar-plastico')
+def articulo_plastico():
+    return render_template('reciclar_plastico.html')
+
+@app.route('/tema/ahorro-agua')
+def articulo_agua():
+    return render_template('ahorro_agua.html')
+
+@app.route('/tema/energia-solar')
+def articulo_solar():
+    return render_template('energia_solar.html')
+
+@app.route('/tema/compostaje-urbano')
+def articulo_compostaje():
+    return render_template('compostaje_urbano.html')
+
 
 @app.route('/login/google')
 def login_google():
@@ -142,7 +160,8 @@ def index():
         return redirect(url_for('login'))
     
     eventos = Evento.query.order_by(Evento.fecha_inicio.asc()).limit(3).all()
-    return render_template('index.html', eventos=eventos)
+    campaigns = Campaign.query.filter_by(activa=True).order_by(Campaign.fecha_inicio.asc()).limit(3).all()
+    return render_template('index.html', eventos=eventos, campaigns=campaigns)
 
 @app.route('/noticia-queretaro')
 def noticia_queretaro():
@@ -225,7 +244,7 @@ def recomendaciones():
             recomendaciones_ia.append("Notamos preocupación en la comunidad. Participa con soluciones prácticas en el foro.")
         else:
             recomendaciones_ia.append("El sentimiento es equilibrado. Comparte consejos útiles para inspirar a otros.")
-        recomendaciones_ia.append(f"Se analizaron {sentimiento['total']} publicaciones con IA de procesamiento de lenguaje natural.")
+        recomendaciones_ia.append(f"Se analizaron {sentimiento['total']} publicaciones del foro con IA de procesamiento de lenguaje natural.")
     
     return render_template('recomendaciones.html', puntos=puntos, sentimiento=sentimiento, recomendaciones_ia=recomendaciones_ia)
 
@@ -258,7 +277,8 @@ def calificar_punto():
         return jsonify({
             'success': True,
             'promedio': float(f"{float(promedio or 0):.1f}"),
-            'total': total or 0
+            'total': total or 0,
+            'usuario': session.get('usuario_nombre', 'Voz')
         })
     except Exception as e:
         db.session.rollback()
@@ -538,14 +558,17 @@ def handle_login():
         # Comparación directa para contraseñas sin hash (compatibilidad legacy)
         if usuario.password == password_usuario:
             valido = True
-        elif usuario.password.startswith("$2y$"):
+        elif usuario.password.startswith("$2y$") or usuario.password.startswith("$2b$") or usuario.password.startswith("$2a$"):
             try:
-                from passlib.hash import bcrypt
-                hash_comparable = usuario.password.replace('$2y$', '$2b$', 1)
-                if bcrypt.verify(password_usuario, hash_comparable):
+                import bcrypt
+                # PHP $2y$ equivale dinámicamente al estándar $2b$
+                hash_comparable = usuario.password.replace('$2y$', '$2b$', 1).encode('utf-8')
+                if bcrypt.checkpw(password_usuario.encode('utf-8'), hash_comparable):
                     valido = True
             except ImportError:
                 pass
+            except Exception as e:
+                print("Error verificando bcrypt cross-platform:", e)
         elif check_password_hash(usuario.password, password_usuario):
             valido = True
 

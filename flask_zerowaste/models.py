@@ -98,7 +98,13 @@ class Campaign(db.Model):
     __tablename__ = 'campaigns'
     id = db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(150), nullable=False)
+    lugar = db.Column(db.String(200), nullable=True)
+    fecha_inicio = db.Column(db.DateTime, nullable=True)
+    fecha_fin = db.Column(db.DateTime, nullable=True)
     descripcion = db.Column(db.Text, nullable=False)
+    tipo_etiqueta = db.Column(db.String(50), nullable=True)
+    imagen_url = db.Column(db.String(255), nullable=True)
+    link_evento = db.Column(db.String(255), nullable=True)
     recompensa_puntos = db.Column(db.Integer, default=0)
     activa = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

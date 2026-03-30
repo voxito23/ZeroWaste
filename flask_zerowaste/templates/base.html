@@ -17,15 +17,28 @@
         html { background-color: #ECFDF5; color: #064E3B; }
         html.dark { background-color: #062C25; color: #D1FAE5; }
         body { background-color: transparent !important; }
+        /* Premium Native Loader Protection (Frame 0) */
+        #pro-loader { position: fixed; inset: 0; z-index: 999999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.7s ease, visibility 0.7s ease; background-color: #ECFDF5; }
+        html.dark #pro-loader { background-color: #062C25; }
+        .loader-wrapper { position: relative; width: 5rem; height: 5rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; }
+        .loader-spin { position: absolute; inset: 0; border: 4px solid transparent; border-top-color: #00E096; border-radius: 50%; animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite; }
+        .loader-logo { width: 3rem; height: 3rem; object-fit: contain; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .loader-text { color: #00E096; font-family: 'Montserrat', sans-serif; font-weight: 900; letter-spacing: 0.2em; font-size: 0.75rem; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
     <!-- Script de Persistencia de Tema (Anti-FOUC) -->
     <script>
         (function() {
             function applyTheme() {
-                if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                var isDark = localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                if (isDark) {
                     document.documentElement.classList.add('dark');
+                    // Forzamos CSS plano desde milisegundo 0 para neutralizar el fondo blanco:
+                    document.documentElement.style.backgroundColor = '#062C25';
                 } else {
                     document.documentElement.classList.remove('dark');
+                    document.documentElement.style.backgroundColor = '#ECFDF5';
                 }
             }
             applyTheme();
@@ -179,19 +192,30 @@
     {% block styles %}{% endblock %}
 </head>
 
-<body class="bg-surface-light dark:bg-surface-dark text-text-light dark:text-text-dark font-sans flex flex-col min-h-screen page-transition">
+<body class="bg-surface-light dark:bg-surface-dark text-text-light dark:text-text-dark font-sans flex flex-col min-h-screen">
     
-    {% if request.endpoint not in ['login', 'registro'] %}
-        {% include 'includes/header.html' %}
-    {% endif %}
-    
-    <main class="flex-grow">
-        {% block content %}{% endblock %}
-    </main>
-    
-    {% if request.endpoint not in ['login', 'registro'] %}
-        {% include 'includes/footer.html' %}
-    {% endif %}
+    <!-- Premium Loader completamente Cero-Dependencia -->
+    <div id="pro-loader">
+        <div class="loader-wrapper">
+            <div class="loader-spin"></div>
+            <img src="/static/img/logo.png" alt="Loading" class="loader-logo">
+        </div>
+        <div class="loader-text">CARGANDO</div>
+    </div>
+    <!-- Contenido Principal Oculto Inicialmente -->
+    <div id="app-content" style="opacity: 0; transition: opacity 0.8s ease-in-out;">
+        {% if request.endpoint not in ['login', 'registro'] %}
+            {% include 'includes/header.html' %}
+        {% endif %}
+        
+        <main class="flex-grow page-transition">
+            {% block content %}{% endblock %}
+        </main>
+        
+        {% if request.endpoint not in ['login', 'registro'] %}
+            {% include 'includes/footer.html' %}
+        {% endif %}
+    </div>
     
     {% block scripts %}{% endblock %}
 
@@ -217,6 +241,27 @@
             setTimeout(() => toast.remove(), 500);
         }, 3500);
     }
+
+    // Desaparecer la Pantalla de Carga de forma "Pro" y transicionar al contenido
+    const hideProLoader = () => {
+        const loader = document.getElementById('pro-loader');
+        const content = document.getElementById('app-content');
+        if (loader && !loader.classList.contains('fade-started')) {
+            loader.classList.add('fade-started');
+            
+            // 1. Mostrar suavemente todo el contenido ya procesado
+            if (content) content.style.opacity = '1';
+            
+            // 2. Desvanecer el loader
+            loader.style.opacity = '0';
+            loader.style.visibility = 'hidden';
+            setTimeout(() => loader.remove(), 800);
+        }
+    };
+    
+    // Suavizamos el destello coordinando el fin de la carga con una hermosa transición
+    window.addEventListener('load', hideProLoader);
+    setTimeout(hideProLoader, 1300); // Fallback 1.3s
     </script>
 </body>
 </html>

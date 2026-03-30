@@ -137,10 +137,17 @@
 
 <main class="flex-grow py-12 px-4 sm:px-6 relative overflow-hidden pt-24">
     <div class="max-w-4xl mx-auto relative z-10 text-left">
-        <div class="mb-8 flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+        <div class="mb-6 flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400">
             <a class="hover:text-primary transition-colors" href="{{ url_for('foro') }}">Foro</a>
             <span class="material-symbols-outlined text-sm">chevron_right</span>
             <span class="text-secondary dark:text-white">Nuevo Post</span>
+        </div>
+        
+        <div class="mb-10">
+            <a href="{{ url_for('foro') }}" class="inline-flex items-center gap-3 text-secondary dark:text-primary font-black text-xl lg:text-2xl group hover:text-primary-hover dark:hover:text-white transition-colors z-10 w-fit">
+                <span class="material-symbols-outlined text-4xl transition-transform group-hover:-translate-x-2 z-10 relative">arrow_left_alt</span>
+                <span class="border-b-2 border-current pb-1">Volver al foro</span>
+            </a>
         </div>
         <div
             class="bg-white dark:bg-forest-dark border border-emerald-100 dark:border-emerald-800/50 rounded-[2rem] shadow-xl p-8 md:p-12">
@@ -198,13 +205,34 @@
                     <label class="block text-lg font-bold text-secondary dark:text-emerald-100">
                         Categoría <span class="text-red-500">*</span>
                     </label>
-                    <select id="categoria_id" name="categoria_id" class="w-full mt-2 p-4 rounded-xl overflow-hidden shadow-lg border border-emerald-100 dark:border-emerald-800 bg-surface-light dark:bg-forest-dark font-bold text-lg text-secondary dark:text-emerald-100 outline-none focus:ring-4 focus:ring-primary/20 cursor-pointer appearance-none" style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23064E3B%22%3E%3Cpath d=%22M7 10l5 5 5-5z%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.5rem;">
-                        <option value="" disabled selected>Selecciona una categoría</option>
-                        {% for cat in categorias %}
-                        <option value="{{ cat.id }}" class="text-emerald-700 dark:text-emerald-400 font-bold">{% if cat.nombre == 'Compostaje' %}🌱{% elif cat.nombre == 'Reciclaje' %}♻️{% elif cat.nombre == 'Reducción de residuos' %}💧{% elif cat.nombre == 'Eventos' %}📅{% else %}❓{% endif %} {{ cat.nombre }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+                    <div class="relative" id="custom-dropdown">
+                        <!-- Botón Visibe (Simulador de Select) -->
+                        <div class="w-full mt-2 p-4 rounded-xl shadow-[0_4px_15px_rgba(0,224,150,0.05)] border-2 border-emerald-100 dark:border-emerald-800 bg-surface-light dark:bg-forest-dark cursor-pointer flex justify-between items-center transition-all hover:border-primary focus-within:ring-4 focus-within:ring-primary/20" onclick="toggleDropdown()">
+                            <span id="dropdown-label" class="font-bold text-lg text-gray-400 dark:text-gray-500 flex items-center gap-3">
+                                Selecciona una categoría
+                            </span>
+                            <span id="dropdown-arrow" class="material-symbols-outlined text-gray-500 dark:text-gray-400 transition-transform duration-300">expand_more</span>
+                        </div>
+                        
+                        <!-- Lista Desplegable Flotante Premium -->
+                        {% set cat_theme = {
+                            'Reciclaje': 'text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/30 border-amber-50 dark:border-amber-900/30',
+                            'Compostaje': 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 border-emerald-50 dark:border-emerald-900/30',
+                            'Reducción de residuos': 'text-cyan-600 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 border-cyan-50 dark:border-cyan-900/30',
+                            'Eventos': 'text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-900/30 border-violet-50 dark:border-violet-900/30',
+                            'Dudas': 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/30 border-rose-50 dark:border-rose-900/30'
+                        } %}
+                        <ul id="dropdown-list" class="absolute z-50 w-full mt-3 bg-white dark:bg-forest-dark border-2 border-emerald-100 dark:border-emerald-800 rounded-2xl shadow-2xl overflow-hidden hidden flex-col transform origin-top transition-all p-1">
+                            {% for cat in categorias %}
+                            <li data-value="{{ cat.id }}" class="px-6 py-4 rounded-xl cursor-pointer transition-all flex items-center gap-3 font-bold text-lg hover:-translate-y-0.5 hover:shadow-sm border border-transparent {{ cat_theme[cat.nombre] | default('text-secondary hover:bg-gray-50') }}" onclick="selectCategory(this)">
+                                <span class="text-2xl drop-shadow-sm">{% if cat.nombre == 'Compostaje' %}🌱{% elif cat.nombre == 'Reciclaje' %}♻️{% elif cat.nombre == 'Reducción de residuos' %}🛍️{% elif cat.nombre == 'Eventos' %}📅{% else %}❓{% endif %}</span>
+                                {{ cat.nombre }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        <!-- Entrada Oculta para el Formulario Flask -->
+                        <input type="hidden" id="categoria_id" name="categoria_id" value="">
+                    </div>
 
                 <div class="space-y-3">
                     <label class="block text-lg font-bold text-secondary dark:text-emerald-100">

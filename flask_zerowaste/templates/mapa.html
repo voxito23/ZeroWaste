@@ -5,8 +5,15 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-    .leaflet-popup-content-wrapper { border-radius: 1rem !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important; }
+    .leaflet-popup-content-wrapper { border-radius: 1rem !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important; transition: background-color 0.3s ease, border-color 0.3s ease; }
+    html.dark .leaflet-popup-content-wrapper { background: #022018 !important; border: 2px solid #00E096 !important; box-shadow: 0 15px 40px rgba(0,224,150,0.15) !important; color: white !important; }
+    html.dark .leaflet-popup-tip { border-top-color: #022018 !important; }
     .leaflet-popup-tip { display: none; }
+    /* Fix Instant Dark Mode Flash on Leaflet Maps */
+    .carto-light, .carto-dark { transition: opacity 0.3s ease !important; }
+    .carto-dark { opacity: 0 !important; }
+    html.dark .carto-light { opacity: 0 !important; }
+    html.dark .carto-dark { opacity: 1 !important; z-index: 2; }
 </style>
 {% endblock %}
 
@@ -16,40 +23,48 @@
         <div class="flex flex-col lg:flex-row gap-6 h-[80vh]">
 
             <!-- Panel Lateral -->
-            <div class="w-full lg:w-96 bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md rounded-2xl shadow-xl border border-emerald-100 dark:border-emerald-800 flex flex-col overflow-hidden">
+            <div class="w-full lg:w-96 bg-white dark:bg-forest-dark/95 backdrop-blur-md rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.12)] border-[3px] border-emerald-400 dark:border-primary flex flex-col overflow-hidden relative z-10">
                 <div class="p-6 pb-3">
                     <h2 class="font-display font-bold text-2xl text-secondary dark:text-white mb-4">Puntos de Reciclaje</h2>
-                    <div class="relative flex items-center rounded-full shadow-md bg-white/90 dark:bg-emerald-900/40 border-2 border-transparent focus-within:border-primary transition-all">
+                    <div class="relative flex items-center rounded-full shadow-md bg-white/90 dark:bg-emerald-900/40 border-2 border-transparent focus-within:border-primary transition duration-300">
                         <span class="pl-4 flex items-center pointer-events-none">
                             <span class="material-symbols-outlined text-emerald-500">search</span>
                         </span>
                         <input id="search-puntos" class="w-full bg-transparent pl-3 pr-4 py-3 text-secondary dark:text-white placeholder-gray-400 outline-none border-none font-semibold focus:ring-0 focus:outline-none" placeholder="Buscar ubicación..." type="text" style="box-shadow: none !important;" />
                     </div>
                 </div>
-                <div class="px-6 py-3 overflow-x-auto no-scrollbar">
-                    <div class="flex space-x-3">
-                        <button class="flex items-center px-4 py-2 rounded-full bg-secondary text-white text-sm font-bold whitespace-nowrap gap-1 shadow-md">
+                <div class="px-6 py-3">
+                    <div class="flex flex-wrap gap-2">
+                        <button class="filter-btn flex items-center px-4 py-2 rounded-full bg-secondary text-white text-sm font-bold whitespace-nowrap gap-1 shadow-md transition-colors" data-filter="todos">
                             <span class="material-symbols-outlined text-sm">check</span> Todos
                         </button>
-                        <button class="flex items-center px-4 py-2 rounded-full bg-surface-light text-secondary dark:text-emerald-100 text-sm font-semibold whitespace-nowrap border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/40 gap-1.5">
+                        <button class="filter-btn flex items-center px-4 py-2 rounded-full bg-surface-light text-secondary dark:text-emerald-100 text-sm font-semibold whitespace-nowrap border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/40 gap-1.5 transition-colors" data-filter="plástico">
                             <i class="fa-solid fa-bottle-water text-blue-500"></i> Plástico
                         </button>
-                        <button class="flex items-center px-4 py-2 rounded-full bg-surface-light text-secondary dark:text-emerald-100 text-sm font-semibold whitespace-nowrap border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/40 gap-1.5">
+                        <button class="filter-btn flex items-center px-4 py-2 rounded-full bg-surface-light text-secondary dark:text-emerald-100 text-sm font-semibold whitespace-nowrap border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/40 gap-1.5 transition-colors" data-filter="vidrio">
                             <i class="fa-solid fa-wine-glass text-green-500"></i> Vidrio
+                        </button>
+                        <button class="filter-btn flex items-center px-4 py-2 rounded-full bg-surface-light text-secondary dark:text-emerald-100 text-sm font-semibold whitespace-nowrap border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/40 gap-1.5 transition-colors" data-filter="cartón">
+                            <span class="material-symbols-outlined text-orange-500 text-sm">inventory_2</span> Cartón
+                        </button>
+                        <button class="filter-btn flex items-center px-4 py-2 rounded-full bg-surface-light text-secondary dark:text-emerald-100 text-sm font-semibold whitespace-nowrap border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/40 gap-1.5 transition-colors" data-filter="electrónicos">
+                            <span class="material-symbols-outlined text-purple-500 text-sm">devices</span> Electrónicos
                         </button>
                     </div>
                 </div>
                 <div class="flex-1 overflow-y-auto no-scrollbar px-2 pb-4">
                     <div class="space-y-2" id="puntos-list">
                         {% for p in puntos %}
-                        <div class="punto-item group mx-2 p-4 rounded-2xl hover:bg-surface-light dark:hover:bg-emerald-900/20 cursor-pointer transition-colors border border-transparent hover:border-emerald-100 dark:hover:border-emerald-800"
-                            data-lat="{{ p.latitud }}" data-lng="{{ p.longitud }}" data-name="{{ p.nombre|lower }}"
+                        <div class="punto-item group p-4 mb-3 rounded-2xl bg-white dark:bg-forest-dark hover:bg-surface-light dark:hover:bg-emerald-900/40 cursor-pointer transition-all border-2 border-emerald-100 dark:border-emerald-800 shadow-sm hover:border-emerald-300 dark:hover:border-primary"
+                            data-lat="{{ p.latitud }}" data-lng="{{ p.longitud }}" data-name="{{ p.nombre|lower }}" data-tipo="{{ p.tipo|lower }}" data-materiales="{{ p.materiales|lower }}"
                             onclick="if(window.map) window.map.flyTo([this.dataset.lat, this.dataset.lng], 16);">
                             <div class="flex items-start gap-3">
-                                <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-800 flex items-center justify-center shrink-0">
-                                    <span class="material-symbols-outlined text-secondary dark:text-emerald-100">
-                                        {% if p.tipo == 'Plástico' %}water_drop{% elif p.tipo == 'Vidrio' %}wine_bar{% else %}recycling{% endif %}
-                                    </span>
+                                <div class="w-12 h-12 rounded-full border-2 border-primary/20 bg-emerald-100 dark:bg-emerald-800 overflow-hidden shrink-0 flex items-center justify-center">
+                                    {% if p.imagen and p.imagen != 'None' %}
+                                    <img src="/static/img/{{ p.imagen }}" alt="{{ p.nombre }}" class="w-full h-full object-cover">
+                                    {% else %}
+                                    <span class="material-symbols-outlined text-primary text-xl">recycling</span>
+                                    {% endif %}
                                 </div>
                                 <div class="flex-1">
                                     <h3 class="font-bold text-secondary dark:text-white leading-tight">{{ p.nombre }}</h3>
@@ -64,17 +79,17 @@
                         <div class="p-6 text-center text-gray-400 font-bold">No hay puntos disponibles.</div>
                         {% endfor %}
                     </div>
-                    <div class="px-4 mt-4 pb-2">
-                        <a href="{{ url_for('recomendaciones') }}" class="w-full bg-primary hover:bg-primary-hover text-secondary px-8 py-3.5 rounded-xl font-bold text-base shadow-lg hover:shadow-primary/40 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
-                            <span class="material-symbols-outlined text-xl">recommend</span>
-                            Recomendaciones
+                    <div class="px-4 mt-4 pb-2 flex justify-center">
+                        <a href="{{ url_for('recomendaciones') }}" class="inline-flex items-center gap-2 text-primary font-black text-lg group hover:text-secondary dark:hover:text-white transition-colors z-10 w-fit drop-shadow-[0_0_5px_rgba(0,224,150,0.3)] hover:drop-shadow-[0_0_10px_rgba(0,224,150,0.6)]">
+                            <span class="border-b-[2px] border-current pb-0.5">Recomendaciones</span>
+                            <span class="material-symbols-outlined text-2xl transition-transform group-hover:translate-x-1.5 z-10 relative">arrow_forward</span>
                         </a>
                     </div>
                 </div>
             </div>
 
             <!-- Mapa -->
-            <div class="flex-1 rounded-2xl overflow-hidden shadow-xl border border-emerald-100 dark:border-emerald-800 relative z-0">
+            <div class="flex-1 rounded-2xl overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.12)] border-[3px] border-emerald-400 dark:border-primary relative z-0">
                 <div id="map-container" class="w-full h-full z-0"></div>
             </div>
 
@@ -95,25 +110,12 @@ document.addEventListener("DOMContentLoaded", () => {
         window.map = L.map('map-container', { zoomControl: false }).setView([20.588, -100.389], 12);
         L.control.zoom({ position: 'bottomright' }).addTo(window.map);
 
-        let lightTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO' });
-        let darkTile  = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',  { attribution: '&copy; CARTO' });
+        let lightTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO', className: 'carto-light' });
+        let darkTile  = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',  { attribution: '&copy; CARTO', className: 'carto-dark' });
 
-        if (document.documentElement.classList.contains('dark')) {
-            darkTile.addTo(window.map);
-        } else {
-            lightTile.addTo(window.map);
-        }
-
-        const observer = new MutationObserver(() => {
-            if (document.documentElement.classList.contains('dark')) {
-                window.map.removeLayer(lightTile);
-                darkTile.addTo(window.map);
-            } else {
-                window.map.removeLayer(darkTile);
-                lightTile.addTo(window.map);
-            }
-        });
-        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+        // Añadimos ambas capas al mismo tiempo. El CSS se encarga de mostrar la correcta instantáneamente según la clase "dark" en el HTML.
+        lightTile.addTo(window.map);
+        darkTile.addTo(window.map);
 
         const ecoIcon = L.divIcon({
             className: '',
@@ -122,6 +124,8 @@ document.addEventListener("DOMContentLoaded", () => {
             iconAnchor: [18, 36],
             popupAnchor: [0, -36]
         });
+
+        window.mapMarkers = [];
 
         puntosData.forEach(p => {
             const imgHtml = `<img src="/static/img/${p.imagen || 'default_punto.png'}" alt="Punto image" style="width:100%; height:120px; object-fit:cover; border-radius:12px; margin-bottom:8px;">`;
@@ -134,41 +138,47 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             starsHtml += `</div>`;
 
-            let reviewBoxHtml = `<div id="review-box-${p.id}" style="display:none; margin-bottom: 8px;">
-                <textarea id="review-text-${p.id}" placeholder="Escribe tu reseña..." style="width:100%; font-size:12px; border-radius:8px; padding:4px; border:1px solid #ccc;"></textarea>
-                <button class="send-review-btn mt-1" data-id="${p.id}" style="background:#10B981; color:white; width:100%; border-radius:8px; border:0; padding:4px; font-weight:bold; font-size:12px; cursor:pointer;">Enviar Reseña</button>
+            let reviewBoxHtml = `<div id="review-box-${p.id}" style="display:none;" class="mb-2">
+                <textarea id="review-text-${p.id}" placeholder="Escribe tu reseña..." class="w-full text-xs rounded-lg p-2 border border-gray-300 dark:border-emerald-800 bg-white dark:bg-forest-dark text-secondary dark:text-white focus:ring-1 focus:ring-primary focus:outline-none placeholder-gray-400"></textarea>
+                <button class="send-review-btn mt-1 w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg border-0 p-1.5 font-bold text-xs cursor-pointer shadow-md transition-colors" data-id="${p.id}">Enviar Reseña</button>
             </div>`;
 
-            let resenasHtml = `<div id="resenas-list-${p.id}" style="max-height: 100px; overflow-y: auto; text-align: left; background: #f9fafb; padding: 8px; border-radius: 8px; margin-top: 8px; border: 1px solid #e5e7eb;">
-                <strong style="font-size: 11px; display: block; margin-bottom: 4px;">Reseñas recientes:</strong>`;
+            let resenasHtml = `<div id="resenas-list-${p.id}" class="max-h-[100px] overflow-y-auto text-left bg-gray-50 dark:bg-emerald-900/30 p-2.5 rounded-xl border border-gray-200 dark:border-emerald-800/50 no-scrollbar mt-2">
+                <strong class="text-[11px] block mb-1 text-secondary dark:text-gray-300">Reseñas recientes:</strong>`;
             if(p.resenas && p.resenas.length > 0) {
                 p.resenas.forEach(r => {
-                    resenasHtml += `<div style="margin-bottom: 6px; font-size: 10px; border-bottom: 1px dashed #ddd; padding-bottom: 4px;">
-                        <span style="color:#059669; font-weight:bold;">⭐ ${r.estrellas} - ${r.usuario}</span><br>
-                        ${r.comentario ? `<i>"${r.comentario}"</i>` : ''}
+                    resenasHtml += `<div class="mb-2 text-[10px] border-b border-dashed border-gray-300 dark:border-emerald-800/50 pb-1.5 last:border-0 last:pb-0">
+                        <span class="text-emerald-600 dark:text-emerald-400 font-bold">⭐ ${r.estrellas} - ${r.usuario}</span><br>
+                        ${r.comentario ? `<i class="text-gray-600 dark:text-gray-400 block mt-0.5">"${r.comentario}"</i>` : ''}
                     </div>`;
                 });
             } else {
-                resenasHtml += `<div style="font-size: 10px; color: #9ca3af;">Aún no hay reseñas.</div>`;
+                resenasHtml += `<div class="text-[10px] text-gray-400 dark:text-gray-500">Aún no hay reseñas.</div>`;
             }
             resenasHtml += `</div>`;
 
-            L.marker([p.latitud, p.longitud], { icon: ecoIcon }).addTo(window.map)
+            const newMarker = L.marker([p.latitud, p.longitud], { icon: ecoIcon }).addTo(window.map)
                 .bindPopup(`
-                    <div style="text-align:center; font-family:Inter,sans-serif; padding:4px; min-width:200px;">
+                    <div class="text-center font-sans p-1 min-w-[200px]">
                         ${imgHtml}
-                        <b style="font-size:16px; color:#064E3B; display:block; margin-bottom:2px;">${p.nombre}</b>
-                        <small style="color:#6b7280; display:block; margin-bottom:8px;">${p.direccion || ''}</small>
-                        <small style="color:#059669; font-weight:bold; display:block; margin-bottom:4px;" class="rating-info-${p.id}">⭐ ${p.promedio} (${p.total_reviews} reseñas)</small>
+                        <b class="text-[16px] text-secondary dark:text-white block mb-0.5">${p.nombre}</b>
+                        <small class="text-gray-500 dark:text-gray-400 block mb-2">${p.direccion || ''}</small>
+                        <small class="text-emerald-700 dark:text-emerald-300 font-bold block mb-1 rating-info-${p.id}">⭐ ${p.promedio} (${p.total_reviews} reseñas)</small>
                         ${starsHtml}
                         ${reviewBoxHtml}
                         ${resenasHtml}
                         <a href="https://www.google.com/maps/search/?api=1&query=${p.latitud},${p.longitud}" target="_blank"
-                           style="display:inline-block; background:#10B981; color:white; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:bold; text-decoration:none; box-shadow:0 4px 12px rgba(16,185,129,0.3); margin-top:8px;">
+                           class="inline-block bg-primary hover:bg-primary-hover text-secondary px-4 py-2 mt-3 rounded-full text-[11px] font-black tracking-wide shadow-lg hover:-translate-y-0.5 transition-transform no-underline uppercase">
                             📍 Ir con Maps
                         </a>
                     </div>
                 `);
+                
+            window.mapMarkers.push({
+                marker: newMarker,
+                tipo: (p.tipo || "").toLowerCase(),
+                materiales: (p.materiales || "").toLowerCase()
+            });
         });
         
         let valSelected = {};
@@ -238,6 +248,71 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelectorAll('.punto-item').forEach(item => {
                 const name = item.dataset.name || '';
                 item.style.display = name.includes(query) ? '' : 'none';
+            });
+        });
+    }
+
+    // Filtros de Botones
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    if(filterBtns.length > 0) {
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                // Actualizar estilo visual de los botones reseteando la clase genérica de inactivo a todos
+                const baseClass = "filter-btn flex items-center px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap gap-1.5 transition-colors bg-surface-light text-secondary border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-100";
+                const activeClass = "filter-btn flex items-center px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap gap-1 transition-colors bg-secondary text-white shadow-md border border-transparent";
+                
+                filterBtns.forEach(b => {
+                    b.className = baseClass;
+                });
+                
+                this.className = activeClass;
+
+                const norm = str => str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : "";
+                const filterType = norm(this.dataset.filter);
+
+                // Filtrar marcadores del Leaflet map
+                if(window.mapMarkers) {
+                    window.mapMarkers.forEach(item => {
+                        let t = norm(item.materiales);
+                        let matches = (filterType === 'todos');
+                        if (!matches) {
+                            if (filterType === 'plastico') {
+                                matches = t.includes('plastico') || t.includes('pet');
+                            } else {
+                                matches = t.includes(filterType);
+                            }
+                        }
+                        
+                        if (matches) {
+                            if (!window.map.hasLayer(item.marker)) {
+                                window.map.addLayer(item.marker);
+                            }
+                        } else {
+                            if (window.map.hasLayer(item.marker)) {
+                                window.map.removeLayer(item.marker);
+                            }
+                        }
+                    });
+                }
+
+                // Filtrar elementos de la lista sidebar
+                document.querySelectorAll('.punto-item').forEach(el => {
+                    const elType = norm(el.dataset.materiales);
+                    let matches = (filterType === 'todos');
+                    if (!matches) {
+                        if (filterType === 'plastico') {
+                            matches = elType.includes('plastico') || elType.includes('pet');
+                        } else {
+                            matches = elType.includes(filterType);
+                        }
+                    }
+                    
+                    if (matches) {
+                        el.style.display = '';
+                    } else {
+                        el.style.display = 'none';
+                    }
+                });
             });
         });
     }

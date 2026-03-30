@@ -100,7 +100,7 @@
 
 <main class="flex-grow py-8 md:py-12 text-left pt-24">
 <div class="max-w-desktop mx-auto px-6 lg:px-10 space-y-8">
-<section class="bg-white dark:bg-emerald-900/20 rounded-[2.5rem] p-10 md:p-16 shadow-xl border border-gray-100 dark:border-emerald-800/50 relative overflow-hidden">
+<section class="bg-white dark:bg-emerald-900/20 rounded-[2.5rem] p-10 md:p-16 shadow-[0_10px_30px_rgba(0,180,100,0.1)] border-2 border-emerald-200 dark:border-emerald-700/50 relative overflow-hidden">
 <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-surface-light to-white dark:from-emerald-900/40 dark:to-transparent z-0"></div>
 <div class="relative z-10 flex flex-col md:flex-row items-start md:items-end gap-12 md:gap-16 hero-profile-flex">
 <div class="relative group mx-auto md:mx-0">
@@ -140,7 +140,7 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 <div class="lg:col-span-5 space-y-6">
-<div class="bg-white dark:bg-emerald-900/10 rounded-3xl p-8 border border-gray-100 dark:border-emerald-800/50 shadow-sm h-full">
+<div class="bg-white dark:bg-emerald-900/10 rounded-3xl p-8 border-2 border-emerald-200 dark:border-emerald-700/50 shadow-[0_10px_30px_rgba(0,180,100,0.1)] h-full">
 <div class="flex items-center gap-3 mb-6">
 <div class="p-2 bg-secondary/10 dark:bg-primary/20 rounded-lg text-secondary dark:text-primary">
 <span class="material-symbols-outlined">person</span>
@@ -182,7 +182,7 @@
 </div>
 
 <div class="lg:col-span-7 space-y-6">
-<div class="bg-white dark:bg-emerald-900/10 rounded-3xl p-8 border border-gray-100 dark:border-emerald-800/50 shadow-sm h-full tarjeta-perfil">
+<div class="bg-white dark:bg-emerald-900/10 rounded-3xl p-8 border-2 border-emerald-200 dark:border-emerald-700/50 shadow-[0_10px_30px_rgba(0,180,100,0.1)] h-full tarjeta-perfil">
 <div class="flex items-center justify-between mb-8">
 <div class="flex items-center gap-3">
 <div class="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg text-orange-600 dark:text-orange-400">
@@ -223,54 +223,62 @@
 </main>
 
 <div id="editModal" class="fixed inset-0 z-[110] hidden overflow-y-auto">
-    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+    <!-- Contenedor externo para el centrado vertical estricto usando align-middle sin Flexbox-Clash -->
+    <div class="min-h-screen px-4 text-center">
+        
+        <!-- Backdrop oscuro -->
         <div class="fixed inset-0 transition-opacity bg-gray-900/70 backdrop-blur-sm" onclick="document.getElementById('editModal').classList.add('hidden')"></div>
 
-        <div class="relative inline-block w-full max-w-2xl p-8 overflow-hidden text-left align-middle transition-all transform bg-white dark:bg-forest-dark shadow-2xl rounded-[2rem] border border-gray-100 dark:border-emerald-800">
-            <div class="flex items-center justify-between mb-6 border-b border-gray-100 dark:border-emerald-800 pb-4">
+        <!-- Truco de Tailwind UI para centrar verticalmente elementos inline-block -->
+        <span class="inline-block h-screen align-middle" aria-hidden="true">&#8203;</span>
+
+        <!-- Panel Modal Principal (Diseño original restaurado) -->
+        <div class="inline-block relative w-full max-w-2xl my-10 p-8 text-left align-middle transition-all transform bg-white dark:bg-forest-dark shadow-2xl rounded-[2rem] border border-gray-100 dark:border-emerald-800">
+            
+            <div class="flex items-center justify-between mb-8 border-b border-gray-100 dark:border-emerald-800 pb-4">
                 <h3 class="text-2xl font-black font-display text-secondary dark:text-white">Editar Perfil</h3>
-                <button onclick="document.getElementById('editModal').classList.add('hidden')" class="text-gray-400 hover:text-red-500 transition-colors">
+                <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="text-gray-400 hover:text-red-500 transition-colors">
                     <span class="material-symbols-outlined text-3xl">close</span>
                 </button>
             </div>
 
-            <form id="editProfileForm" action="{{ url_for('editar_perfil') }}" method="POST" enctype="multipart/form-data" onsubmit="validateProfileEdit(event)">
-                <div id="edit-error" class="hidden mb-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md text-sm font-bold"></div>
+            <form id="editProfileForm" action="{{ url_for('editar_perfil') }}" method="POST" enctype="multipart/form-data" onsubmit="validateProfileEdit(event)" class="space-y-6">
+                <div id="edit-error" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-md text-sm font-bold"></div>
 
-                <div class="mb-6">
-                    <label class="text-sm font-bold text-secondary dark:text-emerald-100 block mb-2">Foto de Perfil</label>
+                <div>
+                    <label class="text-sm font-bold text-secondary dark:text-emerald-100 block mb-3">Foto de Perfil</label>
                     <div class="flex items-center gap-4">
-                        <div class="w-16 h-16 rounded-full border-2 border-gray-200 dark:border-forest-dark overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0">
+                        <div class="w-16 h-16 rounded-full border-2 border-gray-200 dark:border-forest-dark overflow-hidden bg-gray-100 dark:bg-gray-700 shrink-0 shadow-inner">
                             <img alt="Perfil" class="w-full h-full object-cover" src="/static/img/perfiles/{{ session.get('foto_perfil', 'VICPERFIL.jpg') }}"/>
                         </div>
-                        <input type="file" name="foto_perfil" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-primary/20 file:text-primary hover:file:bg-primary/30 outline-none">
+                        <input type="file" name="foto_perfil" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-5 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 outline-none transition-colors cursor-pointer">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div class="space-y-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-3">
                         <label class="text-sm font-bold text-secondary dark:text-emerald-100">Nombre completo <span class="text-red-500">*</span></label>
                         <input type="text" id="edit-nombre" name="nombre" value="{{ session.get('nombre', 'Victor Osvaldo Rodriguez') }}" class="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 text-secondary dark:text-white outline-none">
                         <p class="text-xs text-gray-500">Mínimo 10 caracteres.</p>
                     </div>
-                    <div class="space-y-2">
+                    <div class="space-y-3">
                         <label class="text-sm font-bold text-secondary dark:text-emerald-100">Ubicación</label>
                         <input type="text" name="ubicacion" value="{{ session.get('ubicacion', 'Querétaro, Qro, México') }}" class="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 text-secondary dark:text-white outline-none">
                     </div>
                 </div>
 
-                <div class="space-y-2 mb-6">
+                <div class="space-y-3">
                     <label class="text-sm font-bold text-secondary dark:text-emerald-100">Título / Profesión</label>
                     <input type="text" name="titulo_perfil" value="{{ session.get('titulo_perfil', 'Entusiasta del Desarrollo Sostenible') }}" placeholder="Ej: Ingeniero Ambiental" class="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 text-secondary dark:text-white outline-none">
                 </div>
 
-                <div class="space-y-2 mb-6">
+                <div class="space-y-3">
                     <label class="text-sm font-bold text-secondary dark:text-emerald-100">Biografía</label>
                     <textarea name="biografia" rows="4" class="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 text-secondary dark:text-white outline-none resize-none">{{ session.get('biografia', 'Estudiante comprometido con...') }}</textarea>
                 </div>
 
-                <div class="space-y-2 mb-8">
-                    <label class="text-sm font-bold text-secondary dark:text-emerald-100">Intereses Ecológicos</label>
+                <div>
+                    <label class="text-sm font-bold text-secondary dark:text-emerald-100 block mb-3">Intereses Ecológicos</label>
                     <div class="intereses-grid">
                         {% set mis_ints = session.get('intereses', '')|string %}
                         <label><input type="checkbox" name="intereses" value="Reciclaje de Plásticos" hidden {% if 'Reciclaje de Plásticos' in mis_ints %}checked{% endif %}><div class="interes-pill"><i class="fa-solid fa-recycle"></i> Reciclaje de Plásticos</div></label>
@@ -286,9 +294,9 @@
                     <p id="error-intereses" class="text-red-500 font-bold text-sm hidden mt-3"></p>
                 </div>
 
-                <div class="flex justify-end gap-4">
-                    <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="px-6 py-3 rounded-full text-secondary dark:text-gray-300 font-bold hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">Cancelar</button>
-                    <button type="button" onclick="mostrarConfirmacion()" class="px-8 py-3 rounded-full bg-primary text-secondary font-extrabold hover:bg-primary-hover shadow-lg transition-all transform hover:-translate-y-1 flex items-center gap-2">
+                <div class="flex justify-end gap-4 pt-6 mt-4">
+                    <button type="button" onclick="document.getElementById('editModal').classList.add('hidden')" class="px-8 py-3.5 rounded-full text-secondary dark:text-gray-300 font-bold hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">Cancelar</button>
+                    <button type="button" onclick="mostrarConfirmacion()" class="px-10 py-3.5 rounded-full bg-primary text-secondary font-extrabold hover:bg-primary-hover shadow-xl transition-all transform hover:-translate-y-1 flex items-center gap-2">
                         <span class="material-symbols-outlined text-lg">save</span> Guardar Cambios
                     </button>
                 </div>

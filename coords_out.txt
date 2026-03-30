@@ -1,0 +1,3 @@
+https://maps.app.goo.gl/7VHNDK7JrJVKL8EV8: lat=20.6372864, lng=-100.4634112
+https://maps.app.goo.gl/K8WAwdE2iM2a4LjW9: lat=20.6372864, lng=-100.4634112
+https://maps.app.goo.gl/btdk2jXACwa9G4Tt5: lat=20.6372864, lng=-100.4634112

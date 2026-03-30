@@ -16,12 +16,24 @@
         </ol>
     </nav>
 
+    <div class="mb-10 -mt-2">
+        <a href="{{ url_for('mapa') }}" class="inline-flex items-center gap-3 text-secondary dark:text-primary font-black text-xl lg:text-2xl group hover:text-primary-hover dark:hover:text-white transition-colors z-10 w-fit">
+            <span class="material-symbols-outlined text-4xl transition-transform group-hover:-translate-x-2 z-10 relative">arrow_left_alt</span>
+            <span class="border-b-2 border-current pb-1">Volver al mapa</span>
+        </a>
+    </div>
+
     <!-- ═══════════════════════════════════════════════════════════ -->
     <!--  HEADER                                                     -->
     <!-- ═══════════════════════════════════════════════════════════ -->
     <div class="text-center mb-16">
-        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/30 text-primary font-bold text-sm mb-6">
-            <span class="material-symbols-outlined text-base">eco</span> Impulsado por IA + Comunidad
+        <div class="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-[#062c25]/95 backdrop-blur-md border border-white/30 text-white font-bold text-sm mb-6 anim-fade relative group shadow-[0_10px_30px_rgba(0,0,0,0.15)]">
+            <span class="absolute -inset-1 rounded-full bg-primary/20 opacity-0 group-hover:opacity-100 group-hover:animate-ping z-0 transition-opacity duration-300"></span>
+            <span class="relative flex h-3 w-3 z-10">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-primary shadow-[0_0_8px_#00E096]"></span>
+            </span>
+            <span class="tracking-wide z-10 uppercase font-bold mt-0.5" style="letter-spacing: 0.05em;">IMPULSADO POR IA + COMUNIDAD</span>
         </div>
         <h1 class="font-display text-4xl lg:text-6xl font-black text-secondary dark:text-white mb-4">
             Recomendaciones de la <span class="text-primary">Comunidad</span>
@@ -45,7 +57,7 @@
         <div class="grid lg:grid-cols-12 gap-8 items-stretch">
 
             <!-- Gráfica Donut (Sentimiento) -->
-            <div class="lg:col-span-5 bg-white dark:bg-white/5 p-8 rounded-3xl shadow-xl border border-emerald-50 dark:border-emerald-800/50 flex flex-col items-center justify-center">
+            <div class="lg:col-span-5 bg-white dark:bg-forest-dark p-8 rounded-[2rem] shadow-[0_15px_40px_rgba(0,0,0,0.12)] border-[3px] border-emerald-400 dark:border-primary flex flex-col items-center justify-center">
                 <h3 class="font-display font-bold text-lg text-secondary dark:text-gray-200 mb-6 w-full text-center tracking-wide uppercase">
                     Sentimiento Global NLP
                 </h3>
@@ -84,7 +96,7 @@
                 </h3>
 
                 {% for msg in recomendaciones_ia %}
-                <div class="bg-white dark:bg-white/5 border-l-4 border-primary rounded-r-2xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                <div class="bg-white dark:bg-forest-dark border-[3px] border-emerald-400 dark:border-primary rounded-2xl p-6 shadow-md hover:shadow-lg transition-shadow">
                     <div class="flex items-start gap-4">
                         <div class="p-3 bg-primary/10 rounded-full text-primary shrink-0">
                             <span class="material-symbols-outlined text-2xl">electric_bolt</span>
@@ -103,7 +115,7 @@
                     <a href="{{ url_for('foro') }}" class="flex-1 text-center bg-secondary hover:bg-forest-dark text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2">
                         <span class="material-symbols-outlined text-base">forum</span> Ir al Foro
                     </a>
-                    <a href="{{ url_for('index') }}" class="flex-1 text-center bg-primary hover:bg-primary-hover text-secondary font-black py-3.5 rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2">
+                    <a href="{{ url_for('index') }}#eventos" class="flex-1 text-center bg-primary hover:bg-primary-hover text-secondary font-black py-3.5 rounded-xl transition-colors shadow-lg flex items-center justify-center gap-2">
                         <span class="material-symbols-outlined text-base">event</span> Ver Eventos
                     </a>
                 </div>
@@ -125,7 +137,7 @@
 
         <!-- Puntaje Ecológico Global -->
         {% if puntos %}
-        <div class="bg-white dark:bg-white/5 rounded-3xl p-8 shadow-xl border border-emerald-100 dark:border-emerald-800 mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="bg-white dark:bg-forest-dark rounded-[2rem] p-8 shadow-[0_15px_40px_rgba(0,0,0,0.12)] border-[3px] border-emerald-400 dark:border-primary mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
             <div class="flex items-center gap-6">
                 <div class="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center shadow-lg shadow-primary/30">
                     <span class="material-symbols-outlined text-4xl text-white" style="font-variation-settings: 'FILL' 1;">stars</span>
@@ -149,89 +161,139 @@
         </div>
         {% endif %}
 
-        <!-- Grid de Tarjetas -->
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {% for p in puntos %}
-            <div class="group bg-white dark:bg-white/5 rounded-2xl shadow-lg hover:shadow-2xl border border-emerald-50 dark:border-emerald-800 overflow-hidden transition-all duration-300 hover:-translate-y-1">
-                <!-- Imagen / Icono -->
-                <div class="relative h-44 bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/30 dark:to-forest-dark overflow-hidden">
-                    <img src="{{ url_for('static', filename='img/' + (p.imagen if p.imagen else 'default_punto.png')) }}" alt="{{ p.nombre }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                    <div class="absolute top-3 right-3 bg-white/90 dark:bg-forest-dark/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-secondary dark:text-primary border border-emerald-200 dark:border-emerald-700">
-                        {{ p.tipo }}
-                    </div>
-                </div>
-                <!-- Info -->
-                <div class="p-5">
-                    <h4 class="font-display text-lg font-bold text-secondary dark:text-white mb-1 leading-tight">{{ p.nombre }}</h4>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">{{ p.direccion }}</p>
-
-                    <!-- Estrellas -->
-                    <div class="flex items-center gap-2 mb-3">
-                        <div class="flex items-center gap-0.5 rating-stars" data-id="{{ p.id }}">
-                            {% for i in range(1, 6) %}
-                            <span class="material-symbols-outlined text-base star-btn cursor-pointer transition-transform duration-200 hover:scale-125 hover:text-amber-500 {{ 'text-amber-400' if i <= p.promedio | round else 'text-gray-300 dark:text-gray-600' }}" data-val="{{ i }}" style="font-variation-settings: 'FILL' 1;">star</span>
-                            {% endfor %}
+        <!-- Carrusel Interactivo Marquee Infinito -->
+        <style>
+        @keyframes flexMarquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(calc(-50% - 12px)); }
+        }
+        .animate-marquee-infinite {
+            animation: flexMarquee 45s linear infinite;
+        }
+        .animate-marquee-infinite:hover {
+            animation-play-state: paused;
+        }
+        </style>
+        <div class="relative group mt-6 pb-4" id="puntos-carousel-container">
+            <!-- Viewport -->
+            <div class="overflow-hidden px-2 py-8 -mx-2 -my-8" id="carousel-viewport">
+                {% if puntos and puntos|length > 0 %}
+                <!-- Track animado. El doble width y animate-marquee lo hace continuo -->
+                <div class="flex gap-6 w-max animate-marquee-infinite items-stretch cursor-pointer !transition-none" id="carousel-track">
+                    {% for iteration in range(2) %}
+                    {% for p in puntos %}
+                    <div class="puntos-card relative flex-shrink-0 w-[85vw] md:w-[400px] xl:w-[450px] group bg-white dark:bg-forest-dark rounded-3xl shadow-[0_12px_35px_rgba(0,0,0,0.1)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.15)] border-[3px] border-emerald-400 dark:border-primary overflow-hidden transition duration-300 hover:-translate-y-2 flex flex-col snap-center">
+                        
+                        <!-- Medallas (Rankings) Superior Izquierda -->
+                        {% if loop.index == 1 %}
+                        <div class="absolute top-0 left-0 z-30 flex items-center justify-center bg-gradient-to-br from-yellow-300 via-yellow-500 to-yellow-600 rounded-tl-3xl rounded-br-[2rem] px-4 py-2.5 shadow-[0_5px_15px_rgba(234,179,8,0.4)] border-b border-r border-yellow-200 pointer-events-none group-hover:scale-105 transition-transform">
+                            <!-- 'Pluma' Izquierda -->
+                            <span class="material-symbols-outlined text-white text-2xl -scale-x-100 rotate-12 drop-shadow-md" style="font-variation-settings: 'FILL' 1;">eco</span>
+                            <div class="flex flex-col items-center mx-1.5 transform -translate-y-0.5">
+                                <span class="text-white font-black text-[9px] tracking-[0.2em] leading-none drop-shadow-md mb-0.5">TOP</span>
+                                <span class="text-white font-black text-2xl leading-none drop-shadow-lg">1</span>
+                            </div>
+                            <!-- 'Pluma' Derecha -->
+                            <span class="material-symbols-outlined text-white text-2xl -rotate-12 drop-shadow-md" style="font-variation-settings: 'FILL' 1;">eco</span>
                         </div>
-                        <span class="text-sm font-bold text-secondary dark:text-emerald-100 rating-info-{{ p.id }}">{{ p.promedio }}</span>
-                        <span class="text-xs text-gray-400">({{ p.total_reviews }})</span>
-                    </div>
+                        {% elif loop.index == 2 %}
+                        <div class="absolute top-0 left-0 z-30 flex items-center justify-center gap-1.5 bg-gradient-to-br from-gray-200 via-gray-400 to-gray-500 rounded-tl-3xl rounded-br-[2rem] px-5 py-3 shadow-[0_4px_10px_rgba(156,163,175,0.4)] border-b border-r border-gray-100 pointer-events-none">
+                            <span class="material-symbols-outlined text-white text-2xl drop-shadow-md" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+                            <span class="text-white font-black text-lg drop-shadow-md">TOP 2</span>
+                        </div>
+                        {% elif loop.index == 3 %}
+                        <div class="absolute top-0 left-0 z-30 flex items-center justify-center gap-1 bg-gradient-to-br from-orange-300 via-orange-500 to-orange-700 rounded-tl-3xl rounded-br-[2rem] px-4 py-2.5 shadow-[0_4px_10px_rgba(194,65,12,0.4)] border-b border-r border-orange-200 pointer-events-none">
+                            <span class="material-symbols-outlined text-white text-xl drop-shadow-md" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+                            <span class="text-white font-black text-base drop-shadow-md">TOP 3</span>
+                        </div>
+                        {% endif %}
 
-                    <div id="review-box-{{ p.id }}" style="display:none;" class="mb-4">
-                        <textarea id="review-text-{{ p.id }}" class="w-full text-xs p-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-emerald-900/20 text-secondary dark:text-white" placeholder="Escribe tu reseña..."></textarea>
-                        <button class="send-review-btn w-full mt-1 bg-primary text-secondary font-bold text-xs py-1.5 rounded-lg" data-id="{{ p.id }}">Enviar Reseña</button>
-                    </div>
+                        <!-- Imagen / Icono -->
+                        <div class="relative h-48 md:h-56 bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/30 dark:to-forest-dark overflow-hidden shrink-0">
+                            <img src="{{ url_for('static', filename='img/' + (p.imagen if p.imagen else 'default_punto.png')) }}" alt="{{ p.nombre }}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                            <div class="absolute inset-0 bg-gradient-to-t from-forest-dark/80 via-black/20 to-transparent"></div>
+                            <div class="absolute top-4 right-4 bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-black tracking-wide uppercase text-secondary dark:text-primary border border-emerald-200 dark:border-emerald-700 shadow-lg">
+                                {{ p.tipo }}
+                            </div>
+                        </div>
+                        <!-- Info -->
+                        <div class="p-6 md:p-8 flex flex-col flex-grow">
+                            <h4 class="font-display text-xl md:text-2xl font-black text-secondary dark:text-white mb-2 leading-tight">{{ p.nombre }}</h4>
+                            <p class="text-sm md:text-base text-gray-500 dark:text-gray-400 mb-4">{{ p.direccion }}</p>
 
-                    {% if p.resenas %}
-                    <div class="mb-4 max-h-24 overflow-y-auto bg-gray-50 dark:bg-emerald-900/10 p-2 rounded-lg border border-gray-100 dark:border-emerald-800/50 no-scrollbar">
-                        <p class="text-[10px] font-bold text-gray-400 mb-1">ÚLTIMAS RESEÑAS:</p>
-                        {% for r in p.resenas %}
-                        <div class="mb-1.5 border-b border-gray-200 dark:border-emerald-800/30 pb-1.5 last:border-0 last:pb-0">
-                            <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">⭐ {{ r.estrellas }} - {{ r.usuario }}</span>
-                            {% if r.comentario %}
-                            <p class="text-[10px] text-gray-600 dark:text-gray-300 italic">"{{ r.comentario }}"</p>
+                            <!-- Estrellas -->
+                            <div class="flex items-center gap-2 mb-4">
+                                <div class="flex items-center gap-0.5 rating-stars" data-id="{{ p.id }}">
+                                    {% for i in range(1, 6) %}
+                                    <span class="material-symbols-outlined text-lg star-btn cursor-pointer transition-transform duration-200 hover:scale-125 hover:text-amber-500 {{ 'text-amber-400' if i <= p.promedio | round else 'text-gray-300 dark:text-gray-600' }}" data-val="{{ i }}" style="font-variation-settings: 'FILL' 1;">star</span>
+                                    {% endfor %}
+                                </div>
+                                <span class="text-base font-black text-secondary dark:text-emerald-100 rating-info-{{ p.id }}">{{ p.promedio }}</span>
+                                <span class="text-xs font-bold text-gray-400 total-reviews-{{ p.id }}">({{ p.total_reviews }})</span>
+                            </div>
+
+                            <div class="review-box mb-5" style="display:none;">
+                                <textarea class="review-text w-full text-sm p-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white focus:ring-2 focus:ring-primary focus:outline-none transition-shadow" placeholder="Escribe tu reseña..."></textarea>
+                                <button class="send-review-btn w-full mt-2 bg-primary hover:bg-primary-hover transition-colors text-secondary font-black text-sm py-2.5 rounded-xl shadow-md" data-id="{{ p.id }}">Enviar Reseña</button>
+                            </div>
+
+                            {% if p.resenas %}
+                            <div class="mb-5 max-h-32 overflow-y-auto bg-gray-50 dark:bg-emerald-900/10 p-3 rounded-xl border border-gray-100 dark:border-emerald-800/50 no-scrollbar">
+                                <p class="text-[11px] font-black tracking-wider text-gray-400 mb-2 uppercase">Últimas Reseñas:</p>
+                                {% for r in p.resenas %}
+                                <div class="mb-2 border-b border-gray-200 dark:border-emerald-800/30 pb-2 last:border-0 last:pb-0">
+                                    <span class="text-[11px] font-bold text-emerald-600 dark:text-emerald-400">⭐ {{ r.estrellas }} - {{ r.usuario }}</span>
+                                    {% if r.comentario %}
+                                    <p class="text-xs text-gray-600 dark:text-gray-300 italic mt-1 font-medium">"{{ r.comentario }}"</p>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
                             {% endif %}
+
+                            <!-- Materiales -->
+                            {% if p.materiales %}
+                            <div class="flex flex-wrap gap-2 mb-6">
+                                {% for mat in p.materiales.split(',') %}
+                                <span class="text-xs font-bold bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 px-3 py-1.5 rounded-full border border-emerald-200 dark:border-emerald-700 shadow-sm">{{ mat | trim }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <!-- Botón inferior fijo -->
+                            <div class="mt-auto pt-2 w-full">
+                                <a href="https://www.google.com/maps/search/?api=1&query={{ p.latitud }},{{ p.longitud }}" target="_blank"
+                                   class="w-full flex items-center justify-center gap-2 bg-secondary hover:bg-forest-dark text-white font-black py-3.5 rounded-xl transition-all hover:-translate-y-1 text-base shadow-lg hover:shadow-xl">
+                                    <span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">location_on</span> Ver en Maps
+                                </a>
+                            </div>
                         </div>
-                        {% endfor %}
                     </div>
-                    {% endif %}
-
-                    <!-- Materiales -->
-                    {% if p.materiales %}
-                    <div class="flex flex-wrap gap-1.5 mb-4">
-                        {% for mat in p.materiales.split(',') %}
-                        <span class="text-xs font-semibold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-700">{{ mat | trim }}</span>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-
-                    <!-- Botón -->
-                    <a href="https://www.google.com/maps/search/?api=1&query={{ p.latitud }},{{ p.longitud }}" target="_blank"
-                       class="w-full flex items-center justify-center gap-2 bg-secondary hover:bg-forest-dark text-white font-bold py-2.5 rounded-xl transition-colors text-sm shadow-md">
-                        <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">location_on</span> Ver en Maps
-                    </a>
+                    {% endfor %}
+                    {% endfor %}
                 </div>
+                {% else %}
+                <div class="w-full p-16 text-center text-gray-400 font-bold bg-white dark:bg-white/5 rounded-3xl border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center">
+                    <span class="material-symbols-outlined text-6xl text-gray-300 dark:text-gray-600 mb-4 block">location_off</span>
+                    <p class="text-xl">No hay puntos de reciclaje registrados todavía.</p>
+                </div>
+                {% endif %}
             </div>
-            {% else %}
-            <div class="col-span-full p-12 text-center text-gray-400 font-bold bg-white dark:bg-white/5 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
-                No hay puntos de reciclaje registrados todavía.
-            </div>
-            {% endfor %}
         </div>
         
         <!-- CTA Nuevo Punto -->
-        <div class="mt-16 bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/40 dark:to-forest-dark border border-emerald-200 dark:border-emerald-800 rounded-3xl p-8 md:p-12 text-center shadow-lg relative overflow-hidden">
-            <div class="absolute -right-10 -top-10 text-emerald-200/50 dark:text-emerald-800/30">
-                <span class="material-symbols-outlined text-[150px]">location_on</span>
-            </div>
+        <div class="mt-16 bg-[#e9fbf3] dark:bg-forest-dark/80 border-[3px] border-emerald-400 dark:border-primary rounded-[2rem] p-8 md:p-12 text-center shadow-[0_15px_40px_rgba(0,0,0,0.12)] relative overflow-hidden backdrop-blur-sm">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-primary/20 dark:bg-primary/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-emerald-400/20 dark:bg-emerald-400/10 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
             <div class="relative z-10 max-w-2xl mx-auto">
-                <span class="inline-block p-4 rounded-full bg-white dark:bg-emerald-800/50 shadow-sm text-primary mb-6">
-                    <span class="material-symbols-outlined text-4xl">add_location_alt</span>
+                <span class="inline-flex p-5 rounded-full bg-gradient-to-br from-primary to-emerald-600 shadow-[0_10px_25px_rgba(0,224,150,0.4)] text-white mb-8 border-4 border-white dark:border-forest-dark transform hover:scale-110 transition-transform duration-300">
+                    <span class="material-symbols-outlined text-5xl">add_location_alt</span>
                 </span>
                 <h3 class="font-display text-3xl font-black text-secondary dark:text-white mb-4">¿Conoces un nuevo punto ecológico?</h3>
                 <p class="text-gray-600 dark:text-emerald-100/80 text-lg mb-8 font-medium">Ayúdanos a expandir el mapa. Comparte la ubicación de centros de acopio o contenedores y gana puntos.</p>
-                <a href="{{ url_for('contacto') }}" class="inline-flex items-center justify-center gap-3 bg-primary hover:bg-primary-hover text-secondary font-black py-4 px-10 rounded-full transition-all shadow-xl hover:shadow-primary/40 hover:-translate-y-1 text-lg group">
-                    <span class="material-symbols-outlined group-hover:rotate-12 transition-transform">send</span> Contáctanos
+                <a href="{{ url_for('contacto') }}" class="inline-flex items-center gap-2 text-primary font-black text-2xl group hover:text-secondary dark:hover:text-white transition-colors z-10 w-fit mx-auto mt-4 drop-shadow-[0_0_8px_rgba(0,224,150,0.5)] hover:drop-shadow-[0_0_15px_rgba(0,224,150,0.8)]">
+                    <span class="border-b-[3px] border-current pb-1">Contáctanos</span>
+                    <span class="material-symbols-outlined text-4xl transition-transform group-hover:translate-x-2 z-10 relative">arrow_forward</span>
                 </a>
             </div>
         </div>
@@ -314,7 +376,11 @@ document.addEventListener("DOMContentLoaded", function() {
             valSelected[id] = val;
             
             // Mostrar review box
-            document.getElementById('review-box-'+id).style.display = 'block';
+            const card = e.target.closest('.puntos-card');
+            if (card) {
+                const box = card.querySelector('.review-box');
+                if (box) box.style.display = 'block';
+            }
 
             // Animar estrellas
             const stars = container.querySelectorAll('.star-btn');
@@ -331,7 +397,9 @@ document.addEventListener("DOMContentLoaded", function() {
         } else if (e.target.classList.contains('send-review-btn')) {
             const id = e.target.dataset.id;
             const val = valSelected[id];
-            const comentario = document.getElementById('review-text-'+id).value;
+            const card = e.target.closest('.puntos-card');
+            const textarea = card ? card.querySelector('.review-text') : null;
+            const comentario = textarea ? textarea.value : '';
             
             if(!val) { showToast('Haz clic en una estrella primero', 'warning'); return; }
             
@@ -342,11 +410,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 body: JSON.stringify({location_id: id, estrellas: val, comentario: comentario})
             }).then(res => res.json()).then(data => {
                 if (data.success) {
-                    document.getElementById('review-box-'+id).style.display = 'none';
-                    const info = document.querySelector('.rating-info-'+id);
-                    if (info) info.innerHTML = data.promedio;
-                    // Notificar éxito
-                    showToast('¡Gracias por tu reseña!', 'success');
+                    // Notificar éxito y refrescar la página
+                    showToast('¡Gracias por tu reseña! Refrescando vista...', 'success');
                     setTimeout(() => window.location.reload(), 1500);
                 } else {
                     if (data.error === 'Inicia sesión para calificar.') {

@@ -170,7 +170,7 @@
     }
 
     .tips-box-strong {
-        width: 400px;
+        width: 480px;
         background: rgba(255, 255, 255, 0.08);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
@@ -199,10 +199,10 @@
     }
 
     .tips-item {
-        color: rgba(255,255,255,0.84);
-        font-size: 15px;
+        color: rgba(255,255,255,0.9);
+        font-size: 17px;
         line-height: 1.7;
-        font-weight: 600;
+        font-weight: 700;
         display: flex;
         align-items: flex-start;
         gap: 12px;
@@ -331,28 +331,29 @@
     <div id="hero-animation-container" class="absolute inset-0 z-[5] anim-fade"></div>
 </div>
 
+<div class="absolute top-28 right-6 lg:top-32 lg:right-16 z-[70] flex flex-col items-end group" id="tips-container">
+    <button class="relative bg-white/10 backdrop-blur-xl border border-white/20 hover:border-primary text-white p-3 lg:p-4 rounded-full shadow-[0_0_20px_rgba(0,224,150,0.3)] hover:shadow-[0_0_40px_rgba(0,224,150,0.8)] transition-all duration-500 flex items-center justify-center overflow-hidden animate-[pulse_3s_ease-in-out_infinite] hover:animate-none group-hover:bg-primary/20" id="tips-hover-btn">
+        <span class="absolute inset-0 rounded-full bg-gradient-to-r from-primary/0 via-primary/30 to-primary/0 scale-x-0 group-hover:scale-x-150 transition-transform duration-700 ease-in-out z-0"></span>
+        <span class="material-symbols-outlined text-3xl lg:text-4xl text-primary drop-shadow-[0_0_10px_rgba(0,224,150,0.9)] group-hover:text-yellow-300 group-hover:rotate-12 transition-all duration-500 relative z-10 animate-float-wave">lightbulb</span>
+        <span class="max-w-0 opacity-0 overflow-hidden group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-4 transition-all duration-700 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap tracking-wider font-extrabold text-lg relative z-10 pointer-events-none drop-shadow-md">
+            Tips del tema
+        </span>
+    </button>
+    
+    <div class="tips-box-strong absolute right-0 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-4 group-hover:translate-y-0 transition-all duration-500 mt-[5.5rem] lg:mt-[6rem] max-h-0 group-hover:max-h-[600px] overflow-hidden" id="tips-dropdown">
+         <div class="p-6 lg:p-8 relative z-10 w-[420px] lg:w-[480px]">
+             <div class="flex items-center gap-3 mb-5">
+                 <span class="material-symbols-outlined text-[35px] text-primary drop-shadow-[0_0_10px_rgba(0,224,150,0.6)]">tips_and_updates</span>
+                 <span class="tips-title-strong text-2xl font-black tracking-widest uppercase text-primary drop-shadow-md">Descubre más</span>
+             </div>
+             <div class="tips-divider mb-5"></div>
+             <ul class="space-y-4" id="tips-list"></ul>
+         </div>
+    </div>
+</div>
+
 <div class="relative z-10 max-w-desktop mx-auto px-6 lg:px-10 w-full pt-10 pb-20">
 <div class="max-w-4xl relative">
-
-    <div class="absolute left-[260px] top-[350px] z-40 tooltip-panel -translate-y-24" id="tips-tooltip">
-        <div class="tips-box-strong p-6">
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <span class="material-symbols-outlined text-[22px] text-primary drop-shadow-[0_0_8px_rgba(0,224,150,0.45)]">lightbulb</span>
-                        <span class="tips-title-strong">Tips del tema</span>
-                    </div>
-                    <button class="tips-close-btn" onclick="document.getElementById('tips-tooltip').classList.remove('active')">
-                        <span class="material-symbols-outlined text-[20px]">close</span>
-                    </button>
-                </div>
-
-                <div class="tips-divider mb-4"></div>
-
-                <ul class="space-y-4" id="tips-list"></ul>
-            </div>
-        </div>
-    </div>
 
     <div class="inline-flex items-center gap-3 px-6 py-2.5 rounded-full border border-white/20 text-white text-base font-bold mb-8 anim-fade animate-float-wave bg-wave-gradient backdrop-blur-sm relative group" id="hero-trend">
         <span class="absolute -inset-1 rounded-full bg-primary/20 opacity-0 group-hover:opacity-100 group-hover:animate-ping z-0 transition-opacity duration-300"></span>
@@ -364,7 +365,7 @@
         <span id="trend-tag" class="tracking-wide z-10">TENDENCIA EN ECOLOGÍA</span>
     </div>
 
-    <div class="min-h-[250px]">
+    <div class="min-h-[250px] pr-20 lg:pr-32">
         <h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-black leading-[1.1] mb-6 tracking-tight text-white hero-text-shadow anim-fade" id="hero-title">
             Reciclar plástico: <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-300 to-primary">10 consejos</span> para reducir.
         </h1>
@@ -373,12 +374,11 @@
         </p>
     </div>
 
-    <div class="flex flex-wrap gap-6 anim-fade mt-4" id="hero-btn-container">
-        <button class="relative group bg-primary hover:bg-white dark:hover:bg-surface-dark text-secondary hover:text-primary dark:hover:text-primary px-6 py-2.5 rounded-full font-bold text-base shadow-[0_0_15px_rgba(0,224,150,0.4)] hover:shadow-[0_0_25px_rgba(0,224,150,0.6)] transform hover:-translate-y-0.5 hover:scale-105 transition-all duration-300 flex items-center gap-2 border-2 border-transparent hover:border-primary z-10" onclick="showTips()">
-            <span class="absolute inset-0 rounded-full bg-primary opacity-15 group-hover:animate-ping z-0"></span>
-            <span class="material-symbols-outlined filled text-xl transition-all duration-300 group-hover:rotate-12 group-hover:text-yellow-400 dark:group-hover:text-yellow-300 z-10 relative">lightbulb</span>
-            <span class="z-10 relative tracking-wide">Tips del tema</span>
-        </button>
+    <div class="flex flex-wrap gap-6 anim-fade mt-6" id="hero-btn-container">
+        <a id="hero-read-more" href="{{ url_for('articulo_plastico') }}" class="inline-flex items-center gap-3 text-primary font-black text-xl lg:text-2xl group hover:text-white transition-colors z-10 drop-shadow-[0_0_8px_rgba(0,224,150,0.4)] hover:drop-shadow-[0_0_15px_rgba(0,224,150,0.8)]">
+            <span class="border-b-2 border-current pb-1">Leer más</span>
+            <span class="material-symbols-outlined text-4xl transition-transform group-hover:translate-x-2 z-10 relative">arrow_right_alt</span>
+        </a>
     </div>
 </div>
 </div>
@@ -402,7 +402,7 @@
 <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-emerald-50 to-transparent dark:from-emerald-900/20 pointer-events-none"></div>
 <div class="max-w-desktop mx-auto px-6 lg:px-10 relative z-10">
 <div class="grid lg:grid-cols-12 gap-12 items-center">
-    <div class="lg:col-span-6 w-full aspect-[4/3] relative rounded-[2.5rem] overflow-hidden shadow-2xl group border-4 border-gray-100 dark:border-white/5 cursor-pointer">
+    <div class="lg:col-span-6 w-full aspect-[4/3] relative rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:shadow-[0_25px_60px_rgba(0,0,0,0.15)] group border-0 transition-shadow duration-500 cursor-pointer">
         <img alt="Recycling center worker" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src="/static/img/qrocapita.jpg"/>
         <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
         <div class="absolute top-6 left-6 bg-primary text-secondary text-sm font-black px-6 py-2.5 rounded-full uppercase tracking-wider shadow-lg transition-colors duration-500 group-hover:bg-secondary group-hover:text-primary dark:group-hover:bg-forest-dark dark:group-hover:text-primary flex items-center gap-2">
@@ -440,44 +440,43 @@
 </div>
 </section>
 
-<!-- SECCIÓN: PRÓXIMOS EVENTOS -->
-<section class="py-20 lg:py-24 bg-surface-light dark:bg-forest-dark relative overflow-hidden text-center">
+<!-- SECCIÓN: PRÓXIMAS CAMPAÑAS -->
+<section id="campanas" class="py-20 lg:py-24 bg-white dark:bg-secondary/20 relative overflow-hidden text-center">
     <div class="max-w-desktop mx-auto px-6 lg:px-10">
-        <h2 class="font-display text-4xl lg:text-5xl font-black text-secondary dark:text-white mb-12">Próximos <span class="text-primary">Eventos</span></h2>
+        <h2 class="font-display text-4xl lg:text-5xl font-black text-secondary dark:text-white mb-12">Campañas <span class="text-primary">Activas</span></h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10 text-left">
-            {% for evento in eventos %}
-            <div class="bg-white dark:bg-emerald-900/10 rounded-[2rem] overflow-hidden border border-gray-100 dark:border-emerald-800/50 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 group">
+            {% for campaign in campaigns %}
+            <div class="bg-gray-50 dark:bg-emerald-900/10 rounded-[2rem] overflow-hidden border-[3px] border-emerald-400 dark:border-primary shadow-[0_10px_30px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.12)] hover:-translate-y-2 transition-all duration-300 group">
                 <div class="relative h-48 overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
-                    <!-- Carga de imagen. Fallback a un color sólido si no hay foto -->
-                    <img src="{{ url_for('static', filename='img/eventos/' ~ (evento.imagen_url or 'default_event.png')) }}" alt="{{ evento.titulo }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                    <span class="absolute top-4 left-4 z-20 px-3 py-1 bg-primary text-secondary text-xs font-black uppercase tracking-wider rounded-full shadow-lg">
-                        {{ evento.tipo_etiqueta or 'Ecológico' }}
+                    <img src="{{ url_for('static', filename='img/eventos/' ~ (campaign.imagen_url or 'default_event.png')) }}" alt="{{ campaign.nombre }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    <span class="absolute top-4 left-4 z-20 px-3 py-1 bg-yellow-400 text-yellow-900 text-xs font-black uppercase tracking-wider rounded-full shadow-lg">
+                        {{ campaign.tipo_etiqueta or 'Campaña' }}
                     </span>
                 </div>
                 
                 <div class="p-8">
                     <div class="flex items-center gap-2 text-sm font-bold text-gray-400 dark:text-emerald-100/70 mb-3">
                         <span class="material-symbols-outlined text-primary text-base">calendar_today</span>
-                        <span>{{ evento.fecha_inicio.strftime('%d de %b, %Y') if evento.fecha_inicio else 'Pronto' }}</span>
+                        <span>{{ campaign.fecha_inicio.strftime('%d de %b, %Y') if campaign.fecha_inicio else 'Pronto' }}</span>
                     </div>
                     
                     <h3 class="font-display font-black text-xl text-secondary dark:text-white mb-3 line-clamp-2">
-                        {{ evento.titulo }}
+                        {{ campaign.nombre }}
                     </h3>
                     
                     <p class="text-gray-500 dark:text-gray-400 text-sm mb-6 line-clamp-3">
-                        {{ evento.descripcion }}
+                        {{ campaign.descripcion }}
                     </p>
                     
                     <div class="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-emerald-800/50 pt-4">
                         <span class="material-symbols-outlined text-gray-400">location_on</span>
-                        <span class="truncate">{{ evento.lugar }}</span>
+                        <span class="truncate">{{ campaign.lugar }}</span>
                     </div>
 
                     <div class="mt-4 pt-4 border-t border-gray-100 dark:border-emerald-800/50">
-                        {% if evento.link_evento %}
-                        <a href="{{ evento.link_evento }}" target="_blank" class="block w-full text-center bg-[#00E096] hover:bg-[#059669] text-[#064E3B] hover:text-white font-bold py-2 px-4 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-1">Unirse al Evento</a>
+                        {% if campaign.link_evento %}
+                        <a href="{{ campaign.link_evento }}" target="_blank" class="block w-full text-center bg-[#00E096] hover:bg-[#059669] text-[#064E3B] hover:text-white font-bold py-2 px-4 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-1">Unirse a Campaña</a>
                         {% else %}
                         <button disabled class="block w-full text-center bg-gray-100 dark:bg-emerald-900/30 text-gray-400 dark:text-emerald-800/50 font-bold py-2 px-4 rounded-xl cursor-not-allowed">Próximamente</button>
                         {% endif %}
@@ -486,11 +485,14 @@
             </div>
             {% else %}
             <div class="col-span-3 text-center py-10 text-gray-400 font-bold">
-                Actualmente no hay eventos programados en Querétaro.
+                Actualmente no hay campañas activas en Querétaro.
             </div>
             {% endfor %}
         </div>
-   {% endblock %}
+    </div>
+</section>
+
+{% endblock %}
 
 {% block scripts %}
 <script>
@@ -512,25 +514,29 @@
             title: 'Reciclar plástico: <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-300 to-primary">10 consejos</span> para reducir.',
             desc: 'Pequeños cambios diarios generan un impacto global masivo. Descubre cómo tu hogar puede ser parte de la solución Zero Waste hoy mismo.',
             bg: '/static/img/plasticos.png',
-            tips: ['Usa bolsas de tela reutilizables.', 'Compra productos a granel.', 'Evita los envases de un solo uso.', 'Reutiliza frascos de vidrio.']
+            tips: ['Usa bolsas de tela reutilizables.', 'Compra productos a granel.', 'Evita los envases de un solo uso.', 'Reutiliza frascos de vidrio.'],
+            link: "{{ url_for('articulo_plastico') }}"
         },
         {
             title: 'Ahorro de agua: <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-300 to-primary">Nuevas técnicas</span> para el futuro.',
             desc: 'El agua es un recurso vital y finito. Aprende métodos simples de recolección y reutilización para disminuir tu huella hídrica drásticamente.',
             bg: '/static/img/aguah.png',
-            tips: ['Cierra el grifo al cepillarte.', 'Recoge agua de lluvia para plantas.', 'Repara goteras inmediatamente.', 'Usa la lavadora con carga completa.']
+            tips: ['Cierra el grifo al cepillarte.', 'Recoge agua de lluvia para plantas.', 'Repara goteras inmediatamente.', 'Usa la lavadora con carga completa.'],
+            link: "{{ url_for('articulo_agua') }}"
         },
         {
             title: 'Energía solar: <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-300 to-primary">Fuentes limpias</span> para renovar.',
             desc: 'La transición a energías limpias comienza en casa. Conoce los beneficios de los paneles solares y cómo aprovechar la luz natural diariamente.',
             bg: '/static/img/solar.png',
-            tips: ['Abre cortinas para luz natural.', 'Cambia a bombillas LED.', 'Desconecta aparatos sin uso.', 'Considera cargadores solares.']
+            tips: ['Abre cortinas para luz natural.', 'Cambia a bombillas LED.', 'Desconecta aparatos sin uso.', 'Considera cargadores solares.'],
+            link: "{{ url_for('articulo_solar') }}"
         },
         {
             title: 'Compostaje urbano: <br/><span class="text-transparent bg-clip-text bg-gradient-to-r from-primary via-emerald-300 to-primary">Nutrientes vivos</span> para circular.',
             desc: 'Transforma tus desechos orgánicos en nueva vida. Guía práctica para iniciar tu propia compostera sustentable en tu apartamento o casa.',
             bg: '/static/img/composta.png',
-            tips: ['Separa cáscaras de frutas.', 'Evita restos de carne o lácteos.', 'Manten la mezcla húmeda.', 'Usa lombrices rojas californianas.']
+            tips: ['Separa cáscaras de frutas.', 'Evita restos de carne o lácteos.', 'Manten la mezcla húmeda.', 'Usa lombrices rojas californianas.'],
+            link: "{{ url_for('articulo_compostaje') }}"
         }
     ];
 
@@ -538,21 +544,6 @@
     let slideInterval;
     let isHoveringHero = false;
     let isTransitioning = false;
-
-    function showTips() {
-        const currentTips = slidesData[currentSlide].tips;
-        const list = document.getElementById('tips-list');
-        list.innerHTML = '';
-
-        currentTips.forEach(tip => {
-            const li = document.createElement('li');
-            li.className = 'tips-item';
-            li.innerHTML = '<span class="tips-dot">•</span><span>' + tip + '</span>';
-            list.appendChild(li);
-        });
-
-        document.getElementById('tips-tooltip').classList.toggle('active');
-    }
 
     const animationContainer = document.getElementById('hero-animation-container');
 
@@ -650,7 +641,7 @@
         if (isTransitioning) return;
         isTransitioning = true;
 
-        document.getElementById('tips-tooltip').classList.remove('active');
+        // Tips dropdown is now pure CSS hover — no JS toggle needed
 
         const elementsToFade = ['hero-title', 'hero-desc', 'hero-btn-container', 'hero-trend', 'hero-bg-image', 'hero-animation-container'];
         elementsToFade.forEach(id => document.getElementById(id).classList.add('fade-out-custom'));
@@ -661,6 +652,17 @@
             document.getElementById('hero-title').innerHTML = s.title;
             document.getElementById('hero-desc').textContent = s.desc;
             document.getElementById('hero-bg-image').src = s.bg;
+            document.getElementById('hero-read-more').href = s.link;
+            
+            // Render tips list into the DOM instantly for the hover effect Dropdown
+            const list = document.getElementById('tips-list');
+            list.innerHTML = '';
+            s.tips.forEach(tip => {
+                const li = document.createElement('li');
+                li.className = 'tips-item';
+                li.innerHTML = '<span class="tips-dot">•</span><span class="text-xl font-bold">' + tip + '</span>';
+                list.appendChild(li);
+            });
 
             clearAnimations();
             switch (currentSlide) {
@@ -738,7 +740,7 @@
     });
 
     const statsData = [
-        { icon: '/static/img/logo.png', value: '30%', label: 'TASA DE RECICLAJE', back: 'Querétaro logra reciclar el 30% de sus residuos, procesando gran parte de los 2.4 kg per cápita generados.', ref: 'SEDESU Querétaro', link: 'https://sedesu.queretaro.gob.mx/' },
+        { icon: 'recycling', value: '30%', label: 'TASA DE RECICLAJE', back: 'Querétaro logra reciclar el 30% de sus residuos, procesando gran parte de los 2.4 kg per cápita generados.', ref: 'SEDESU Querétaro', link: 'https://sedesu.queretaro.gob.mx/' },
         { icon: 'groups', value: '+5K', label: 'VOLUNTARIOS', back: 'Miles de ciudadanos suman esfuerzos constantemente en jornadas de limpieza y reforestación comunitaria.', ref: 'Voluntariado Qro', link: 'https://www.queretaro.gob.mx/' },
         { icon: 'forest', value: '+165K', label: 'ÁRBOLES PLANTADOS', back: 'Se han plantado más de 165 mil árboles en el estado mediante el programa ambiental desde 2019.', ref: 'Respira Querétaro', link: 'https://municipiodequeretaro.gob.mx/programas/respira-queretaro/' },
         { icon: '/static/img/mapa_queretaro.png', value: '13', label: 'MUNICIPIOS DE QRO', back: '13 de los 18 municipios integran activamente estrategias de sustentabilidad y programas de economía circular.', ref: 'Gobierno Qro', link: 'https://www.queretaro.gob.mx/' }
@@ -757,14 +759,14 @@
         return `
             <a href="${stat.link}" target="_blank" rel="noopener noreferrer" class="flex-none w-full md:w-1/2 lg:w-1/3 px-4 h-[320px] perspective-1000 group cursor-pointer block z-20 transition-all duration-500 hover:-translate-y-4 hover:scale-[1.02]">
                 <div class="relative w-full h-full transform-style-3d transition-transform duration-700 group-hover:rotate-y-180">
-                    <div class="absolute inset-0 backface-hidden flex flex-col items-center justify-center text-center p-8 rounded-[2.5rem] bg-white dark:bg-forest-dark shadow-xl border border-emerald-50 dark:border-emerald-800 transition-all duration-500 group-hover:border-primary">
+                    <div class="absolute inset-0 backface-hidden flex flex-col items-center justify-center text-center p-8 rounded-[2.5rem] bg-white dark:bg-forest-dark shadow-[0_15px_40px_rgba(0,0,0,0.12)] border-[3px] border-emerald-400 dark:border-primary transition-all duration-500">
                         <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6 overflow-hidden transition-colors duration-500 group-hover:bg-primary dark:group-hover:bg-primary">
                             ${iconHtml}
                         </div>
                         <div class="text-5xl font-black text-secondary dark:text-white mb-3">${stat.value}</div>
                         <div class="text-sm font-bold text-gray-400 uppercase tracking-widest no-hyphens">${stat.label}</div>
                     </div>
-                    <div class="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center text-center p-6 lg:p-8 rounded-[2.5rem] bg-surface-light dark:bg-surface-dark shadow-2xl border border-emerald-200 dark:border-emerald-800 transition-colors duration-300">
+                    <div class="absolute inset-0 backface-hidden rotate-y-180 flex flex-col items-center justify-center text-center p-6 lg:p-8 rounded-[2.5rem] bg-surface-light dark:bg-surface-dark shadow-[0_15px_40px_rgba(0,0,0,0.15)] border-[3px] border-emerald-400 dark:border-primary transition-colors duration-300">
                         <div class="mb-4 bg-primary dark:bg-primary/10 rounded-full p-3 inline-flex shadow-md dark:shadow-none transform transition-transform group-hover:scale-110">
                             <span class="material-symbols-outlined text-3xl text-secondary dark:text-accent">info</span>
                         </div>
@@ -784,8 +786,23 @@
     statsData.forEach(s => track.innerHTML += createCard(s));
     statsData.forEach(s => track.innerHTML += createCard(s));
 
+    let isHoveringStats = false;
+    const statsContainer = document.getElementById('stats-carousel-container');
+    
+    // Pausa el carrusel en PC
+    statsContainer.addEventListener('mouseenter', () => isHoveringStats = true);
+    statsContainer.addEventListener('mouseleave', () => isHoveringStats = false);
+    
+    // Pausa el carrusel en Móviles/Táctil
+    statsContainer.addEventListener('touchstart', () => isHoveringStats = true, {passive: true});
+    statsContainer.addEventListener('touchend', () => { 
+        setTimeout(() => isHoveringStats = false, 3000); // Reanuda tras 3s de soltar
+    }, {passive: true});
+
     let carouselIndexStats = 0;
     setInterval(() => {
+        if (isHoveringStats) return; // Si el cursor está encima, no rota.
+
         carouselIndexStats++;
         let visible = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1;
         track.style.transform = `translateX(${-(carouselIndexStats * (100 / visible))}%)`;

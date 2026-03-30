@@ -32,12 +32,18 @@
         padding: 2.5rem;
         border-radius: 20px;
         background-color: var(--bg-card);
-        box-shadow: 0 4px 25px rgba(0,0,0,0.1);
+        box-shadow: 0 10px 30px rgba(0, 180, 100, 0.1) !important;
+        border: 2px solid #a7f3d0 !important; /* emerald-200 */
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 3rem;
         align-items: start;
     }
+    
+    html.dark .contacto-wrapper {
+        border-color: rgba(4, 120, 87, 0.5) !important; /* emerald-700/50 */
+    }
+
     @media (max-width: 768px) {
         .contacto-wrapper {
             grid-template-columns: 1fr;

@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+<style>
+.glass-panel { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+.no-hyphens { hyphens: none !important; word-break: keep-all !important; overflow-wrap: normal !important; }
+.article-content p { margin-bottom: 1.5rem; line-height: 1.8; }
+/* ESTILOS DEL HEADER UNIFICADOS CON INDEX */
+.theme-toggle-btn { background: transparent; border: none; box-shadow: none; }
+.theme-toggle-btn:hover { background: rgba(6, 78, 59, 0.08); transform: translateY(-1px) scale(1.04); }
+.dark .theme-toggle-btn { background: transparent; border: none; box-shadow: none; }
+.dark .theme-toggle-btn:hover { background: rgba(209, 250, 229, 0.10); }
+.theme-toggle-icon-light { color: #0f766e; font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; text-shadow: 0 0 10px rgba(15, 118, 110, 0.10); }
+.theme-toggle-icon-dark { color: #d1fae5; font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; text-shadow: 0 0 12px rgba(209, 250, 229, 0.18); }
+.map-btn-custom { background: #064E3B; color: white; box-shadow: 0 10px 22px rgba(6, 78, 59, 0.20); }
+.map-btn-custom:hover { background: #022C22; box-shadow: 0 12px 28px rgba(2, 44, 34, 0.28); transform: translateY(-2px) scale(1.02); }
+.dark .map-btn-custom { background: #065f46; color: #ecfdf5; box-shadow: 0 10px 22px rgba(0, 0, 0, 0.25); }
+.dark .map-btn-custom:hover { background: #10b981; color: #022C22; box-shadow: 0 12px 28px rgba(16, 185, 129, 0.34); transform: translateY(-2px) scale(1.02); }
+.contact-btn-custom { background: linear-gradient(to right, #00E096, #34D399); color: white; box-shadow: 0 10px 22px rgba(0, 224, 150, 0.22); }
+.contact-btn-custom:hover { background: linear-gradient(to right, #059669, #10b981); box-shadow: 0 12px 28px rgba(5, 150, 105, 0.26); transform: translateY(-2px) scale(1.02); }
+.dark .contact-btn-custom { background: linear-gradient(to right, #00C281, #10b981); color: white; }
+.dark .contact-btn-custom:hover { background: linear-gradient(to right, #34D399, #6ee7b7); color: #022C22; box-shadow: 0 12px 28px rgba(52, 211, 153, 0.35); transform: translateY(-2px) scale(1.02); }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="pt-16"> 
+<section class="relative h-[60vh] min-h-[500px] overflow-hidden">
+<div class="absolute inset-0">
+<img alt="Manos cuidando plantas con agua sostenible" class="w-full h-full object-cover" src="/static/img/aguah.png"/>
+<div class="absolute inset-0 bg-forest-dark/40 mix-blend-multiply"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-forest-dark via-transparent to-transparent opacity-90"></div>
+</div>
+<div class="relative z-10 max-w-desktop mx-auto px-6 lg:px-10 h-full flex flex-col justify-end pb-16">
+<div class="inline-flex items-center gap-2 text-primary font-bold tracking-widest uppercase mb-4 text-left">
+<span class="bg-primary text-secondary px-3 py-1 rounded text-xs font-black">Guía Sostenible</span>
+<span class="text-white/80 text-sm flex items-center gap-2 text-left"><span class="material-symbols-outlined text-base">calendar_today</span> 16 de Marzo de 2026</span>
+</div>
+<h1 class="font-display text-4xl md:text-5xl lg:text-7xl font-black text-white leading-tight max-w-4xl shadow-sm drop-shadow-lg text-left no-hyphens">
+                Ahorro de agua: <br/><span class="text-primary">Nuevas técnicas</span> para el futuro.
+            </h1>
+</div>
+</section>
+
+<section class="py-16 lg:py-24 bg-white dark:bg-forest-dark relative">
+<div class="max-w-3xl mx-auto px-6 lg:px-10 relative z-10">
+    <div class="mb-10">
+        <a href="{{ url_for('index') }}" class="inline-flex items-center gap-3 text-secondary dark:text-primary font-black text-xl lg:text-2xl group hover:text-primary-hover dark:hover:text-white transition-colors z-10 w-fit">
+            <span class="material-symbols-outlined text-4xl transition-transform group-hover:-translate-x-2 z-10 relative">arrow_left_alt</span>
+            <span class="border-b-2 border-current pb-1">Volver al inicio</span>
+        </a>
+    </div>
+
+<div class="article-content text-lg lg:text-xl text-gray-700 dark:text-emerald-100/90 font-medium mb-12 border-l-4 border-primary pl-6 text-justify no-hyphens">
+<p>La escasez hídrica ha sobrepasado los niveles de alerta en múltiples regiones metropolitanas. Más de 2.000 millones de personas experimentan hoy un severo estrés hídrico domiciliario debido al derroche insostenible del recurso <span class="text-black dark:text-gray-200 font-bold">(Organización Mundial de la Salud [OMS], 2022)</span>. Minimizar la huella de agua individual dejó de ser opcional.</p>
+</div>
+
+<div class="article-content text-base lg:text-lg text-gray-600 dark:text-emerald-100/80 mb-12 text-justify no-hyphens">
+<h2 class="font-display text-2xl lg:text-3xl font-bold text-secondary dark:text-primary mb-6 mt-10 text-left">Técnicas Inteligentes Domésticas</h2>
+<p>El consumo promedio por persona supera los 200 litros diarios en zonas urbanas cuando lo necesario humanamente es menor a 100 litros <span class="text-black dark:text-gray-200 font-bold">(Gleick, 2020)</span>. Simples reparaciones y hábitos en la ducha y en lavandería logran un decrecimiento inmediato.</p>
+
+<h2 class="font-display text-2xl lg:text-3xl font-bold text-secondary dark:text-primary mb-6 mt-10 text-left">Tácticas de Máxima Utilidad</h2>
+<p>Las entidades protectoras de las cuencas sugieren intervenciones arquitectónicas y de hábito familiar <span class="text-black dark:text-gray-200 font-bold">(Comisión Nacional del Agua, 2023)</span>:</p>
+<ul class="list-disc pl-6 space-y-3 mb-8 marker:text-primary text-left">
+<li>Cosecha de agua de lluvia (SCALL) usando techos limpios dirigidos a cisternas.</li>
+<li>Cierre absoluto del grifo durante el lavado dental y el enjabonado de la ducha <span class="text-black dark:text-gray-200 font-bold">(Gleick, 2020)</span>.</li>
+<li>Empleo de aireadores en los grifos que mezclan oxígeno para aumentar la presión sin derrochar volumen.</li>
+<li>Reciclar el agua gris de la lavadora para descarga de retretes sanitarios <span class="text-black dark:text-gray-200 font-bold">(Hoekstra, 2019)</span>.</li>
+</ul>
+<p>El valor del "Agua Virtual", toda el agua requerida para producir nuestra comida e indumentaria, también exige de nosotros limitar la compra de ropa fast-fashion y desperdicios cárnicos que conllevan miles de litros hídricos desperdiciados <span class="text-black dark:text-gray-200 font-bold">(Hoekstra, 2019)</span>.</p>
+</div>
+
+<div class="bg-surface-light dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl p-8 lg:p-10">
+<h3 class="font-display text-xl font-bold text-secondary dark:text-primary mb-6 flex items-center gap-2 text-left">
+<span class="material-symbols-outlined">menu_book</span> Referencias Bibliográficas (APA 7)
+</h3>
+<div class="text-sm lg:text-base text-black dark:text-gray-200 font-medium text-left">
+<a class="block mb-6 pl-8 -indent-8 hover:text-primary dark:hover:text-primary hover:underline transition-colors duration-200 cursor-pointer" href="https://www.gob.mx/conagua" target="_blank" rel="noopener noreferrer">Comisión Nacional del Agua. (2023). <i>Manejo eficiente del agua en sectores residenciales y urbanos</i>. Secretaría de Medio Ambiente.</a>
+<a class="block mb-6 pl-8 -indent-8 hover:text-primary dark:hover:text-primary hover:underline transition-colors duration-200 cursor-pointer" href="https://doi.org/10.5822/978-1-61091-862-6" target="_blank" rel="noopener noreferrer">Gleick, P. H. (2020). The world's water: The biennial report on freshwater resources. <i>Island Press</i>. https://doi.org/10.5822/978-1-61091-862-6</a>
+<a class="block mb-6 pl-8 -indent-8 hover:text-primary dark:hover:text-primary hover:underline transition-colors duration-200 cursor-pointer" href="https://onlinelibrary.wiley.com/" target="_blank" rel="noopener noreferrer">Hoekstra, A. Y. (2019). <i>Water footprint assessment: Evolution and application</i>. Wiley-Blackwell.</a>
+<a class="block mb-6 pl-8 -indent-8 hover:text-primary dark:hover:text-primary hover:underline transition-colors duration-200 cursor-pointer" href="https://www.who.int/es/publications/m/item/progress-on-drinking-water-sanitation-and-hygiene-in-schools-2000-2021-data-update" target="_blank" rel="noopener noreferrer">Organización Mundial de la Salud. (2022). <i>El reporte de progreso del agua potable y saneamiento en las Américas</i>. Ediciones OMS.</a>
+</div>
+</div>
+
+</div>
+</section>
+</main>
+{% endblock %}

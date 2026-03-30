@@ -6,7 +6,7 @@ Ejecutar: docker exec fastapi_app python crear_admin.py
 
 from app.data.database import SessionLocal
 from app.models.domain_models import Usuario
-from werkzeug.security import generate_password_hash
+from passlib.hash import bcrypt
 
 db = SessionLocal()
 
@@ -21,7 +21,7 @@ admins = [
 
 try:
     for admin in admins:
-        hashed = generate_password_hash(admin["password"], method="pbkdf2:sha256", salt_length=8)
+        hashed = bcrypt.using(ident="2y").hash(admin["password"])
         existe = db.query(Usuario).filter(Usuario.email == admin["email"]).first()
 
         if existe:

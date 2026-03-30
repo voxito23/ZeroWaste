@@ -31,19 +31,7 @@
     .contenido-post ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin-top: 0.2rem !important; margin-bottom: 0.2rem !important; }
     .contenido-post li { display: list-item !important; }
 
-    /* FASE 3: Nuevo Post */
-    .btn-nuevo-post {
-        background: transparent; border: none; font-weight: bold;
-        text-decoration: none; border-bottom: 2px solid transparent;
-        color: white; /* In header hero it should be white or secondary depending on theme */
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .btn-nuevo-post:hover {
-        color: #00FF7F;
-        border-bottom: 2px solid #00FF7F;
-        transform: translateY(-2px);
-        text-shadow: 0 0 10px rgba(0,255,127,0.4);
-    }
+    /* Botón Nuevo Post modificado para coincidir con estilo Leer Más */
 
     /* CSS DEL BANNER ANIMADO CLASIFICA */
     @keyframes glow-and-scale {
@@ -105,9 +93,9 @@
             </button>
         </div>
         
-        <a href="{{ url_for('nuevo_post') }}" class="btn-nuevo-post px-8 py-5 text-lg flex items-center justify-center gap-2 whitespace-nowrap">
-            <span class="material-symbols-outlined text-2xl">add_circle</span>
-            Nuevo Post
+        <a href="{{ url_for('nuevo_post') }}" class="inline-flex items-center gap-3 text-primary font-black text-xl lg:text-2xl group hover:text-white transition-colors z-10 whitespace-nowrap drop-shadow-[0_0_8px_rgba(0,224,150,0.4)] hover:drop-shadow-[0_0_15px_rgba(0,224,150,0.8)] pt-4 md:pt-0 pl-0 md:pl-2">
+            <span class="material-symbols-outlined text-4xl transition-transform group-hover:-translate-x-2 z-10 relative">add_circle</span>
+            <span class="border-b-2 border-current pb-1">Nuevo Post</span>
         </a>
     </div>
 </div>
@@ -158,8 +146,22 @@
         'Eventos': 'calendar_month',
         'Dudas': 'help'
     } %}
+    {% set border_cat = {
+        'Reciclaje': 'border-amber-400 dark:border-amber-500',
+        'Compostaje': 'border-emerald-400 dark:border-emerald-500',
+        'Reducción de residuos': 'border-cyan-400 dark:border-cyan-500',
+        'Eventos': 'border-violet-400 dark:border-violet-500',
+        'Dudas': 'border-rose-400 dark:border-rose-500'
+    } %}
+    {% set btn_cat = {
+        'Reciclaje': 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500 hover:text-white dark:hover:bg-black dark:hover:text-amber-400 dark:hover:shadow-[0_0_25px_rgba(251,191,36,0.6)] dark:hover:[text-shadow:_0_0_15px_rgba(251,191,36,1)]',
+        'Compostaje': 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500 hover:text-white dark:hover:bg-black dark:hover:text-emerald-400 dark:hover:shadow-[0_0_25px_rgba(52,211,153,0.6)] dark:hover:[text-shadow:_0_0_15px_rgba(52,211,153,1)]',
+        'Reducción de residuos': 'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500 hover:text-white dark:hover:bg-black dark:hover:text-cyan-400 dark:hover:shadow-[0_0_25px_rgba(34,211,238,0.6)] dark:hover:[text-shadow:_0_0_15px_rgba(34,211,238,1)]',
+        'Eventos': 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 hover:bg-violet-500 hover:text-white dark:hover:bg-black dark:hover:text-violet-400 dark:hover:shadow-[0_0_25px_rgba(167,139,250,0.6)] dark:hover:[text-shadow:_0_0_15px_rgba(167,139,250,1)]',
+        'Dudas': 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 hover:bg-rose-500 hover:text-white dark:hover:bg-black dark:hover:text-rose-400 dark:hover:shadow-[0_0_25px_rgba(251,113,133,0.6)] dark:hover:[text-shadow:_0_0_15px_rgba(251,113,133,1)]'
+    } %}
     {% for post in posts %}
-    <div class="post-card group bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl transition-all duration-500 relative overflow-hidden border-l-4 {{ colores_cat[post.categoria_rel.nombre] | default('border-gray-500 text-gray-700') }} {{ glow_cat[post.categoria_rel.nombre] | default('') }}" data-responses="{{ post.respuestas|length }}" data-created="{{ post.created_at.strftime('%Y%m%d%H%M%S') }}" data-search="{{ post.titulo|lower }} {{ post.autor_rel.nombre|lower }}">
+    <div class="post-card group bg-white dark:bg-white/5 border-2 {{ border_cat[post.categoria_rel.nombre] | default('border-gray-300 dark:border-gray-600') }} rounded-[2rem] p-8 shadow-xl hover:shadow-2xl transition-all duration-500 relative overflow-hidden {{ glow_cat[post.categoria_rel.nombre] | default('') }}" data-responses="{{ post.respuestas|length }}" data-created="{{ post.created_at.strftime('%Y%m%d%H%M%S') }}" data-search="{{ post.titulo|lower }} {{ post.autor_rel.nombre|lower }}">
         <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
             <div class="flex-grow">
                 <div class="flex flex-wrap items-center gap-3 mb-4">
@@ -178,6 +180,8 @@
                     </div>
                     <div class="w-1 h-1 rounded-full bg-gray-300"></div>
                     <div class="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm font-medium"><span class="material-symbols-outlined text-lg">chat_bubble</span> {{ post.respuestas|length }} respuestas</div>
+                    <div class="w-1 h-1 rounded-full bg-gray-300"></div>
+                    <div class="flex items-center gap-1 text-rose-500 dark:text-rose-400 text-sm font-medium"><span class="material-symbols-outlined text-lg">favorite</span> {{ post.likes|length }} likes</div>
                     {% if post.respuestas|length >= 2 %}
                     <div class="w-1 h-1 rounded-full bg-gray-300"></div>
                     <div class="flex items-center gap-1.5 text-primary dark:text-primary font-bold text-sm"><i class="fa-solid fa-clover text-base" style="filter: drop-shadow(0 0 4px rgba(0,224,150,0.6));"></i> Popular</div>
@@ -185,7 +189,7 @@
                 </div>
             </div>
             <div class="flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
-                <a class="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 rounded-xl bg-gray-50 dark:bg-white/5 text-secondary dark:text-primary font-bold hover:bg-primary hover:text-white transition-all group-hover:translate-x-1" href="{{ url_for('ver_post', post_id=post.id) }}">Ver discusión <span class="material-symbols-outlined text-xl">arrow_forward</span></a>
+                <a class="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 rounded-xl font-bold transition-all group-hover:translate-x-1 {{ btn_cat[post.categoria_rel.nombre] | default('bg-gray-50 dark:bg-white/5 text-secondary dark:text-primary hover:bg-primary hover:text-white dark:hover:bg-black dark:hover:text-primary') }}" href="{{ url_for('ver_post', post_id=post.id) }}">Ver discusión <span class="material-symbols-outlined text-xl">arrow_forward</span></a>
             </div>
         </div>
     </div>

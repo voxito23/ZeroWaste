@@ -61,14 +61,21 @@
 
 
 <main class="relative z-10 max-w-desktop mx-auto px-6 lg:px-10 py-12 pt-24 text-left flex-grow">
-<nav class="flex mb-8 text-sm font-medium text-gray-500 dark:text-gray-400">
-<ol class="flex items-center space-x-2">
+<nav class="flex flex-col gap-4 mb-8">
+<ol class="flex items-center space-x-2 text-sm font-medium text-gray-500 dark:text-gray-400">
 <li><a class="hover:text-primary transition-colors" href="{{ url_for('index') }}">Inicio</a></li>
 <li><span class="material-symbols-outlined text-base">chevron_right</span></li>
 <li><a class="hover:text-primary transition-colors" href="{{ url_for('foro') }}">Foro</a></li>
 <li><span class="material-symbols-outlined text-base">chevron_right</span></li>
 <li><span class="text-secondary dark:text-emerald-100">{{ post.categoria_rel.nombre }}</span></li>
 </ol>
+
+<div>
+<a href="{{ url_for('foro') }}" class="inline-flex items-center gap-2 py-2 pr-4 rounded-full text-gray-500 dark:text-gray-400 hover:text-secondary dark:hover:text-white transition-colors group font-bold">
+<span class="material-symbols-outlined p-2 bg-gray-100 dark:bg-white/10 rounded-full group-hover:bg-primary group-hover:text-white dark:group-hover:bg-black dark:group-hover:text-primary transition-all group-hover:-translate-x-1 shadow-sm">arrow_back</span>
+Regresar al foro
+</a>
+</div>
 </nav>
 
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">

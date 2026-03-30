@@ -13,7 +13,13 @@ class Campaign extends Model
 
     protected $fillable = [
         'nombre',
+        'lugar',
+        'fecha_inicio',
+        'fecha_fin',
         'descripcion',
+        'tipo_etiqueta',
+        'imagen_url',
+        'link_evento',
         'recompensa_puntos',
         'activa',
         'created_at'
