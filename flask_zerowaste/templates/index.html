@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Inicio - Zero Waste{% endblock %}
+{% block title %}Inicio{% endblock %}
 
 {% block styles %}
 <style>
@@ -444,24 +444,42 @@
 <section class="py-20 lg:py-24 bg-surface-light dark:bg-forest-dark relative overflow-hidden text-center">
     <div class="max-w-desktop mx-auto px-6 lg:px-10">
         <h2 class="font-display text-4xl lg:text-5xl font-black text-secondary dark:text-white mb-12">Próximos <span class="text-primary">Eventos</span></h2>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 text-left">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10 text-left">
             {% for evento in eventos %}
-            <div class="bg-white dark:bg-surface-dark rounded-3xl p-8 shadow-xl border border-emerald-50 dark:border-emerald-900 flex flex-col h-full transform transition-transform hover:-translate-y-2">
-                <div class="bg-primary/10 text-primary font-bold px-4 py-2 rounded-full inline-block mb-4 text-sm w-max">
-                    {{ evento.fecha_inicio.strftime('%d %b, %Y') if evento.fecha_inicio else 'Próximamente' }}
+            <div class="bg-white dark:bg-emerald-900/10 rounded-[2rem] overflow-hidden border border-gray-100 dark:border-emerald-800/50 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 group">
+                <div class="relative h-48 overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+                    <!-- Carga de imagen. Fallback a un color sólido si no hay foto -->
+                    <img src="{{ url_for('static', filename='img/eventos/' ~ (evento.imagen_url or 'default_event.png')) }}" alt="{{ evento.titulo }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    <span class="absolute top-4 left-4 z-20 px-3 py-1 bg-primary text-secondary text-xs font-black uppercase tracking-wider rounded-full shadow-lg">
+                        {{ evento.tipo_etiqueta or 'Ecológico' }}
+                    </span>
                 </div>
-                <h3 class="font-display text-2xl font-bold text-secondary dark:text-white mb-3">{{ evento.titulo }}</h3>
-                <p class="text-gray-600 dark:text-gray-300 mb-6 flex-grow">{{ evento.descripcion }}</p>
-                <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
-                    <span class="material-symbols-outlined text-lg">location_on</span>
-                    {{ evento.ubicacion }}
+                
+                <div class="p-8">
+                    <div class="flex items-center gap-2 text-sm font-bold text-gray-400 dark:text-emerald-100/70 mb-3">
+                        <span class="material-symbols-outlined text-primary text-base">calendar_today</span>
+                        <span>{{ evento.fecha_inicio.strftime('%d de %b, %Y') if evento.fecha_inicio else 'Pronto' }}</span>
+                    </div>
+                    
+                    <h3 class="font-display font-black text-xl text-secondary dark:text-white mb-3 line-clamp-2">
+                        {{ evento.titulo }}
+                    </h3>
+                    
+                    <p class="text-gray-500 dark:text-gray-400 text-sm mb-6 line-clamp-3">
+                        {{ evento.descripcion }}
+                    </p>
+                    
+                    <div class="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400 border-t border-gray-100 dark:border-emerald-800/50 pt-4">
+                        <span class="material-symbols-outlined text-gray-400">location_on</span>
+                        <span class="truncate">{{ evento.lugar }}</span>
+                    </div>
                 </div>
-                <a href="{{ evento.link_unirse if evento.link_unirse else '#' }}" target="_blank" class="w-full text-center bg-primary hover:bg-primary-hover text-secondary font-bold py-3 rounded-xl transition-colors">
-                    Unirse al Evento
-                </a>
             </div>
             {% else %}
-            <p class="text-gray-500 dark:text-gray-400 col-span-full text-center">No hay eventos programados por el momento.</p>
+            <div class="col-span-3 text-center py-10 text-gray-400 font-bold">
+                Actualmente no hay eventos programados en Querétaro.
+            </div>
             {% endfor %}
         </div>
    {% endblock %}

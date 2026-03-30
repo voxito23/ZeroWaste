@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% block title %}Foro de Comunidad{% endblock %}
 
 {% block styles %}
 <style>
@@ -118,24 +119,34 @@
 <div class="max-w-desktop mx-auto px-6 lg:px-10">
 <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
     <div>
-        <h3 class="font-display text-4xl font-black text-secondary dark:text-white mb-2">Discusiones Recientes</h3>
-        <p class="text-gray-500 dark:text-gray-400 font-medium text-lg" id="result-count">Únete a las conversaciones más populares de la semana</p>
+        <h3 class="font-display text-4xl font-black text-secondary dark:text-white mb-2">Discusiones {{ 'Populares' if filtro_activo == 'populares' else 'Recientes' }}</h3>
+        <p class="text-gray-500 dark:text-gray-400 font-medium text-lg">Únete a las conversaciones más populares de la semana</p>
     </div>
     <div class="flex gap-3">
-        <button id="btn-popular" onclick="setActiveFilter('popular')" class="filter-btn px-6 py-2 rounded-full bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300 font-bold text-sm hover:bg-gray-200 transition-colors">Populares</button>
-        <button id="btn-recent" onclick="setActiveFilter('recent')" class="filter-btn px-6 py-2 rounded-full bg-secondary text-white font-bold text-sm transition-colors">Recientes</button>
-        <button id="btn-unanswered" onclick="setActiveFilter('unanswered')" class="filter-btn px-6 py-2 rounded-full bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300 font-bold text-sm hover:bg-gray-200 transition-colors">Sin respuesta</button>
+        <a href="{{ url_for('foro', filtro='populares') }}" class="px-6 py-2 rounded-full font-bold text-sm transition-colors {{ 'bg-secondary text-white' if filtro_activo == 'populares' else 'bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300 hover:bg-gray-200' }}">Populares</a>
+        <a href="{{ url_for('foro', filtro='recientes') }}" class="px-6 py-2 rounded-full font-bold text-sm transition-colors {{ 'bg-secondary text-white' if filtro_activo == 'recientes' else 'bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300 hover:bg-gray-200' }}">Recientes</a>
     </div>
 </div>
 
 <div class="grid gap-8" id="posts-container">
+    {% set colores_cat = {
+        'Compostaje': 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 dark:border-emerald-400',
+        'Estilo de Vida': 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 dark:border-cyan-400',
+        'Reciclaje': 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 dark:border-amber-400',
+        'Eventos': 'border-violet-500 bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 dark:border-violet-400'
+    } %}
+    {% set glow_cat = {
+        'Compostaje': 'dark:shadow-[0_0_15px_rgba(52,211,153,0.4)]',
+        'Estilo de Vida': 'dark:shadow-[0_0_15px_rgba(34,211,238,0.4)]',
+        'Reciclaje': 'dark:shadow-[0_0_15px_rgba(251,191,36,0.4)]',
+        'Eventos': 'dark:shadow-[0_0_15px_rgba(167,139,250,0.4)]'
+    } %}
     {% for post in posts %}
-    <div class="post-card group bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl hover:border-primary/30 transition-all duration-300 relative overflow-hidden" data-category="recent" data-search="{{ post.titulo|lower }} {{ post.autor_rel.nombre|lower }}">
-        <div class="absolute top-0 left-0 w-2 h-full bg-primary group-hover:bg-emerald-400 transition-colors"></div>
+    <div class="post-card group bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl transition-all duration-300 relative overflow-hidden border-l-4 {{ colores_cat[post.categoria_rel.nombre] | default('border-gray-500 text-gray-700') }} {{ glow_cat[post.categoria_rel.nombre] | default('') }}" data-category="recent" data-search="{{ post.titulo|lower }} {{ post.autor_rel.nombre|lower }}">
         <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
             <div class="flex-grow">
                 <div class="flex flex-wrap items-center gap-3 mb-4">
-                    <span class="bg-emerald-100 text-secondary dark:bg-emerald-900/50 dark:text-primary px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1">
+                    <span class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1 {{ colores_cat[post.categoria_rel.nombre] | default('border-gray-500 bg-gray-50 text-gray-700') }}">
                         <span class="material-symbols-outlined text-sm">
                             {% if post.categoria_rel.nombre == 'Compostaje' %}eco
                             {% elif post.categoria_rel.nombre == 'Estilo de Vida' %}spa
@@ -148,10 +159,10 @@
                     <span class="flex items-center gap-1 text-gray-400 text-sm font-medium"><span class="material-symbols-outlined text-base">schedule</span> {{ post.created_at.strftime('%Y-%m-%d') }}</span>
                 </div>
                 <h4 class="font-display text-2xl font-bold text-secondary dark:text-white mb-3 group-hover:text-primary transition-colors">{{ post.titulo }}</h4>
-                <p class="text-gray-600 dark:text-gray-300 text-lg mb-6 line-clamp-2">{{ post.contenido[:150] }}{% if post.contenido|length > 150 %}...{% endif %}</p>
+                <div class="text-gray-800 dark:text-gray-300 text-lg mb-6 line-clamp-2 contenido-post">{{ post.contenido[:150] | safe }}{% if post.contenido|length > 150 %}...{% endif %}</div>
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-3">
-                        <img alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" src="/static/img/perfiles/{{ post.autor_rel.foto_perfil }}"/>
+                        <img alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" src="{{ post.autor_rel.foto_perfil if 'http' in post.autor_rel.foto_perfil|string else url_for('static', filename='img/perfiles/' ~ post.autor_rel.foto_perfil) if post.autor_rel.foto_perfil else url_for('static', filename='img/default.png') }}"/>
                         <span class="text-sm font-bold text-secondary dark:text-emerald-100">{{ post.autor_rel.nombre }}</span>
                     </div>
                     <div class="w-1 h-1 rounded-full bg-gray-300"></div>
@@ -233,18 +244,30 @@
     }
 
     function loadMore() {
+        const btn = document.getElementById('load-btn');
         const btnText = document.getElementById('load-text');
         const icon = document.getElementById('load-icon');
+        
+        btn.disabled = true;
+        btn.classList.add('opacity-70', 'cursor-not-allowed');
         icon.classList.add('animate-spin');
         icon.textContent = 'refresh';
         btnText.textContent = 'Cargando BD...';
 
         setTimeout(() => {
-            alert('¡En producción esto llamará a la Base de Datos para traer más posts!');
             icon.classList.remove('animate-spin');
-            icon.textContent = 'expand_more';
-            btnText.textContent = 'Cargar más discusiones';
-        }, 800);
+            icon.textContent = 'check_circle';
+            icon.classList.add('text-primary');
+            btnText.textContent = 'Todas las discusiones cargadas';
+            
+            setTimeout(() => {
+                icon.classList.remove('text-primary');
+                icon.textContent = 'expand_more';
+                btnText.textContent = 'Cargar más discusiones';
+                btn.disabled = false;
+                btn.classList.remove('opacity-70', 'cursor-not-allowed');
+            }, 2000);
+        }, 1000);
     }
 </script>
 

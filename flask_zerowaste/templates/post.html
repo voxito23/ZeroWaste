@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% block title %}{{ post.titulo[:50] }}{% endblock %}
 
 {% block styles %}
 <style>
@@ -49,7 +50,7 @@
 <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-secondary to-primary"></div>
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
 <div class="flex items-center gap-4">
-    <img alt="{{ post.autor_rel.nombre }}" class="w-14 h-14 rounded-full border-2 border-emerald-50 object-cover shadow-sm" src="/static/img/perfiles/{{ post.autor_rel.foto_perfil }}"/>
+    <img alt="{{ post.autor_rel.nombre }}" class="w-14 h-14 rounded-full border-2 border-emerald-50 object-cover shadow-sm" src="{{ post.autor_rel.foto_perfil if 'http' in post.autor_rel.foto_perfil|string else url_for('static', filename='img/perfiles/' ~ post.autor_rel.foto_perfil) if post.autor_rel.foto_perfil else url_for('static', filename='img/default.png') }}"/>
 <div>
 <h3 class="font-bold text-secondary dark:text-white text-lg leading-tight">{{ post.autor_rel.nombre }}</h3>
 <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -73,7 +74,7 @@
 <h1 class="font-display text-3xl md:text-4xl font-black text-secondary dark:text-white mb-6 leading-tight">
     {{ post.titulo }}
 </h1>
-<div class="prose prose-lg prose-emerald dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 mb-8 no-hyphens" style="white-space: pre-wrap;">
+<div class="prose prose-lg prose-emerald dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 mb-8 no-hyphens contenido-post" style="white-space: pre-wrap;">
 {{ post.contenido | safe }}
 </div>
 {% if post.imagen %}
@@ -83,9 +84,9 @@
 {% endif %}
 <div class="flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-gray-100 dark:border-white/10">
 <div class="flex items-center gap-4">
-<button class="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors font-bold group">
-<span class="material-symbols-outlined text-xl group-hover:fill-current">favorite</span>
-<span>{{ likes_count }} Likes</span>
+<button id="btn-like-{{ post.id }}" data-post="{{ post.id }}" data-user="{{ session.get('usuario_id', 0) }}" onclick="toggleLike(this.dataset.post, this.dataset.user)" class="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 dark:bg-white/10 text-gray-600 dark:text-gray-300 hover:bg-red-50 hover:text-red-500 transition-colors font-bold group">
+<span class="material-symbols-outlined text-xl transition-colors {{ 'text-rose-500 fill-current' if liked else 'text-gray-400 group-hover:text-rose-400' }}">favorite</span>
+<span id="contador-like-{{ post.id }}">{{ likes_count }}</span> Likes
 </button>
 </div>
 </div>
@@ -99,13 +100,13 @@
 {% for r in respuestas %}
 <div class="bg-white dark:bg-white/5 rounded-2xl p-6 shadow-sm border border-emerald-50 dark:border-white/5">
 <div class="flex gap-4 text-left">
-<img alt="{{ r.autor_rel.nombre }}" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" src="/static/img/perfiles/{{ r.autor_rel.foto_perfil }}"/>
+<img alt="{{ r.autor_rel.nombre }}" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" src="{{ r.autor_rel.foto_perfil if 'http' in r.autor_rel.foto_perfil|string else url_for('static', filename='img/perfiles/' ~ r.autor_rel.foto_perfil) if r.autor_rel.foto_perfil else url_for('static', filename='img/default.png') }}"/>
 <div class="flex-grow">
 <div class="flex justify-between items-start">
 <h4 class="font-bold text-secondary dark:text-emerald-100">{{ r.autor_rel.nombre }}</h4>
 <span class="text-xs text-gray-400">{{ r.created_at.strftime('%d %b, %H:%M') }}</span>
 </div>
-<p class="text-gray-600 dark:text-gray-300 mt-2 no-hyphens">{{ r.contenido }}</p>
+<div class="respuesta-texto mt-2 no-hyphens contenido-post">{{ r.contenido | safe }}</div>
 </div>
 </div>
 </div>
@@ -198,7 +199,39 @@
             return;
         }
         
+        
         errorDiv.classList.add('hidden');
+    }
+
+    // Toggle Like usando FastAPI
+    async function toggleLike(postId, usuarioId) {
+        if (!usuarioId) {
+            alert("Debes iniciar sesión para dar like.");
+            return;
+        }
+
+        const btnIcon = document.querySelector(`#btn-like-${postId} span.material-symbols-outlined`);
+        const contador = document.getElementById(`contador-like-${postId}`);
+        
+        try {
+            // Se asume FastAPI en localhost puerto 8000
+            const res = await fetch(`http://localhost:8000/api/v1/posts/${postId}/like?usuario_id=${usuarioId}`, { method: 'POST' });
+            
+            if (!res.ok) throw new Error("Error en respuesta");
+            
+            const data = await res.json();
+            
+            contador.textContent = data.total;
+            if (data.liked) {
+                btnIcon.classList.add('text-rose-500', 'fill-current');
+                btnIcon.classList.remove('text-gray-400');
+            } else {
+                btnIcon.classList.remove('text-rose-500', 'fill-current');
+                btnIcon.classList.add('text-gray-400');
+            }
+        } catch (error) {
+            console.error("Error toggling like:", error);
+        }
     }
 </script>
 {% endblock %}

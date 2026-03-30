@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.data.database import get_db
 from app.models.domain_models import (
-    Usuario, Categoria, Foro, RespuestaForo, LikeForo,
+    Usuario, Categoria, Foro, RespuestaForo, LikeForo, Actividad
 )
 from app.models.schemas import (
     PostCreate, PostUpdate, PostResponse, PostDetailResponse,
@@ -111,6 +111,14 @@ def create_post(
         imagen=post_in.imagen,
     )
     db.add(nuevo_post)
+    
+    # Inserción de Actividad
+    actividad = Actividad(
+        usuario_id=current_user.id,
+        tipo="post",
+        descripcion=f"Publicó un nuevo post en el foro"
+    )
+    db.add(actividad)
     db.commit()
     db.refresh(nuevo_post)
     return nuevo_post
@@ -236,11 +244,11 @@ def create_respuesta(
 
 # Sistema de likes
 
-@router.post("/posts/{post_id}/like", response_model=LikeResponse, summary="Dar/quitar like a un post")
+@router.post("/posts/{post_id}/like", summary="Dar/quitar like a un post")
 def toggle_like(
     post_id: int,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_user),
+    usuario_id: int,
+    db: Session = Depends(get_db)
 ):
     """
     Toggle de like: si ya existe lo quita, si no existe lo agrega.
@@ -250,17 +258,19 @@ def toggle_like(
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
 
-    like = db.query(LikeForo).filter_by(post_id=post_id, usuario_id=current_user.id).first()
+    like = db.query(LikeForo).filter_by(post_id=post_id, usuario_id=usuario_id).first()
 
     if like:
         db.delete(like)
         action = "unliked"
+        liked = False
     else:
-        nuevo_like = LikeForo(post_id=post_id, usuario_id=current_user.id)
+        nuevo_like = LikeForo(post_id=post_id, usuario_id=usuario_id)
         db.add(nuevo_like)
         action = "liked"
+        liked = True
 
     db.commit()
     total_likes = db.query(LikeForo).filter(LikeForo.post_id == post_id).count()
 
-    return LikeResponse(success=True, action=action, total_likes=total_likes)
+    return {"liked": liked, "total": total_likes}

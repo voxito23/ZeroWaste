@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Form, File, Uploa
 from sqlalchemy.orm import Session
 import os
 import uuid
+import json
 
 from app.data.database import get_db
 from app.models.domain_models import Usuario
@@ -64,7 +65,7 @@ def update_intereses(
     if len(intereses) > 5:
         raise HTTPException(status_code=400, detail="Máximo 5 intereses permitidos.")
     
-    current_user.intereses = ", ".join(intereses)
+    current_user.intereses = json.dumps(intereses, ensure_ascii=False)
     db.commit()
     db.refresh(current_user)
     

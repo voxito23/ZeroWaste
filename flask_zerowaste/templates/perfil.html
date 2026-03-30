@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% block title %}Mi Perfil{% endblock %}
 
 {% block styles %}
 <style>
@@ -405,40 +406,16 @@
         modal.classList.remove('flex');
     }
 
-    async function ejecutarGuardadoPro() {
-        // Collect checkboxes into a comma-separated string (or JSON) to match FastAPI
-        const marcados = document.querySelectorAll('input[name="intereses"]:checked');
-        const listaIntereses = Array.from(marcados).map(c => c.value).join(', ');
-
-        // Create form data from the editProfileForm
-        const form = document.getElementById('editProfileForm');
-        const formData = new FormData(form);
-        formData.append('intereses', listaIntereses);
-
-        // Optional: If we just want to submit standard to Flask instead: form.submit()
-        // But the prompt says send to FastAPI endpoint: /api/usuarios/perfil/actualizar
-        const formObj = {
-            method: 'PUT',
-            body: formData
-        };
-
-        try {
-            await fetch('/api/usuarios/perfil/actualizar', formObj);
-            
-            // Animacion final
-            document.getElementById('confirmContent').classList.add('hidden');
-            document.getElementById('successContent').classList.remove('hidden');
-            
-            setTimeout(() => {
-                cerrarConfirmacion();
-                window.location.reload();
-            }, 1000);
-
-        } catch(error) {
-            console.error('Error al guardar en backend', error);
-            // Si quieres volver a intentar con form tradicional:
-            // form.submit();
-        }
+    function ejecutarGuardadoPro() {
+        // Animacion final
+        document.getElementById('confirmContent').classList.add('hidden');
+        document.getElementById('successContent').classList.remove('hidden');
+        
+        setTimeout(() => {
+            // Submit nativo a Flask (URL: /editar_perfil)
+            const form = document.getElementById('editProfileForm');
+            form.submit();
+        }, 1000);
     }
 </script>
 {% endblock %}

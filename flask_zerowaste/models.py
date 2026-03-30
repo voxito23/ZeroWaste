@@ -51,12 +51,12 @@ class Evento(db.Model):
     __tablename__ = 'eventos'
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(150), nullable=False)
+    lugar = db.Column(db.String(200), nullable=False)
     fecha_inicio = db.Column(db.DateTime, nullable=False)
-    ubicacion = db.Column(db.String(255), nullable=False)
+    fecha_fin = db.Column(db.DateTime, nullable=False)
     descripcion = db.Column(db.Text, nullable=False)
-    categoria = db.Column(db.String(100), nullable=True)
-    imagen = db.Column(db.String(255), nullable=True)
-    link_unirse = db.Column(db.String(255), nullable=True)
+    tipo_etiqueta = db.Column(db.String(50), nullable=True)
+    imagen_url = db.Column(db.String(255), nullable=True)
 
 class Foro(db.Model):
     __tablename__ = 'posts'
@@ -107,3 +107,11 @@ class Material(db.Model):
     tipo = db.Column(db.String(50), nullable=False)
     unidades_medida = db.Column(db.String(20), nullable=False)
     valor_puntos = db.Column(db.Integer, default=0)
+
+class Actividad(db.Model):
+    __tablename__ = 'actividades'
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    tipo = db.Column(db.String(50), nullable=False)
+    descripcion = db.Column(db.String(255), nullable=False)
+    fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)

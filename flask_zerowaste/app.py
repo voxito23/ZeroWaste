@@ -16,7 +16,8 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 CLIENT_SECRETS_FILE = "client_secret.json"
 SCOPES = ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile', 'openid']
 
-from models import db, Usuario, Categoria, PuntoMapa, CalificacionPunto, Evento, Foro, RespuestaForo, LikeForo
+from models import db, Usuario, Categoria, PuntoMapa, CalificacionPunto, Evento, Foro, RespuestaForo, LikeForo, Actividad
+from utils.analisis import analizar_sentimiento_comunidad
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -127,7 +128,7 @@ def index():
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
     
-    eventos = Evento.query.order_by(db.desc(Evento.fecha_inicio)).limit(3).all()
+    eventos = Evento.query.order_by(Evento.fecha_inicio.asc()).limit(3).all()
     return render_template('index.html', eventos=eventos)
 
 @app.route('/noticia-queretaro')
@@ -178,7 +179,24 @@ def mapa():
 @app.route('/recomendaciones')
 def recomendaciones():
     puntos = get_puntos_con_promedio()
-    return render_template('recomendaciones.html', puntos=puntos)
+    
+    # Análisis de sentimiento de los posts del foro
+    todos_posts = Foro.query.all()
+    textos = [p.contenido for p in todos_posts if p.contenido]
+    sentimiento = analizar_sentimiento_comunidad(textos)
+    
+    # Recomendaciones textuales basadas en el análisis
+    recomendaciones_ia = []
+    if sentimiento['total'] > 0:
+        if sentimiento['POS'] >= 60:
+            recomendaciones_ia.append("La comunidad se siente muy positiva. ¡Sigue compartiendo tus logros de reciclaje!")
+        elif sentimiento['NEG'] >= 40:
+            recomendaciones_ia.append("Notamos preocupación en la comunidad. Participa con soluciones prácticas en el foro.")
+        else:
+            recomendaciones_ia.append("El sentimiento es equilibrado. Comparte consejos útiles para inspirar a otros.")
+        recomendaciones_ia.append(f"Se analizaron {sentimiento['total']} publicaciones con IA de procesamiento de lenguaje natural.")
+    
+    return render_template('recomendaciones.html', puntos=puntos, sentimiento=sentimiento, recomendaciones_ia=recomendaciones_ia)
 
 @app.route('/calificar_punto', methods=['POST'])
 def calificar_punto():
@@ -308,10 +326,18 @@ def foro():
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
-    posts = Foro.query.order_by(Foro.created_at.desc()).all()
+    filtro = request.args.get('filtro', 'recientes')
+    
+    if filtro == 'populares':
+        # Ordenar por número de respuestas (interacción)
+        posts = Foro.query.outerjoin(RespuestaForo).group_by(Foro.id)\
+            .order_by(db.func.count(RespuestaForo.id).desc()).all()
+    else:
+        posts = Foro.query.order_by(Foro.created_at.desc()).all()
+    
     categorias = Categoria.query.all()
     
-    return render_template('foro.html', posts=posts, categorias=categorias)
+    return render_template('foro.html', posts=posts, categorias=categorias, filtro_activo=filtro)
 
 @app.route('/foro/post/<int:post_id>')
 def ver_post(post_id):
@@ -324,8 +350,9 @@ def ver_post(post_id):
         
     respuestas = RespuestaForo.query.filter_by(post_id=post_id).order_by(RespuestaForo.created_at.asc()).all()
     likes_count = LikeForo.query.filter_by(post_id=post_id).count()
+    liked = LikeForo.query.filter_by(post_id=post_id, usuario_id=session['usuario_id']).first() is not None
         
-    return render_template('post.html', post=post, respuestas=respuestas, likes_count=likes_count)
+    return render_template('post.html', post=post, respuestas=respuestas, likes_count=likes_count, liked=liked)
 
 @app.route('/foro/nuevo')
 def nuevo_post():
@@ -367,6 +394,15 @@ def crear_post():
     db.session.add(nuevo_post)
     db.session.commit()
 
+    # Registrar actividad
+    actividad = Actividad(
+        usuario_id=session['usuario_id'],
+        tipo='post',
+        descripcion=f'Publicó: {titulo[:80]}'
+    )
+    db.session.add(actividad)
+    db.session.commit()
+
     return redirect(url_for('foro'))
 
 @app.route('/crear_respuesta/<int:post_id>', methods=['POST'])
@@ -378,6 +414,13 @@ def crear_respuesta(post_id):
     if contenido and len(contenido.strip()) > 10:
         respuesta = RespuestaForo(post_id=post_id, autor_id=session['usuario_id'], contenido=contenido)
         db.session.add(respuesta)
+        # Registrar actividad
+        actividad = Actividad(
+            usuario_id=session['usuario_id'],
+            tipo='respuesta',
+            descripcion=f'Respondió en discusión #{post_id}'
+        )
+        db.session.add(actividad)
         db.session.commit()
 
     return redirect(url_for('ver_post', post_id=post_id))
@@ -500,6 +543,52 @@ def handle_registro():
     session['intereses'] = nuevo_usuario.intereses
 
     return jsonify({'success': True, 'redirect': url_for('index')})
+
+# ==========================================================================
+#  IA y NLP (Microservicio)
+# ==========================================================================
+
+@app.route('/api/sentimiento')
+def api_sentimiento():
+    """Endpoint REST interno para compartir el análisis a Laravel y Dashboards."""
+    posts_records = Foro.query.all()
+    posts = [p.contenido for p in posts_records if p.contenido]
+    resultados = analizar_sentimiento_comunidad(posts)
+    return jsonify({"success": True, "data": resultados})
+
+@app.route('/ia/recomendaciones')
+def vista_recomendaciones_ia():
+    """Pantalla interactiva de recomendaciones ecológicas según sentimiendo."""
+    if 'usuario_id' not in session:
+        return redirect(url_for('login'))
+
+    posts_records = Foro.query.all()
+    posts = [p.contenido for p in posts_records if p.contenido]
+    sentimiento = analizar_sentimiento_comunidad(posts)
+    
+    # Lógica de NLP Dinámica
+    max_sent = max(sentimiento, key=lambda k: sentimiento[k] if k != "total" else -1)
+    
+    if max_sent == "NEG":
+        msgs = [
+            "Notamos frustración con el reciclaje en la comunidad, revisa esta guía básica para no estresarte.",
+            "Muchos usuarios reportan falta de centros de acopio. ¡Conoce nuestro mapa interactivo!",
+            "¿Dudas con la separación de residuos? Únete a los próximos talleres gratuitos en Querétaro."
+        ]
+    elif max_sent == "POS":
+        msgs = [
+            "¡Gran entusiasmo en nuestra comunidad! Sigue compartiendo tus logros Zero Waste.",
+            "Aprovecha esta motivación colectiva para organizar una brigada de limpieza.",
+            "Tus casos de éxito inspiran: publica fotos de tu compostera y etiqueta tus consejos."
+        ]
+    else:
+        msgs = [
+            "Infórmate sobre nuevas regulaciones de plásticos de un solo uso en la región.",
+            "Mantén el equilibrio: reduce, reutiliza y recicla.",
+            "Descubre eventos locales de sustentabilidad este mes y asiste con tus amigos."
+        ]
+
+    return render_template('recomendaciones.html', sentimiento=sentimiento, recomendaciones_ia=msgs)
 
 # ==========================================================================
 #  Manejadores de errores HTTP

@@ -21,6 +21,7 @@ Route::get('/admin/logout', [AuthController::class, 'logout'])->name('admin.logo
 // Rutas del panel de administración
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/exportar-pdf', [DashboardController::class, 'exportarPDF'])->name('dashboard.exportar-pdf');
     
     Route::get('/usuarios', [UserController::class, 'index'])->name('usuarios.index');
     Route::get('/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
