@@ -8,6 +8,34 @@
     textarea::-webkit-scrollbar-track { background: transparent; }
     textarea::-webkit-scrollbar-thumb { background-color: #00E096; border-radius: 20px; }
     .no-hyphens { hyphens: none !important; word-break: keep-all !important; overflow-wrap: normal !important; }
+    
+    /* FIX RICH TEXT RENDERING */
+    .contenido-post b, .contenido-post strong { font-weight: 800 !important; color: var(--tw-prose-bold); }
+    .contenido-post i, .contenido-post em { font-style: italic !important; }
+    .contenido-post u { text-decoration: underline !important; text-underline-offset: 2px; }
+    .contenido-post ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin-top: 0.5rem !important; margin-bottom: 0.5rem !important; }
+    .contenido-post li { display: list-item !important; }
+
+    /* EDITOR WYSIWYG ESTILOS ACTIVOS */
+    .btn-active {
+        background-color: #d1fae5 !important;
+        color: #059669 !important;
+        border-color: #34d399 !important;
+    }
+    .dark .btn-active {
+        background-color: rgba(16, 185, 129, 0.2) !important;
+        color: #6ee7b7 !important;
+        border-color: #059669 !important;
+    }
+
+    #reply-editor:empty:before {
+        content: attr(placeholder);
+        color: #9ca3af;
+        pointer-events: none;
+        display: block; 
+    }
+    .dark #reply-editor:empty:before { color: #4b5563; }
+
 
     /* CSS DEL HEADER EXACTO AL INDEX */
     .theme-toggle-btn { background: transparent; border: none; box-shadow: none; }
@@ -39,15 +67,43 @@
 <li><span class="material-symbols-outlined text-base">chevron_right</span></li>
 <li><a class="hover:text-primary transition-colors" href="{{ url_for('foro') }}">Foro</a></li>
 <li><span class="material-symbols-outlined text-base">chevron_right</span></li>
-<li><span class="text-secondary dark:text-emerald-100">Compostaje</span></li>
+<li><span class="text-secondary dark:text-emerald-100">{{ post.categoria_rel.nombre }}</span></li>
 </ol>
 </nav>
 
 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 <div class="lg:col-span-8 space-y-8">
     
-<article class="bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] p-8 md:p-10 shadow-xl relative overflow-hidden">
-<div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-secondary to-primary"></div>
+{% set colores_cat = {
+    'Reciclaje': 'border-amber-400 dark:border-amber-500',
+    'Compostaje': 'border-emerald-400 dark:border-emerald-500',
+    'Reducción de residuos': 'border-cyan-400 dark:border-cyan-500',
+    'Eventos': 'border-violet-400 dark:border-violet-500',
+    'Dudas': 'border-rose-400 dark:border-rose-500'
+} %}
+{% set glow_cat = {
+    'Reciclaje': 'dark:shadow-[0_0_15px_rgba(251,191,36,0.3)]',
+    'Compostaje': 'dark:shadow-[0_0_15px_rgba(52,211,153,0.3)]',
+    'Reducción de residuos': 'dark:shadow-[0_0_15px_rgba(34,211,238,0.3)]',
+    'Eventos': 'dark:shadow-[0_0_15px_rgba(167,139,250,0.3)]',
+    'Dudas': 'dark:shadow-[0_0_15px_rgba(251,113,133,0.3)]'
+} %}
+{% set icon_cat = {
+    'Reciclaje': 'recycling',
+    'Compostaje': 'eco',
+    'Reducción de residuos': 'delete_sweep',
+    'Eventos': 'calendar_month',
+    'Dudas': 'help'
+} %}
+{% set badge_colors = {
+    'Reciclaje': 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 dark:border-amber-400',
+    'Compostaje': 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 dark:border-emerald-400',
+    'Reducción de residuos': 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 dark:border-cyan-400',
+    'Eventos': 'border-violet-500 bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 dark:border-violet-400',
+    'Dudas': 'border-rose-500 bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 dark:border-rose-400'
+} %}
+<article class="bg-white dark:bg-white/5 border-2 {{ colores_cat[post.categoria_rel.nombre] | default('border-gray-300 dark:border-gray-600') }} rounded-[2rem] p-8 md:p-10 shadow-xl {{ glow_cat[post.categoria_rel.nombre] | default('') }} relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
 <div class="flex items-center gap-4">
     <img alt="{{ post.autor_rel.nombre }}" class="w-14 h-14 rounded-full border-2 border-emerald-50 object-cover shadow-sm" src="{{ post.autor_rel.foto_perfil if 'http' in post.autor_rel.foto_perfil|string else url_for('static', filename='img/perfiles/' ~ post.autor_rel.foto_perfil) if post.autor_rel.foto_perfil else url_for('static', filename='img/perfiles/perfil_default.png') }}"/>
@@ -56,18 +112,12 @@
 <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
 <span>Miembro</span>
 <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
-<span>{{ post.created_at.strftime('%d de %b, %Y') }}</span>
+<span>{{ post.created_at | datetime_mx }}</span>
 </div>
 </div>
 </div>
-<span class="bg-emerald-100 text-secondary dark:bg-emerald-900/50 dark:text-primary px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider self-start md:self-center flex items-center gap-1">
-    <span class="material-symbols-outlined text-sm">
-        {% if post.categoria_rel.nombre == 'Compostaje' %}eco
-        {% elif post.categoria_rel.nombre == 'Estilo de Vida' %}spa
-        {% elif post.categoria_rel.nombre == 'Reciclaje' %}recycling
-        {% elif post.categoria_rel.nombre == 'Eventos' %}calendar_month
-        {% else %}forum{% endif %}
-    </span>
+<span class="px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider self-start md:self-center flex items-center gap-1 border {{ badge_colors[post.categoria_rel.nombre] | default('bg-emerald-100 text-secondary') }}">
+    <span class="material-symbols-outlined text-sm">{{ icon_cat[post.categoria_rel.nombre] | default('forum') }}</span>
     {{ post.categoria_rel.nombre }}
 </span>
 </div>
@@ -108,7 +158,7 @@
 <div class="flex-grow">
 <div class="flex justify-between items-start">
 <h4 class="font-bold text-secondary dark:text-emerald-100">{{ r.autor_rel.nombre }}</h4>
-<span class="text-xs text-gray-400">{{ r.created_at.strftime('%d %b, %H:%M') }}</span>
+<span class="text-xs text-gray-400">{{ r.created_at | datetime_mx }}</span>
 </div>
 <div class="respuesta-texto mt-2 no-hyphens contenido-post">{{ r.contenido | safe }}</div>
 </div>
@@ -130,10 +180,11 @@
         <div id="reply-error" class="hidden mb-4 text-red-600 font-bold text-sm bg-red-100 p-3 rounded-lg border-l-4 border-red-600"></div>
         
         <div class="flex flex-wrap items-center gap-1 p-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-gray-700 rounded-t-xl">
-            <button type="button" class="p-2 rounded hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-400 transition-colors"><span class="material-symbols-outlined text-xl">format_bold</span></button>
-            <button type="button" class="p-2 rounded hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-400 transition-colors"><span class="material-symbols-outlined text-xl">format_italic</span></button>
+            <button type="button" onclick="formatReplyDoc('bold', this)" class="editor-btn p-2 rounded hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-400 transition-colors"><span class="material-symbols-outlined text-xl">format_bold</span></button>
+            <button type="button" onclick="formatReplyDoc('italic', this)" class="editor-btn p-2 rounded hover:bg-gray-200 dark:hover:bg-white/10 text-gray-600 dark:text-gray-400 transition-colors"><span class="material-symbols-outlined text-xl">format_italic</span></button>
         </div>
-        <textarea id="reply-content" name="contenido" class="w-full p-4 h-32 bg-transparent border-x border-b border-gray-200 dark:border-gray-700 focus:ring-0 focus:border-primary text-gray-700 dark:text-gray-200 resize-y outline-none rounded-b-xl" placeholder="Escribe tu consejo aquí..."></textarea>
+        <div id="reply-editor" contenteditable="true" class="w-full p-4 h-32 bg-transparent border-x border-b border-gray-200 dark:border-gray-700 focus:ring-0 focus:border-primary text-gray-700 dark:text-gray-200 outline-none rounded-b-xl overflow-y-auto" placeholder="Escribe tu consejo aquí..."></div>
+        <textarea id="reply-content" name="contenido" class="hidden"></textarea>
         
         <div class="flex justify-end gap-3 mt-4">
             <button type="button" onclick="toggleReplyForm()" class="px-6 py-2 rounded-full text-secondary dark:text-gray-300 font-bold hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">Cancelar</button>
@@ -142,6 +193,20 @@
             </button>
         </div>
     </form>
+</div>
+
+<!-- Modal Confirmación Respuesta -->
+<div id="confirmReplyModal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="cerrarReplyModal()"></div>
+    <div class="relative bg-white dark:bg-forest-dark rounded-3xl border border-gray-100 dark:border-emerald-800 p-8 shadow-2xl max-w-sm w-full text-center">
+        <span class="material-symbols-outlined text-5xl text-emerald-400 mb-4 block animate-bounce">send</span>
+        <h3 class="font-display font-black text-2xl text-secondary dark:text-emerald-50 mb-3">¿Estás seguro de enviar tu respuesta?</h3>
+        <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Tu consejo ayudará a la comunidad a ser más ecológica.</p>
+        <div class="flex justify-center gap-4">
+            <button type="button" onclick="cerrarReplyModal()" class="font-bold text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 py-2 px-4 rounded-full transition-colors">Cancelar</button>
+            <button type="button" onclick="confirmarReply()" class="font-bold bg-primary text-secondary hover:bg-primary-hover py-2 px-6 rounded-full transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-sm">check</span> Sí, enviar</button>
+        </div>
+    </div>
 </div>
 
 </section>
@@ -154,14 +219,16 @@
     Publicaciones Relacionadas
 </h3>
 <div class="space-y-4">
-<a class="group block p-4 rounded-xl hover:bg-surface-light dark:hover:bg-white/5 transition-colors border border-transparent hover:border-emerald-100 dark:hover:border-white/5" href="#">
-<span class="text-xs font-bold text-primary mb-1 block uppercase">Reciclaje</span>
-<h4 class="font-bold text-secondary dark:text-gray-200 group-hover:text-primary transition-colors line-clamp-2">Guía de separación de residuos en el hogar</h4>
-</a>
-<a class="group block p-4 rounded-xl hover:bg-surface-light dark:hover:bg-white/5 transition-colors border border-transparent hover:border-emerald-100 dark:hover:border-white/5" href="#">
-<span class="text-xs font-bold text-primary mb-1 block uppercase">Compostaje</span>
-<h4 class="font-bold text-secondary dark:text-gray-200 group-hover:text-primary transition-colors line-clamp-2">¿Qué materiales NO debo poner en mi composta?</h4>
-</a>
+    {% if relacionados %}
+        {% for rel in relacionados %}
+        <a class="group block p-4 rounded-xl hover:bg-surface-light dark:hover:bg-white/5 transition-colors border border-transparent hover:border-emerald-100 dark:hover:border-white/5" href="{{ url_for('ver_post', post_id=rel.id) }}">
+            <span class="text-xs font-bold text-primary mb-1 block uppercase">{{ rel.categoria_rel.nombre if rel.categoria_rel else 'GENERAL' }}</span>
+            <h4 class="font-bold text-secondary dark:text-gray-200 group-hover:text-primary transition-colors line-clamp-2">{{ rel.titulo }}</h4>
+        </a>
+        {% endfor %}
+    {% else %}
+        <p class="text-sm text-gray-500 font-medium p-2">Aún no hay publicaciones similares en esta categoría.</p>
+    {% endif %}
 </div>
 </div>
 </aside>
@@ -192,7 +259,9 @@
     }
 
     function validateReply(event) {
-        const content = document.getElementById('reply-content').value.trim();
+        // Sincronizar de forma silenciosa el contenido text para checar el largo
+        const editor = document.getElementById('reply-editor');
+        const content = editor.innerText.trim();
         const errorDiv = document.getElementById('reply-error');
 
         // Requisito: Mínimo 10 caracteres
@@ -203,9 +272,49 @@
             return;
         }
         
-        
+        event.preventDefault();
         errorDiv.classList.add('hidden');
+        document.getElementById('confirmReplyModal').classList.remove('hidden');
+        document.getElementById('confirmReplyModal').classList.add('flex');
     }
+
+    function cerrarReplyModal() {
+        const modal = document.getElementById('confirmReplyModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    function confirmarReply() {
+        const editor = document.getElementById('reply-editor');
+        const textarea = document.getElementById('reply-content');
+        textarea.value = editor.innerHTML;
+        document.getElementById('replyForm').submit();
+    }
+
+    // Funcionalidad de formato WYSIWYG
+    function formatReplyDoc(cmd, btn = null) {
+        if (event) event.preventDefault();
+        document.execCommand(cmd, false, null);
+        
+        if (btn && (cmd === 'bold' || cmd === 'italic' || cmd === 'underline')) {
+            btn.classList.toggle('btn-active');
+        }
+        document.getElementById('reply-editor').focus();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const editor = document.getElementById('reply-editor');
+        editor.addEventListener('focus', function () {
+            if (this.innerHTML.trim() === '<br>' || this.innerHTML.trim() === '') {
+                this.innerHTML = '';
+            }
+        });
+        editor.addEventListener('blur', function () {
+            if (this.innerHTML.trim() === '') {
+                this.innerHTML = '';
+            }
+        });
+    });
 
     // Toggle Like usando Flask (misma app, misma BD)
     async function toggleLike(postId, usuarioId) {

@@ -122,6 +122,13 @@
         color: #6ee7b7 !important;
         border-color: #059669 !important;
     }
+    
+    /* EDITOR WYSIWYG WYSIWYG STYLES */
+    #editor b, #editor strong { font-weight: 800 !important; color: inherit; }
+    #editor i, #editor em { font-style: italic !important; }
+    #editor u { text-decoration: underline !important; text-underline-offset: 2px; }
+    #editor ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin-top: 0.5rem !important; margin-bottom: 0.5rem !important; }
+    #editor li { display: list-item !important; }
 </style>
 {% endblock %}
 
@@ -191,11 +198,11 @@
                     <label class="block text-lg font-bold text-secondary dark:text-emerald-100">
                         Categoría <span class="text-red-500">*</span>
                     </label>
-                    <select name="categoria_id" class="w-full mt-2 p-4 rounded-xl overflow-hidden shadow-lg border border-emerald-100 dark:border-emerald-800 bg-surface-light dark:bg-forest-dark font-bold text-lg text-secondary dark:text-emerald-100 outline-none focus:ring-4 focus:ring-primary/20 cursor-pointer appearance-none" style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23064E3B%22%3E%3Cpath d=%22M7 10l5 5 5-5z%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.5rem;">
-                        <option value="1" class="text-emerald-600 font-bold">🌱 Compostaje</option>
-                        <option value="2" class="text-cyan-600 font-bold">💧 Estilo de Vida</option>
-                        <option value="3" class="text-amber-600 font-bold">♻️ Reciclaje</option>
-                        <option value="4" class="text-violet-600 font-bold">📅 Eventos</option>
+                    <select id="categoria_id" name="categoria_id" class="w-full mt-2 p-4 rounded-xl overflow-hidden shadow-lg border border-emerald-100 dark:border-emerald-800 bg-surface-light dark:bg-forest-dark font-bold text-lg text-secondary dark:text-emerald-100 outline-none focus:ring-4 focus:ring-primary/20 cursor-pointer appearance-none" style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23064E3B%22%3E%3Cpath d=%22M7 10l5 5 5-5z%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 1rem center; background-size: 1.5rem;">
+                        <option value="" disabled selected>Selecciona una categoría</option>
+                        {% for cat in categorias %}
+                        <option value="{{ cat.id }}" class="text-emerald-700 dark:text-emerald-400 font-bold">{% if cat.nombre == 'Compostaje' %}🌱{% elif cat.nombre == 'Reciclaje' %}♻️{% elif cat.nombre == 'Reducción de residuos' %}💧{% elif cat.nombre == 'Eventos' %}📅{% else %}❓{% endif %} {{ cat.nombre }}</option>
+                        {% endfor %}
                     </select>
                 </div>
 
@@ -368,6 +375,10 @@
     }
 
     function confirmarPublicacion() {
+        const editor = document.getElementById('editor');
+        const textarea = document.getElementById('post-content');
+        textarea.value = editor.innerHTML;
+        
         // Enviar form nativamente al servidor Flask
         const form = document.getElementById('new-post-form');
         form.submit();

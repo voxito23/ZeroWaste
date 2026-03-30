@@ -260,6 +260,7 @@ class PuntoMapaResponse(BaseModel):
     longitud: float
     tipo: str
     materiales: Optional[str] = None
+    imagen: Optional[str] = "default_punto.png"
     promedio: float = 0.0
     total_reviews: int = 0
 

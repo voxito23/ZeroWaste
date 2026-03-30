@@ -35,6 +35,7 @@ class PuntoMapa(db.Model):
     longitud = db.Column(db.Numeric(11, 8), nullable=False)
     tipo = db.Column(db.String(100), nullable=False)
     materiales = db.Column(db.Text, nullable=True)
+    imagen = db.Column(db.String(255), default='default_punto.png')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     calificaciones = db.relationship('CalificacionPunto', backref='punto', lazy=True)
@@ -45,6 +46,7 @@ class CalificacionPunto(db.Model):
     location_id = db.Column(db.Integer, db.ForeignKey('locations.id'), nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     estrellas = db.Column(db.Integer, nullable=False) # Escala de 1 a 5
+    comentario = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Evento(db.Model):
@@ -57,6 +59,7 @@ class Evento(db.Model):
     descripcion = db.Column(db.Text, nullable=False)
     tipo_etiqueta = db.Column(db.String(50), nullable=True)
     imagen_url = db.Column(db.String(255), nullable=True)
+    link_evento = db.Column(db.String(255), nullable=True)
 
 class Foro(db.Model):
     __tablename__ = 'posts'
@@ -114,4 +117,5 @@ class Actividad(db.Model):
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     tipo = db.Column(db.String(50), nullable=False)
     descripcion = db.Column(db.String(255), nullable=False)
+    referencia_id = db.Column(db.Integer, nullable=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)

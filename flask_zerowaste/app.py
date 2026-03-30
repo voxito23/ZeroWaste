@@ -33,6 +33,19 @@ with app.app_context():
     db.create_all()
 
 # ==========================================================================
+#  Template Filters
+# ==========================================================================
+@app.template_filter('datetime_mx')
+def datetime_mx_filter(dt):
+    if not dt:
+        return ''
+    # UTC-6 para Hora Central de México
+    mx_dt = dt - timedelta(hours=6)
+    meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+    mes_str = meses[mx_dt.month - 1]
+    return f"{mx_dt.day:02d} {mes_str}, {mx_dt.strftime('%H:%M')}"
+
+# ==========================================================================
 #  Rutas de navegación básica
 # ==========================================================================
 
@@ -158,6 +171,20 @@ def get_puntos_con_promedio():
     
     puntos = []
     for punto, promedio, total in resultados:
+        resenas_raw = db.session.query(CalificacionPunto, Usuario)\
+            .join(Usuario, CalificacionPunto.usuario_id == Usuario.id)\
+            .filter(CalificacionPunto.location_id == punto.id)\
+            .order_by(CalificacionPunto.created_at.desc()).all()
+            
+        resenas_list = []
+        for c, u in resenas_raw:
+            resenas_list.append({
+                'usuario': u.nombre,
+                'estrellas': c.estrellas,
+                'comentario': c.comentario,
+                'fecha': c.created_at.strftime("%Y-%m-%d %H:%M")
+            })
+            
         puntos.append({
             'id': punto.id,
             'nombre': punto.nombre,
@@ -166,8 +193,10 @@ def get_puntos_con_promedio():
             'longitud': float(punto.longitud),
             'tipo': punto.tipo,
             'materiales': punto.materiales,
+            'imagen': punto.imagen,
             'promedio': float(f"{float(promedio or 0):.1f}"),
-            'total_reviews': total
+            'total_reviews': total,
+            'resenas': resenas_list
         })
     return puntos
 
@@ -180,9 +209,11 @@ def mapa():
 def recomendaciones():
     puntos = get_puntos_con_promedio()
     
-    # Análisis de sentimiento de los posts del foro
+    # Análisis de sentimiento de los posts del foro y reseñas
     todos_posts = Foro.query.all()
     textos = [p.contenido for p in todos_posts if p.contenido]
+    todas_calificaciones = CalificacionPunto.query.all()
+    textos.extend([c.comentario for c in todas_calificaciones if c.comentario])
     sentimiento = analizar_sentimiento_comunidad(textos)
     
     # Recomendaciones textuales basadas en el análisis
@@ -206,7 +237,8 @@ def calificar_punto():
     data = request.get_json()
     location_id = data.get('location_id')
     estrellas = data.get('estrellas')
-    
+    comentario = data.get('comentario', '')
+
     if not location_id or not estrellas or int(estrellas) < 1 or int(estrellas) > 5:
         return jsonify({'success': False, 'error': 'Datos inválidos.'})
     
@@ -214,8 +246,9 @@ def calificar_punto():
         calificacion = CalificacionPunto.query.filter_by(location_id=location_id, usuario_id=session['usuario_id']).first()
         if calificacion:
             calificacion.estrellas = int(estrellas)
+            calificacion.comentario = comentario
         else:
-            nueva_calificacion = CalificacionPunto(location_id=location_id, usuario_id=session['usuario_id'], estrellas=int(estrellas))
+            nueva_calificacion = CalificacionPunto(location_id=location_id, usuario_id=session['usuario_id'], estrellas=int(estrellas), comentario=comentario)
             db.session.add(nueva_calificacion)
         db.session.commit()
         
@@ -318,6 +351,32 @@ def editar_perfil():
 
     return redirect(url_for('perfil'))
 
+@app.route('/api/usuarios/me/foto', methods=['PUT', 'POST'])
+def actualizar_foto_perfil():
+    if 'usuario_id' not in session:
+        return jsonify({'success': False, 'error': 'No has iniciado sesión.'}), 401
+    
+    foto_perfil_file = request.files.get('foto_perfil')
+    if not foto_perfil_file or not foto_perfil_file.filename:
+        return jsonify({'success': False, 'error': 'No se seleccionó ninguna imagen.'}), 400
+
+    usuario = Usuario.query.get(session['usuario_id'])
+    if not usuario:
+        return jsonify({'success': False, 'error': 'Usuario no encontrado.'}), 404
+
+    extension = foto_perfil_file.filename.split('.')[-1].lower()
+    nombre_foto = f"{uuid.uuid4().hex}.{extension}"
+    carpeta_destino = os.path.join(app.root_path, 'static', 'img', 'perfiles')
+    os.makedirs(carpeta_destino, exist_ok=True)
+    ruta_completa = os.path.join(carpeta_destino, nombre_foto)
+    foto_perfil_file.save(ruta_completa)
+
+    usuario.foto_perfil = nombre_foto
+    db.session.commit()
+    session['foto_perfil'] = nombre_foto
+
+    return jsonify({'success': True, 'foto_perfil': nombre_foto})
+
 
 # ==========================================================================
 #  Foro comunitario
@@ -328,7 +387,7 @@ def foro():
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
-    filtro = request.args.get('filtro', 'recientes')
+    filtro = request.args.get('filtro', 'todos')
     
     if filtro == 'populares':
         # Ordenar por número de respuestas (interacción)
@@ -353,8 +412,11 @@ def ver_post(post_id):
     respuestas = RespuestaForo.query.filter_by(post_id=post_id).order_by(RespuestaForo.created_at.asc()).all()
     likes_count = LikeForo.query.filter_by(post_id=post_id).count()
     liked = LikeForo.query.filter_by(post_id=post_id, usuario_id=session['usuario_id']).first() is not None
+    
+    # 2 Publicaciones relacionadas de la misma categoría, excluyendo la actual
+    relacionados = Foro.query.filter(Foro.categoria_id == post.categoria_id, Foro.id != post.id).order_by(Foro.created_at.desc()).limit(2).all()
         
-    return render_template('post.html', post=post, respuestas=respuestas, likes_count=likes_count, liked=liked)
+    return render_template('post.html', post=post, respuestas=respuestas, likes_count=likes_count, liked=liked, relacionados=relacionados)
 
 @app.route('/foro/nuevo')
 def nuevo_post():
@@ -400,7 +462,8 @@ def crear_post():
     actividad = Actividad(
         usuario_id=session['usuario_id'],
         tipo='post',
-        descripcion=f'Publicó: {titulo[:80]}'
+        descripcion=f'Publicó: {titulo[:80]}',
+        referencia_id=nuevo_post.id
     )
     db.session.add(actividad)
     db.session.commit()
@@ -420,7 +483,8 @@ def crear_respuesta(post_id):
         actividad = Actividad(
             usuario_id=session['usuario_id'],
             tipo='respuesta',
-            descripcion=f'Respondió en discusión #{post_id}'
+            descripcion=f'Respondió en discusión #{post_id}',
+            referencia_id=post_id
         )
         db.session.add(actividad)
         db.session.commit()
@@ -474,6 +538,14 @@ def handle_login():
         # Comparación directa para contraseñas sin hash (compatibilidad legacy)
         if usuario.password == password_usuario:
             valido = True
+        elif usuario.password.startswith("$2y$"):
+            try:
+                from passlib.hash import bcrypt
+                hash_comparable = usuario.password.replace('$2y$', '$2b$', 1)
+                if bcrypt.verify(password_usuario, hash_comparable):
+                    valido = True
+            except ImportError:
+                pass
         elif check_password_hash(usuario.password, password_usuario):
             valido = True
 
@@ -554,8 +626,12 @@ def handle_registro():
 def api_sentimiento():
     """Endpoint REST interno para compartir el análisis a Laravel y Dashboards."""
     posts_records = Foro.query.all()
-    posts = [p.contenido for p in posts_records if p.contenido]
-    resultados = analizar_sentimiento_comunidad(posts)
+    textos = [p.contenido for p in posts_records if p.contenido]
+    
+    todas_calificaciones = CalificacionPunto.query.all()
+    textos.extend([c.comentario for c in todas_calificaciones if c.comentario])
+    
+    resultados = analizar_sentimiento_comunidad(textos)
     return jsonify({"success": True, "data": resultados})
 
 @app.route('/ia/recomendaciones')
@@ -565,8 +641,12 @@ def vista_recomendaciones_ia():
         return redirect(url_for('login'))
 
     posts_records = Foro.query.all()
-    posts = [p.contenido for p in posts_records if p.contenido]
-    sentimiento = analizar_sentimiento_comunidad(posts)
+    textos = [p.contenido for p in posts_records if p.contenido]
+    
+    todas_calificaciones = CalificacionPunto.query.all()
+    textos.extend([c.comentario for c in todas_calificaciones if c.comentario])
+    
+    sentimiento = analizar_sentimiento_comunidad(textos)
     
     # Lógica de NLP Dinámica
     max_sent = max(sentimiento, key=lambda k: sentimiento[k] if k != "total" else -1)

@@ -55,6 +55,7 @@ class PuntoMapa(Base):
     longitud = Column(Numeric(11, 8), nullable=False)
     tipo = Column(String(100), nullable=False)
     materiales = Column(Text, nullable=True)
+    imagen = Column(String(255), default="default_punto.png")
     created_at = Column(DateTime, default=datetime.utcnow)
 
     calificaciones = relationship("CalificacionPunto", back_populates="punto")
@@ -155,6 +156,7 @@ class Actividad(Base):
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     tipo = Column(String(50), nullable=False) # ej: "post", "respuesta", "contacto"
     descripcion = Column(String(255), nullable=False)
+    referencia_id = Column(Integer, nullable=True)
     fecha_creacion = Column(DateTime, default=datetime.utcnow)
 
     usuario = relationship("Usuario", back_populates="actividades")

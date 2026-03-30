@@ -11,10 +11,12 @@
     
     <!-- FASE 3: Librería Boxicons (Opción Vibrante) añadida -->
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-
+    
+    <!-- FIX FOUC: Pre-cargar colores de fondo antes de Tailwind CDN -->
     <style>
-        .page-transition { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        html { background-color: #ECFDF5; color: #064E3B; }
+        html.dark { background-color: #062C25; color: #D1FAE5; }
+        body { background-color: transparent !important; }
     </style>
     <!-- Script de Persistencia de Tema (Anti-FOUC) -->
     <script>
@@ -134,13 +136,13 @@
         .bg-wave-gradient { background: linear-gradient(90deg, rgba(0,224,150,0.1), rgba(255,255,255,0.4), rgba(0,224,150,0.1)); background-size: 200% 200%; animation: gradient-wave 3s ease-in-out infinite; }
         .anim-fade { transition: opacity 0.6s ease-in-out, transform 0.6s ease-in-out; }
 
-        /* TAREA 3: Animación Suave de Página */
+        /* Animación Suave de Página */
         @keyframes fadeInPage {
-            from { opacity: 0; transform: translateY(4px); }
+            from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .page-transition {
-            animation: fadeInPage 0.3s ease-in-out forwards;
+            animation: fadeInPage 0.4s ease-out forwards;
         }
 
         /* TAREA 1: RESPONSIVIDAD GENERAL */
@@ -192,5 +194,29 @@
     {% endif %}
     
     {% block scripts %}{% endblock %}
+
+    <!-- Toast Notification System -->
+    <div id="toastContainer" class="fixed top-6 right-6 z-[99999] flex flex-col gap-3 pointer-events-none"></div>
+    <script>
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        const icons = { success: 'check_circle', error: 'error', warning: 'warning', info: 'info' };
+        const colors = {
+            success: 'bg-emerald-600 text-white shadow-emerald-500/40',
+            error: 'bg-red-600 text-white shadow-red-500/40',
+            warning: 'bg-amber-500 text-white shadow-amber-400/40',
+            info: 'bg-sky-600 text-white shadow-sky-500/40'
+        };
+        toast.className = `pointer-events-auto flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl font-bold text-sm backdrop-blur-md ${colors[type] || colors.info} transform translate-x-[120%] transition-transform duration-500 ease-out`;
+        toast.innerHTML = `<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">${icons[type] || 'info'}</span><span>${message}</span>`;
+        container.appendChild(toast);
+        requestAnimationFrame(() => { toast.style.transform = 'translateX(0)'; });
+        setTimeout(() => {
+            toast.style.transform = 'translateX(120%)';
+            setTimeout(() => toast.remove(), 500);
+        }, 3500);
+    }
+    </script>
 </body>
 </html>

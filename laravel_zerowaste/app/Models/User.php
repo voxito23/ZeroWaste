@@ -13,7 +13,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $table = 'usuarios';
-    const UPDATED_AT = null;
+    public $timestamps = false;
 
     /**
      * Atributos asignables de forma masiva.

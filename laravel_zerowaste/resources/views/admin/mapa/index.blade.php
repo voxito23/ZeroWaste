@@ -37,7 +37,7 @@
                             <b class="text-emerald-800 text-lg">${loc.nombre}</b><br>
                             <span class="text-xs font-bold text-gray-600 bg-emerald-100 px-2 py-1 rounded-full mt-1 inline-block">${loc.tipo}</span>
                             <span class="text-sm mt-2 text-gray-700 block"><span class="font-bold">Dirección:</span> ${loc.direccion}</span>
-                            ${loc.materiales_aceptados ? `<p class="mt-2 text-xs"><b class="text-emerald-600">Materiales:</b> ${loc.materiales_aceptados}</p>` : ''}
+                            ${loc.materiales ? `<p class="mt-2 text-xs"><b class="text-emerald-600">Materiales:</b> ${loc.materiales}</p>` : ''}
                         </div>
                     `);
             }
@@ -59,6 +59,10 @@
             <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 cursor-pointer">Electrónicos</span>
             <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 cursor-pointer">PET</span>
         </div>
+        
+        <a href="{{ route('mapa.create') }}" class="mt-6 w-full bg-[#00E096] text-[#064E3B] hover:text-white px-4 py-3 rounded-full font-bold shadow-xl hover:bg-[#059669] transition-all flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">add_location_alt</span> Añadir Punto
+        </a>
     </div>
 </div>
 @endsection

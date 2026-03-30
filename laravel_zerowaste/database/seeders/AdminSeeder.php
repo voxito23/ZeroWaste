@@ -15,6 +15,12 @@ class AdminSeeder extends Seeder
     {
         $admins = [
             [
+                'nombre'   => 'Victor Admin',
+                'email'    => 'vichdz@gmail.com',
+                'password' => Hash::make('voxito12'),
+                'is_admin' => true,
+            ],
+            [
                 'nombre'   => 'Admin Principal',
                 'email'    => 'admin@zerowaste.com',
                 'password' => Hash::make('ZeroWaste2026!'),

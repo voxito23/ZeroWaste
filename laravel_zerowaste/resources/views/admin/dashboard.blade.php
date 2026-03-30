@@ -5,77 +5,75 @@
 
 @section('content')
 <div class="flex justify-end mb-6">
-    <a href="{{ route('dashboard.exportar-pdf') }}" target="_blank" class="bg-[#059669] hover:bg-[#065F46] text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 transition-colors shadow-md">
+    <a href="{{ route('dashboard.exportar-pdf') }}" target="_blank" class="bg-gradient-to-r from-[#00E096] to-[#10B981] text-white px-6 py-2.5 rounded-full font-bold flex items-center gap-2 transition-all shadow-lg hover:-translate-y-1">
         <span class="material-symbols-outlined">picture_as_pdf</span>
-        Exportar Reporte NLP
+        Exportar Reporte Profesional
     </a>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 flex flex-col">
-        <div class="flex items-center gap-3 text-gray-500 mb-2">
-            <span class="material-symbols-outlined">campaign</span>
-            <h3 class="text-sm font-bold">Campañas</h3>
+    <!-- Card Base -->
+    <div class="bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] shadow-xl border border-white/20 flex flex-col relative group">
+        <div class="flex items-center gap-3 text-emerald-800 mb-2">
+            <span class="material-symbols-outlined bg-[#00E096]/20 p-2 rounded-xl text-[#064E3B]">campaign</span>
+            <h3 class="text-sm font-bold uppercase text-[#064E3B]">Campañas</h3>
         </div>
-        <p class="text-4xl font-black text-[#00E096]">{{ $campaignCount ?? 0 }}</p>
+        <p class="text-5xl font-black text-[#00E096] drop-shadow-md">{{ $campaignCount ?? 0 }}</p>
     </div>
     
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 flex flex-col">
-        <div class="flex items-center gap-3 text-gray-500 mb-2">
-            <span class="material-symbols-outlined">group</span>
-            <h3 class="text-sm font-bold">Usuarios</h3>
+    <div class="bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] shadow-xl border border-white/20 flex flex-col relative group">
+        <div class="flex items-center gap-3 text-emerald-800 mb-2">
+            <span class="material-symbols-outlined bg-[#00E096]/20 p-2 rounded-xl text-[#064E3B]">group</span>
+            <h3 class="text-sm font-bold uppercase text-[#064E3B]">Usuarios</h3>
         </div>
-        <p class="text-4xl font-black text-[#00E096]">{{ number_format($totalUsuarios ?? 0) }}</p>
+        <p class="text-5xl font-black text-[#00E096] drop-shadow-md">{{ number_format($totalUsuarios ?? 0) }}</p>
     </div>
 
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 flex flex-col">
-        <div class="flex items-center gap-3 text-gray-500 mb-2">
-            <span class="material-symbols-outlined">forum</span>
-            <h3 class="text-sm font-bold">Posts del Foro</h3>
+    <div class="bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] shadow-xl border border-white/20 flex flex-col relative group">
+        <div class="flex items-center gap-3 text-emerald-800 mb-2">
+            <span class="material-symbols-outlined bg-[#00E096]/20 p-2 rounded-xl text-[#064E3B]">forum</span>
+            <h3 class="text-sm font-bold uppercase text-[#064E3B]">Foro</h3>
         </div>
-        <p class="text-4xl font-black text-[#00E096]">{{ $totalPosts ?? 0 }}</p>
+        <p class="text-5xl font-black text-[#00E096] drop-shadow-md">{{ $totalPosts ?? 0 }}</p>
     </div>
 
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 flex flex-col">
-        <div class="flex items-center gap-3 text-gray-500 mb-2">
-            <span class="material-symbols-outlined">map</span>
-            <h3 class="text-sm font-bold">Puntos de Acopio</h3>
+    <div class="bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] shadow-xl border border-white/20 flex flex-col relative group">
+        <div class="flex items-center gap-3 text-emerald-800 mb-2">
+            <span class="material-symbols-outlined bg-[#00E096]/20 p-2 rounded-xl text-[#064E3B]">map</span>
+            <h3 class="text-sm font-bold uppercase text-[#064E3B]">Puntos</h3>
         </div>
-        <p class="text-4xl font-black text-[#00E096]">{{ $totalPuntos ?? 0 }}</p>
+        <p class="text-5xl font-black text-[#00E096] drop-shadow-md">{{ $totalPuntos ?? 0 }}</p>
     </div>
 
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 flex flex-col">
-        <div class="flex items-center gap-3 text-gray-500 mb-2">
-            <span class="material-symbols-outlined">timeline</span>
-            <h3 class="text-sm font-bold">Actividades</h3>
+    <div class="bg-white/10 backdrop-blur-xl p-6 rounded-[2rem] shadow-xl border border-white/20 flex flex-col relative group">
+        <div class="flex items-center gap-3 text-emerald-800 mb-2">
+            <span class="material-symbols-outlined bg-[#00E096]/20 p-2 rounded-xl text-[#064E3B]">timeline</span>
+            <h3 class="text-sm font-bold uppercase text-[#064E3B]">Eventos</h3>
         </div>
-        <p class="text-4xl font-black text-[#00E096]">{{ $totalActividades ?? 0 }}</p>
+        <p class="text-5xl font-black text-[#00E096] drop-shadow-md">{{ $totalActividades ?? 0 }}</p>
     </div>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-8">
-    <div class="col-span-1 md:col-span-4 mb-2">
-        <h2 class="text-xl font-bold text-[#064E3B] uppercase tracking-wide border-b-2 border-emerald-100 pb-2">Análisis de Sentimiento de la Comunidad (IA)</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+    <div class="bg-white p-8 rounded-[2rem] shadow-xl border-b-8 border-b-[#10B981]">
+        <h3 class="text-sm font-black uppercase text-gray-500 mb-2">Postura Positiva</h3>
+        <p class="text-6xl font-black text-[#10B981]">{{ $sentimiento['POS'] ?? 0 }}%</p>
     </div>
-
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 flex flex-col border-l-4 border-l-[#10B981]">
-        <h3 class="text-md font-bold text-gray-500 mb-2">Sentimiento Positivo</h3>
-        <p class="text-3xl font-black text-[#10B981]">{{ $sentimiento['POS'] ?? 0 }}%</p>
+    <div class="bg-white p-8 rounded-[2rem] shadow-xl border-b-8 border-b-gray-400">
+        <h3 class="text-sm font-black uppercase text-gray-500 mb-2">Postura Neutra</h3>
+        <p class="text-6xl font-black text-gray-400">{{ $sentimiento['NEU'] ?? 0 }}%</p>
     </div>
-
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 flex flex-col border-l-4 border-l-[#9CA3AF]">
-        <h3 class="text-md font-bold text-gray-500 mb-2">Sentimiento Neutro</h3>
-        <p class="text-3xl font-black text-[#6B7280]">{{ $sentimiento['NEU'] ?? 0 }}%</p>
-    </div>
-
-    <div class="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 flex flex-col border-l-4 border-l-[#EF4444]">
-        <h3 class="text-md font-bold text-gray-500 mb-2">Sentimiento Negativo</h3>
-        <p class="text-3xl font-black text-[#EF4444]">{{ $sentimiento['NEG'] ?? 0 }}%</p>
+    <div class="bg-white p-8 rounded-[2rem] shadow-xl border-b-8 border-b-[#EF4444]">
+        <h3 class="text-sm font-black uppercase text-gray-500 mb-2">Postura Negativa</h3>
+        <p class="text-6xl font-black text-[#EF4444]">{{ $sentimiento['NEG'] ?? 0 }}%</p>
     </div>
 </div>
 
-<div class="mt-10 bg-white p-8 rounded-3xl shadow-lg border border-emerald-100">
-    <h2 class="text-2xl font-bold mb-6 text-[#064E3B]">Sincronización con PostgreSQL</h2>
-    <p class="text-gray-600">Este dashboard lee directamente de la base de datos compartida con Flask y FastAPI. Los conteos de Posts, Puntos y Actividades se actualizan en tiempo real.</p>
+<div class="mt-8 bg-gradient-to-r from-[#064E3B] to-[#047857] p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+    <div class="absolute inset-0 bg-no-repeat bg-right opacity-10" style="background-image: url('{{ asset('static/img/logo.png') }}'); background-size: contain;"></div>
+    <div class="relative z-10 flex items-center gap-4">
+        <div class="p-3 bg-white/10 backdrop-blur-sm rounded-2xl"><span class="material-symbols-outlined text-[#00E096]">hub</span></div>
+        <h2 class="text-2xl font-black text-white">Ecosistema Conectado [Laravel ⇌ FastAPI ⇌ Flask] PostgreSQL</h2>
+    </div>
 </div>
 @endsection

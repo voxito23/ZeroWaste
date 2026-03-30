@@ -24,6 +24,13 @@
     .dark .contact-btn-custom { background: linear-gradient(to right, #00C281, #10b981); color: white; }
     .dark .contact-btn-custom:hover { background: linear-gradient(to right, #34D399, #6ee7b7); color: #022C22; box-shadow: 0 12px 28px rgba(52, 211, 153, 0.35); transform: translateY(-2px) scale(1.02); }
 
+    /* FIX RICH TEXT RENDERING IN SNIPPETS */
+    .contenido-post b, .contenido-post strong { font-weight: 800 !important; color: inherit; }
+    .contenido-post i, .contenido-post em { font-style: italic !important; }
+    .contenido-post u { text-decoration: underline !important; text-underline-offset: 2px; }
+    .contenido-post ul { list-style-type: disc !important; padding-left: 1.5rem !important; margin-top: 0.2rem !important; margin-bottom: 0.2rem !important; }
+    .contenido-post li { display: list-item !important; }
+
     /* FASE 3: Nuevo Post */
     .btn-nuevo-post {
         background: transparent; border: none; font-weight: bold;
@@ -119,41 +126,45 @@
 <div class="max-w-desktop mx-auto px-6 lg:px-10">
 <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
     <div>
-        <h3 class="font-display text-4xl font-black text-secondary dark:text-white mb-2">Discusiones {{ 'Populares' if filtro_activo == 'populares' else 'Recientes' }}</h3>
+        <h3 id="section-title" class="font-display text-4xl font-black text-secondary dark:text-white mb-2">Discusiones</h3>
         <p class="text-gray-500 dark:text-gray-400 font-medium text-lg">Únete a las conversaciones más populares de la semana</p>
     </div>
-    <div class="flex gap-3">
-        <a href="{{ url_for('foro', filtro='populares') }}" class="px-6 py-2 rounded-full font-bold text-sm transition-colors {{ 'bg-secondary text-white' if filtro_activo == 'populares' else 'bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300 hover:bg-gray-200' }}">Populares</a>
-        <a href="{{ url_for('foro', filtro='recientes') }}" class="px-6 py-2 rounded-full font-bold text-sm transition-colors {{ 'bg-secondary text-white' if filtro_activo == 'recientes' else 'bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300 hover:bg-gray-200' }}">Recientes</a>
+    <div class="flex gap-3 flex-wrap" id="filter-bar">
+        <button type="button" onclick="applyFilter('todos')" data-filter="todos" class="filter-pill px-6 py-2 rounded-full font-bold text-sm transition-all duration-300 bg-secondary text-white shadow-md">Todos</button>
+        <button type="button" onclick="applyFilter('populares')" data-filter="populares" class="filter-pill px-6 py-2 rounded-full font-bold text-sm transition-all duration-300 bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300 hover:bg-gray-200">Populares</button>
+        <button type="button" onclick="applyFilter('recientes')" data-filter="recientes" class="filter-pill px-6 py-2 rounded-full font-bold text-sm transition-all duration-300 bg-gray-100 text-gray-600 dark:bg-white/5 dark:text-gray-300 hover:bg-gray-200">Recientes</button>
     </div>
 </div>
 
 <div class="grid gap-8" id="posts-container">
     {% set colores_cat = {
-        'Compostaje': 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 dark:border-emerald-400',
-        'Estilo de Vida': 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 dark:border-cyan-400',
         'Reciclaje': 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 dark:border-amber-400',
-        'Eventos': 'border-violet-500 bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 dark:border-violet-400'
+        'Compostaje': 'border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 dark:border-emerald-400',
+        'Reducción de residuos': 'border-cyan-500 bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-300 dark:border-cyan-400',
+        'Eventos': 'border-violet-500 bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 dark:border-violet-400',
+        'Dudas': 'border-rose-500 bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 dark:border-rose-400'
     } %}
     {% set glow_cat = {
-        'Compostaje': 'dark:shadow-[0_0_15px_rgba(52,211,153,0.4)]',
-        'Estilo de Vida': 'dark:shadow-[0_0_15px_rgba(34,211,238,0.4)]',
         'Reciclaje': 'dark:shadow-[0_0_15px_rgba(251,191,36,0.4)]',
-        'Eventos': 'dark:shadow-[0_0_15px_rgba(167,139,250,0.4)]'
+        'Compostaje': 'dark:shadow-[0_0_15px_rgba(52,211,153,0.4)]',
+        'Reducción de residuos': 'dark:shadow-[0_0_15px_rgba(34,211,238,0.4)]',
+        'Eventos': 'dark:shadow-[0_0_15px_rgba(167,139,250,0.4)]',
+        'Dudas': 'dark:shadow-[0_0_15px_rgba(251,113,133,0.4)]'
+    } %}
+    {% set icon_cat = {
+        'Reciclaje': 'recycling',
+        'Compostaje': 'eco',
+        'Reducción de residuos': 'delete_sweep',
+        'Eventos': 'calendar_month',
+        'Dudas': 'help'
     } %}
     {% for post in posts %}
-    <div class="post-card group bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl transition-all duration-300 relative overflow-hidden border-l-4 {{ colores_cat[post.categoria_rel.nombre] | default('border-gray-500 text-gray-700') }} {{ glow_cat[post.categoria_rel.nombre] | default('') }}" data-category="recent" data-search="{{ post.titulo|lower }} {{ post.autor_rel.nombre|lower }}">
+    <div class="post-card group bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 rounded-[2rem] p-8 shadow-xl hover:shadow-2xl transition-all duration-500 relative overflow-hidden border-l-4 {{ colores_cat[post.categoria_rel.nombre] | default('border-gray-500 text-gray-700') }} {{ glow_cat[post.categoria_rel.nombre] | default('') }}" data-responses="{{ post.respuestas|length }}" data-created="{{ post.created_at.strftime('%Y%m%d%H%M%S') }}" data-search="{{ post.titulo|lower }} {{ post.autor_rel.nombre|lower }}">
         <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
             <div class="flex-grow">
                 <div class="flex flex-wrap items-center gap-3 mb-4">
                     <span class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1 {{ colores_cat[post.categoria_rel.nombre] | default('border-gray-500 bg-gray-50 text-gray-700') }}">
-                        <span class="material-symbols-outlined text-sm">
-                            {% if post.categoria_rel.nombre == 'Compostaje' %}eco
-                            {% elif post.categoria_rel.nombre == 'Estilo de Vida' %}spa
-                            {% elif post.categoria_rel.nombre == 'Reciclaje' %}recycling
-                            {% elif post.categoria_rel.nombre == 'Eventos' %}calendar_month
-                            {% else %}forum{% endif %}
-                        </span>
+                        <span class="material-symbols-outlined text-sm">{{ icon_cat[post.categoria_rel.nombre] | default('forum') }}</span>
                         {{ post.categoria_rel.nombre }}
                     </span>
                     <span class="flex items-center gap-1 text-gray-400 text-sm font-medium"><span class="material-symbols-outlined text-base">schedule</span> {{ post.created_at.strftime('%Y-%m-%d') }}</span>
@@ -167,6 +178,10 @@
                     </div>
                     <div class="w-1 h-1 rounded-full bg-gray-300"></div>
                     <div class="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm font-medium"><span class="material-symbols-outlined text-lg">chat_bubble</span> {{ post.respuestas|length }} respuestas</div>
+                    {% if post.respuestas|length >= 2 %}
+                    <div class="w-1 h-1 rounded-full bg-gray-300"></div>
+                    <div class="flex items-center gap-1.5 text-primary dark:text-primary font-bold text-sm"><i class="fa-solid fa-clover text-base" style="filter: drop-shadow(0 0 4px rgba(0,224,150,0.6));"></i> Popular</div>
+                    {% endif %}
                 </div>
             </div>
             <div class="flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
@@ -194,54 +209,79 @@
 
 
 <script>
+    // ═══════════════════════════════════════════════════════
+    //  FILTRADO CLIENT-SIDE SIN RECARGA DE PÁGINA
+    // ═══════════════════════════════════════════════════════
+    let activeFilter = 'todos';
 
-
-    // JS DE BÚSQUEDA Y FILTRADO DE FORO
-    let currentFilter = 'recent';
-
-    function setActiveFilter(filterType) {
-        currentFilter = filterType;
+    function applyFilter(filter) {
+        activeFilter = filter;
         
-        // Estilos botones
-        const buttons = document.querySelectorAll('.filter-btn');
-        buttons.forEach(btn => {
-            btn.classList.remove('bg-secondary', 'text-white');
+        // Actualizar botones visualmente
+        document.querySelectorAll('.filter-pill').forEach(btn => {
+            btn.classList.remove('bg-secondary', 'text-white', 'shadow-md');
             btn.classList.add('bg-gray-100', 'text-gray-600', 'dark:bg-white/5', 'dark:text-gray-300');
         });
-        
-        const activeBtn = document.getElementById('btn-' + filterType);
+        const activeBtn = document.querySelector(`.filter-pill[data-filter="${filter}"]`);
         activeBtn.classList.remove('bg-gray-100', 'text-gray-600', 'dark:bg-white/5', 'dark:text-gray-300');
-        activeBtn.classList.add('bg-secondary', 'text-white');
+        activeBtn.classList.add('bg-secondary', 'text-white', 'shadow-md');
 
-        filterPosts();
+        // Título dinámico
+        const titles = { todos: 'Discusiones', populares: 'Discusiones Populares', recientes: 'Discusiones Recientes' };
+        document.getElementById('section-title').textContent = titles[filter] || 'Discusiones';
+
+        // Obtener y ordenar las tarjetas
+        const container = document.getElementById('posts-container');
+        const cards = Array.from(container.querySelectorAll('.post-card'));
+
+        if (filter === 'populares') {
+            cards.sort((a, b) => parseInt(b.dataset.responses) - parseInt(a.dataset.responses));
+        } else if (filter === 'recientes') {
+            cards.sort((a, b) => b.dataset.created.localeCompare(a.dataset.created));
+        }
+        // 'todos' mantiene el orden original (desc por fecha, que es el default del server)
+
+        // Animar salida
+        cards.forEach(c => {
+            c.style.opacity = '0';
+            c.style.transform = 'translateY(16px)';
+        });
+
+        // Reordenar en el DOM tras la animación de salida
+        setTimeout(() => {
+            cards.forEach(c => container.appendChild(c));
+            // Aplicar búsqueda
+            doSearch();
+            // Animar entrada escalonada
+            cards.forEach((c, i) => {
+                setTimeout(() => {
+                    c.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                    c.style.opacity = '1';
+                    c.style.transform = 'translateY(0)';
+                }, i * 80);
+            });
+        }, 250);
     }
 
-    function filterPosts() {
-        const searchInput = document.getElementById('searchInput').value.toLowerCase();
-        const posts = document.querySelectorAll('.post-card');
-        let count = 0;
-
-        posts.forEach(post => {
-            const category = post.getAttribute('data-category');
-            const searchData = post.getAttribute('data-search').toLowerCase();
-
-            let matchFilter = false;
-            if (currentFilter === 'recent') matchFilter = true;
-            if (currentFilter === 'popular' && category === 'popular') matchFilter = true;
-            if (currentFilter === 'unanswered' && category === 'unanswered') matchFilter = true;
-
-            const matchSearch = searchData.includes(searchInput);
-
-            if (matchFilter && matchSearch) {
+    function doSearch() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        document.querySelectorAll('.post-card').forEach(post => {
+            const text = post.dataset.search;
+            if (text.includes(q)) {
                 post.classList.remove('post-hidden');
-                count++;
             } else {
                 post.classList.add('post-hidden');
             }
         });
-
-        document.getElementById('result-count').textContent = `Mostrando ${count} resultados`;
     }
+
+    // Vincular el campo de búsqueda
+    document.addEventListener('DOMContentLoaded', () => {
+        const input = document.getElementById('searchInput');
+        if (input) input.addEventListener('keyup', doSearch);
+    });
+
+    function filterPosts() { doSearch(); }
 
     function loadMore() {
         const btn = document.getElementById('load-btn');

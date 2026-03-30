@@ -9,7 +9,7 @@ class Location extends Model
 {
     use HasFactory;
     
-    const UPDATED_AT = null;
+    public $timestamps = false;
 
     protected $fillable = [
         'nombre',
@@ -18,6 +18,7 @@ class Location extends Model
         'longitud',
         'tipo',
         'materiales',
+        'imagen',
     ];
 
     public function campaigns()

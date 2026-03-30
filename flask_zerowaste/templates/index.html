@@ -474,6 +474,14 @@
                         <span class="material-symbols-outlined text-gray-400">location_on</span>
                         <span class="truncate">{{ evento.lugar }}</span>
                     </div>
+
+                    <div class="mt-4 pt-4 border-t border-gray-100 dark:border-emerald-800/50">
+                        {% if evento.link_evento %}
+                        <a href="{{ evento.link_evento }}" target="_blank" class="block w-full text-center bg-[#00E096] hover:bg-[#059669] text-[#064E3B] hover:text-white font-bold py-2 px-4 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-1">Unirse al Evento</a>
+                        {% else %}
+                        <button disabled class="block w-full text-center bg-gray-100 dark:bg-emerald-900/30 text-gray-400 dark:text-emerald-800/50 font-bold py-2 px-4 rounded-xl cursor-not-allowed">Próximamente</button>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
             {% else %}
@@ -730,7 +738,7 @@
     });
 
     const statsData = [
-        { icon: 'recycling', value: '30%', label: 'TASA DE RECICLAJE', back: 'Querétaro logra reciclar el 30% de sus residuos, procesando gran parte de los 2.4 kg per cápita generados.', ref: 'SEDESU Querétaro', link: 'https://sedesu.queretaro.gob.mx/' },
+        { icon: '/static/img/logo.png', value: '30%', label: 'TASA DE RECICLAJE', back: 'Querétaro logra reciclar el 30% de sus residuos, procesando gran parte de los 2.4 kg per cápita generados.', ref: 'SEDESU Querétaro', link: 'https://sedesu.queretaro.gob.mx/' },
         { icon: 'groups', value: '+5K', label: 'VOLUNTARIOS', back: 'Miles de ciudadanos suman esfuerzos constantemente en jornadas de limpieza y reforestación comunitaria.', ref: 'Voluntariado Qro', link: 'https://www.queretaro.gob.mx/' },
         { icon: 'forest', value: '+165K', label: 'ÁRBOLES PLANTADOS', back: 'Se han plantado más de 165 mil árboles en el estado mediante el programa ambiental desde 2019.', ref: 'Respira Querétaro', link: 'https://municipiodequeretaro.gob.mx/programas/respira-queretaro/' },
         { icon: '/static/img/mapa_queretaro.png', value: '13', label: 'MUNICIPIOS DE QRO', back: '13 de los 18 municipios integran activamente estrategias de sustentabilidad y programas de economía circular.', ref: 'Gobierno Qro', link: 'https://www.queretaro.gob.mx/' }

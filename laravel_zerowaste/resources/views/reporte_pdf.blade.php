@@ -4,77 +4,40 @@
     <meta charset="UTF-8">
     <title>Reporte Zero Waste</title>
     <style>
-        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1f2937; margin: 0; padding: 20px; }
-        .header { text-align: center; border-bottom: 4px solid #00FA9A; padding-bottom: 25px; margin-bottom: 35px; }
-        .header h1 { color: #064E3B; margin: 0; font-size: 32px; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; }
-        .header p { color: #6b7280; font-size: 14px; margin-top: 5px; }
-        
-        .section-title { color: #064E3B; font-size: 18px; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 20px; margin-top: 40px; font-weight: bold; text-transform: uppercase; }
-        
-        .metric-box { background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 12px; padding: 20px; text-align: center; width: 44%; display: inline-block; margin-right: 2%; box-sizing: border-box; }
-        .metric-value { font-size: 28px; font-weight: 900; color: #059669; }
-        .metric-label { font-size: 11px; color: #065F46; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px;}
-
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #e5e7eb; padding: 14px; text-align: left; font-size: 14px; }
-        th { background-color: #064E3B; color: #ffffff; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
-        tr:nth-child(even) { background-color: #f9fafb; }
-        
-        .status-pos { color: #10B981; font-weight: bold; }
-        .status-neu { color: #6B7280; font-weight: bold; }
-        .status-neg { color: #EF4444; font-weight: bold; }
-        
-        .footer { text-align: center; margin-top: 60px; font-size: 10px; color: #9ca3af; border-top: 1px solid #f3f4f6; padding-top: 20px;}
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #fafafa; padding: 20px;}
+        .report-box { background: white; padding: 30px; border-radius: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);}
+        .header { border-bottom: 3px solid #00E096; padding-bottom: 20px; margin-bottom: 20px; text-align: center;}
+        .header img { width: 80px; margin-bottom: 10px;}
+        .header h1 { color: #064E3B; margin: 0; font-size: 32px; font-weight: 900; }
+        .section-title { color: #064E3B; font-size: 20px; font-weight: 900; border-bottom: 2px solid #D1FAE5; padding-bottom: 5px; margin-top: 30px;}
+        .metric-box { background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); border: 1px solid #10B981; border-radius: 16px; padding: 20px; text-align: center; width: 45%; display: inline-block; box-sizing: border-box; }
+        .metric-value { font-size: 30px; font-weight: 900; color: #064E3B;}
+        table { width: 100%; border-collapse: collapse; margin-top: 15px;}
+        th, td { border-bottom: 1px solid #e5e7eb; padding: 15px; text-align: left; }
+        th { background-color: #064E3B; color: #ffffff;}
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Zero Waste NLP 🍃</h1>
-        <p>Reporte Ejecutivo de Interacciones | Generado el: {{ $fecha }}</p>
-    </div>
-
-    <div class="section-title">Resumen de Impacto</div>
-    <div style="width: 100%;">
-        <div class="metric-box">
-            <div class="metric-value">{{ number_format($totalUsuarios) }}</div>
-            <div class="metric-label">Usuarios Activos en Plataforma</div>
+    <div class="report-box">
+        <div class="header">
+            <!-- Referencing Flask global asset relative to Laravel's position in this demo, or absolute public_path based on structure -->
+            <img src="{{ public_path('../../flask_zerowaste/static/img/logo.png') }}" alt="ZeroWaste Logo">
+            <h1>Zero Waste Analytics</h1>
+            <p>Reporte Generado: {{ $fecha }}</p>
         </div>
-        <div class="metric-box" style="margin-right: 0;">
-            <div class="metric-value">{{ number_format($puntosGlobales) }}</div>
-            <div class="metric-label">Puntos Globales Ecológicos (Exp)</div>
+        <div class="section-title">Resumen Operativo</div>
+        <div style="width: 100%; text-align: center;">
+            <div class="metric-box"><div class="metric-value">{{ number_format($totalUsuarios) }}</div><p style="font-size: 11px; font-weight: bold; color: #064E3B; text-transform:uppercase;">Comunidad Activa</p></div>
+            <div class="metric-box" style="margin-left: 5%;"><div class="metric-value">{{ number_format($puntosGlobales) }}</div><p style="font-size: 11px; font-weight: bold; color: #064E3B; text-transform:uppercase;">Puntos Ecológicos</p></div>
         </div>
-    </div>
-
-    <div class="section-title">Análisis de Sentimiento NLP (Comunidad)</div>
-    <table>
-        <thead>
-            <tr>
-                <th>Clasificación AI</th>
-                <th>Volumen de Posturas (%)</th>
-                <th>Diagnóstico del Algoritmo</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Sentimiento Positivo</td>
-                <td class="status-pos">{{ $sentimiento['POS'] }}%</td>
-                <td>Excelente recepción y logros compartidos</td>
-            </tr>
-            <tr>
-                <td>Sentimiento Neutro</td>
-                <td class="status-neu">{{ $sentimiento['NEU'] }}%</td>
-                <td>Informativo / Consultas rutinarias</td>
-            </tr>
-            <tr>
-                <td>Sentimiento Negativo</td>
-                <td class="status-neg">{{ $sentimiento['NEG'] }}%</td>
-                <td>Puntos de fricción / Frustración con reciclaje</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="footer">
-        Este documento es confidencial y generado de forma analítica en el servidor de Laravel conectando al motor de IA Predictiva en Python de Zero Waste.
+        <div class="section-title">Análisis de Sentimiento NLP</div>
+        <table>
+            <tr><th>Postura AI</th><th>Volumen</th></tr>
+            <tr><td style="color:#10B981; font-weight:bold;">Recepción Positiva</td><td style="font-weight:900;">{{ $sentimiento['POS'] }}%</td></tr>
+            <tr><td style="color:#6B7280; font-weight:bold;">Postura Neutra</td><td style="font-weight:900;">{{ $sentimiento['NEU'] }}%</td></tr>
+            <tr><td style="color:#EF4444; font-weight:bold;">Fricción (Negativo)</td><td style="font-weight:900;">{{ $sentimiento['NEG'] }}%</td></tr>
+        </table>
+        <div style="font-size: 11px; color:#6b7280; text-align:center; margin-top:30px;">Laravel ⇌ FastAPI ⇌ PostgreSQL</div>
     </div>
 </body>
 </html>
