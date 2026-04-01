@@ -34,9 +34,12 @@
   .header-actions { display: flex; align-items: center; gap: 15px; }
   .profile-pic-desktop {
     width: 40px; height: 40px;
+    min-width: 40px; min-height: 40px;
+    flex-shrink: 0;
     object-fit: cover; object-position: center;
     border: 2px solid var(--border-color);
     border-radius: 50%;
+    display: block;
   }
 
   /* FASE 3: Compresión Tablets */
@@ -106,28 +109,48 @@
         </a>
 
         {% if session.get('usuario_id') %}
-        <div class="header-actions relative group flex items-center gap-4">
-            <!-- Modo Oscuro Reubicado Inmediatamente al Lado -->
+        <div class="header-actions flex items-center gap-3">
+            <!-- Modo Oscuro -->
             <button class="theme-toggle-btn p-2 rounded-full transition-all duration-300" onclick="toggleTheme()">
                 <span class="material-symbols-outlined text-xl theme-toggle-icon-light dark:hidden">dark_mode</span>
                 <span class="material-symbols-outlined hidden dark:block text-xl theme-toggle-icon-dark">light_mode</span>
             </button>
 
-            <!-- Foto HD de 40px -->
-            <a href="{{ url_for('perfil') }}" class="flex items-center gap-3 bg-transparent border-0 outline-none cursor-pointer">
-                <span class="font-bold text-sm text-secondary dark:text-emerald-100 hidden md:block">{{ session.get('nombre', 'Usuario').split(' ')[0] }}</span>
-                {% set avatar = session.get('foto_perfil', session.get('usuario_foto', 'default.png')) %}
-                {% if avatar and avatar.startswith('http') %}
-                <img alt="User Avatar" class="profile-pic-desktop shadow-sm transition-transform duration-300 group-hover:scale-105" src="{{ avatar }}" onerror="this.src='/static/img/perfiles/default.png'"/>
-                {% else %}
-                <img alt="User Avatar" class="profile-pic-desktop shadow-sm transition-transform duration-300 group-hover:scale-105" src="/static/img/perfiles/{{ avatar }}" onerror="this.src='/static/img/perfiles/default.png'"/>
-                {% endif %}
-            </a>
-            
-            <div class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 origin-top-right z-50">
-                <a class="block px-6 py-3 text-sm font-semibold text-secondary dark:text-emerald-100 hover:bg-surface-light dark:hover:bg-emerald-900/50 hover:text-primary dark:hover:text-white first:rounded-t-xl transition-colors" href="{{ url_for('perfil') }}"> Ver perfil </a>
-                <div class="h-px bg-gray-100 dark:bg-emerald-900 mx-2"></div>
-                <a class="block px-6 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 last:rounded-b-xl transition-colors cursor-pointer" onclick="document.getElementById('logoutModal').classList.remove('hidden'); document.getElementById('logoutModal').classList.add('flex');"> Cerrar sesión </a>
+            <!-- Campana de Notificaciones -->
+            <div class="relative" id="noti-dropdown-container">
+                <button class="p-2 rounded-full transition-all duration-300 hover:bg-gray-100 dark:hover:bg-emerald-900 relative" onclick="toggleNotiDropdown(event)">
+                    <span class="material-symbols-outlined text-xl text-gray-600 dark:text-emerald-100">notifications</span>
+                    <span id="noti-badge" class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full hidden animate-pulse"></span>
+                </button>
+                <div id="noti-dropdown" class="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-xl shadow-2xl opacity-0 invisible transition-all duration-200 origin-top-right z-[60]">
+                    <div class="p-3 border-b border-gray-100 dark:border-emerald-800 flex justify-between items-center">
+                        <span class="font-bold text-sm text-secondary dark:text-emerald-100">Notificaciones</span>
+                        <button onclick="markAllRead()" class="text-xs text-primary hover:text-emerald-600 dark:text-emerald-400 font-bold">Marcar leídas</button>
+                    </div>
+                    <div id="noti-list" class="max-h-60 overflow-y-auto">
+                        <div class="p-4 text-center text-xs text-gray-500 dark:text-gray-400">Sin notificaciones</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Perfil con dropdown click -->
+            <div class="relative" id="profile-dropdown-container">
+                <button onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 bg-transparent border-0 outline-none cursor-pointer">
+                    <span class="font-bold text-sm text-secondary dark:text-emerald-100 hidden md:block">{{ session.get('nombre', 'Usuario').split(' ')[0] }}</span>
+                    <div class="profile-pic-desktop shadow-sm bg-gray-100 dark:bg-emerald-950/40 relative overflow-hidden flex items-center justify-center border-2 border-emerald-100 dark:border-emerald-800 transition-transform duration-300 hover:scale-105">
+                        <span class="material-symbols-outlined text-gray-300 dark:text-emerald-800 text-2xl absolute z-0">person</span>
+                        {% set avatar = session.get('foto_perfil') or session.get('usuario_foto') or 'default.png' %}
+                        <img alt="User Avatar" class="w-full h-full object-cover relative z-10" 
+                             src="{{ avatar if avatar.startswith('http') else '/static/img/perfiles/' + avatar }}" 
+                             onerror="this.style.display='none';">
+                    </div>
+                </button>
+                
+                <div id="profile-dropdown" class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-xl shadow-2xl opacity-0 invisible transition-all duration-200 origin-top-right z-[60]">
+                    <a class="block px-6 py-3 text-sm font-semibold text-secondary dark:text-emerald-100 hover:bg-surface-light dark:hover:bg-emerald-900/50 hover:text-primary dark:hover:text-white first:rounded-t-xl transition-colors" href="{{ url_for('perfil') }}"> Ver perfil </a>
+                    <div class="h-px bg-gray-100 dark:bg-emerald-900 mx-2"></div>
+                    <a class="block px-6 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 last:rounded-b-xl transition-colors cursor-pointer" onclick="document.getElementById('logoutModal').classList.remove('hidden'); document.getElementById('logoutModal').classList.add('flex');"> Cerrar sesión </a>
+                </div>
             </div>
         </div>
         {% else %}
@@ -203,7 +226,83 @@
       }
       lastScrollY = window.scrollY;
   });
+
+  // ========== Lógica de Notificaciones (AJAX Polling) ==========
 </script>
+
+{% if session.get('usuario_id') %}
+<script>
+  var NOTI_URLS = {
+      unread: '{{ url_for("get_unread_notificaciones") }}',
+      markRead: '{{ url_for("mark_read_notificaciones") }}'
+  };
+</script>
+<script>
+  function fetchNotificaciones() {
+      fetch(NOTI_URLS.unread)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+          if(data.success) {
+              var badge = document.getElementById('noti-badge');
+              var list = document.getElementById('noti-list');
+              if(data.count > 0) {
+                  badge.classList.remove('hidden');
+                  var html = '';
+                  for(var i = 0; i < data.data.length; i++) {
+                      var n = data.data[i];
+                      html += '<a href="' + (n.url || '#') + '" class="block p-3 border-b border-gray-50 dark:border-emerald-900/50 hover:bg-gray-50 dark:hover:bg-emerald-900/30 transition-colors">' +
+                          '<p class="font-bold text-xs text-secondary dark:text-emerald-100">' + n.titulo + '</p>' +
+                          '<p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">' + n.mensaje + '</p>' +
+                          '<p class="text-[10px] text-gray-400 mt-1">' + n.created_at + '</p>' +
+                      '</a>';
+                  }
+                  list.innerHTML = html;
+              } else {
+                  badge.classList.add('hidden');
+                  list.innerHTML = '<div class="p-4 text-center text-xs text-gray-500 dark:text-gray-400">Sin notificaciones nuevas</div>';
+              }
+          }
+      }).catch(function(e) { console.log('Noti error:', e); });
+  }
+
+  function showDropdown(el) { el.classList.remove('invisible','opacity-0'); el.classList.add('visible','opacity-100'); }
+  function hideDropdown(el) { el.classList.add('invisible','opacity-0'); el.classList.remove('visible','opacity-100'); }
+
+  function toggleNotiDropdown(e) {
+      e.stopPropagation();
+      var noti = document.getElementById('noti-dropdown');
+      var prof = document.getElementById('profile-dropdown');
+      if(prof) hideDropdown(prof);
+      noti.classList.contains('invisible') ? showDropdown(noti) : hideDropdown(noti);
+  }
+
+  function toggleProfileDropdown(e) {
+      e.stopPropagation();
+      var prof = document.getElementById('profile-dropdown');
+      var noti = document.getElementById('noti-dropdown');
+      if(noti) hideDropdown(noti);
+      prof.classList.contains('invisible') ? showDropdown(prof) : hideDropdown(prof);
+  }
+
+  document.addEventListener('click', function(e) {
+      var notiC = document.getElementById('noti-dropdown-container');
+      var profC = document.getElementById('profile-dropdown-container');
+      var noti = document.getElementById('noti-dropdown');
+      var prof = document.getElementById('profile-dropdown');
+      if(notiC && !notiC.contains(e.target)) hideDropdown(noti);
+      if(profC && !profC.contains(e.target)) hideDropdown(prof);
+  });
+
+  function markAllRead() {
+      fetch(NOTI_URLS.markRead, { method: 'POST' })
+      .then(function(r) { return r.json(); })
+      .then(function(data) { if(data.success) fetchNotificaciones(); });
+  }
+
+  setInterval(fetchNotificaciones, 12000);
+  setTimeout(fetchNotificaciones, 1000);
+</script>
+{% endif %}
 
 <!-- Modal Cerrar Sesión -->
 <div id="logoutModal" class="fixed inset-0 z-[9999] hidden items-center justify-center p-4">

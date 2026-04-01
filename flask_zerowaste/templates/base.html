@@ -51,6 +51,7 @@
         function toggleTheme() {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.documentElement.style.backgroundColor = isDark ? '#062C25' : '#ECFDF5';
             window.dispatchEvent(new Event('themeChanged'));
         }
     </script>
@@ -121,6 +122,12 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .no-hyphens { hyphens: none !important; word-break: keep-all !important; overflow-wrap: normal !important; }
+
+        /* Mejora global de renderizado de imágenes para evitar pixeleo */
+        img { 
+            image-rendering: -webkit-optimize-contrast; 
+            image-rendering: high-quality; 
+        }
 
         /* BOTÓN TEMA */
         .theme-toggle-btn { background: transparent; border: none; box-shadow: none; }

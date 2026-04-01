@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% block head %}
+    {{ super() }}
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='faviconZeroWaste.svg') }}">
+    <link rel="alternate icon" type="image/png" href="{{ url_for('static', filename='faviconZeroWaste.png') }}">
+{% endblock %}
+
+{% block title %}Completar Perfil{% endblock %}
+
+{% block styles %}
+<style>
+    .theme-toggle-btn { background: transparent; border: none; box-shadow: none; }
+    .theme-toggle-btn:hover { background: rgba(6, 78, 59, 0.08); transform: translateY(-1px) scale(1.04); }
+    .dark .theme-toggle-btn:hover { background: rgba(209, 250, 229, 0.10); }
+    .theme-toggle-icon-light { color: #0f766e; font-variation-settings: 'FILL' 1, 'wght' 500; }
+    .theme-toggle-icon-dark { color: #d1fae5; font-variation-settings: 'FILL' 1, 'wght' 500; }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="flex-grow pt-28 pb-16 bg-surface-light dark:bg-surface-dark transition-colors duration-300">
+<div class="max-w-6xl mx-auto px-6">
+    <div class="bg-white dark:bg-forest-dark rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-emerald-100 dark:border-emerald-800 p-8 md:p-10 overflow-hidden relative">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
+        <div class="text-center mb-8 relative z-10">
+            <div class="inline-flex p-1 rounded-full bg-gradient-to-br from-primary to-emerald-600 mb-4 shadow-lg shadow-emerald-400/20">
+                <div class="h-20 w-20 rounded-full bg-white dark:bg-forest-dark flex items-center justify-center overflow-hidden border-4 border-white dark:border-forest-dark relative">
+                    <span class="material-symbols-outlined text-gray-200 dark:text-emerald-900/40 text-5xl absolute z-0">person</span>
+                    {% set avatar_src = usuario.foto_perfil if usuario.foto_perfil and usuario.foto_perfil.startswith('http') else ('/static/img/perfiles/' + usuario.foto_perfil if usuario.foto_perfil and usuario.foto_perfil != 'None' else '') %}
+                    <img id="preview-avatar" src="{{ avatar_src }}" alt="Avatar" class="h-full w-full object-cover relative z-10 {% if not avatar_src %}hidden{% endif %}" onerror="this.style.display='none';">
+                </div>
+            </div>
+            <h1 class="font-display font-black text-3xl md:text-4xl text-secondary dark:text-white mb-1">¡Bienvenido, <span class="text-primary">{{ usuario.nombre.split(' ')[0] }}</span>!</h1>
+            <p class="text-gray-500 dark:text-gray-400 font-medium italic text-sm">"Tu primer paso hacia una vida sin residuos comienza aquí"</p>
+        </div>
+
+        <form action="/completar-perfil" method="POST" enctype="multipart/form-data" class="space-y-6 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                <!-- Nombre -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-black text-secondary dark:text-emerald-100 flex items-center gap-2 uppercase tracking-[0.2em] opacity-70">
+                        <span class="material-symbols-outlined text-primary text-base">person</span> Nombre Completo
+                    </label>
+                    <input type="text" name="nombre" value="{{ usuario.nombre }}" required minlength="3"
+                        class="block w-full px-5 py-3.5 rounded-2xl border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all placeholder-gray-400 text-sm">
+                </div>
+
+                <!-- Ubicación -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-black text-secondary dark:text-emerald-100 flex items-center gap-2 uppercase tracking-[0.2em] opacity-70">
+                        <span class="material-symbols-outlined text-primary text-base">location_on</span> Ubicación
+                    </label>
+                    <input type="text" name="ubicacion" value="{{ usuario.ubicacion or 'Querétaro' }}" placeholder="Querétaro, Qro."
+                        class="block w-full px-5 py-3.5 rounded-2xl border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-sm">
+                </div>
+
+                <!-- Título -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-black text-secondary dark:text-emerald-100 flex items-center gap-2 uppercase tracking-[0.2em] opacity-70">
+                        <span class="material-symbols-outlined text-primary text-base">military_tech</span> Título Público
+                    </label>
+                    <input type="text" name="titulo_perfil" value="{{ usuario.titulo_perfil or 'Usuario Eco-consciente' }}"
+                        class="block w-full px-5 py-3.5 rounded-2xl border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-sm">
+                </div>
+
+                <!-- Foto de perfil -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-black text-secondary dark:text-emerald-100 flex items-center gap-2 uppercase tracking-[0.2em] opacity-70">
+                        <span class="material-symbols-outlined text-primary text-base">photo_camera</span> Foto de Perfil
+                    </label>
+                    <div class="relative">
+                        <input type="file" name="foto_perfil" accept="image/*"
+                            class="block w-full text-[10px] file:mr-4 file:py-3.5 file:px-4 file:rounded-2xl file:border-2 file:border-dashed file:border-emerald-200 dark:file:border-emerald-800 file:text-secondary dark:file:text-emerald-100 file:bg-white dark:file:bg-emerald-950/20 hover:file:border-primary transition-all cursor-pointer">
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Biografía -->
+                <div class="lg:col-span-2 flex flex-col gap-1.5">
+                    <label class="text-[10px] font-black text-secondary dark:text-emerald-100 flex items-center gap-2 uppercase tracking-[0.2em] opacity-70">
+                        <span class="material-symbols-outlined text-primary text-base">format_quote</span> Sobre Mí
+                    </label>
+                    <textarea name="biografia" rows="4" placeholder="Comparte tu motivación ecológica con la comunidad..."
+                        class="block w-full px-6 py-4 rounded-3xl border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-medium resize-none transition-all text-sm">{{ usuario.biografia or '' }}</textarea>
+                </div>
+
+                <!-- Contraseña -->
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[10px] font-black text-secondary dark:text-emerald-100 flex items-center gap-2 uppercase tracking-[0.2em] opacity-70">
+                        <span class="material-symbols-outlined text-primary text-base">lock</span> Nueva Contraseña
+                    </label>
+                    <div class="p-6 h-full rounded-3xl bg-gray-50 dark:bg-emerald-950/20 border-2 border-dashed border-emerald-100 dark:border-emerald-800/50 flex flex-col justify-center gap-4">
+                        <input type="password" name="password" minlength="6" placeholder="Mínimo 6 caracteres"
+                            class="block w-full px-5 py-3.5 rounded-2xl border-white dark:border-emerald-800 bg-white dark:bg-black/20 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-sm shadow-sm">
+                        <p class="text-[9px] text-gray-500 uppercase font-black text-center tracking-widest">Opcional: Solo para login local</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Intereses: Grid ultra-compacto -->
+            <div class="p-8 rounded-[2.5rem] bg-emerald-50/30 dark:bg-emerald-950/20 border-2 border-emerald-100/50 dark:border-emerald-800/30">
+                <div class="flex items-center justify-between gap-4 mb-6">
+                    <label class="text-[10px] font-black text-secondary dark:text-emerald-100 flex items-center gap-2 uppercase tracking-[0.2em]">
+                        <span class="material-symbols-outlined text-primary">eco</span> Intereses Seleccionados
+                    </label>
+                    <span id="interests-count" class="text-[10px] bg-primary text-secondary font-black px-4 py-1.5 rounded-full shadow-lg shadow-primary/20">0 de 5</span>
+                </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {% for interes in ['Reciclaje', 'Compostaje', 'Energía Solar', 'Huertos Urbanos', 'Reducción de Plástico', 'Reforestación', 'Moda Sostenible', 'Movilidad Eléctrica'] %}
+                    <label class="interest-pill flex items-center gap-3 px-4 py-2.5 rounded-2xl border-2 border-white dark:border-emerald-800 bg-white dark:bg-emerald-900/10 cursor-pointer shadow-sm transition-all hover:translate-y-[-2px]">
+                        <input type="checkbox" name="intereses" value="{{ interes }}" class="hidden checkbox-interest">
+                        <span class="material-symbols-outlined text-base checkbox-icon">radio_button_unchecked</span>
+                        <span class="text-[11px] font-bold text-secondary dark:text-emerald-50 whitespace-nowrap">{{ interes }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit"
+                class="w-full py-5 bg-primary hover:bg-emerald-400 text-secondary font-black rounded-3xl shadow-2xl shadow-primary/30 transition-all transform hover:-translate-y-2 text-base tracking-[0.3em] uppercase mt-2">
+                Actualizar e Ingresar
+            </button>
+        </form>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const maxIntereses = 5;
+                const checkboxes = document.querySelectorAll('.checkbox-interest');
+                const countBadge = document.getElementById('interests-count');
+
+                function updateInterestsUI() {
+                    const checked = document.querySelectorAll('.checkbox-interest:checked');
+                    countBadge.textContent = `${checked.length} de ${maxIntereses}`;
+                    
+                    checkboxes.forEach(cb => {
+                        const pill = cb.closest('.interest-pill');
+                        const icon = pill.querySelector('.checkbox-icon');
+                        if (cb.checked) {
+                            pill.classList.remove('border-emerald-50', 'dark:border-emerald-900/40', 'bg-white', 'dark:bg-emerald-900/10');
+                            pill.classList.add('border-primary', 'bg-emerald-50', 'dark:bg-primary/20');
+                            icon.textContent = 'check_circle';
+                            icon.classList.add('text-primary');
+                        } else {
+                            pill.classList.add('border-emerald-50', 'dark:border-emerald-900/40', 'bg-white', 'dark:bg-emerald-900/10');
+                            pill.classList.remove('border-primary', 'bg-emerald-50', 'dark:bg-primary/20');
+                            icon.textContent = 'circle';
+                            icon.classList.remove('text-primary');
+                        }
+                    });
+                }
+
+                checkboxes.forEach(cb => {
+                    cb.addEventListener('change', function(e) {
+                        const checkedCount = document.querySelectorAll('.checkbox-interest:checked').length;
+                        if (checkedCount > maxIntereses) {
+                            this.checked = false;
+                            if (typeof showToast === 'function') {
+                                showToast('Solo puedes seleccionar un máximo de 5 intereses', 'warning');
+                            } else {
+                                alert('Solo puedes seleccionar un máximo de 5 intereses');
+                            }
+                        }
+                        updateInterestsUI();
+                    });
+                });
+
+                // Init UI
+                updateInterestsUI();
+
+                // Live Preview Foto Perfil
+                const fotoInput = document.querySelector('input[name="foto_perfil"]');
+                const avatarImg = document.getElementById('preview-avatar');
+
+                fotoInput.addEventListener('change', function() {
+                    const file = this.files[0];
+                    if (file) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            avatarImg.src = e.target.result;
+                            avatarImg.classList.remove('hidden');
+                            avatarImg.style.display = 'block';
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                });
+            });
+        </script>
+    </div>
+</div>
+</main>
+{% endblock %}

@@ -1,7 +1,0 @@
-
-                                                                                
-                           APPLICATION IN PRODUCTION.                           
-                                                                                
-
-   WARN  Command cancelled.  
-

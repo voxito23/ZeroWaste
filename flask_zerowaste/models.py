@@ -9,15 +9,17 @@ class Usuario(db.Model):
     nombre = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password = db.Column(db.String(255), nullable=False)
-    foto_perfil = db.Column(db.String(255), default='perfil_default.png')
+    foto_perfil = db.Column(db.String(255), default='default.png')
     titulo_perfil = db.Column(db.String(100), default='Usuario Eco-consciente')
     biografia = db.Column(db.Text, nullable=True)
     ubicacion = db.Column(db.String(100), default='Querétaro')
     intereses = db.Column(db.String(255), nullable=True)
     is_admin = db.Column(db.Boolean, default=False)
+    firebase_uid = db.Column(db.String(255), nullable=True, unique=True)
+    auth_provider = db.Column(db.String(50), default='local')
+    profile_completed = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relaciones con el foro
     posts = db.relationship('Foro', backref='autor_rel', lazy=True)
     respuestas = db.relationship('RespuestaForo', backref='autor_rel', lazy=True)
 
@@ -34,8 +36,8 @@ class PuntoMapa(db.Model):
     latitud = db.Column(db.Numeric(10, 8), nullable=False)
     longitud = db.Column(db.Numeric(11, 8), nullable=False)
     tipo = db.Column(db.String(100), nullable=False)
-    materiales = db.Column(db.Text, nullable=True)
     imagen = db.Column(db.String(255), default='default_punto.png')
+    materiales = db.Column(db.String(255), nullable=True, default='Mixtos')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     calificaciones = db.relationship('CalificacionPunto', backref='punto', lazy=True)
@@ -45,7 +47,7 @@ class CalificacionPunto(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     location_id = db.Column(db.Integer, db.ForeignKey('locations.id'), nullable=False)
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
-    estrellas = db.Column(db.Integer, nullable=False) # Escala de 1 a 5
+    estrellas = db.Column(db.Integer, nullable=False)
     comentario = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -59,7 +61,7 @@ class Evento(db.Model):
     descripcion = db.Column(db.Text, nullable=False)
     tipo_etiqueta = db.Column(db.String(50), nullable=True)
     imagen_url = db.Column(db.String(255), nullable=True)
-    link_evento = db.Column(db.String(255), nullable=True)
+    link_evento = db.Column(db.String(500), nullable=True)
 
 class Foro(db.Model):
     __tablename__ = 'posts'
@@ -104,7 +106,7 @@ class Campaign(db.Model):
     descripcion = db.Column(db.Text, nullable=False)
     tipo_etiqueta = db.Column(db.String(50), nullable=True)
     imagen_url = db.Column(db.String(255), nullable=True)
-    link_evento = db.Column(db.String(255), nullable=True)
+    link_evento = db.Column(db.String(500), nullable=True)
     recompensa_puntos = db.Column(db.Integer, default=0)
     activa = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -125,3 +127,43 @@ class Actividad(db.Model):
     descripcion = db.Column(db.String(255), nullable=False)
     referencia_id = db.Column(db.Integer, nullable=True)
     fecha_creacion = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Notificacion(db.Model):
+    __tablename__ = 'notificaciones'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
+    titulo = db.Column(db.String(255), nullable=False)
+    mensaje = db.Column(db.Text, nullable=False)
+    url = db.Column(db.String(255), nullable=True)
+    leida = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class ContactMessage(db.Model):
+    __tablename__ = 'contact_messages'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(150), nullable=False)
+    email = db.Column(db.String(150), nullable=False)
+    ubicacion = db.Column(db.String(200), nullable=True)
+    mensaje = db.Column(db.Text, nullable=False)
+    estado = db.Column(db.String(30), default='pendiente')
+    respuesta_admin = db.Column(db.Text, nullable=True)
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    replies = db.relationship('ContactReply', backref='contact_message', lazy=True, order_by='ContactReply.created_at')
+
+class ContactReply(db.Model):
+    __tablename__ = 'contact_replies'
+    id = db.Column(db.Integer, primary_key=True)
+    contact_message_id = db.Column(db.Integer, db.ForeignKey('contact_messages.id'), nullable=False)
+    sender = db.Column(db.String(10), nullable=False)  # 'user' or 'admin'
+    mensaje = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class PasswordResetRequest(db.Model):
+    __tablename__ = 'password_reset_requests'
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(150), nullable=False)
+    estado = db.Column(db.String(30), default='pendiente')
+    notas = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

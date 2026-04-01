@@ -11,13 +11,13 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY package*.json ./
-RUN npm install
+COPY frontend_build/package*.json ./frontend_build/
+RUN cd frontend_build && npm install
 
 COPY . .
 
 # Compilar Tailwind CSS
-RUN npm run build:css
+RUN cd frontend_build && npm run build:css
 
 EXPOSE 5000
 

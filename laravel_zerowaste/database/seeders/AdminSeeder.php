@@ -17,39 +17,9 @@ class AdminSeeder extends Seeder
             [
                 'nombre'   => 'Victor Admin',
                 'email'    => 'vichdz@gmail.com',
-                'password' => Hash::make('voxito12'),
+                'password' => '123456',
                 'is_admin' => true,
-            ],
-            [
-                'nombre'   => 'Admin Principal',
-                'email'    => 'admin@zerowaste.com',
-                'password' => Hash::make('ZeroWaste2026!'),
-                'is_admin' => true,
-            ],
-            [
-                'nombre'   => 'Admin Operaciones',
-                'email'    => 'operaciones@zerowaste.com',
-                'password' => Hash::make('ZeroWaste2026!'),
-                'is_admin' => true,
-            ],
-            [
-                'nombre'   => 'Admin Contenido',
-                'email'    => 'contenido@zerowaste.com',
-                'password' => Hash::make('ZeroWaste2026!'),
-                'is_admin' => true,
-            ],
-            [
-                'nombre'   => 'Admin Soporte',
-                'email'    => 'soporte@zerowaste.com',
-                'password' => Hash::make('ZeroWaste2026!'),
-                'is_admin' => true,
-            ],
-            [
-                'nombre'   => 'Admin Desarrollo',
-                'email'    => 'dev@zerowaste.com',
-                'password' => Hash::make('ZeroWaste2026!'),
-                'is_admin' => true,
-            ],
+            ]
         ];
 
         foreach ($admins as $admin) {

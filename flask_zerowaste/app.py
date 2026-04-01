@@ -5,27 +5,28 @@ import os
 import uuid
 from sqlalchemy.sql import func
 from datetime import datetime, timedelta
-
-try:
-    import google_auth_oauthlib.flow
-    import requests
-except ImportError:
-    pass
+import requests as http_requests
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
-CLIENT_SECRETS_FILE = "client_secret.json"
-SCOPES = ['https://www.googleapis.com/auth/userinfo.email', 'https://www.googleapis.com/auth/userinfo.profile', 'openid']
 
-from models import db, Usuario, Categoria, PuntoMapa, CalificacionPunto, Evento, Foro, RespuestaForo, LikeForo, Actividad, Campaign
-from utils.analisis import analizar_sentimiento_comunidad
+from models import (db, Usuario, Categoria, PuntoMapa, CalificacionPunto,
+                     Evento, Foro, RespuestaForo, LikeForo, Actividad,
+                     Campaign, ContactMessage, ContactReply, PasswordResetRequest, Notificacion)
+# IA delegada a FastAPI
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 app.secret_key = 'super_secreta_zerowaste_2026'
 
-# Configuración de SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:postgrespassword@127.0.0.1:5432/zerowaste_db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Variable dinámica para Producción vs Desarrollo
+PUBLIC_API_URL = os.environ.get('PUBLIC_API_URL', 'http://localhost:6001')
+
+@app.context_processor
+def inject_global_vars():
+    return dict(API_URL=PUBLIC_API_URL)
 
 db.init_app(app)
 
@@ -39,7 +40,6 @@ with app.app_context():
 def datetime_mx_filter(dt):
     if not dt:
         return ''
-    # UTC-6 para Hora Central de México
     mx_dt = dt - timedelta(hours=6)
     meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
     mes_str = meses[mx_dt.month - 1]
@@ -53,15 +53,65 @@ def datetime_mx_filter(dt):
 def root():
     return render_template('login.html')
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+        
+        usuario = Usuario.query.filter_by(email=email).first()
+        if not usuario:
+            return jsonify({'success': False, 'error': 'Credenciales inválidas.'}), 401
+            
+        import bcrypt
+        if isinstance(usuario.password, str) and bcrypt.checkpw(password.encode('utf-8'), usuario.password.encode('utf-8')):
+            session['usuario_id'] = usuario.id
+            session['nombre'] = usuario.nombre
+            session['email'] = usuario.email
+            session['foto_perfil'] = usuario.foto_perfil
+            session['profile_completed'] = usuario.profile_completed
+            return jsonify({'success': True, 'redirect': url_for('index')})
+        else:
+            return jsonify({'success': False, 'error': 'Credenciales inválidas.'}), 401
+            
     return render_template('login.html')
 
-@app.route('/registro')
+@app.route('/registro', methods=['GET', 'POST'])
 def registro():
+    if request.method == 'POST':
+        data = request.get_json() if request.is_json else request.form
+        nombre = data.get('nombre', '').strip()
+        email = data.get('email', '').strip()
+        password = data.get('password', '')
+        
+        if not nombre or not email or len(password) < 6:
+            return jsonify({'success': False, 'error': 'Datos incompletos o contraseña muy corta.'}), 400
+            
+        if Usuario.query.filter_by(email=email).first():
+            return jsonify({'success': False, 'error': 'El correo ya está registrado.'}), 400
+            
+        import bcrypt
+        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        nuevo = Usuario(
+            nombre=nombre,
+            email=email,
+            password=hashed,
+            auth_provider='local',
+            profile_completed=True
+        )
+        db.session.add(nuevo)
+        db.session.commit()
+        
+        session['usuario_id'] = nuevo.id
+        session['nombre'] = nuevo.nombre
+        session['email'] = nuevo.email
+        session['profile_completed'] = True
+        
+        return jsonify({'success': True, 'redirect': url_for('index')})
+        
     return render_template('registro.html')
 
-# -- Rutas de Artículos Educativos (APA 7) --
 @app.route('/tema/reciclar-plastico')
 def articulo_plastico():
     return render_template('reciclar_plastico.html')
@@ -79,88 +129,173 @@ def articulo_compostaje():
     return render_template('compostaje_urbano.html')
 
 
-@app.route('/login/google')
-def login_google():
-    try:
-        flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-            CLIENT_SECRETS_FILE, scopes=SCOPES)
-        flow.redirect_uri = url_for('callback_google', _external=True)
-        authorization_url, state = flow.authorization_url(
-            access_type='offline',
-            include_granted_scopes='true')
-        session['state'] = state
-        return redirect(authorization_url)
-    except Exception as e:
-        print(f"Redirigiendo a inicio de sesión simulado por ausencia de client_secret.json: {e}")
-        return redirect(url_for('callback_google_dummy'))
+# ==========================================================================
+#  Autenticación Firebase (Google Sign-In)
+# ==========================================================================
 
-@app.route('/callback/google')
-def callback_google():
-    state = session.get('state')
+@app.route('/auth/firebase', methods=['POST'])
+def auth_firebase():
+    """Recibe idToken de Firebase, verifica con Google y crea/enlaza usuario."""
+    data = request.get_json()
+    id_token = data.get('idToken')
+    if not id_token:
+        return jsonify({'success': False, 'error': 'Token no proporcionado.'}), 400
+
     try:
-        flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-            CLIENT_SECRETS_FILE, scopes=SCOPES, state=state)
-        flow.redirect_uri = url_for('callback_google', _external=True)
-        
-        authorization_response = request.url
-        flow.fetch_token(authorization_response=authorization_response)
-        
-        credentials = flow.credentials
-        response = requests.get('https://www.googleapis.com/oauth2/v1/userinfo', headers={'Authorization': f'Bearer {credentials.token}'})
-        user_info = response.json()
-        
-        email = user_info.get('email')
-        name = user_info.get('name')
-        picture = user_info.get('picture', 'perfil_default.png')
-        
+        # Verificar token con Google
+        verify_url = f'https://www.googleapis.com/oauth2/v3/tokeninfo?id_token={id_token}'
+        resp = http_requests.get(verify_url, timeout=10)
+        if resp.status_code != 200:
+            return jsonify({'success': False, 'error': 'Token inválido.'}), 401
+
+        token_info = resp.json()
+        email = token_info.get('email')
+        name = token_info.get('name', email.split('@')[0])
+        picture = token_info.get('picture', 'perfil_default.png')
+        firebase_uid = token_info.get('sub')
+
+        if not email:
+            return jsonify({'success': False, 'error': 'No se pudo obtener el correo.'}), 400
+
+        # Buscar usuario existente por email
         usuario = Usuario.query.filter_by(email=email).first()
-        if not usuario:
-            usuario = Usuario(
+
+        if usuario:
+            # Enlazar firebase_uid si no lo tiene
+            if not usuario.firebase_uid:
+                usuario.firebase_uid = firebase_uid
+                usuario.auth_provider = 'google' if usuario.auth_provider == 'local' else usuario.auth_provider
+                db.session.commit()
+
+            session['usuario_id'] = usuario.id
+            session['nombre'] = usuario.nombre
+            session['email'] = usuario.email
+            session['foto_perfil'] = usuario.foto_perfil
+            session['titulo_perfil'] = usuario.titulo_perfil
+            session['biografia'] = usuario.biografia
+            session['ubicacion'] = usuario.ubicacion
+            session['intereses'] = usuario.intereses
+            # Si es admin, redirigir al panel de Laravel
+            if usuario.is_admin:
+                redirect_url = 'http://localhost:8001/admin/dashboard'
+            else:
+                redirect_url = url_for('perfil')
+
+            return jsonify({'success': True, 'redirect': redirect_url, 'new_user': False})
+        else:
+            # Crear usuario nuevo con perfil incompleto
+            import bcrypt
+            random_pass = bcrypt.hashpw(uuid.uuid4().hex.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            nuevo = Usuario(
                 nombre=name,
                 email=email,
-                password=generate_password_hash(str(uuid.uuid4())),
-                foto_perfil=picture
+                password=random_pass,
+                foto_perfil=picture,
+                firebase_uid=firebase_uid,
+                auth_provider='google',
+                profile_completed=False
             )
-            db.session.add(usuario)
+            db.session.add(nuevo)
             db.session.commit()
-            
-        session['usuario_id'] = usuario.id
-        session['usuario_nombre'] = usuario.nombre
-        session['usuario_foto'] = usuario.foto_perfil
-        return redirect(url_for('index'))
-    except Exception as e:
-        print(f"Error en la autenticación de Google: {e}")
-        return redirect(url_for('login', error='google_auth_failed'))
 
-@app.route('/callback/google/dummy')
-def callback_google_dummy():
-    email = "google.user@example.com"
-    name = "Usuario Google (Dummy)"
-    picture = "https://cdn-icons-png.flaticon.com/512/2991/2991148.png"
-    
-    usuario = Usuario.query.filter_by(email=email).first()
+            session['usuario_id'] = nuevo.id
+            session['nombre'] = nuevo.nombre
+            session['email'] = nuevo.email
+            session['foto_perfil'] = nuevo.foto_perfil
+            session['titulo_perfil'] = nuevo.titulo_perfil
+            session['biografia'] = nuevo.biografia
+            session['ubicacion'] = nuevo.ubicacion
+            session['intereses'] = nuevo.intereses
+            return jsonify({'success': True, 'redirect': url_for('completar_perfil_view'), 'new_user': True})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Error de verificación: {str(e)}'}), 500
+
+
+# ==========================================================================
+#  Completar Perfil (tras Google Sign-In)
+# ==========================================================================
+
+@app.route('/completar-perfil')
+def completar_perfil_view():
+    if 'usuario_id' not in session:
+        return redirect(url_for('login'))
+    usuario = Usuario.query.get(session['usuario_id'])
     if not usuario:
-        usuario = Usuario(
-            nombre=name, 
-            email=email, 
-            password=generate_password_hash(str(uuid.uuid4())), 
-            foto_perfil=picture
-        )
-        db.session.add(usuario)
-        db.session.commit()
-        
-    session['usuario_id'] = usuario.id
-    session['usuario_nombre'] = usuario.nombre
-    session['usuario_foto'] = usuario.foto_perfil
+        return redirect(url_for('login'))
+    return render_template('completar_perfil.html', usuario=usuario)
+
+@app.route('/completar-perfil', methods=['POST'])
+def completar_perfil_save():
+    if 'usuario_id' not in session:
+        return redirect(url_for('login'))
+
+    usuario = Usuario.query.get(session['usuario_id'])
+    if not usuario:
+        return redirect(url_for('login'))
+
+    nombre = request.form.get('nombre', '').strip()
+    ubicacion = request.form.get('ubicacion', '').strip()
+    titulo_perfil = request.form.get('titulo_perfil', '').strip()
+    biografia = request.form.get('biografia', '').strip()
+    intereses_lista = request.form.getlist('intereses')
+    intereses = ", ".join(intereses_lista) if intereses_lista else ""
+    password_local = request.form.get('password', '').strip()
+    foto_perfil_file = request.files.get('foto_perfil')
+
+    if nombre and len(nombre) > 2:
+        usuario.nombre = nombre
+    if ubicacion:
+        usuario.ubicacion = ubicacion
+    if titulo_perfil:
+        usuario.titulo_perfil = titulo_perfil
+    if biografia:
+        usuario.biografia = biografia
+    if intereses:
+        usuario.intereses = intereses
+
+    # Contraseña local opcional (bcrypt para compatibilidad con Laravel)
+    if password_local and len(password_local) >= 6:
+        import bcrypt
+        hashed = bcrypt.hashpw(password_local.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        usuario.password = hashed
+        if usuario.auth_provider == 'google':
+            usuario.auth_provider = 'google+local'
+
+    # Foto de perfil
+    if foto_perfil_file and foto_perfil_file.filename:
+        extension = foto_perfil_file.filename.split('.')[-1].lower()
+        nombre_foto = f"{uuid.uuid4().hex}.{extension}"
+        carpeta_destino = os.path.join(app.root_path, 'static', 'img', 'perfiles')
+        os.makedirs(carpeta_destino, exist_ok=True)
+        foto_perfil_file.save(os.path.join(carpeta_destino, nombre_foto))
+        usuario.foto_perfil = nombre_foto
+
+    usuario.profile_completed = True
+    db.session.commit()
+
+    session['nombre'] = usuario.nombre
+    session['foto_perfil'] = usuario.foto_perfil
+    session['ubicacion'] = usuario.ubicacion
+    session['titulo_perfil'] = usuario.titulo_perfil
+    session['biografia'] = usuario.biografia
+    session['intereses'] = usuario.intereses
+
     return redirect(url_for('index'))
+
 
 @app.route('/inicio')
 def index():
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
+
+    # Verificar si necesita completar perfil
+    usuario = Usuario.query.get(session['usuario_id'])
+    if usuario and not usuario.profile_completed:
+        return redirect(url_for('completar_perfil_view'))
     
     eventos = Evento.query.order_by(Evento.fecha_inicio.asc()).limit(3).all()
-    campaigns = Campaign.query.filter_by(activa=True).order_by(Campaign.fecha_inicio.asc()).limit(3).all()
+    campaigns = Campaign.query.filter_by(activa=True).order_by(Campaign.fecha_inicio.asc()).all()
     return render_template('index.html', eventos=eventos, campaigns=campaigns)
 
 @app.route('/noticia-queretaro')
@@ -174,6 +309,80 @@ def Acercade():
 @app.route('/contacto')
 def contacto():
     return render_template('contacto.html')
+
+
+# ==========================================================================
+#  API: Contacto y Recuperación de Contraseña
+# ==========================================================================
+
+# Endpoints migrados a FastAPI
+
+@app.route('/api/mis_mensajes_contacto')
+def mis_mensajes_contacto():
+    """Devuelve los mensajes de contacto del usuario logueado con hilo de respuestas."""
+    if 'usuario_id' not in session:
+        return jsonify({'success': False, 'error': 'No autenticado.'}), 401
+    
+    usuario = Usuario.query.get(session['usuario_id'])
+    if not usuario:
+        return jsonify({'success': False, 'error': 'Usuario no encontrado.'}), 404
+    
+    mensajes = ContactMessage.query.filter_by(email=usuario.email).order_by(ContactMessage.created_at.desc()).all()
+    
+    result = []
+    for m in mensajes:
+        replies = ContactReply.query.filter_by(contact_message_id=m.id).order_by(ContactReply.created_at.asc()).all()
+        replies_list = []
+        for r in replies:
+            replies_list.append({
+                'sender': r.sender,
+                'mensaje': r.mensaje,
+                'created_at': (r.created_at - timedelta(hours=6)).strftime('%d %b, %Y %H:%M') if r.created_at else ''
+            })
+        
+        result.append({
+            'id': m.id,
+            'mensaje': m.mensaje,
+            'estado': m.estado,
+            'respuesta_admin': m.respuesta_admin,
+            'replies': replies_list,
+            'created_at': (m.created_at - timedelta(hours=6)).strftime('%d %b, %Y %H:%M') if m.created_at else ''
+        })
+    
+    return jsonify({'success': True, 'mensajes': result})
+
+
+@app.route('/api/responder_contacto/<int:msg_id>', methods=['POST'])
+def responder_contacto(msg_id):
+    """Permite al usuario responder a un hilo de contacto."""
+    if 'usuario_id' not in session:
+        return jsonify({'success': False, 'error': 'No autenticado.'}), 401
+    
+    msg = ContactMessage.query.get(msg_id)
+    if not msg:
+        return jsonify({'success': False, 'error': 'Mensaje no encontrado.'}), 404
+    
+    usuario = Usuario.query.get(session['usuario_id'])
+    if not usuario or usuario.email != msg.email:
+        return jsonify({'success': False, 'error': 'No autorizado.'}), 403
+    
+    data = request.get_json()
+    texto = data.get('mensaje', '').strip() if data else ''
+    if len(texto) < 2:
+        return jsonify({'success': False, 'error': 'Mínimo 2 caracteres.'}), 400
+    
+    reply = ContactReply(
+        contact_message_id=msg_id,
+        sender='user',
+        mensaje=texto
+    )
+    db.session.add(reply)
+    
+    # Change status back so admin sees there's a new message
+    msg.estado = 'pendiente'
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Respuesta enviada.'})
 
 
 # ==========================================================================
@@ -227,15 +436,12 @@ def mapa():
 @app.route('/recomendaciones')
 def recomendaciones():
     puntos = get_puntos_con_promedio()
+    try:
+        # aqui se manda llamar la api de fast api y analiza todo
+        sentimiento = http_requests.get('http://fastapi_app:6000/analisis/sentimiento', timeout=10).json().get('data', {"POS": 0, "NEG": 0, "NEU": 0, "total": 0})
+    except Exception:
+        sentimiento = {"POS": 0, "NEG": 0, "NEU": 0, "total": 0}
     
-    # Análisis de sentimiento de los posts del foro y reseñas
-    todos_posts = Foro.query.all()
-    textos = [p.contenido for p in todos_posts if p.contenido]
-    todas_calificaciones = CalificacionPunto.query.all()
-    textos.extend([c.comentario for c in todas_calificaciones if c.comentario])
-    sentimiento = analizar_sentimiento_comunidad(textos)
-    
-    # Recomendaciones textuales basadas en el análisis
     recomendaciones_ia = []
     if sentimiento['total'] > 0:
         if sentimiento['POS'] >= 60:
@@ -244,7 +450,11 @@ def recomendaciones():
             recomendaciones_ia.append("Notamos preocupación en la comunidad. Participa con soluciones prácticas en el foro.")
         else:
             recomendaciones_ia.append("El sentimiento es equilibrado. Comparte consejos útiles para inspirar a otros.")
-        recomendaciones_ia.append(f"Se analizaron {sentimiento['total']} publicaciones del foro con IA de procesamiento de lenguaje natural.")
+        total_foros = Foro.query.count()
+        total_estrellas = CalificacionPunto.query.count()
+        total_resenas = CalificacionPunto.query.filter(CalificacionPunto.comentario != None, CalificacionPunto.comentario != '').count()
+        
+        recomendaciones_ia.append(f"Se analizaron {total_foros} publicaciones del foro, {total_estrellas} calificaciones de estrellas y {total_resenas} reseñas con IA de procesamiento de lenguaje natural.")
     
     return render_template('recomendaciones.html', puntos=puntos, sentimiento=sentimiento, recomendaciones_ia=recomendaciones_ia)
 
@@ -306,6 +516,14 @@ def perfil():
     if not usuario:
         return redirect(url_for('logout'))
         
+    # Sincronización en tiempo real con la Base de Datos (en caso de ediciones desde el panel Laravel)
+    session['nombre'] = usuario.nombre
+    session['foto_perfil'] = usuario.foto_perfil
+    session['ubicacion'] = usuario.ubicacion
+    session['titulo_perfil'] = usuario.titulo_perfil
+    session['biografia'] = usuario.biografia
+    session['intereses'] = usuario.intereses
+        
     mis_posts = Foro.query.filter_by(autor_id=usuario.id).order_by(Foro.created_at.desc()).limit(10).all()
     mis_respuestas_raw = db.session.query(RespuestaForo, Foro).join(Foro).filter(RespuestaForo.autor_id==usuario.id).order_by(RespuestaForo.created_at.desc()).limit(10).all()
     
@@ -320,7 +538,7 @@ def perfil():
 
     actividades = Actividad.query.filter_by(usuario_id=usuario.id).order_by(Actividad.fecha_creacion.desc()).limit(10).all()
 
-    return render_template('perfil.html', mis_posts=mis_posts, mis_respuestas=mis_respuestas, actividades=actividades)
+    return render_template('perfil.html', mis_posts=mis_posts, mis_respuestas=mis_respuestas, actividades=actividades, timedelta=timedelta)
 
 @app.route('/editar_perfil', methods=['POST'])
 def editar_perfil():
@@ -331,12 +549,10 @@ def editar_perfil():
     ubicacion = request.form.get('ubicacion')
     titulo_perfil = request.form.get('titulo_perfil')
     biografia = request.form.get('biografia')
-    
-    # CRÍTICO: Recibir múltiples checkboxes
     intereses_lista = request.form.getlist('intereses')
     intereses = ", ".join(intereses_lista) if intereses_lista else ""
-
     foto_perfil_file = request.files.get('foto_perfil')
+    password = request.form.get('password')
     
     if not nombre or not nombre.strip():
         return redirect(url_for('perfil'))
@@ -351,7 +567,6 @@ def editar_perfil():
         
         if foto_perfil_file and foto_perfil_file.filename:
             extension = foto_perfil_file.filename.split('.')[-1].lower()
-            import uuid
             nombre_foto = f"{uuid.uuid4().hex}.{extension}"
             carpeta_destino = os.path.join(app.root_path, 'static', 'img', 'perfiles')
             os.makedirs(carpeta_destino, exist_ok=True)
@@ -360,8 +575,15 @@ def editar_perfil():
             usuario.foto_perfil = nombre_foto
             session['foto_perfil'] = nombre_foto
 
+        if password and len(password) >= 6:
+            import bcrypt
+            hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            usuario.password = hashed
+            if usuario.auth_provider == 'google':
+                usuario.auth_provider = 'google+local'
+
         db.session.commit()
-        db.session.refresh(usuario) # <--- Asegura que los datos se recarguen de la BD
+        db.session.refresh(usuario)
         
         session['nombre'] = usuario.nombre
         session['ubicacion'] = usuario.ubicacion
@@ -410,9 +632,8 @@ def foro():
     filtro = request.args.get('filtro', 'todos')
     
     if filtro == 'populares':
-        # Ordenar por número de respuestas (interacción)
-        posts = Foro.query.outerjoin(RespuestaForo).group_by(Foro.id)\
-            .order_by(db.func.count(RespuestaForo.id).desc()).all()
+        posts = Foro.query.outerjoin(LikeForo).outerjoin(RespuestaForo).group_by(Foro.id)\
+            .order_by((db.func.count(db.distinct(LikeForo.id)) + db.func.count(db.distinct(RespuestaForo.id))).desc()).all()
     else:
         posts = Foro.query.order_by(Foro.created_at.desc()).all()
     
@@ -432,8 +653,6 @@ def ver_post(post_id):
     respuestas = RespuestaForo.query.filter_by(post_id=post_id).order_by(RespuestaForo.created_at.asc()).all()
     likes_count = LikeForo.query.filter_by(post_id=post_id).count()
     liked = LikeForo.query.filter_by(post_id=post_id, usuario_id=session['usuario_id']).first() is not None
-    
-    # 2 Publicaciones relacionadas de la misma categoría, excluyendo la actual
     relacionados = Foro.query.filter(Foro.categoria_id == post.categoria_id, Foro.id != post.id).order_by(Foro.created_at.desc()).limit(2).all()
         
     return render_template('post.html', post=post, respuestas=respuestas, likes_count=likes_count, liked=liked, relacionados=relacionados)
@@ -478,7 +697,6 @@ def crear_post():
     db.session.add(nuevo_post)
     db.session.commit()
 
-    # Registrar actividad
     actividad = Actividad(
         usuario_id=session['usuario_id'],
         tipo='post',
@@ -499,7 +717,6 @@ def crear_respuesta(post_id):
     if contenido and len(contenido.strip()) > 10:
         respuesta = RespuestaForo(post_id=post_id, autor_id=session['usuario_id'], contenido=contenido)
         db.session.add(respuesta)
-        # Registrar actividad
         actividad = Actividad(
             usuario_id=session['usuario_id'],
             tipo='respuesta',
@@ -507,9 +724,20 @@ def crear_respuesta(post_id):
             referencia_id=post_id
         )
         db.session.add(actividad)
+        
+        post = Foro.query.get(post_id)
+        if post and post.autor_id != session['usuario_id']:
+            noti = Notificacion(
+                user_id=post.autor_id,
+                titulo='Nuevo comentario en tu foro',
+                mensaje=f'Revisar tu post: "{post.titulo[:30]}..."',
+                url=url_for('ver_post', post_id=post.id) + '#respuestas'
+            )
+            db.session.add(noti)
+
         db.session.commit()
 
-    return redirect(url_for('ver_post', post_id=post_id))
+    return redirect(url_for('ver_post', post_id=post_id) + '#respuestas')
 
 @app.route('/like_post/<int:post_id>', methods=['POST'])
 def like_post(post_id):
@@ -527,11 +755,44 @@ def like_post(post_id):
         db.session.add(nuevo_like)
         action = 'liked'
         
+        # Notificar al autor del post
+        post = Foro.query.get(post_id)
+        if post and post.autor_id != usuario_id:
+            usuario = Usuario.query.get(usuario_id)
+            nombre_liker = usuario.nombre if usuario else 'Alguien'
+            noti = Notificacion(
+                user_id=post.autor_id,
+                titulo='❤️ Le gustó tu publicación',
+                mensaje=f'{nombre_liker} reaccionó a tu post: "{post.titulo[:30]}..."',
+                url=url_for('ver_post', post_id=post.id)
+            )
+            db.session.add(noti)
+        
     db.session.commit()
     total_likes = LikeForo.query.filter_by(post_id=post_id).count()
 
     return jsonify({'success': True, 'action': action, 'likes': total_likes, 'total': total_likes, 'liked': action == 'liked'})
 
+
+# ==========================================================================
+#  Notificaciones 
+# ==========================================================================
+
+@app.route('/api/notificaciones/unread')
+def get_unread_notificaciones():
+    if 'usuario_id' not in session:
+        return jsonify({'success': False, 'error': 'No autenticado.'}), 401
+    unread = Notificacion.query.filter_by(user_id=session['usuario_id'], leida=False).order_by(Notificacion.created_at.desc()).all()
+    lista = [{'id': n.id, 'titulo': n.titulo, 'mensaje': n.mensaje, 'url': n.url, 'created_at': n.created_at.strftime("%d %b, %H:%M")} for n in unread]
+    return jsonify({'success': True, 'count': len(lista), 'data': lista})
+
+@app.route('/api/notificaciones/mark_read', methods=['POST'])
+def mark_read_notificaciones():
+    if 'usuario_id' not in session:
+        return jsonify({'success': False})
+    Notificacion.query.filter_by(user_id=session['usuario_id'], leida=False).update({'leida': True})
+    db.session.commit()
+    return jsonify({'success': True})
 
 # ==========================================================================
 #  Autenticación de usuarios
@@ -552,7 +813,6 @@ def handle_login():
 
     usuario = Usuario.query.filter_by(email=email_usuario).first()
 
-    # Verificación de contraseña con compatibilidad para registros legacy
     valido = False
     if usuario:
         # Comparación directa para contraseñas sin hash (compatibilidad legacy)
@@ -561,19 +821,17 @@ def handle_login():
         elif usuario.password.startswith("$2y$") or usuario.password.startswith("$2b$") or usuario.password.startswith("$2a$"):
             try:
                 import bcrypt
-                # PHP $2y$ equivale dinámicamente al estándar $2b$
                 hash_comparable = usuario.password.replace('$2y$', '$2b$', 1).encode('utf-8')
                 if bcrypt.checkpw(password_usuario.encode('utf-8'), hash_comparable):
                     valido = True
             except ImportError:
                 pass
-            except Exception as e:
-                print("Error verificando bcrypt cross-platform:", e)
+            except Exception:
+                pass
         elif check_password_hash(usuario.password, password_usuario):
             valido = True
 
     if valido:
-        # Configuración de sesión persistente
         remember = request.form.get('remember-me')
         if remember == 'on':
             session.permanent = True
@@ -624,7 +882,9 @@ def handle_registro():
     ruta_completa = os.path.join(carpeta_destino, nombre_foto)
     foto_perfil_file.save(ruta_completa)
 
-    password_hasheado = generate_password_hash(password_usuario, method='pbkdf2:sha256', salt_length=8)
+    # Usar bcrypt para compatibilidad con Laravel
+    import bcrypt
+    password_hasheado = bcrypt.hashpw(password_usuario.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
     nuevo_usuario = Usuario(nombre=nombre_usuario, email=email_usuario, password=password_hasheado, foto_perfil=nombre_foto)
     db.session.add(nuevo_usuario)
@@ -645,33 +905,16 @@ def handle_registro():
 #  IA y NLP (Microservicio)
 # ==========================================================================
 
-@app.route('/api/sentimiento')
-def api_sentimiento():
-    """Endpoint REST interno para compartir el análisis a Laravel y Dashboards."""
-    posts_records = Foro.query.all()
-    textos = [p.contenido for p in posts_records if p.contenido]
-    
-    todas_calificaciones = CalificacionPunto.query.all()
-    textos.extend([c.comentario for c in todas_calificaciones if c.comentario])
-    
-    resultados = analizar_sentimiento_comunidad(textos)
-    return jsonify({"success": True, "data": resultados})
-
 @app.route('/ia/recomendaciones')
 def vista_recomendaciones_ia():
-    """Pantalla interactiva de recomendaciones ecológicas según sentimiendo."""
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
-    posts_records = Foro.query.all()
-    textos = [p.contenido for p in posts_records if p.contenido]
+    try:
+        sentimiento = http_requests.get('http://fastapi_app:6000/analisis/sentimiento', timeout=10).json().get('data', {"POS": 0, "NEG": 0, "NEU": 0, "total": 0})
+    except Exception:
+        sentimiento = {"POS": 0, "NEG": 0, "NEU": 0, "total": 0}
     
-    todas_calificaciones = CalificacionPunto.query.all()
-    textos.extend([c.comentario for c in todas_calificaciones if c.comentario])
-    
-    sentimiento = analizar_sentimiento_comunidad(textos)
-    
-    # Lógica de NLP Dinámica
     max_sent = max(sentimiento, key=lambda k: sentimiento[k] if k != "total" else -1)
     
     if max_sent == "NEG":
@@ -701,12 +944,10 @@ def vista_recomendaciones_ia():
 
 @app.errorhandler(404)
 def page_not_found(e):
-    # Renderiza la plantilla personalizada para error 404
     return render_template('404.html'), 404
 
 @app.errorhandler(500)
 def internal_server_error(e):
-    # Renderiza la plantilla personalizada para error 500
     return render_template('500.html'), 500
 
 if __name__ == '__main__':

@@ -31,8 +31,8 @@ class AuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'Correo o contraseña incorrectos.',
-        ])->withInput(['email' => $request->email]);
+            'email' => 'Las credenciales proporcionadas no son correctas.',
+        ])->withInput(['email' => $request->input('email')]);
     }
 
     /**

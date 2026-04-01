@@ -189,6 +189,7 @@
         event.preventDefault(); 
         const name = document.getElementById('name').value.trim();
         const email = document.getElementById('email').value.trim();
+        const ubicacion = document.getElementById('location').value.trim();
         const message = document.getElementById('message').value.trim();
         const errorDiv = document.getElementById('contact-error');
         
@@ -227,8 +228,25 @@
 
         if (!isValid) return;
 
-        document.getElementById('contact-form').classList.add('hidden');
-        document.getElementById('success-message').classList.remove('hidden');
+        fetch('{{ API_URL }}/formularios/contacto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ nombre: name, email: email, ubicacion: ubicacion, mensaje: message })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('contact-form').classList.add('hidden');
+                document.getElementById('success-message').classList.remove('hidden');
+            } else {
+                errorDiv.textContent = data.error || 'Error al enviar el mensaje.';
+                errorDiv.classList.remove('hidden');
+            }
+        })
+        .catch(() => {
+            errorDiv.textContent = 'Error de conexión con el servidor.';
+            errorDiv.classList.remove('hidden');
+        });
     }
 </script>
 {% endblock %}

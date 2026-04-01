@@ -4,6 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property int $post_id
+ * @property int $autor_id
+ * @property string $contenido
+ * @property \Illuminate\Support\Carbon $created_at
+ * @method static \Illuminate\Database\Eloquent\Builder|Respuesta query()
+ */
 class Respuesta extends Model
 {
     protected $table = 'respuestas';

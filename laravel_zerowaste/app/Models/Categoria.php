@@ -4,6 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property string $nombre
+ * @method static \Illuminate\Database\Eloquent\Builder|Categoria query()
+ */
 class Categoria extends Model
 {
     protected $table = 'categorias';
@@ -13,6 +18,6 @@ class Categoria extends Model
 
     public function posts()
     {
-        return $this->hasMany(Foro::class, 'categoria_id');
+        return $this->hasMany(Post::class, 'categoria_id');
     }
 }

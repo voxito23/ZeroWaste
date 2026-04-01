@@ -8,6 +8,10 @@ use App\Http\Controllers\MapController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\EventoController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ContactMessageController;
+use App\Http\Controllers\PasswordResetRequestController;
+use App\Http\Controllers\AdminProfileController;
+use App\Http\Controllers\ReportController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -18,30 +22,61 @@ Route::redirect('/admin', '/');
 Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login');
 Route::get('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
 
-// Rutas del panel de administración
 Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/exportar-pdf', [DashboardController::class, 'exportarPDF'])->name('dashboard.exportar-pdf');
     
+    // Reportes
+    Route::get('/reportes', [ReportController::class, 'index'])->name('reportes.index');
+    Route::get('/reportes/exportar', [ReportController::class, 'exportar'])->name('reportes.exportar');
+    
+    // Perfil Administrador
+    Route::get('/perfil', [AdminProfileController::class, 'edit'])->name('admin.perfil.edit');
+    Route::put('/perfil', [AdminProfileController::class, 'update'])->name('admin.perfil.update');
+
+    // Usuarios
+    Route::get('/usuarios/check-email', [UserController::class, 'checkEmail'])->name('usuarios.checkEmail');
     Route::get('/usuarios', [UserController::class, 'index'])->name('usuarios.index');
     Route::get('/usuarios/create', [UserController::class, 'create'])->name('usuarios.create');
     Route::post('/usuarios', [UserController::class, 'store'])->name('usuarios.store');
+    Route::get('/usuarios/{user}/edit', [UserController::class, 'edit'])->name('usuarios.edit');
+    Route::put('/usuarios/{user}', [UserController::class, 'update'])->name('usuarios.update');
+    Route::delete('/usuarios/{user}', [UserController::class, 'destroy'])->name('usuarios.destroy');
 
+    // Campañas (CRUD completo)
     Route::get('/campanas', [CampaignController::class, 'index'])->name('campanas.index');
     Route::get('/campanas/create', [CampaignController::class, 'create'])->name('campanas.create');
     Route::post('/campanas', [CampaignController::class, 'store'])->name('campanas.store');
+    Route::get('/campanas/{campaign}/edit', [CampaignController::class, 'edit'])->name('campanas.edit');
+    Route::put('/campanas/{campaign}', [CampaignController::class, 'update'])->name('campanas.update');
+    Route::delete('/campanas/{campaign}', [CampaignController::class, 'destroy'])->name('campanas.destroy');
 
+    // Materiales
     Route::get('/materiales', [MaterialController::class, 'index'])->name('materiales.index');
     Route::post('/materiales', [MaterialController::class, 'store'])->name('materiales.store');
 
+    // Mapa (CRUD completo)
     Route::get('/mapa', [MapController::class, 'index'])->name('mapa.index');
     Route::get('/mapa/create', [MapController::class, 'create'])->name('mapa.create');
     Route::post('/mapa', [MapController::class, 'store'])->name('mapa.store');
+    Route::get('/mapa/{location}/edit', [MapController::class, 'edit'])->name('mapa.edit');
+    Route::put('/mapa/{location}', [MapController::class, 'update'])->name('mapa.update');
+    Route::delete('/mapa/{location}', [MapController::class, 'destroy'])->name('mapa.destroy');
 
+    // Eventos
     Route::get('/eventos', [EventoController::class, 'index'])->name('eventos.index');
     Route::get('/eventos/create', [EventoController::class, 'create'])->name('eventos.create');
     Route::post('/eventos', [EventoController::class, 'store'])->name('eventos.store');
     Route::get('/eventos/{evento}/edit', [EventoController::class, 'edit'])->name('eventos.edit');
     Route::put('/eventos/{evento}', [EventoController::class, 'update'])->name('eventos.update');
     Route::delete('/eventos/{evento}', [EventoController::class, 'destroy'])->name('eventos.destroy');
+
+    // Mensajes de contacto
+    Route::get('/mensajes', [ContactMessageController::class, 'index'])->name('mensajes.index');
+    Route::put('/mensajes/{id}/estado', [ContactMessageController::class, 'updateEstado'])->name('mensajes.updateEstado');
+    Route::put('/mensajes/{id}/responder', [ContactMessageController::class, 'responder'])->name('mensajes.responder');
+    Route::get('/mensajes/{id}/thread', [ContactMessageController::class, 'getThread'])->name('mensajes.thread');
+
+    // Solicitudes de recuperación de contraseña
+    Route::get('/recuperacion', [PasswordResetRequestController::class, 'index'])->name('recuperacion.index');
+    Route::put('/recuperacion/{id}', [PasswordResetRequestController::class, 'update'])->name('recuperacion.update');
 });

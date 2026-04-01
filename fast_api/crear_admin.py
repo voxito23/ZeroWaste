@@ -11,12 +11,7 @@ from passlib.hash import bcrypt
 db = SessionLocal()
 
 admins = [
-    {"nombre": "Victor Admin",      "email": "vichdz@gmail.com",           "password": "voxito12"},
-    {"nombre": "Admin Principal",    "email": "admin@zerowaste.com",        "password": "ZeroWaste2026!"},
-    {"nombre": "Admin Operaciones",  "email": "operaciones@zerowaste.com",  "password": "ZeroWaste2026!"},
-    {"nombre": "Admin Contenido",    "email": "contenido@zerowaste.com",    "password": "ZeroWaste2026!"},
-    {"nombre": "Admin Soporte",      "email": "soporte@zerowaste.com",      "password": "ZeroWaste2026!"},
-    {"nombre": "Admin Desarrollo",   "email": "dev@zerowaste.com",          "password": "ZeroWaste2026!"},
+    {"nombre": "Victor Admin",      "email": "vichdz@gmail.com",           "password": "123456"}
 ]
 
 try:

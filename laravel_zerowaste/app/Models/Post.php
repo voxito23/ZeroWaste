@@ -4,6 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property string $titulo
+ * @property string $contenido
+ * @property int $categoria_id
+ * @property int $autor_id
+ * @property string $imagen
+ * @property \Illuminate\Support\Carbon $created_at
+ * @method static \Illuminate\Database\Eloquent\Builder|Post query()
+ * @method static int count()
+ */
 class Post extends Model
 {
     protected $table = 'posts';

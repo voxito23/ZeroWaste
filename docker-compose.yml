@@ -25,9 +25,11 @@ services:
     volumes:
       - ./laravel_zerowaste:/var/www/html
       - /var/www/html/vendor
+      - perfiles_compartidos:/var/www/html/public/img/perfiles
+      - ./flask_zerowaste/static/img:/var/www/flask_zerowaste/static/img
     environment:
       - APP_ENV=production
-      - APP_DEBUG=false
+      - APP_DEBUG=true
       - DB_CONNECTION=pgsql
       - DB_HOST=db
       - DB_PORT=5432
@@ -78,7 +80,7 @@ services:
     container_name: tailwind_builder
     tty: true
     stdin_open: true
-    working_dir: /app
+    working_dir: /app/frontend_build
     volumes:
       - ./flask_zerowaste:/app
     command: sh -c "npm install && npm run dev:css"

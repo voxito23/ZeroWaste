@@ -362,3 +362,15 @@ class MessageResponse(BaseModel):
     """Respuesta genérica para operaciones que retornan un mensaje."""
     success: bool
     message: str
+
+
+# Esquemas de Formularios (Migrados desde Flask)
+
+class ContactMessageCreate(BaseModel):
+    nombre: str
+    email: EmailStr
+    ubicacion: Optional[str] = None
+    mensaje: str
+
+class PasswordResetRequestCreate(BaseModel):
+    email: EmailStr

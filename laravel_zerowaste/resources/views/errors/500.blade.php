@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>500 Error Del Servidor - Zero Waste</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('faviconZeroWaste.svg') }}">
+    <link rel="alternate icon" type="image/png" href="{{ asset('faviconZeroWaste.png') }}">
+
+    <script>
+        // Sincronizar con el dark mode del panel de Laravel
+        if (localStorage.getItem('zw-admin-theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('zw-admin-theme', 'light');
+        }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#00E096",
+                        "primary-hover": "#00C281",
+                        secondary: "#064E3B",
+                        "forest-dark": "#022C22",
+                        "surface-light": "#ECFDF5",
+                        "surface-dark": "#062C25",
+                        "text-light": "#064E3B",
+                        "text-dark": "#D1FAE5",
+                        accent: "#34D399",
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Montserrat', 'sans-serif'],
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        @keyframes drooping {
+            0%, 100% { transform: rotate(-3deg); }
+            50% { transform: rotate(4deg); }
+        }
+        @keyframes teardrop {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            60% { transform: translateY(40px) scale(0.8); opacity: 0.6; }
+            100% { transform: translateY(80px) scale(0.5); opacity: 0; }
+        }
+        @keyframes pulse-cracks {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+
+        .plant-droop {
+            transform-origin: 50% 90%;
+            animation: drooping 6s ease-in-out infinite;
+        }
+        .tear-drop {
+            transform-origin: center;
+            animation: teardrop 3s ease-in infinite;
+        }
+        .dry-soil {
+            transform-origin: center;
+            animation: pulse-cracks 4s infinite;
+        }
+    </style>
+</head>
+
+<body class="bg-surface-light dark:bg-surface-dark text-text-light dark:text-text-dark font-sans transition-colors duration-300 flex flex-col min-h-screen">
+
+<main class="flex-grow flex items-center justify-center px-6 relative z-10 w-full">
+    <div class="max-w-2xl w-full text-center flex flex-col items-center">
+        <!-- SVG Plantita Sedienta -->
+        <div class="w-64 h-64 mb-8 pt-6 relative flex justify-center items-end overflow-visible">
+            <svg class="absolute bottom-0 w-32 h-24 overflow-visible z-10" viewBox="0 0 100 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 0 L25 80 L75 80 L90 0 Z" fill="#b45309" class="dark:fill-orange-900 transition-colors duration-500"/>
+                <path d="M5 0 L95 0 L92 10 L8 10 Z" fill="#92400e" class="dark:fill-orange-800 transition-colors duration-500"/>
+                <path class="dry-soil" d="M30 15 L45 35 L25 55 L50 75" stroke="#78350f" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <path class="dry-soil" d="M70 20 L55 40 L70 60" stroke="#78350f" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+
+            <div class="absolute bottom-16 w-40 h-48 plant-droop overflow-visible z-0 flex flex-col items-center" style="animation-duration: 8s;">
+                <svg viewBox="0 0 150 200" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg" class="overflow-visible">
+                    <path d="M75 200 Q80 120 130 50" stroke="#059669" stroke-width="6" fill="none" stroke-linecap="round" class="dark:stroke-emerald-800 transition-colors duration-500"/>
+                    <path d="M85 150 Q120 170 110 200 Q85 180 85 150 Z" fill="#065f46" class="dark:fill-emerald-900 opacity-90" />
+                    <path d="M115 105 Q160 120 150 150 Q115 130 115 105 Z" fill="#10b981" class="dark:fill-emerald-700 opacity-70" />
+                    <path d="M125 55 Q170 60 160 100 Q120 80 125 55 Z" fill="#34d399" class="dark:fill-emerald-600 opacity-50" />
+                    <path d="M150 105 Q155 120 150 125 Q145 120 150 105 Z" fill="#60a5fa" class="tear-drop" style="animation-duration: 4s;" />
+                </svg>
+            </div>
+        </div>
+
+        <h1 class="text-7xl md:text-9xl font-black font-display text-primary drop-shadow-sm mb-4 tracking-tighter">500</h1>
+        <h2 class="text-2xl md:text-3xl font-bold text-red-500 dark:text-red-400 mb-6 drop-shadow-sm">¡Oh no! Parece que nuestro sistema necesita agua...</h2>
+
+        <p class="text-gray-600 dark:text-gray-300 text-lg md:text-xl max-w-lg mx-auto mb-10 leading-relaxed font-medium">
+            Tenemos un error interno del servidor. Estamos trabajando para reforestar esta sección. Vuelve a intentarlo en unos minutos.
+        </p>
+
+        <a href="{{ url('/admin/dashboard') }}" class="group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-primary text-secondary font-bold text-lg rounded-full shadow-lg shadow-primary/30 hover:bg-primary-hover hover:shadow-primary/50 transition-all duration-300 transform hover:-translate-y-1">
+            <span class="material-symbols-outlined group-hover:block transition-transform">home</span>
+            Volver al Inicio
+        </a>
+    </div>
+</main>
+
+</body>
+</html>

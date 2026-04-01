@@ -1,6 +1,13 @@
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 import re
 import pandas as pd
-# Variable global vacía al inicio (Instancia diferida)
+
+from app.data.database import get_db
+from app.models.domain_models import Foro, CalificacionPunto
+
+router = APIRouter(prefix="/analisis", tags=["IA Análisis"])
+
 analyzer = None
 
 def get_analyzer():
@@ -27,7 +34,7 @@ def limpiar_texto(texto):
 def analizar_sentimiento_comunidad(posts):
     """
     Ingiere un array de posts, los limpia y extrae las métricas globales
-    de sentimiento transformadas en porcentajes para el Frontend/Laravel.
+    de sentimiento transformadas en porcentajes.
     """
     if not posts:
         return {"POS": 0, "NEG": 0, "NEU": 0, "total": 0}
@@ -49,5 +56,26 @@ def analizar_sentimiento_comunidad(posts):
         "POS": round((conteos.get("POS", 0) / total) * 100, 1),
         "NEG": round((conteos.get("NEG", 0) / total) * 100, 1),
         "NEU": round((conteos.get("NEU", 0) / total) * 100, 1),
-        "total": total
+        "total": int(total)
     }
+
+@router.get("/sentimiento")
+def api_sentimiento(db: Session = Depends(get_db)):
+    """Endpoint REST para compartir el análisis a Laravel y Flask."""
+    posts_records = db.query(Foro.contenido).filter(Foro.contenido != None).all()
+    textos = [p[0] for p in posts_records]
+    
+    todas_calificaciones = db.query(CalificacionPunto.estrellas, CalificacionPunto.comentario).all()
+    for estrellas, comentario in todas_calificaciones:
+        if comentario and comentario.strip():
+            textos.append(comentario)
+        else:
+            # Generar texto sintético para NLP basado en las estrellas si no hay reseña
+            if estrellas == 5: textos.append("Excelente, muy buen lugar.")
+            elif estrellas == 4: textos.append("Buen lugar, recomendado.")
+            elif estrellas == 3: textos.append("Normal, aceptable.")
+            elif estrellas == 2: textos.append("Puede mejorar mucho.")
+            else: textos.append("No recomendado, mala experiencia.")
+    
+    resultados = analizar_sentimiento_comunidad(textos)
+    return {"success": True, "data": resultados}

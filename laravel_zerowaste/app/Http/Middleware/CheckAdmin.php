@@ -14,13 +14,12 @@ class CheckAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Verifica que esté autenticado y que sea administrador
-        if (!Auth::check() || !Auth::user()->is_admin) {
-            Auth::logout(); // Destruye la sesión no autorizada
-            
-            return redirect()->route('login')->withErrors([
-                'error' => 'Acceso restringido: Se requieren credenciales de administrador'
-            ]);
+        if (!Auth::check()) {
+            return redirect('http://localhost:5001/login');
+        }
+
+        if (!Auth::user()->is_admin) {
+            abort(403);
         }
 
         return $next($request);

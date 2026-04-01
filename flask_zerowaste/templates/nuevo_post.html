@@ -392,8 +392,10 @@
         // Si pasa las pruebas, detenemos el envío tradicional y mostramos el modal PRO
         event.preventDefault();
         errorDiv.classList.add('hidden');
-        document.getElementById('confirmPostModal').classList.remove('hidden');
-        document.getElementById('confirmPostModal').classList.add('flex');
+        const modal = document.getElementById('confirmPostModal');
+        document.body.appendChild(modal);
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
     }
 
     function cerrarPost() {

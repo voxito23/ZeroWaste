@@ -203,7 +203,7 @@
                             <label class="ml-2 block text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none" for="remember-me">Recordarme</label>
                         </div>
                         <div class="text-sm">
-                            <a class="font-bold text-primary hover:text-primary-hover transition-colors" href="#">¿Olvidaste tu contraseña?</a>
+                            <a class="font-bold text-primary hover:text-primary-hover transition-colors cursor-pointer" onclick="openForgotModal()">¿Olvidaste tu contraseña?</a>
                         </div>
                     </div>
 
@@ -223,7 +223,7 @@
                         <div class="flex-grow border-t border-gray-200 dark:border-emerald-800/60"></div>
                     </div>
                     
-                    <a href="/login/google" class="w-full flex justify-center items-center gap-3 py-2.5 px-4 border border-gray-200 dark:border-emerald-800/60 rounded-xl shadow-sm text-sm font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-emerald-900/20 hover:bg-gray-50 dark:hover:bg-emerald-800/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-all transform hover:-translate-y-1">
+                    <button type="button" onclick="signInWithGoogle()" class="w-full flex justify-center items-center gap-3 py-2.5 px-4 border border-gray-200 dark:border-emerald-800/60 rounded-xl shadow-sm text-sm font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-emerald-900/20 hover:bg-gray-50 dark:hover:bg-emerald-800/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-all transform hover:-translate-y-1">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -231,7 +231,7 @@
                             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                         </svg>
                         Continuar con Google
-                    </a>
+                    </button>
                 </form>
 
                 <div class="mt-4 text-center">
@@ -265,6 +265,35 @@
         </div>
         <div class="mt-8 flex justify-end">
             <button type="button" onclick="closeInfoModal()" class="py-2.5 px-6 font-bold text-white bg-primary hover:bg-primary-hover rounded-xl shadow-md transition-all">Aceptar y Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Olvidaste tu contraseña -->
+<div id="forgot-modal" class="fixed inset-0 z-[1000] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+    <div class="bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-2xl p-6 md:p-8 w-full max-w-md shadow-2xl">
+        <div class="flex justify-between items-center mb-5">
+            <h3 class="text-xl font-display font-black text-secondary dark:text-white">Recuperar Contraseña</h3>
+            <button type="button" onclick="closeForgotModal()" class="text-gray-400 hover:text-red-500 transition-colors">
+                <span class="material-symbols-outlined text-2xl">close</span>
+            </button>
+        </div>
+        <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Ingresa tu correo electrónico y nuestro equipo procesará tu solicitud de recuperación.</p>
+        <div id="forgot-form-container">
+            <div class="space-y-2 mb-4">
+                <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1">Correo electrónico</label>
+                <input type="email" id="forgot-email" placeholder="correo@ejemplo.com" required
+                    class="block w-full px-4 py-3 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium">
+                <span id="forgot-error" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+            </div>
+            <button type="button" onclick="submitForgotPassword()" class="w-full py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-1">Enviar Solicitud</button>
+        </div>
+        <div id="forgot-success" class="hidden text-center py-6">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 mb-4">
+                <span class="material-symbols-outlined text-4xl text-primary">check_circle</span>
+            </div>
+            <h4 class="font-display font-bold text-lg text-secondary dark:text-white mb-2">¡Solicitud Enviada!</h4>
+            <p class="text-gray-500 dark:text-gray-400 text-sm">Nuestro equipo revisará tu solicitud y se pondrá en contacto contigo.</p>
         </div>
     </div>
 </div>
@@ -458,6 +487,98 @@
             btnText.textContent = "Iniciar sesión";
             spinner.classList.add('hidden');
             showError("Hubo un problema al conectar con el servidor.");
+        });
+    }
+
+    // === Firebase Google Sign-In ===
+    async function signInWithGoogle() {
+        try {
+            const { initializeApp, getApps, getApp } = await import('https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js');
+            const { getAuth, GoogleAuthProvider, signInWithPopup } = await import('https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js');
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyCNxoLg8OetTvbYFTdw1obSP9L2NtLVxTU",
+                authDomain: "zerowaste-57c55.firebaseapp.com",
+                projectId: "zerowaste-57c55",
+                storageBucket: "zerowaste-57c55.firebasestorage.app",
+                messagingSenderId: "95524501274",
+                appId: "1:95524501274:web:38fafb7316844cdd6f1ea3",
+                measurementId: "G-MKY08QXC2M"
+            };
+
+            const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+            const auth = getAuth(app);
+            const provider = new GoogleAuthProvider();
+
+            const result = await signInWithPopup(auth, provider);
+            const idToken = await result.user.getIdToken();
+
+            const resp = await fetch('/auth/firebase', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken: idToken })
+            });
+            const data = await resp.json();
+
+            if (data.success) {
+                const overlay = document.getElementById('success-overlay');
+                document.getElementById('overlay-text').textContent = data.new_user ? '¡Bienvenido!' : '¡Hola de nuevo!';
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.remove('opacity-0'), 20);
+                setTimeout(() => { window.location.href = data.redirect; }, 1400);
+            } else {
+                showError(data.error || 'Error al iniciar sesión con Google.');
+            }
+        } catch (error) {
+            if (error.code !== 'auth/popup-closed-by-user') {
+                showError('Error al conectar con Google. Intenta de nuevo.');
+            }
+        }
+    }
+
+    // === Forgot Password Modal ===
+    function openForgotModal() {
+        document.getElementById('forgot-modal').classList.remove('hidden');
+        document.getElementById('forgot-form-container').classList.remove('hidden');
+        document.getElementById('forgot-success').classList.add('hidden');
+        document.getElementById('forgot-email').value = '';
+        document.getElementById('forgot-error').classList.add('hidden');
+    }
+
+    function closeForgotModal() {
+        document.getElementById('forgot-modal').classList.add('hidden');
+    }
+
+    function submitForgotPassword() {
+        const email = document.getElementById('forgot-email').value.trim();
+        const errEl = document.getElementById('forgot-error');
+        errEl.classList.add('hidden');
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+            errEl.textContent = 'Ingresa un correo electrónico válido.';
+            errEl.classList.remove('hidden');
+            return;
+        }
+
+        fetch('{{ API_URL }}/formularios/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('forgot-form-container').classList.add('hidden');
+                document.getElementById('forgot-success').classList.remove('hidden');
+            } else {
+                errEl.textContent = data.error || 'Error al enviar la solicitud.';
+                errEl.classList.remove('hidden');
+            }
+        })
+        .catch(() => {
+            errEl.textContent = 'Error de conexión.';
+            errEl.classList.remove('hidden');
         });
     }
 </script>

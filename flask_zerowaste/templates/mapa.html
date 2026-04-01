@@ -20,10 +20,10 @@
 {% block content %}
 <main class="flex-grow pt-20">
     <div class="max-w-desktop mx-auto px-4 lg:px-8 py-6">
-        <div class="flex flex-col lg:flex-row gap-6 h-[80vh]">
+        <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 h-[85vh] min-h-[600px]">
 
             <!-- Panel Lateral -->
-            <div class="w-full lg:w-96 bg-white dark:bg-forest-dark/95 backdrop-blur-md rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.12)] border-[3px] border-emerald-400 dark:border-primary flex flex-col overflow-hidden relative z-10">
+            <div class="w-full lg:w-96 h-[45%] lg:h-auto shrink-0 bg-white dark:bg-forest-dark/95 backdrop-blur-md rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.12)] border-[3px] border-emerald-400 dark:border-primary flex flex-col overflow-hidden relative z-10">
                 <div class="p-6 pb-3">
                     <h2 class="font-display font-bold text-2xl text-secondary dark:text-white mb-4">Puntos de Reciclaje</h2>
                     <div class="relative flex items-center rounded-full shadow-md bg-white/90 dark:bg-emerald-900/40 border-2 border-transparent focus-within:border-primary transition duration-300">
@@ -33,24 +33,62 @@
                         <input id="search-puntos" class="w-full bg-transparent pl-3 pr-4 py-3 text-secondary dark:text-white placeholder-gray-400 outline-none border-none font-semibold focus:ring-0 focus:outline-none" placeholder="Buscar ubicación..." type="text" style="box-shadow: none !important;" />
                     </div>
                 </div>
-                <div class="px-6 py-3">
-                    <div class="flex flex-wrap gap-2">
-                        <button class="filter-btn flex items-center px-4 py-2 rounded-full bg-secondary text-white text-sm font-bold whitespace-nowrap gap-1 shadow-md transition-colors" data-filter="todos">
-                            <span class="material-symbols-outlined text-sm">check</span> Todos
-                        </button>
-                        <button class="filter-btn flex items-center px-4 py-2 rounded-full bg-surface-light text-secondary dark:text-emerald-100 text-sm font-semibold whitespace-nowrap border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/40 gap-1.5 transition-colors" data-filter="plástico">
-                            <i class="fa-solid fa-bottle-water text-blue-500"></i> Plástico
-                        </button>
-                        <button class="filter-btn flex items-center px-4 py-2 rounded-full bg-surface-light text-secondary dark:text-emerald-100 text-sm font-semibold whitespace-nowrap border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/40 gap-1.5 transition-colors" data-filter="vidrio">
-                            <i class="fa-solid fa-wine-glass text-green-500"></i> Vidrio
-                        </button>
-                        <button class="filter-btn flex items-center px-4 py-2 rounded-full bg-surface-light text-secondary dark:text-emerald-100 text-sm font-semibold whitespace-nowrap border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/40 gap-1.5 transition-colors" data-filter="cartón">
-                            <span class="material-symbols-outlined text-orange-500 text-sm">inventory_2</span> Cartón
-                        </button>
-                        <button class="filter-btn flex items-center px-4 py-2 rounded-full bg-surface-light text-secondary dark:text-emerald-100 text-sm font-semibold whitespace-nowrap border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/40 gap-1.5 transition-colors" data-filter="electrónicos">
-                            <span class="material-symbols-outlined text-purple-500 text-sm">devices</span> Electrónicos
-                        </button>
-                    </div>
+                <div class="px-6 py-2 border-b border-gray-100 dark:border-emerald-800/50">
+                    <button id="btn-filtros" class="flex items-center justify-center gap-2 px-4 py-2 bg-surface-light dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-secondary dark:text-emerald-100 font-bold hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors shadow-sm w-full outline-none">
+                        <span class="material-symbols-outlined">tune</span>
+                        <span>Filtros</span>
+                        <span id="active-filter-badge" class="ml-2 bg-primary text-white text-[10px] px-2 py-0.5 rounded-full hidden font-bold"></span>
+                    </button>
+                </div>
+                
+                <!-- Modal overlay (Filters) -->
+                <div id="modal-filtros" class="absolute inset-0 bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md z-50 flex flex-col transform translate-x-full transition-transform duration-300">
+                     <div class="p-6 pb-4 flex justify-between items-center border-b border-emerald-100 dark:border-emerald-800">
+                         <h3 class="font-bold text-xl text-secondary dark:text-white flex items-center gap-2">
+                             <span class="material-symbols-outlined text-primary text-2xl">tune</span> Filtros de Mapa
+                         </h3>
+                         <button id="close-filtros" class="text-gray-400 hover:text-red-500 transition-colors">
+                             <span class="material-symbols-outlined text-3xl">close</span>
+                         </button>
+                     </div>
+                     <div class="p-6 flex-1 overflow-y-auto w-full no-scrollbar">
+                         <div class="grid grid-cols-2 gap-3 pb-8">
+                            <button class="filter-btn flex flex-col items-center justify-center p-3 rounded-xl bg-secondary text-white text-sm font-bold border border-transparent shadow-[0_4px_15px_rgba(0,0,0,0.1)] transition-colors col-span-2" data-filter="todos">
+                                <span class="material-symbols-outlined mb-1 text-2xl">check_circle</span> Todos los Puntos
+                            </button>
+                            
+                            <button class="filter-btn flex flex-col items-center justify-center p-3 rounded-xl bg-surface-light dark:bg-emerald-900/40 text-secondary dark:text-emerald-100 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors shadow-sm" data-filter="plástico">
+                                <i class="fa-solid fa-bottle-water text-blue-500 text-2xl mb-1.5"></i> Plástico/PET
+                            </button>
+                            <button class="filter-btn flex flex-col items-center justify-center p-3 rounded-xl bg-surface-light dark:bg-emerald-900/40 text-secondary dark:text-emerald-100 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors shadow-sm" data-filter="vidrio">
+                                <i class="fa-solid fa-wine-glass text-green-500 text-2xl mb-1.5"></i> Vidrio
+                            </button>
+                            <button class="filter-btn flex flex-col items-center justify-center p-3 rounded-xl bg-surface-light dark:bg-emerald-900/40 text-secondary dark:text-emerald-100 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors shadow-sm" data-filter="cartón">
+                                <span class="material-symbols-outlined text-orange-500 text-3xl mb-1.5 leading-none">inventory_2</span> Cartón/Papel
+                            </button>
+                            <button class="filter-btn flex flex-col items-center justify-center p-3 rounded-xl bg-surface-light dark:bg-emerald-900/40 text-secondary dark:text-emerald-100 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors shadow-sm" data-filter="electrónicos">
+                                <span class="material-symbols-outlined text-purple-500 text-3xl mb-1.5 leading-none">devices</span> Electrónicos
+                            </button>
+                            <button class="filter-btn flex flex-col items-center justify-center p-3 rounded-xl bg-surface-light dark:bg-emerald-900/40 text-secondary dark:text-emerald-100 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors shadow-sm" data-filter="pilas">
+                                <span class="material-symbols-outlined text-yellow-500 text-3xl mb-1.5 leading-none">battery_charging_full</span> Pilas / Baterías
+                            </button>
+                            <button class="filter-btn flex flex-col items-center justify-center p-3 rounded-xl bg-surface-light dark:bg-emerald-900/40 text-secondary dark:text-emerald-100 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors shadow-sm" data-filter="metal">
+                                <span class="material-symbols-outlined text-gray-500 text-3xl mb-1.5 leading-none">settings_input_component</span> Metales
+                            </button>
+                            <button class="filter-btn flex flex-col items-center justify-center p-3 rounded-xl bg-surface-light dark:bg-emerald-900/40 text-secondary dark:text-emerald-100 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors shadow-sm" data-filter="orgánico">
+                                <span class="material-symbols-outlined text-lime-600 text-3xl mb-1.5 leading-none">compost</span> Orgánico
+                            </button>
+                            <button class="filter-btn flex flex-col items-center justify-center p-3 rounded-xl bg-surface-light dark:bg-emerald-900/40 text-secondary dark:text-emerald-100 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors shadow-sm" data-filter="aceite">
+                                <span class="material-symbols-outlined text-amber-600 text-3xl mb-1.5 leading-none">water_drop</span> Aceite
+                            </button>
+                            <button class="filter-btn flex flex-col items-center justify-center p-3 rounded-xl bg-surface-light dark:bg-emerald-900/40 text-secondary dark:text-emerald-100 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors shadow-sm" data-filter="ropa">
+                                <span class="material-symbols-outlined text-pink-500 text-3xl mb-1.5 leading-none">checkroom</span> Ropa/Textiles
+                            </button>
+                            <button class="filter-btn flex flex-col items-center justify-center p-3 rounded-xl bg-surface-light dark:bg-emerald-900/40 text-secondary dark:text-emerald-100 text-[11px] font-bold border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:hover:bg-emerald-800 transition-colors shadow-sm" data-filter="madera">
+                                <span class="material-symbols-outlined text-amber-800 text-3xl mb-1.5 leading-none">forest</span> Madera
+                            </button>
+                         </div>
+                     </div>
                 </div>
                 <div class="flex-1 overflow-y-auto no-scrollbar px-2 pb-4">
                     <div class="space-y-2" id="puntos-list">
@@ -89,7 +127,7 @@
             </div>
 
             <!-- Mapa -->
-            <div class="flex-1 rounded-2xl overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.12)] border-[3px] border-emerald-400 dark:border-primary relative z-0">
+            <div class="flex-1 min-h-[50%] lg:min-h-0 rounded-2xl overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.12)] border-[3px] border-emerald-400 dark:border-primary relative z-0">
                 <div id="map-container" class="w-full h-full z-0"></div>
             </div>
 
@@ -252,23 +290,48 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    const btnFiltros = document.getElementById('btn-filtros');
+    const closeFiltros = document.getElementById('close-filtros');
+    const modalFiltros = document.getElementById('modal-filtros');
+    const filterBadge = document.getElementById('active-filter-badge');
+
+    if (btnFiltros && modalFiltros) {
+        btnFiltros.addEventListener('click', () => {
+            modalFiltros.classList.remove('translate-x-full');
+        });
+        closeFiltros.addEventListener('click', () => {
+            modalFiltros.classList.add('translate-x-full');
+        });
+    }
+
     // Filtros de Botones
     const filterBtns = document.querySelectorAll('.filter-btn');
     if(filterBtns.length > 0) {
         filterBtns.forEach(btn => {
             btn.addEventListener('click', function() {
-                // Actualizar estilo visual de los botones reseteando la clase genérica de inactivo a todos
-                const baseClass = "filter-btn flex items-center px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap gap-1.5 transition-colors bg-surface-light text-secondary border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100 dark:bg-emerald-900/40 dark:text-emerald-100";
-                const activeClass = "filter-btn flex items-center px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap gap-1 transition-colors bg-secondary text-white shadow-md border border-transparent";
-                
-                filterBtns.forEach(b => {
-                    b.className = baseClass;
-                });
-                
-                this.className = activeClass;
-
                 const norm = str => str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : "";
                 const filterType = norm(this.dataset.filter);
+
+                // Activar el botón presionado
+                filterBtns.forEach(b => {
+                    b.classList.remove('bg-secondary', 'text-white', 'border-transparent', 'shadow-[0_4px_15px_rgba(0,0,0,0.1)]');
+                    b.classList.add('bg-surface-light', 'dark:bg-emerald-900/40', 'text-secondary', 'dark:text-emerald-100', 'border-emerald-200', 'dark:border-emerald-800');
+                });
+                
+                this.classList.remove('bg-surface-light', 'dark:bg-emerald-900/40', 'text-secondary', 'dark:text-emerald-100', 'border-emerald-200', 'dark:border-emerald-800');
+                this.classList.add('bg-secondary', 'text-white', 'border-transparent', 'shadow-[0_4px_15px_rgba(0,0,0,0.1)]');
+                
+                // Cerrar modal automáticamente
+                modalFiltros.classList.add('translate-x-full');
+
+                // Actualizar texto del badge
+                if (filterType === 'todos') {
+                    filterBadge.classList.add('hidden');
+                } else {
+                    let label = this.dataset.filter.charAt(0).toUpperCase() + this.dataset.filter.slice(1);
+                    filterBadge.textContent = label;
+                    filterBadge.classList.remove('hidden');
+                }
 
                 // Filtrar marcadores del Leaflet map
                 if(window.mapMarkers) {

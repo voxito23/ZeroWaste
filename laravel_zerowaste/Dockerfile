@@ -7,9 +7,13 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libpq-dev \
     curl \
+    libpng-dev \
+    libjpeg-dev \
+    libfreetype6-dev \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
-    && docker-php-ext-install pdo pdo_pgsql zip
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo pdo_pgsql zip gd
 
 # 2. Habilitar mod_rewrite de Apache
 RUN a2enmod rewrite
@@ -28,5 +32,10 @@ COPY . .
 # 6. Instalar dependencias (Instalación limpia ignorando reqs del sistema anfitrión)
 RUN composer install --no-interaction --optimize-autoloader --ignore-platform-reqs --no-scripts
 
-# 7. Permisos de Laravel
+# 7. Crear directorios de imágenes compartidos con Flask y permisos correctos
+RUN mkdir -p /var/www/flask_zerowaste/static/img/perfiles \
+    /var/www/flask_zerowaste/static/img/eventos \
+    && chmod -R 777 /var/www/flask_zerowaste/static/img
+
+# 8. Permisos de Laravel
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true

@@ -5,6 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property string $titulo
+ * @property string|null $lugar
+ * @property \Illuminate\Support\Carbon|null $fecha_inicio
+ * @property \Illuminate\Support\Carbon|null $fecha_fin
+ * @property string $descripcion
+ * @property string|null $tipo_etiqueta
+ * @property string|null $imagen_url
+ * @method static \Illuminate\Database\Eloquent\Builder|Evento query()
+ */
 class Evento extends Model
 {
     use HasFactory;

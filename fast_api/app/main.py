@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_redoc_html
 from fastapi.responses import FileResponse
 
-from app.routers import auth, usuarios, foro, mapa, eventos
+from app.routers import auth, usuarios, foro, mapa, eventos, analisis, formularios
 
 app = FastAPI(
     title="ZeroWaste API Completa",
@@ -35,6 +35,8 @@ app.include_router(usuarios.router)
 app.include_router(foro.router)
 app.include_router(mapa.router)
 app.include_router(eventos.router)
+app.include_router(analisis.router)
+app.include_router(formularios.router)
 
 
 @app.get("/", tags=["Salud"])

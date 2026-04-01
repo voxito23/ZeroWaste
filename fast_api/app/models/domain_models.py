@@ -69,6 +69,7 @@ class CalificacionPunto(Base):
     location_id = Column(Integer, ForeignKey("locations.id"), nullable=False)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     estrellas = Column(Integer, nullable=False)
+    comentario = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     punto = relationship("PuntoMapa", back_populates="calificaciones")
@@ -173,4 +174,42 @@ class Evento(Base):
     tipo_etiqueta = Column(String(50), nullable=True)
     imagen_url = Column(String(255), nullable=True)
 
+
+# TAREA 2: MODELOS DE CONTACTO Y RECUPERACIÓN (Migrados desde Flask)
+class ContactMessage(Base):
+    __tablename__ = 'contact_messages'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nombre = Column(String(150), nullable=False)
+    email = Column(String(150), nullable=False)
+    ubicacion = Column(String(200), nullable=True)
+    mensaje = Column(Text, nullable=False)
+    estado = Column(String(30), default='pendiente')
+    respuesta_admin = Column(Text, nullable=True)
+    usuario_id = Column(Integer, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    replies = relationship("ContactReply", back_populates="contact_message")
+
+
+class ContactReply(Base):
+    __tablename__ = 'contact_replies'
+
+    id = Column(Integer, primary_key=True, index=True)
+    contact_message_id = Column(Integer, ForeignKey("contact_messages.id"), nullable=False)
+    sender = Column(String(10), nullable=False)  # 'user' or 'admin'
+    mensaje = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    contact_message = relationship("ContactMessage", back_populates="replies")
+
+
+class PasswordResetRequest(Base):
+    __tablename__ = 'password_reset_requests'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(150), nullable=False)
+    estado = Column(String(30), default='pendiente')
+    notas = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
