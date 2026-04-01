@@ -10,6 +10,8 @@ class Notificacion extends Model
     use HasFactory;
 
     protected $table = 'notificaciones';
+    
+    const UPDATED_AT = null;
 
     protected $fillable = [
         'user_id',
