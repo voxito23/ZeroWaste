@@ -12,6 +12,7 @@ services:
       - perfiles_compartidos:/app/static/img/perfiles
     environment:
       - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/zerowaste_db
+      - PUBLIC_API_URL=http://167.99.239.121:6001
     depends_on:
       db:
         condition: service_healthy
