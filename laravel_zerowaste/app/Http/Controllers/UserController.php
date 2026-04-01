@@ -146,7 +146,30 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        // Limpiar posteos y datos relacionados con posteos
+        $postIds = \Illuminate\Support\Facades\DB::table('posts')->where('autor_id', $user->id)->pluck('id');
+        if ($postIds->isNotEmpty()) {
+            \Illuminate\Support\Facades\DB::table('likes_foro')->whereIn('post_id', $postIds)->delete();
+            \Illuminate\Support\Facades\DB::table('respuestas')->whereIn('post_id', $postIds)->delete();
+            \Illuminate\Support\Facades\DB::table('posts')->where('autor_id', $user->id)->delete();
+        }
+
+        // Limpiar mensajes de contacto (si existen)
+        $contactIds = \Illuminate\Support\Facades\DB::table('contact_messages')->where('usuario_id', $user->id)->pluck('id');
+        if ($contactIds->isNotEmpty()) {
+             \Illuminate\Support\Facades\DB::table('contact_replies')->whereIn('contact_message_id', $contactIds)->delete();
+             \Illuminate\Support\Facades\DB::table('contact_messages')->where('usuario_id', $user->id)->delete();
+        }
+
+        // Limpiar actividad adicional (ratings, notis, etc)
+        \Illuminate\Support\Facades\DB::table('likes_foro')->where('usuario_id', $user->id)->delete();
+        \Illuminate\Support\Facades\DB::table('respuestas')->where('autor_id', $user->id)->delete();
+        \Illuminate\Support\Facades\DB::table('calificaciones_puntos')->where('usuario_id', $user->id)->delete();
+        \Illuminate\Support\Facades\DB::table('actividades')->where('usuario_id', $user->id)->delete();
+        \Illuminate\Support\Facades\DB::table('notificaciones')->where('user_id', $user->id)->delete();
+        \Illuminate\Support\Facades\DB::table('password_reset_requests')->where('usuario_id', $user->id)->delete();
+
         $user->delete();
-        return redirect()->route('usuarios.index')->with('success', 'Usuario eliminado correctamente.');
+        return redirect()->route('usuarios.index')->with('success', 'Usuario y todos sus datos relacionados eliminados correctamente.');
     }
 }
