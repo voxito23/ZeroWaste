@@ -25,7 +25,7 @@
                 @php
                     $currentFoto = $user->foto_perfil ?? 'perfil_default.png';
                 @endphp
-                <img id="preview-foto" src="{{ asset('img/perfiles/' . $currentFoto) }}"
+                <img id="preview-foto" src="{{ url('/static/img/perfiles/' . $currentFoto) }}"
                      alt="{{ $user->nombre }}" class="w-24 h-24 rounded-full object-cover border-[3px] border-primary shadow-lg shadow-primary/20"
                      onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 120%22><rect fill=%22%2334D399%22 width=%22120%22 height=%22120%22 rx=%2260%22/><text x=%2250%%22 y=%2256%%22 text-anchor=%22middle%22 fill=%22%23064E3B%22 font-size=%2248%22 font-weight=%22bold%22 font-family=%22Inter%22>{{ strtoupper(substr($user->nombre, 0, 1)) }}</text></svg>';">
                 <label for="foto-input" class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZeroWaste Admin - @yield('title', 'Dashboard')</title>
-    <link href="{{ url('/static/favicon/faviconZeroWaste.svg') }}" rel="icon" type="image/svg+xml">
+    <link href="/static/favicon/faviconZeroWaste.svg" rel="icon" type="image/svg+xml">
     <link rel="alternate icon" type="image/png" href="{{ asset('faviconZeroWaste.png') }}">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -48,7 +48,7 @@
     <!-- Barra lateral de navegación -->
     <aside class="w-64 bg-white/95 dark:bg-forest-card border-r border-emerald-100 dark:border-emerald-900/50 shadow-xl flex flex-col hidden lg:flex">
         <div class="h-24 flex items-center justify-center border-b border-emerald-50 dark:border-emerald-900/50 gap-3">
-            <img src="{{ url('/static/img/logo.png') }}" alt="ZeroWaste" class="h-10 w-auto" onerror="this.style.display='none'">
+            <img src="/static/img/logo.png" alt="ZeroWaste" class="h-10 w-auto" onerror="this.style.display='none'">
             <span class="font-extrabold text-xl text-secondary dark:text-white">ZEROWASTE</span>
         </div>
         <nav class="p-4 flex flex-col gap-1 flex-1">
@@ -99,7 +99,7 @@
         </nav>
     </aside>
 
-    <main class="flex-1 p-10 flex flex-col overflow-auto">
+    <main class="flex-1 p-4 md:p-6 lg:p-10 flex flex-col overflow-auto">
         <header class="flex justify-between items-center mb-8">
             <h1 class="text-3xl font-extrabold dark:text-white">@yield('page_title', 'Dashboard')</h1>
             <div class="flex items-center gap-3">
@@ -118,7 +118,7 @@
                         </div>
                         <img src="{{ $fotoUrl }}" alt="Avatar"
                              class="w-11 h-11 rounded-full border-[3px] border-primary object-cover shadow-lg shadow-primary/20 transition-transform group-hover:scale-105"
-                             onerror="this.onerror=null; this.src='{{ url('/static/img/perfiles/default.png') }}';">
+                             onerror="this.onerror=null; this.src='/static/img/perfiles/default.png';">
                     </div>
                     
                     <!-- Dropdown Menu -->
