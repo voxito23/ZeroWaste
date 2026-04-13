@@ -378,12 +378,11 @@
             return;
         }
 
-        // Validar categoría
         if (!category) {
             event.preventDefault();
             errorDiv.textContent = 'Por favor, selecciona una categoría para publicar.';
             errorDiv.classList.remove('hidden');
-            document.getElementById('category').focus();
+            // Remove the invalid focus call that crashed the JS: document.getElementById('category').focus();
             return;
         }
 
