@@ -25,7 +25,7 @@
                 @php
                     $isAuth = \Illuminate\Support\Facades\Auth::check();
                     $fotoPerfil = ($isAuth && \Illuminate\Support\Facades\Auth::user()->foto_perfil) ? \Illuminate\Support\Facades\Auth::user()->foto_perfil : 'default.png';
-                    $fotoUrl = asset('img/perfiles/' . $fotoPerfil);
+                    $fotoUrl = url('/static/img/perfiles/' . $fotoPerfil);
                 @endphp
                 
                 <div class="relative group">
