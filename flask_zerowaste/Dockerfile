@@ -12,12 +12,12 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY frontend_build/package*.json ./frontend_build/
-RUN cd frontend_build && npm install
+RUN cd frontend_build && npm install && chmod -R +x node_modules/.bin/
 
 COPY . .
 
 # Compilar Tailwind CSS
-RUN cd frontend_build && npm run build:css
+RUN cd frontend_build && npx tailwindcss -i ../static/src/input.css -o ../static/css/output.css --minify
 
 EXPOSE 5000
 
