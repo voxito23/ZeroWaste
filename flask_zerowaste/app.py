@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from flask_cors import CORS
-from flask_mail import Mail, Message as MailMessage
+# Email se envía via Resend HTTP API (DigitalOcean bloquea puertos SMTP)
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -72,17 +72,42 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
-# ===== Configuración Flask-Mail (Gmail SMTP) =====
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
-app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
-app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
-app.config['MAIL_DEFAULT_SENDER'] = ('Zero Waste', os.environ.get('MAIL_USERNAME', 'noreply@zerowaste.com'))
-app.config['MAIL_TIMEOUT'] = 5
+# ===== Configuración de Email (Resend HTTP API — sin SMTP) =====
+# DigitalOcean bloquea puertos SMTP (25, 465, 587).
+# Resend usa HTTP/HTTPS, así que funciona sin problemas.
+RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
+MAIL_FROM_ADDRESS = os.environ.get('MAIL_FROM_ADDRESS', 'noreply@zerowaste-qro.com')
+MAIL_FROM_NAME = os.environ.get('MAIL_FROM_NAME', 'Zero Waste')
 
-mail = Mail(app)
+def send_email_resend(to_email, subject, html_body):
+    """Envía email usando Resend REST API (HTTP, no SMTP)."""
+    if not RESEND_API_KEY:
+        app.logger.error('RESEND_API_KEY no configurada. No se puede enviar email.')
+        return False
+    try:
+        response = http_requests.post(
+            'https://api.resend.com/emails',
+            headers={
+                'Authorization': f'Bearer {RESEND_API_KEY}',
+                'Content-Type': 'application/json',
+            },
+            json={
+                'from': f'{MAIL_FROM_NAME} <{MAIL_FROM_ADDRESS}>',
+                'to': [to_email],
+                'subject': subject,
+                'html': html_body,
+            },
+            timeout=10,
+        )
+        if response.status_code in (200, 201):
+            app.logger.info(f'Email enviado exitosamente a {to_email}')
+            return True
+        else:
+            app.logger.error(f'Error Resend [{response.status_code}]: {response.text}')
+            return False
+    except Exception as e:
+        app.logger.error(f'Error enviando email via Resend: {e}')
+        return False
 
 # Variable dinámica para Producción vs Desarrollo
 PUBLIC_API_URL = os.environ.get('PUBLIC_API_URL', 'http://localhost:6001')
@@ -484,7 +509,7 @@ def forgot_password():
                         <!-- HEADER -->
                         <tr>
                             <td style="background-color: #064E3B; padding: 36px 24px 28px; text-align: center;">
-                                <img src="cid:zerowaste_logo" alt="Zero Waste" width="64" height="64" style="display: block; margin: 0 auto 16px; border-radius: 14px;">
+                                <img src="https://zerowaste-qro.com/static/img/logo_texture.png" alt="Zero Waste" width="64" height="64" style="display: block; margin: 0 auto 16px; border-radius: 14px;">
                                 <h1 style="color: #ffffff; margin: 0 0 10px; font-size: 26px; font-weight: 800; letter-spacing: 2px; font-family: 'Segoe UI', Roboto, Arial, sans-serif;">ZERO WASTE</h1>
                                 <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 14px;">
                                     <tr><td style="width: 50px; height: 3px; background-color: #00E096; border-radius: 2px;"></td></tr>
@@ -569,7 +594,7 @@ def forgot_password():
                                 <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
                                     <tr>
                                         <td style="vertical-align: middle; padding-right: 8px;">
-                                            <img src="cid:zerowaste_logo" alt="ZW" width="20" height="20" style="display: block; border-radius: 4px;">
+                                            <img src="https://zerowaste-qro.com/static/img/logo_texture.png" alt="ZW" width="20" height="20" style="display: block; border-radius: 4px;">
                                         </td>
                                         <td style="vertical-align: middle;">
                                             <p style="color: #6ee7b7; font-size: 12px; font-weight: 600; margin: 0; font-family: 'Segoe UI', Roboto, Arial, sans-serif;">Zero Waste</p>
@@ -585,35 +610,21 @@ def forgot_password():
             </tr>
         </table>
         """
-        msg = MailMessage(
-            subject='🔑 Tu contraseña temporal — Zero Waste',
-            recipients=[email],
-            html=html_body
-        )
-        # Adjuntar logo como imagen inline (CID) para que Gmail lo muestre
-        logo_path = os.path.join(app.root_path, 'static', 'img', 'logo_texture.png')
-        with open(logo_path, 'rb') as logo_file:
-            msg.attach(
-                'logo_texture.png',
-                'image/png',
-                logo_file.read(),
-                'inline',
-                headers={'Content-ID': '<zerowaste_logo>'}
-            )
         print(f"==================================", flush=True)
         print(f"[RECOVERY] EMAIL: {email}", flush=True)
-        print(f"[RECOVERY] PASSWORD. TEMP: {temp_password}", flush=True)
+        print(f"[RECOVERY] PASSWORD TEMP: {temp_password}", flush=True)
         print(f"==================================", flush=True)
 
+        # Enviar via Resend HTTP API (sin SMTP, esquiva el bloqueo de DigitalOcean)
         import threading
-        def send_async_email(app_instance, msg):
-            with app_instance.app_context():
-                try:
-                    mail.send(msg)
-                except Exception as e:
-                    app_instance.logger.error(f'Error enviando email asíncrono de recuperación: {e}')
+        def send_async_email():
+            send_email_resend(
+                to_email=email,
+                subject='🔑 Tu contraseña temporal — Zero Waste',
+                html_body=html_body,
+            )
 
-        thread = threading.Thread(target=send_async_email, args=(app, msg))
+        thread = threading.Thread(target=send_async_email)
         thread.start()
 
     except Exception as e:

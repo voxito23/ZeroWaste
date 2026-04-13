@@ -11,5 +11,5 @@ requests>=2.33.0
 pandas>=2.0.0
 pysentimiento>=0.7.3
 bcrypt>=4.0.0
-Flask-Mail>=0.10.0
+# Email se envía via Resend HTTP API (requests), no necesita Flask-Mail
 markupsafe>=3.0.0
