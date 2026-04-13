@@ -1549,16 +1549,16 @@ input:where([type='file']):focus {
   width: 340px;
 }
 
-.w-\[420px\] {
-  width: 420px;
-}
-
 .w-\[72px\] {
   width: 72px;
 }
 
 .w-\[90\%\] {
   width: 90%;
+}
+
+.w-\[90vw\] {
+  width: 90vw;
 }
 
 .w-auto {
@@ -6475,6 +6475,10 @@ input:where([type='file']):focus {
 }
 
 @media (min-width: 640px) {
+  .sm\:w-\[420px\] {
+    width: 420px;
+  }
+
   .sm\:w-auto {
     width: auto;
   }
@@ -6609,6 +6613,10 @@ input:where([type='file']):focus {
 
   .md\:pt-32 {
     padding-top: 8rem;
+  }
+
+  .md\:text-center {
+    text-align: center;
   }
 
   .md\:text-3xl {
