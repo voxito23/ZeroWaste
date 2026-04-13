@@ -114,6 +114,8 @@ def datetime_mx_filter(dt):
 
 @app.route('/')
 def root():
+    if 'usuario_id' in session:
+        return redirect(url_for('index'))
     return render_template('login.html')
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -143,6 +145,9 @@ def login():
         else:
             return jsonify({'success': False, 'error': 'Credenciales inválidas.'}), 401
             
+    if 'usuario_id' in session:
+        return redirect(url_for('index'))
+        
     return render_template('login.html')
 
 @app.route('/registro', methods=['GET', 'POST'])
@@ -565,12 +570,23 @@ def forgot_password():
         print(f"[RECOVERY] EMAIL: {email}", flush=True)
         print(f"[RECOVERY] PASSWORD. TEMP: {temp_password}", flush=True)
         print(f"==================================", flush=True)
-        mail.send(msg)
-    except Exception as e:
-        app.logger.error(f'Error enviando email de recuperación: {e}')
-        # Si DO bloquea el puerto 587, devolver éxito para pruebas de todas formas
-        return jsonify({'success': True, 'message': 'Se envió una contraseña temporal. Revisa tu correo o la consola del servidor (docker logs).'})
 
+        import threading
+        def send_async_email(app_instance, msg):
+            with app_instance.app_context():
+                try:
+                    mail.send(msg)
+                except Exception as e:
+                    app_instance.logger.error(f'Error enviando email asíncrono de recuperación: {e}')
+
+        thread = threading.Thread(target=send_async_email, args=(app, msg))
+        thread.start()
+
+    except Exception as e:
+        app.logger.error(f'Error preparando email de recuperación: {e}')
+        return jsonify({'success': False, 'error': 'Error interno preparando el correo.'}), 500
+
+    # Siempre retornamos éxito instantáneamente; el envío real ocurre en background o DO lo bloquea silenciosamente en el log.
     return jsonify({'success': True, 'message': 'Se envió una contraseña temporal a tu correo.'})
 
 @app.route('/api/mis_mensajes_contacto')
