@@ -4,8 +4,8 @@
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>404 Página no encontrada - Zero Waste</title>
-    <link rel="icon" type="image/svg+xml" href="{{ asset('faviconZeroWaste.svg') }}">
-    <link rel="alternate icon" type="image/png" href="{{ asset('faviconZeroWaste.png') }}">
+    <link rel="icon" type="image/svg+xml" href="/static/faviconZeroWaste.svg">
+    <link rel="alternate icon" type="image/png" href="/static/faviconZeroWaste.png">
 
     <script>
         // Sincronizar con el dark mode del panel de Laravel Admin
