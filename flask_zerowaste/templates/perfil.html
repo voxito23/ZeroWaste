@@ -545,7 +545,7 @@
         formData.append('foto_perfil', this.files[0]);
 
         try {
-            const response = await fetch('/api/usuarios/me/foto', {
+            const response = await fetch('/ajax/usuarios/me/foto', {
                 method: 'PUT',
                 body: formData
             });
@@ -647,7 +647,7 @@
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         
-        fetch('/api/mis_mensajes_contacto?_t=' + Date.now())
+        fetch('/ajax/mis_mensajes_contacto?_t=' + Date.now())
             .then(res => res.json())
             .then(data => {
                 const thread = document.getElementById('contacto-thread');
@@ -756,7 +756,7 @@
             return;
         }
         
-        fetch('/api/responder_contacto/' + msgId, {
+        fetch('/ajax/responder_contacto/' + msgId, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({mensaje: texto})

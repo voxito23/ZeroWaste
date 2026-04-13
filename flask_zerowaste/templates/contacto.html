@@ -228,7 +228,7 @@
 
         if (!isValid) return;
 
-        fetch('/api/formularios/contacto', {
+        fetch('/ajax/formularios/contacto', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre: name, email: email, ubicacion: ubicacion, mensaje: message })

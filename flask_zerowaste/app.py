@@ -394,6 +394,40 @@ def contacto():
 #  API: Contacto y Recuperación de Contraseña
 # ==========================================================================
 
+@app.route('/ajax/formularios/contacto', methods=['POST'])
+@limiter.limit("5/minute")
+def formulario_contacto():
+    """Recibe mensaje de contacto desde el formulario y lo guarda en BD."""
+    data = request.get_json()
+    if not data:
+        return jsonify({'success': False, 'error': 'Datos no válidos.'}), 400
+
+    nombre = sanitize_text(data.get('nombre', ''), 150)
+    email = data.get('email', '').strip()
+    ubicacion = sanitize_text(data.get('ubicacion', ''), 200)
+    mensaje = sanitize_text(data.get('mensaje', ''), 2000)
+
+    if len(nombre) < 10:
+        return jsonify({'success': False, 'error': 'El nombre debe tener al menos 10 caracteres.'}), 400
+    if not EMAIL_REGEX.match(email):
+        return jsonify({'success': False, 'error': 'Correo electrónico no válido.'}), 400
+    if len(mensaje) < 10:
+        return jsonify({'success': False, 'error': 'El mensaje debe tener al menos 10 caracteres.'}), 400
+
+    usuario_id = session.get('usuario_id')
+
+    nuevo_msg = ContactMessage(
+        nombre=nombre,
+        email=email,
+        ubicacion=ubicacion,
+        mensaje=mensaje,
+        usuario_id=usuario_id
+    )
+    db.session.add(nuevo_msg)
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Mensaje enviado correctamente.'})
+
 def generar_password_temporal(longitud=8):
     """Genera una contraseña temporal alfanumérica legible."""
     caracteres = string.ascii_uppercase + string.digits
@@ -899,7 +933,7 @@ def editar_perfil():
         return jsonify({'success': True, 'redirect': url_for('perfil')})
     return redirect(url_for('perfil'))
 
-@app.route('/api/usuarios/me/foto', methods=['PUT', 'POST'])
+@app.route('/ajax/usuarios/me/foto', methods=['PUT', 'POST'])
 @limiter.limit("10/minute")
 def actualizar_foto_perfil():
     if 'usuario_id' not in session:
