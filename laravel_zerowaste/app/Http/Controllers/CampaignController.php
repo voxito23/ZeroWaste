@@ -33,12 +33,16 @@ class CampaignController extends Controller
 
         // Manejar subida de imagen
         if ($request->hasFile('imagen_archivo')) {
-            $img = $request->file('imagen_archivo');
-            $nombreImg = uniqid('camp_') . '.' . $img->getClientOriginalExtension();
-            $destino = app()->basePath('../flask_zerowaste/static/img/eventos/');
-            if (!file_exists($destino)) { mkdir($destino, 0755, true); }
-            $img->move($destino, $nombreImg);
-            $data['imagen_url'] = $nombreImg;
+            try {
+                $img = $request->file('imagen_archivo');
+                $nombreImg = uniqid('camp_') . '.' . $img->getClientOriginalExtension();
+                $destino = app()->basePath('../flask_zerowaste/static/img/eventos/');
+                if (!file_exists($destino)) { mkdir($destino, 0777, true); }
+                $img->move($destino, $nombreImg);
+                $data['imagen_url'] = $nombreImg;
+            } catch (\Exception $e) {
+                \Log::error("Error subiendo imagen de campaña: " . $e->getMessage());
+            }
         }
         unset($data['imagen_archivo']);
 
@@ -70,12 +74,16 @@ class CampaignController extends Controller
 
         // Manejar subida de imagen
         if ($request->hasFile('imagen_archivo')) {
-            $img = $request->file('imagen_archivo');
-            $nombreImg = uniqid('camp_') . '.' . $img->getClientOriginalExtension();
-            $destino = app()->basePath('../flask_zerowaste/static/img/eventos/');
-            if (!file_exists($destino)) { mkdir($destino, 0755, true); }
-            $img->move($destino, $nombreImg);
-            $data['imagen_url'] = $nombreImg;
+            try {
+                $img = $request->file('imagen_archivo');
+                $nombreImg = uniqid('camp_') . '.' . $img->getClientOriginalExtension();
+                $destino = app()->basePath('../flask_zerowaste/static/img/eventos/');
+                if (!file_exists($destino)) { mkdir($destino, 0777, true); }
+                $img->move($destino, $nombreImg);
+                $data['imagen_url'] = $nombreImg;
+            } catch (\Exception $e) {
+                \Log::error("Error subiendo imagen de campaña edit: " . $e->getMessage());
+            }
         }
         unset($data['imagen_archivo']);
 

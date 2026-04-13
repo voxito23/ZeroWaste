@@ -35,12 +35,18 @@ class MapController extends Controller
 
         // Manejar subida de imagen del punto
         if ($request->hasFile('imagen_archivo')) {
-            $img = $request->file('imagen_archivo');
-            $nombreImg = uniqid('punto_') . '.' . $img->getClientOriginalExtension();
-            $destino = base_path('../flask_zerowaste/static/img/');
-            if (!file_exists($destino)) { mkdir($destino, 0755, true); }
-            $img->move($destino, $nombreImg);
-            $data['imagen'] = $nombreImg;
+            try {
+                $img = $request->file('imagen_archivo');
+                $nombreImg = uniqid('punto_') . '.' . $img->getClientOriginalExtension();
+                $destino = base_path('../flask_zerowaste/static/img/');
+                if (!file_exists($destino)) { mkdir($destino, 0777, true); }
+                $img->move($destino, $nombreImg);
+                $data['imagen'] = $nombreImg;
+            } catch (\Exception $e) {
+                // If it fails due to permissions, log it and continue without image
+                // so the user doesn't get a 500 error.
+                \Log::error("Error subiendo imagen de punto: " . $e->getMessage());
+            }
         }
 
         Location::query()->create($data);
@@ -69,12 +75,16 @@ class MapController extends Controller
 
         // Manejar subida de imagen del punto
         if ($request->hasFile('imagen_archivo')) {
-            $img = $request->file('imagen_archivo');
-            $nombreImg = uniqid('punto_') . '.' . $img->getClientOriginalExtension();
-            $destino = base_path('../flask_zerowaste/static/img/');
-            if (!file_exists($destino)) { mkdir($destino, 0755, true); }
-            $img->move($destino, $nombreImg);
-            $data['imagen'] = $nombreImg;
+            try {
+                $img = $request->file('imagen_archivo');
+                $nombreImg = uniqid('punto_') . '.' . $img->getClientOriginalExtension();
+                $destino = base_path('../flask_zerowaste/static/img/');
+                if (!file_exists($destino)) { mkdir($destino, 0777, true); }
+                $img->move($destino, $nombreImg);
+                $data['imagen'] = $nombreImg;
+            } catch (\Exception $e) {
+                \Log::error("Error subiendo imagen de punto en edit: " . $e->getMessage());
+            }
         }
 
         $location->update($data);
