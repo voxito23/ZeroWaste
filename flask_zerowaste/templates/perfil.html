@@ -647,7 +647,7 @@
         modal.classList.remove('hidden');
         modal.classList.add('flex');
         
-        fetch('/api/mis_mensajes_contacto')
+        fetch('/api/mis_mensajes_contacto?_t=' + Date.now())
             .then(res => res.json())
             .then(data => {
                 const thread = document.getElementById('contacto-thread');
