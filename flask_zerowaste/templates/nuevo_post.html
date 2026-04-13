@@ -387,6 +387,20 @@
             return;
         }
 
+        // Validar tamaño de imagen (Máximo 50MB)
+        const imageInput = document.getElementById('post-image');
+        if(imageInput.files && imageInput.files[0]) {
+            const fileSize = imageInput.files[0].size;
+            const maxSize = 50 * 1024 * 1024; // 50MB
+            if(fileSize > maxSize) {
+                event.preventDefault();
+                const sizeMB = (fileSize / (1024 * 1024)).toFixed(2);
+                errorDiv.innerHTML = `Límite máximo 50MB. <span class="text-red-700 font-bold">Error al subir esta img, pesa esto: ${sizeMB}MB</span>. ¡Por favor reduce su tamaño!`;
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+        }
+
         // Validar contenido (Mínimo 100, Máximo 1500)
         if (content.length < 100) {
             event.preventDefault();
