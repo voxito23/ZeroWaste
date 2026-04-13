@@ -164,6 +164,9 @@ class PasswordResetRequest(db.Model):
     __tablename__ = 'password_reset_requests'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(150), nullable=False)
+    temp_password_hash = db.Column(db.String(255), nullable=True)
+    expires_at = db.Column(db.DateTime, nullable=True)
+    usado = db.Column(db.Boolean, default=False)
     estado = db.Column(db.String(30), default='pendiente')
     notas = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

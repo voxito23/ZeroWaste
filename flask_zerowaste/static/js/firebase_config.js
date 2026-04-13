@@ -6,7 +6,7 @@ import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstati
 
 const firebaseConfig = {
     apiKey: "AIzaSyCNxoLg8OetTvbYFTdw1obSP9L2NtLVxTU",
-    authDomain: "zerowaste-57c55.firebaseapp.com",
+    authDomain: "zerowaste-qro.com",
     projectId: "zerowaste-57c55",
     storageBucket: "zerowaste-57c55.firebasestorage.app",
     messagingSenderId: "95524501274",

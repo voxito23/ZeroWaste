@@ -106,6 +106,38 @@ def actualizar_perfil(
     return {"message": "Perfíl actualizado exitosamente", "perfil": current_user}
 
 
+@router.put("/perfil/password", summary="Actualizar contraseña del perfil")
+def actualizar_password(
+    password_actual: str = Form(...),
+    password_nueva: str = Form(...),
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """
+    Permite al usuario cambiar su contraseña, verificando de forma segura
+    su contraseña actual antes de aplicar el cambio.
+    """
+    from app.security.jwt_auth import verify_password, hash_password
+    
+    if not verify_password(password_actual, current_user.password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="La contraseña actual es incorrecta."
+        )
+
+    if len(password_nueva) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="La nueva contraseña debe tener al menos 6 caracteres."
+        )
+
+    current_user.password = hash_password(password_nueva)
+    db.commit()
+    
+    return {"message": "Contraseña actualizada exitosamente"}
+
+
+
 @router.get("/", response_model=List[UsuarioResponse], summary="Listar todos los usuarios")
 def list_users(
     db: Session = Depends(get_db),

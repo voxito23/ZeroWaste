@@ -51,26 +51,43 @@
                 <div class="p-6 bg-emerald-50/50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 space-y-5">
                     <p class="text-sm text-gray-500 dark:text-gray-400 font-medium mb-4">Déjalo en blanco si solo deseas actualizar la foto de perfil.</p>
                     
-                    <div>
-                        <label class="block text-sm font-bold text-secondary dark:text-emerald-100 mb-2">Nueva Contraseña</label>
-                        <div class="relative">
-                            <input type="password" id="admin-password" name="password" placeholder="Mínimo 6 caracteres" class="w-full px-4 py-3 pr-12 rounded-xl bg-white dark:bg-black/20 border-2 border-emerald-100 dark:border-emerald-700 focus:border-primary dark:focus:border-primary focus:ring-4 focus:ring-primary/10 text-secondary dark:text-white outline-none transition-all">
-                            <button type="button" onclick="togglePass('admin-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
-                                <span class="material-symbols-outlined">visibility_off</span>
-                            </button>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-secondary dark:text-emerald-100 mb-2">Contraseña Anterior</label>
+                            <div class="relative">
+                                <input type="password" id="admin-password-current" name="password_actual" placeholder="Ingresa tu contraseña actual" class="w-full px-4 py-3 pr-12 rounded-xl bg-white dark:bg-black/20 border-2 border-emerald-100 dark:border-emerald-700 focus:border-primary dark:focus:border-primary focus:ring-4 focus:ring-primary/10 text-secondary dark:text-white outline-none transition-all">
+                                <button type="button" onclick="togglePass('admin-password-current', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
+                                    <span class="material-symbols-outlined">visibility_off</span>
+                                </button>
+                            </div>
+                            @error('password_actual')
+                                <span class="text-red-500 text-sm mt-1 font-medium">{{ $message }}</span>
+                            @enderror
                         </div>
-                        <span id="err-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
-                    </div>
 
-                    <div>
-                        <label class="block text-sm font-bold text-secondary dark:text-emerald-100 mb-2">Confirmar Contraseña</label>
-                        <div class="relative">
-                            <input type="password" id="admin-password-confirm" name="password_confirmation" placeholder="Repite la contraseña" class="w-full px-4 py-3 pr-12 rounded-xl bg-white dark:bg-black/20 border-2 border-emerald-100 dark:border-emerald-700 focus:border-primary dark:focus:border-primary focus:ring-4 focus:ring-primary/10 text-secondary dark:text-white outline-none transition-all">
-                            <button type="button" onclick="togglePass('admin-password-confirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
-                                <span class="material-symbols-outlined">visibility_off</span>
-                            </button>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-secondary dark:text-emerald-100 mb-2">Nueva Contraseña</label>
+                                <div class="relative">
+                                    <input type="password" id="admin-password" name="password" placeholder="Mínimo 6 caracteres" class="w-full px-4 py-3 pr-12 rounded-xl bg-white dark:bg-black/20 border-2 border-emerald-100 dark:border-emerald-700 focus:border-primary dark:focus:border-primary focus:ring-4 focus:ring-primary/10 text-secondary dark:text-white outline-none transition-all">
+                                    <button type="button" onclick="togglePass('admin-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined">visibility_off</span>
+                                    </button>
+                                </div>
+                                <span id="err-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-bold text-secondary dark:text-emerald-100 mb-2">Confirmar Contraseña</label>
+                                <div class="relative">
+                                    <input type="password" id="admin-password-confirm" name="password_confirmation" placeholder="Repite la contraseña" class="w-full px-4 py-3 pr-12 rounded-xl bg-white dark:bg-black/20 border-2 border-emerald-100 dark:border-emerald-700 focus:border-primary dark:focus:border-primary focus:ring-4 focus:ring-primary/10 text-secondary dark:text-white outline-none transition-all">
+                                    <button type="button" onclick="togglePass('admin-password-confirm', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
+                                        <span class="material-symbols-outlined">visibility_off</span>
+                                    </button>
+                                </div>
+                                <span id="err-password-confirm" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+                            </div>
                         </div>
-                        <span id="err-password-confirm" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
                     </div>
                 </div>
             </div>
@@ -111,6 +128,7 @@
         if (!form) return;
 
         form.addEventListener('submit', function(e) {
+            const current = document.getElementById('admin-password-current');
             const password = document.getElementById('admin-password');
             const confirm = document.getElementById('admin-password-confirm');
             const errPass = document.getElementById('err-password');
@@ -119,13 +137,20 @@
             // Reset
             errPass.classList.add('hidden');
             errConfirm.classList.add('hidden');
+            if (current) current.classList.remove('border-red-500');
             password.classList.remove('border-red-500');
             confirm.classList.remove('border-red-500');
 
             let isValid = true;
 
-            // Solo validar si se ingresó algo en alguno de los campos
+            // Solo validar si se ingresó algo en alguno de los campos de nueva contraseña
             if (password.value || confirm.value) {
+                // frontend client-side required current password check
+                if (!current.value) {
+                    current.classList.add('border-red-500');
+                    isValid = false;
+                }
+
                 if (password.value.length < 6) {
                     errPass.textContent = 'La contrase\u00f1a debe tener al menos 6 caracteres.';
                     errPass.classList.remove('hidden');

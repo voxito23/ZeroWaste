@@ -93,7 +93,7 @@
             </button>
         </div>
         
-        <a href="{{ url_for('nuevo_post') }}" class="inline-flex items-center gap-3 text-primary font-black text-xl lg:text-2xl group hover:text-white transition-colors z-10 whitespace-nowrap drop-shadow-[0_0_8px_rgba(0,224,150,0.4)] hover:drop-shadow-[0_0_15px_rgba(0,224,150,0.8)] pt-4 md:pt-0 pl-0 md:pl-2">
+        <a href="{{ url_for('nuevo_post') }}" class="inline-flex items-center gap-3 text-[#10B981] font-black text-xl lg:text-2xl group hover:text-[#34D399] transition-all z-10 whitespace-nowrap drop-shadow-[0_0_8px_rgba(16,185,129,0.4)] hover:drop-shadow-[0_0_15px_rgba(52,211,153,0.8)] pt-4 md:pt-0 pl-0 md:pl-2">
             <span class="material-symbols-outlined text-4xl transition-transform group-hover:-translate-x-2 z-10 relative">add_circle</span>
             <span class="border-b-2 border-current pb-1">Nuevo Post</span>
         </a>
@@ -160,9 +160,21 @@
         'Eventos': 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 hover:bg-violet-500 hover:text-white dark:hover:bg-black dark:hover:text-violet-400 dark:hover:shadow-[0_0_25px_rgba(167,139,250,0.6)] dark:hover:[text-shadow:_0_0_15px_rgba(167,139,250,1)]',
         'Dudas': 'bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 hover:bg-rose-500 hover:text-white dark:hover:bg-black dark:hover:text-rose-400 dark:hover:shadow-[0_0_25px_rgba(251,113,133,0.6)] dark:hover:[text-shadow:_0_0_15px_rgba(251,113,133,1)]'
     } %}
+    {% set draw_cat = {
+        'Reciclaje': 'bg-[conic-gradient(from_0deg,transparent_0_300deg,#f59e0b_360deg)]',
+        'Compostaje': 'bg-[conic-gradient(from_0deg,transparent_0_300deg,#10b981_360deg)]',
+        'Reducción de residuos': 'bg-[conic-gradient(from_0deg,transparent_0_300deg,#06b6d4_360deg)]',
+        'Eventos': 'bg-[conic-gradient(from_0deg,transparent_0_300deg,#8b5cf6_360deg)]',
+        'Dudas': 'bg-[conic-gradient(from_0deg,transparent_0_300deg,#f43f5e_360deg)]'
+    } %}
     {% for post in posts %}
-    <div class="post-card group bg-white dark:bg-white/5 border-2 {{ border_cat[post.categoria_rel.nombre] | default('border-gray-300 dark:border-gray-600') }} rounded-[2rem] p-8 shadow-xl hover:shadow-2xl transition-all duration-500 relative overflow-hidden {{ glow_cat[post.categoria_rel.nombre] | default('') }}" data-responses="{{ post.respuestas|length }}" data-popular="{{ post.respuestas|length + post.likes|length }}" data-created="{{ post.created_at.strftime('%Y%m%d%H%M%S') }}" data-search="{{ post.titulo|lower }} {{ post.autor_rel.nombre|lower }}">
-        <div class="flex flex-col md:flex-row gap-8 items-start md:items-center">
+    <div class="foro-post-container relative rounded-[2rem] p-[3px] transition-all duration-500 hover:-translate-y-1 group/post shadow-xl hover:shadow-2xl overflow-hidden {{ glow_cat[post.categoria_rel.nombre] | default('') }}" data-responses="{{ post.respuestas|length }}" data-likes="{{ post.likes|length }}" data-popular="{{ post.respuestas|length + post.likes|length }}" data-created="{{ post.created_at.strftime('%Y%m%d%H%M%S') }}" data-search="{{ post.titulo|lower }} {{ post.autor_rel.nombre|lower }}">
+        <div class="absolute inset-0 z-0 overflow-hidden rounded-[2rem]">
+            <div class="absolute left-1/2 top-1/2 w-[250%] aspect-square -translate-x-1/2 -translate-y-1/2 opacity-80 group-hover/post:opacity-100 transition-opacity">
+                <div class="w-full h-full animate-slow-spin {{ draw_cat[post.categoria_rel.nombre] | default('bg-[conic-gradient(from_0deg,transparent_0_300deg,#d1d5db_360deg)]') }}"></div>
+            </div>
+        </div>
+        <div class="post-card relative w-full h-full bg-white dark:bg-[#022018] z-10 rounded-[1.8rem] p-8 flex flex-col md:flex-row gap-8 items-start md:items-center">
             <div class="flex-grow">
                 <div class="flex flex-wrap items-center gap-3 mb-4">
                     <span class="px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1 {{ colores_cat[post.categoria_rel.nombre] | default('border-gray-500 bg-gray-50 text-gray-700') }}">
@@ -182,14 +194,16 @@
                     <div class="flex items-center gap-1 text-gray-500 dark:text-gray-400 text-sm font-medium"><span class="material-symbols-outlined text-lg">chat_bubble</span> {{ post.respuestas|length }} respuestas</div>
                     <div class="w-1 h-1 rounded-full bg-gray-300"></div>
                     <div class="flex items-center gap-1 {% if post.likes|length > 0 %}text-rose-500 dark:text-rose-400{% else %}text-gray-400 dark:text-gray-500{% endif %} text-sm font-medium"><span class="material-symbols-outlined text-lg">favorite</span> {{ post.likes|length }} likes</div>
-                    {% if post.respuestas|length >= 2 %}
+                    {% if post.respuestas|length > 4 and post.likes|length > 4 %}
                     <div class="w-1 h-1 rounded-full bg-gray-300"></div>
                     <div class="flex items-center gap-1.5 text-primary dark:text-primary font-bold text-sm"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" class="w-5 h-5"><g fill="currentColor"><path d="M16 4c-1.7-2.7-5-3.5-7.2-1.3S6.7 7.3 9 10c1.3 1.5 4 3.5 7 6 3-2.5 5.7-4.5 7-6 2.3-2.7 2.5-6 .3-8.2S17.7 1.3 16 4z"/><path d="M4 16c-2.7 1.7-3.5 5-1.3 7.2S7.3 25.3 10 23c1.5-1.3 3.5-4 6-7-2.5-3-4.5-5.7-6-7-2.7-2.3-6-2.5-8.2-.3S1.3 14.3 4 16z"/><path d="M28 16c2.7-1.7 3.5-5 1.3-7.2S24.7 6.7 22 9c-1.5 1.3-3.5 4-6 7 2.5 3 4.5 5.7 6 7 2.7 2.3 6 2.5 8.2.3S30.7 17.7 28 16z"/><path d="M16 28c1.7 2.7 5 3.5 7.2 1.3S25.3 24.7 23 22c-1.3-1.5-4-3.5-7-6-3 2.5-5.7 4.5-7 6-2.3 2.7-2.5 6-.3 8.2S14.3 30.7 16 28z"/></g></svg> Popular</div>
                     {% endif %}
                 </div>
             </div>
-            <div class="flex-shrink-0 w-full md:w-auto mt-4 md:mt-0">
-                <a class="flex items-center justify-center gap-2 w-full md:w-auto px-6 py-3 rounded-xl font-bold transition-all group-hover:translate-x-1 {{ btn_cat[post.categoria_rel.nombre] | default('bg-gray-50 dark:bg-white/5 text-secondary dark:text-primary hover:bg-primary hover:text-white dark:hover:bg-black dark:hover:text-primary') }}" href="{{ url_for('ver_post', post_id=post.id) }}">Ver discusión <span class="material-symbols-outlined text-xl">arrow_forward</span></a>
+            <div class="mt-6 md:mt-0 md:ml-auto flex flex-col gap-3 min-w-[140px] z-20">
+                <a href="{{ url_for('ver_post', post_id=post.id) }}" class="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-all duration-300 shadow-sm hover:shadow-md {{ btn_cat[post.categoria_rel.nombre] | default('bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300') }}">
+                    Ver discusión <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                </a>
             </div>
         </div>
     </div>
@@ -236,7 +250,7 @@
 
         // Obtener y ordenar las tarjetas
         const container = document.getElementById('posts-container');
-        const cards = Array.from(container.querySelectorAll('.post-card'));
+        const cards = Array.from(container.querySelectorAll('.foro-post-container'));
 
         if (filter === 'populares') {
             cards.sort((a, b) => parseInt(b.dataset.popular) - parseInt(a.dataset.popular));
@@ -269,9 +283,21 @@
 
     function doSearch() {
         const q = document.getElementById('searchInput').value.toLowerCase();
-        document.querySelectorAll('.post-card').forEach(post => {
-            const text = post.dataset.search;
-            if (text.includes(q)) {
+        document.querySelectorAll('.foro-post-container').forEach(post => {
+            const text = post.dataset.search || "";
+            const matchesSearch = text.includes(q);
+            
+            let matchesFilter = true;
+            // Regla estricta del usuario: Populares = más de 4 respuestas y más de 4 likes.
+            if (activeFilter === 'populares') {
+                const resps = parseInt(post.dataset.responses) || 0;
+                const likes = parseInt(post.dataset.likes) || 0;
+                if (resps <= 4 || likes <= 4) {
+                    matchesFilter = false;
+                }
+            }
+
+            if (matchesSearch && matchesFilter) {
                 post.classList.remove('post-hidden');
             } else {
                 post.classList.add('post-hidden');
@@ -296,7 +322,7 @@
         btn.classList.add('opacity-70', 'cursor-not-allowed');
         icon.classList.add('animate-spin');
         icon.textContent = 'refresh';
-        btnText.textContent = 'Cargando BD...';
+        btnText.textContent = 'Cargando...';
 
         setTimeout(() => {
             icon.classList.remove('animate-spin');

@@ -25,15 +25,15 @@
         theme: {
             extend: {
                 colors: {
-                    primary: "#00E096",
-                    "primary-hover": "#00C281",
+                    primary: "#059669",
+                    "primary-hover": "#047857",
                     secondary: "#064E3B",
                     "forest-dark": "#022C22",
                     "surface-light": "#ECFDF5",
                     "surface-dark": "#062C25",
                     "text-light": "#064E3B",
                     "text-dark": "#D1FAE5",
-                    accent: "#34D399",
+                    accent: "#10B981",
                 },
                 fontFamily: {
                     sans: ['Inter', 'sans-serif'],
@@ -119,6 +119,47 @@
         transform: translateX(90px) scale(0.985);
         filter: blur(4px);
     }
+
+    /* Scrollbar global — mismo estilo que el index */
+    ::-webkit-scrollbar {
+        width: 14px;
+        height: 14px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #ECFDF5;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #34D399, #059669);
+        border-radius: 10px;
+        border: 4px solid #ECFDF5;
+        background-clip: padding-box;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #10B981, #047857);
+        border: 3px solid #ECFDF5;
+    }
+    ::-webkit-scrollbar-button {
+        display: none;
+    }
+    .dark ::-webkit-scrollbar-track {
+        background: #062C25;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #059669, #022C22);
+        border: 4px solid #062C25;
+        background-clip: padding-box;
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #34D399, #059669);
+        border: 3px solid #062C25;
+    }
+    html {
+        scrollbar-width: thin;
+        scrollbar-color: #10B981 #ECFDF5;
+    }
+    html.dark {
+        scrollbar-color: #059669 #062C25;
+    }
 </style>
 </head>
 <body class="bg-surface-light dark:bg-surface-dark text-text-light dark:text-text-dark font-sans transition-colors duration-300 flex flex-col min-h-screen">
@@ -143,84 +184,122 @@
     </div>
 </header>
 
-<main class="grow min-h-screen flex items-center justify-center bg-white dark:bg-forest-dark relative pt-20 pb-4">
+<main class="grow flex items-center justify-center bg-white dark:bg-forest-dark relative pt-20 pb-4">
     <div id="auth-shell" class="auth-card page-enter w-full max-w-4xl flex flex-col lg:flex-row rounded-[2rem] overflow-hidden shadow-2xl bg-white dark:bg-surface-dark border border-emerald-50 dark:border-emerald-900 mx-4 lg:mx-8">
     <!-- FORMULARIO IZQUIERDA EN REGISTRO -->
 
-    <div class="w-full lg:w-1/2 p-6 md:p-8 flex flex-col justify-center relative bg-white dark:bg-forest-dark order-2 lg:order-1 overflow-y-auto overflow-x-hidden scrollbar-hide" style="-ms-overflow-style: none; scrollbar-width: none;">
+    <div class="w-full lg:w-1/2 p-4 md:p-5 flex flex-col justify-center relative bg-white dark:bg-forest-dark order-2 lg:order-1 overflow-y-auto overflow-x-hidden auth-scroll">
         <style>
-            .scrollbar-hide::-webkit-scrollbar { display: none; }
+            .auth-scroll::-webkit-scrollbar {
+                width: 10px;
+            }
+            .auth-scroll::-webkit-scrollbar-track {
+                background: #f8fafc;
+                border-radius: 0 0 2rem 0;
+            }
+            .auth-scroll::-webkit-scrollbar-thumb {
+                background: linear-gradient(180deg, #34D399, #059669);
+                border-radius: 10px;
+                border: 3px solid #f8fafc;
+                background-clip: padding-box;
+            }
+            .auth-scroll::-webkit-scrollbar-thumb:hover {
+                background: linear-gradient(180deg, #10B981, #047857);
+                border: 2px solid #f8fafc;
+            }
+            .auth-scroll::-webkit-scrollbar-button {
+                display: none;
+            }
+            .dark .auth-scroll::-webkit-scrollbar-track {
+                background: #022C22;
+            }
+            .dark .auth-scroll::-webkit-scrollbar-thumb {
+                background: linear-gradient(180deg, #059669, #022C22);
+                border: 3px solid #022C22;
+                background-clip: padding-box;
+            }
+            .dark .auth-scroll::-webkit-scrollbar-thumb:hover {
+                background: linear-gradient(180deg, #34D399, #059669);
+                border: 2px solid #022C22;
+            }
+            .auth-scroll {
+                scrollbar-width: thin;
+                scrollbar-color: #10B981 #f8fafc;
+            }
+            .dark .auth-scroll {
+                scrollbar-color: #059669 #022C22;
+            }
         </style>
         <div class="max-w-md mx-auto w-full">
-            <div class="text-center mb-5">
-                <h1 class="font-display font-black text-3xl md:text-4xl text-secondary dark:text-white mb-2">Crea tu cuenta</h1>
-                <p class="text-gray-500 dark:text-gray-400">Únete a nosotros para empezar a reciclar</p>
+            <div class="text-center mb-2">
+                <h1 class="font-display font-black text-2xl text-secondary dark:text-white mb-0.5">Crea tu cuenta</h1>
+                <p class="text-gray-500 dark:text-gray-400 text-xs">Únete a nosotros para empezar a reciclar</p>
             </div>
 
-            <div id="general-error" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-3 mb-4 rounded-md shadow-sm text-sm font-medium transition-all"></div>
+            <div id="general-error" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-2 mb-2 rounded-md shadow-sm text-sm font-medium transition-all"></div>
 
-            <form id="register-form" class="space-y-3" onsubmit="validateRegister(event)" novalidate>
-                <div class="flex flex-col items-center justify-center mb-3">
-                    <div class="relative w-24 h-24 rounded-full overflow-hidden border-4 border-emerald-100 bg-gray-100 cursor-pointer group shadow-md" onclick="document.getElementById('foto_input').click()">
+            <form id="register-form" class="space-y-2" onsubmit="validateRegister(event)" novalidate>
+                <div class="flex flex-col items-center justify-center mb-1">
+                    <div class="relative w-16 h-16 rounded-full overflow-hidden border-2 border-emerald-100 bg-gray-100 cursor-pointer group shadow-md" onclick="document.getElementById('foto_input').click()">
                         <img id="avatar-preview" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Perfil" class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <span class="material-symbols-outlined text-white">photo_camera</span>
+                            <span class="material-symbols-outlined text-white text-base">photo_camera</span>
                         </div>
                     </div>
-                    <span class="text-xs text-gray-500 mt-2 font-medium">Añadir foto de perfil</span>
+                    <span class="text-[11px] text-gray-500 mt-0.5 font-medium">Añadir foto de perfil</span>
                     <input type="file" id="foto_input" accept=".jpg, .jpeg, .png" class="hidden" onchange="openCropper(event)">
                 </div>
-                <div class="flex justify-center"><span id="error-foto" class="hidden text-red-500 text-sm mt-1 font-medium"></span></div>
+                <div class="flex justify-center"><span id="error-foto" class="hidden text-red-500 text-xs mt-0.5 font-medium"></span></div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="name">Nombre completo</label>
+                <div class="space-y-0.5">
+                    <label class="text-xs font-bold text-secondary dark:text-emerald-100 ml-1" for="name">Nombre completo</label>
                     <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">person</span>
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors text-lg">person</span>
                         </div>
-                        <input class="block w-full pl-11 pr-4 py-3 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium" id="name" name="nombre" placeholder="Tu Nombre Completo" type="text" required minlength="11"/>
+                        <input class="block w-full pl-10 pr-3 py-2 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium text-sm" id="name" name="nombre" placeholder="Tu Nombre Completo" type="text" required minlength="11"/>
                     </div>
-                    <span id="error-name" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+                    <span id="error-name" class="hidden text-red-500 text-xs mt-0.5 font-medium"></span>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="email">Email</label>
+                <div class="space-y-0.5">
+                    <label class="text-xs font-bold text-secondary dark:text-emerald-100 ml-1" for="email">Email</label>
                     <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">mail</span>
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors text-lg">mail</span>
                         </div>
-                        <input class="block w-full pl-11 pr-4 py-3 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium" id="email" name="email" placeholder="correo@ejemplo.com" type="email" required/>
+                        <input class="block w-full pl-10 pr-3 py-2 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium text-sm" id="email" name="email" placeholder="correo@ejemplo.com" type="email" required/>
                     </div>
-                    <span id="error-email" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+                    <span id="error-email" class="hidden text-red-500 text-xs mt-0.5 font-medium"></span>
                 </div>
 
-                <div class="space-y-1">
-                    <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="password">Contraseña</label>
+                <div class="space-y-0.5">
+                    <label class="text-xs font-bold text-secondary dark:text-emerald-100 ml-1" for="password">Contraseña</label>
                     <div class="relative group">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors">lock</span>
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors text-lg">lock</span>
                         </div>
-                        <input class="block w-full pl-11 pr-4 py-3 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium" id="password" name="password" placeholder="••••••••" type="password"/>
-                        <div class="absolute inset-y-0 right-0 pr-4 flex items-center cursor-pointer" onclick="togglePassword('password', 'eye-icon-reg')">
-                            <span id="eye-icon-reg" class="material-symbols-outlined text-gray-400 hover:text-secondary dark:hover:text-white transition-colors text-xl">visibility</span>
+                        <input class="block w-full pl-10 pr-3 py-2 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium text-sm" id="password" name="password" placeholder="••••••••" type="password"/>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer" onclick="togglePassword('password', 'eye-icon-reg')">
+                            <span id="eye-icon-reg" class="material-symbols-outlined text-gray-400 hover:text-secondary dark:hover:text-white transition-colors text-lg">visibility</span>
                         </div>
                     </div>
-                    <span id="error-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+                    <span id="error-password" class="hidden text-red-500 text-xs mt-0.5 font-medium"></span>
                 </div>
 
-                <div class="mt-3 mb-2">
+                <div class="mt-1 mb-0.5">
                     <div class="flex items-start gap-2">
-                        <input id="privacy" name="privacy" type="checkbox" class="mt-1 w-4 h-4 text-primary bg-gray-50 border-gray-300 rounded focus:ring-primary focus:ring-2 dark:bg-emerald-900/20 dark:border-emerald-800 cursor-pointer transition-colors">
-                        <div class="text-sm leading-relaxed text-gray-500 dark:text-gray-400 text-justify">
+                        <input id="privacy" name="privacy" type="checkbox" class="mt-0.5 w-3.5 h-3.5 text-primary bg-gray-50 border-gray-300 rounded focus:ring-primary focus:ring-2 dark:bg-emerald-900/20 dark:border-emerald-800 cursor-pointer transition-colors">
+                        <div class="text-xs leading-relaxed text-gray-500 dark:text-gray-400 text-justify">
                             <label for="privacy" class="cursor-pointer select-none">
-                                Al registrarte, aceptas nuestro <button type="button" onclick="openPrivacyModal()" class="font-bold text-primary hover:text-primary-hover transition-colors">Aviso de Privacidad</button> y los <button type="button" onclick="openTermsModal()" class="font-bold text-primary hover:text-primary-hover transition-colors">Términos y Condiciones</button> del servicio de ZeroWaste.
+                                Al registrarte, aceptas nuestro <button type="button" onclick="openPrivacyModal()" class="font-bold text-teal-700 dark:text-teal-400 hover:text-teal-900 dark:hover:text-teal-300 transition-colors">Aviso de Privacidad</button> y los <button type="button" onclick="openTermsModal()" class="font-bold text-teal-700 dark:text-teal-400 hover:text-teal-900 dark:hover:text-teal-300 transition-colors">Términos y Condiciones</button> del servicio de ZeroWaste.
                             </label>
                         </div>
                     </div>
                     <span id="error-privacy" class="hidden text-red-500 text-xs mt-1 font-medium ml-6">Debes aceptar el aviso de privacidad.</span>
                 </div>
 
-                <button id="submit-btn" class="w-full flex justify-center items-center gap-2 py-3 px-4 rounded-xl shadow-lg shadow-emerald-400/30 font-bold text-white bg-primary hover:bg-primary-hover transition-all transform hover:-translate-y-1 mt-4" type="submit">
+                <button id="submit-btn" class="w-full flex justify-center items-center gap-2 py-2 px-4 rounded-xl shadow-lg shadow-emerald-700/25 font-bold text-sm text-white bg-primary hover:bg-primary-hover transition-all transform hover:-translate-y-1 mt-2" type="submit">
                     <span id="btn-text">Registrarse</span>
                     <svg id="btn-spinner" class="hidden animate-spin-slow h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -228,13 +307,13 @@
                     </svg>
                 </button>
                 
-                <div class="relative flex items-center py-2">
+                <div class="relative flex items-center py-1">
                     <div class="flex-grow border-t border-gray-200 dark:border-emerald-800/60"></div>
                     <span class="flex-shrink-0 mx-4 text-gray-400 dark:text-gray-500 text-xs font-bold">O</span>
                     <div class="flex-grow border-t border-gray-200 dark:border-emerald-800/60"></div>
                 </div>
                 
-                <button type="button" onclick="signInWithGoogle()" class="w-full flex justify-center items-center gap-3 py-2.5 px-4 mb-2 border border-gray-200 dark:border-emerald-800/60 rounded-xl shadow-sm text-sm font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-emerald-900/20 hover:bg-gray-50 dark:hover:bg-emerald-800/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-all transform hover:-translate-y-1">
+                <button type="button" onclick="signInWithGoogle()" class="w-full flex justify-center items-center gap-3 py-1.5 px-4 border border-gray-200 dark:border-emerald-800/60 rounded-xl shadow-sm text-xs font-bold text-gray-700 dark:text-gray-200 bg-white dark:bg-emerald-900/20 hover:bg-gray-50 dark:hover:bg-emerald-800/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-all transform hover:-translate-y-1">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                         <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -245,8 +324,8 @@
                 </button>
             </form>
 
-            <div class="mt-4 text-center">
-                <p class="text-gray-600 dark:text-gray-400 text-sm">
+            <div class="mt-1.5 text-center">
+                <p class="text-gray-600 dark:text-gray-400 text-xs">
                     ¿Ya tienes cuenta?
                     <a class="font-bold text-secondary dark:text-emerald-200 hover:text-primary ml-1" href="/login" onclick="goWithSlide(event, '/login', 'left')">Inicia sesión</a>
                 </p>
@@ -270,7 +349,7 @@
 </div>
 </main>
 
-<div id="cropper-modal" class="fixed inset-0 z-[100] hidden bg-black bg-opacity-80 flex items-center justify-center p-4 transition-opacity">
+<div id="cropper-modal" class="fixed inset-0 z-[99999] hidden bg-black bg-opacity-80 flex items-center justify-center p-4 transition-opacity">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
         <h3 class="text-xl font-bold text-secondary mb-4 text-center">Ajusta tu foto</h3>
         <p class="text-sm text-gray-500 text-center mb-4">Arrastra para mover o usa la rueda para acercar/alejar.</p>
@@ -292,7 +371,7 @@
     <h2 class="font-display font-black text-3xl text-primary drop-shadow-sm tracking-tight" id="overlay-text">¡Cuenta Creada!</h2>
 </div>
 
-<div id="info-modal" class="fixed inset-0 z-[1000] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+<div id="info-modal" class="fixed inset-0 z-[99999] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
     <div class="bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-2xl p-6 md:p-8 w-full max-w-2xl shadow-2xl overflow-y-auto max-h-[85vh]">
         <div class="flex justify-between items-center mb-5">
             <h3 id="modal-title" class="text-2xl font-display font-black text-secondary dark:text-white">Aviso de Privacidad</h3>
@@ -303,7 +382,7 @@
         <div id="modal-body-text" class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed text-justify space-y-4 font-medium">
         </div>
         <div class="mt-8 flex justify-end">
-            <button type="button" onclick="closeInfoModal()" class="py-2.5 px-6 font-bold text-white bg-primary hover:bg-primary-hover rounded-xl shadow-md transition-all">Aceptar y Cerrar</button>
+            <button type="button" onclick="closeInfoModal()" class="py-2.5 px-6 font-bold text-white bg-primary hover:bg-primary-hover rounded-xl shadow-md shadow-emerald-700/20 transition-all">Aceptar y Cerrar</button>
         </div>
     </div>
 </div>
@@ -610,7 +689,10 @@
             const provider = new GoogleAuthProvider();
 
             const result = await signInWithPopup(auth, provider);
-            const idToken = await result.user.getIdToken();
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+            const idToken = credential.idToken;
+            
+            if (!idToken) throw new Error("No se pudo obtener el token de Google.");
 
             const resp = await fetch('/auth/firebase', {
                 method: 'POST',

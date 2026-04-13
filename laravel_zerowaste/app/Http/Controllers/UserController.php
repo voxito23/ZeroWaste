@@ -32,24 +32,31 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'nombre' => 'required|string|min:11|max:100',
+            'nombre' => 'required|string|min:10|max:20',
             'email' => 'required|email|max:100|unique:usuarios',
             'password' => 'required|string|min:6',
-            'ubicacion' => 'required|string|max:150',
-            'titulo_perfil' => 'required|string|max:100',
+            'ubicacion' => 'required|string|min:10|max:20',
+            'titulo_perfil' => 'required|string|min:10|max:30',
+            'biografia' => 'nullable|string|max:100',
             'foto_perfil' => 'nullable|image|max:2048',
         ];
 
         $messages = [
             'nombre.required' => 'El nombre es obligatorio.',
-            'nombre.min' => 'El nombre debe tener al menos 11 caracteres.',
+            'nombre.min' => 'El nombre debe tener al menos 10 caracteres.',
+            'nombre.max' => 'El nombre no puede tener más de 20 caracteres.',
             'email.required' => 'El correo electrónico es obligatorio.',
             'email.email' => 'Debe ingresar un correo válido.',
             'email.unique' => 'Este correo ya está registrado.',
             'password.required' => 'La contraseña es obligatoria.',
             'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
             'ubicacion.required' => 'La ubicación es obligatoria.',
+            'ubicacion.min' => 'La ubicación debe tener al menos 10 caracteres.',
+            'ubicacion.max' => 'La ubicación no puede exceder los 20 caracteres.',
             'titulo_perfil.required' => 'El título del perfil es obligatorio.',
+            'titulo_perfil.min' => 'El título del perfil debe tener al menos 10 caracteres.',
+            'titulo_perfil.max' => 'El título del perfil no puede exceder los 30 caracteres.',
+            'biografia.max' => 'La biografía no puede exceder los 100 caracteres.',
             'foto_perfil.image' => 'El archivo debe ser una imagen.',
             'foto_perfil.max' => 'La imagen no debe pesar más de 2MB.',
             'foto_perfil.uploaded' => 'Error al subir la imagen. Intenta con una de menor tamaño.',
@@ -57,7 +64,7 @@ class UserController extends Controller
 
         $request->validate($rules, $messages);
 
-        $data = $request->only(['nombre', 'email', 'password', 'ubicacion', 'titulo_perfil']);
+        $data = $request->only(['nombre', 'email', 'password', 'ubicacion', 'titulo_perfil', 'biografia']);
         $data['is_admin'] = $request->has('is_admin') ? true : false;
         $data['auth_provider'] = 'local';
         $data['profile_completed'] = true;
@@ -92,23 +99,30 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $rules = [
-            'nombre' => 'required|string|min:11|max:100',
+            'nombre' => 'required|string|min:10|max:20',
             'email' => 'required|email|max:100|unique:usuarios,email,'.$user->id,
             'password' => 'nullable|string|min:6',
-            'ubicacion' => 'required|string|max:150',
-            'titulo_perfil' => 'required|string|max:100',
+            'ubicacion' => 'required|string|min:10|max:20',
+            'titulo_perfil' => 'required|string|min:10|max:30',
+            'biografia' => 'nullable|string|max:100',
             'foto_perfil' => 'nullable|image|max:2048',
         ];
 
         $messages = [
             'nombre.required' => 'El nombre es obligatorio.',
-            'nombre.min' => 'El nombre debe tener al menos 11 caracteres.',
+            'nombre.min' => 'El nombre debe tener al menos 10 caracteres.',
+            'nombre.max' => 'El nombre no puede tener más de 20 caracteres.',
             'email.required' => 'El correo electrónico es obligatorio.',
             'email.email' => 'Debe ingresar un correo válido.',
             'email.unique' => 'Este correo ya está registrado.',
             'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
             'ubicacion.required' => 'La ubicación es obligatoria.',
+            'ubicacion.min' => 'La ubicación debe tener al menos 10 caracteres.',
+            'ubicacion.max' => 'La ubicación no puede exceder los 20 caracteres.',
             'titulo_perfil.required' => 'El título del perfil es obligatorio.',
+            'titulo_perfil.min' => 'El título del perfil debe tener al menos 10 caracteres.',
+            'titulo_perfil.max' => 'El título del perfil no puede exceder los 30 caracteres.',
+            'biografia.max' => 'La biografía no puede exceder los 100 caracteres.',
             'foto_perfil.image' => 'El archivo debe ser una imagen.',
             'foto_perfil.max' => 'La imagen no debe pesar más de 2MB.',
             'foto_perfil.uploaded' => 'Error al subir la imagen. Intenta con una de menor tamaño.',
@@ -116,7 +130,7 @@ class UserController extends Controller
 
         $request->validate($rules, $messages);
 
-        $data = $request->only(['nombre', 'email', 'ubicacion', 'titulo_perfil']);
+        $data = $request->only(['nombre', 'email', 'ubicacion', 'titulo_perfil', 'biografia']);
         $data['is_admin'] = $request->has('is_admin') ? true : false;
 
         if ($request->filled('password')) {

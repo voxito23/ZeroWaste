@@ -3,7 +3,7 @@
 <div class="max-w-desktop mx-auto px-6 lg:px-10 py-10 relative z-10">
 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-12">
     <div class="flex flex-col gap-6 max-w-lg">
-        <div class="flex items-center gap-5" onclick="window.location.href='{{ url_for('index') }}'" style="cursor: pointer;">
+        <div class="flex items-center gap-5 cursor-pointer" data-href="{{ url_for('index') }}">
             <div class="bg-white/10 p-3 rounded-2xl glass-panel border border-white/20"><img alt="Logo" class="h-10 rounded-lg" src="/static/img/logo_texture.png"/></div>
             <div><h4 class="font-display font-black text-2xl tracking-tight">ZERO WASTE</h4><p class="text-primary font-bold text-sm">Clasifica y reduce para un futuro más verde.</p></div>
         </div>
@@ -25,6 +25,10 @@
 <script>
     if(!window.smartHeaderInitialized) {
         document.addEventListener("DOMContentLoaded", () => {
+            // Footer logo click
+            document.querySelectorAll('[data-href]').forEach(el => {
+                el.addEventListener('click', () => window.location.href = el.dataset.href);
+            });
             const header = document.getElementById("smart-header");
             let lastScrollY = window.scrollY;
             window.addEventListener("scroll", () => {

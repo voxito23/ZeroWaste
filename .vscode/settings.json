@@ -1,0 +1,26 @@
+{
+    // ── Built-in PHP validation ──────────────────────────────────────────
+    // Disable the built-in PHP validator — it produces false-positive
+    // PHP0417 / PHP0418 diagnostics for Laravel helper functions (env,
+    // config, view, etc.) and Query Builder methods (where, whereIn, etc.)
+    // because it doesn't understand the framework context.
+    "php.validate.enable": false,
+    "php.suggest.basic": false,
+    "php.problems.exclude": {
+        "**/laravel_zerowaste/**": true
+    },
+
+    // ── Intelephense (if installed) ──────────────────────────────────────
+    // Suppress false-positive "undefined function / method" diagnostics
+    // that occur because Intelephense may not fully index Laravel's
+    // vendor directory or understand dynamic facades/helpers.
+    "intelephense.diagnostics.undefinedFunctions": false,
+    "intelephense.diagnostics.undefinedMethods": false,
+    "intelephense.diagnostics.undefinedTypes": false,
+
+    // ── File exclusions ─────────────────────────────────────────────────
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/node_modules": true
+    }
+}

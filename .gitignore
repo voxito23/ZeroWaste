@@ -127,8 +127,14 @@ celerybeat.pid
 # SageMath parsed files
 *.sage.py
 
-# Environments
+# Environments & Secrets — NEVER commit these
 .env
+*.env
+.env.*
+!.env.example
+flask_zerowaste/.env
+fast_api/.env
+laravel_zerowaste/.env
 .venv
 env/
 venv/
@@ -181,3 +187,13 @@ cython_debug/
 .cursorindexingignore
 
 mysql_data/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# SQLite databases (generated at runtime)
+*.db
+
+# Node modules (frontend build tools)
+node_modules/

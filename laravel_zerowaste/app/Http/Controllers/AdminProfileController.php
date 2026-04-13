@@ -23,12 +23,15 @@ class AdminProfileController extends Controller
     {
         $request->validate([
             'foto_perfil' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'password_actual' => 'nullable|required_with:password|current_password',
             'password'    => 'nullable|string|min:6|confirmed',
         ], [
             'foto_perfil.image' => 'El archivo debe ser una imagen.',
             'foto_perfil.mimes' => 'La imagen debe ser de tipo jpeg, png, jpg o gif.',
             'foto_perfil.max' => 'La imagen no debe pesar más de 2MB.',
             'foto_perfil.uploaded' => 'Error al subir la imagen. Intenta con una de menor tamaño.',
+            'password_actual.required_with' => 'Debes ingresar tu contraseña actual para establecer una nueva.',
+            'password_actual.current_password' => 'La contraseña actual es incorrecta.',
             'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
             'password.confirmed' => 'Las contraseñas no coinciden.',
         ]);

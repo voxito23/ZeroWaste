@@ -27,6 +27,9 @@ class Usuario(Base):
     ubicacion = Column(String(100), default="Querétaro")
     intereses = Column(String(255), nullable=True)
     is_admin = Column(Boolean, default=False)
+    firebase_uid = Column(String(255), nullable=True, unique=True)
+    auth_provider = Column(String(50), default='local')
+    profile_completed = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     posts = relationship("Foro", back_populates="autor_rel")
@@ -132,7 +135,13 @@ class Campaign(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(150), nullable=False)
+    lugar = Column(String(200), nullable=True)
+    fecha_inicio = Column(DateTime, nullable=True)
+    fecha_fin = Column(DateTime, nullable=True)
     descripcion = Column(Text, nullable=False)
+    tipo_etiqueta = Column(String(50), nullable=True)
+    imagen_url = Column(String(255), nullable=True)
+    link_evento = Column(String(500), nullable=True)
     recompensa_puntos = Column(Integer, default=0)
     activa = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
@@ -173,6 +182,19 @@ class Evento(Base):
     descripcion = Column(Text, nullable=False)
     tipo_etiqueta = Column(String(50), nullable=True)
     imagen_url = Column(String(255), nullable=True)
+    link_evento = Column(String(500), nullable=True)
+
+
+# MODELO NOTIFICACION
+class Notificacion(Base):
+    __tablename__ = 'notificaciones'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    titulo = Column(String(255), nullable=False)
+    mensaje = Column(Text, nullable=False)
+    url = Column(String(255), nullable=True)
+    leida = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
 
 # TAREA 2: MODELOS DE CONTACTO Y RECUPERACIÓN (Migrados desde Flask)
@@ -209,7 +231,11 @@ class PasswordResetRequest(Base):
     
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(150), nullable=False)
+    temp_password_hash = Column(String(255), nullable=True)
+    expires_at = Column(DateTime, nullable=True)
+    usado = Column(Boolean, default=False)
     estado = Column(String(30), default='pendiente')
     notas = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+
 

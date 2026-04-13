@@ -10,3 +10,5 @@ python-multipart==0.0.22
 pydantic[email]==2.12.5
 pysentimiento==0.7.3
 pandas==2.2.3
+slowapi>=0.1.9
+matplotlib==3.10.8

@@ -294,11 +294,12 @@ class CalificacionResponse(BaseModel):
 class EventoCreate(BaseModel):
     titulo: str
     fecha_inicio: datetime
-    ubicacion: str
+    fecha_fin: datetime
+    lugar: str
     descripcion: str
-    categoria: Optional[str] = None
-    imagen: Optional[str] = None
-    link_unirse: Optional[str] = None
+    tipo_etiqueta: Optional[str] = None
+    imagen_url: Optional[str] = None
+    link_evento: Optional[str] = None
 
     model_config = {
         "json_schema_extra": {
@@ -306,11 +307,11 @@ class EventoCreate(BaseModel):
                 {
                     "titulo": "Limpieza del Parque Querétaro 2026",
                     "fecha_inicio": "2026-05-15T09:00:00",
-                    "ubicacion": "Parque Querétaro 2000, Querétaro",
+                    "lugar": "Parque Querétaro 2000, Querétaro",
                     "descripcion": "Jornada comunitaria de limpieza y reforestación en el parque principal.",
-                    "categoria": "Limpieza",
-                    "imagen": "limpieza_parque.jpg",
-                    "link_unirse": "https://zerowaste.com/eventos/limpieza-parque",
+                    "tipo_etiqueta": "Limpieza",
+                    "imagen_url": "limpieza_parque.jpg",
+                    "link_evento": "https://zerowaste.com/eventos/limpieza-parque",
                 }
             ]
         }
@@ -320,11 +321,12 @@ class EventoCreate(BaseModel):
 class EventoUpdate(BaseModel):
     titulo: Optional[str] = None
     fecha_inicio: Optional[datetime] = None
-    ubicacion: Optional[str] = None
+    fecha_fin: Optional[datetime] = None
+    lugar: Optional[str] = None
     descripcion: Optional[str] = None
-    categoria: Optional[str] = None
-    imagen: Optional[str] = None
-    link_unirse: Optional[str] = None
+    tipo_etiqueta: Optional[str] = None
+    imagen_url: Optional[str] = None
+    link_evento: Optional[str] = None
 
     model_config = {
         "json_schema_extra": {
@@ -332,11 +334,11 @@ class EventoUpdate(BaseModel):
                 {
                     "titulo": "Limpieza del Parque Querétaro 2026 (Reprogramado)",
                     "fecha_inicio": "2026-06-01T10:00:00",
-                    "ubicacion": "Parque Querétaro 2000, Querétaro",
+                    "lugar": "Parque Querétaro 2000, Querétaro",
                     "descripcion": "Evento reprogramado. Jornada comunitaria de limpieza y reforestación.",
-                    "categoria": "Limpieza",
-                    "imagen": "limpieza_parque_v2.jpg",
-                    "link_unirse": "https://zerowaste.com/eventos/limpieza-parque-v2",
+                    "tipo_etiqueta": "Limpieza",
+                    "imagen_url": "limpieza_parque_v2.jpg",
+                    "link_evento": "https://zerowaste.com/eventos/limpieza-parque-v2",
                 }
             ]
         }
@@ -347,11 +349,12 @@ class EventoResponse(BaseModel):
     id: int
     titulo: str
     fecha_inicio: datetime
-    ubicacion: str
+    lugar: str
+    fecha_fin: Optional[datetime] = None
     descripcion: str
-    categoria: Optional[str] = None
-    imagen: Optional[str] = None
-    link_unirse: Optional[str] = None
+    tipo_etiqueta: Optional[str] = None
+    imagen_url: Optional[str] = None
+    link_evento: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

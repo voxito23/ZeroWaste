@@ -50,8 +50,29 @@ def api_contacto(data: ContactMessageCreate, db: Session = Depends(get_db)):
 
 @router.post("/forgot-password", response_model=MessageResponse)
 def api_forgot_password(data: PasswordResetRequestCreate, db: Session = Depends(get_db)):
-    """Registra solicitud de recuperación de contraseña en PostgreSQL."""
-    nueva = PasswordResetRequest(email=data.email)
-    db.add(nueva)
-    db.commit()
-    return MessageResponse(success=True, message="Solicitud registrada. Nuestro equipo se pondrá en contacto contigo.")
+    """
+    Recuperación de contraseña — delega al servicio Flask que envía el email real.
+    Este endpoint actúa como proxy para mantener la arquitectura API-first.
+    """
+    import requests
+    try:
+        # Reenviar la solicitud al servicio Flask que maneja el SMTP
+        flask_url = "http://flask_app:5000/forgot-password"
+        response = requests.post(flask_url, json={"email": data.email}, timeout=30)
+        result = response.json()
+        
+        if result.get("success"):
+            return MessageResponse(success=True, message=result.get("message", "Contraseña temporal enviada a tu correo."))
+        else:
+            from fastapi import HTTPException
+            raise HTTPException(
+                status_code=response.status_code,
+                detail=result.get("error", "Error al procesar la solicitud.")
+            )
+    except requests.exceptions.ConnectionError:
+        from fastapi import HTTPException
+        raise HTTPException(
+            status_code=503,
+            detail="El servicio de correo no está disponible en este momento."
+        )
+

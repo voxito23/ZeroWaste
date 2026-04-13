@@ -10,9 +10,11 @@ services:
     volumes:
       - ./flask_zerowaste:/app
       - perfiles_compartidos:/app/static/img/perfiles
+    env_file:
+      - ./flask_zerowaste/.env
     environment:
-      - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/zerowaste_db
-      - PUBLIC_API_URL=http://167.99.239.121:6001
+      - FLASK_DEBUG=false
+      - HTTPS_ENABLED=false
     depends_on:
       db:
         condition: service_healthy
@@ -50,10 +52,10 @@ services:
     volumes:
       - ./fast_api:/app
       - perfiles_compartidos:/app/static/img/perfiles
+    env_file:
+      - ./fast_api/.env
     environment:
-      - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/zerowaste_db
-      - JWT_SECRET_KEY=zerowaste_super_secret_jwt_2026
-      - JWT_EXPIRE_MINUTES=60
+      - APP_ENV=development
     depends_on:
       db:
         condition: service_healthy

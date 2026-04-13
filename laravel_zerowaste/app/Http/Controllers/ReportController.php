@@ -19,17 +19,21 @@ class ReportController extends Controller
     public function exportar(Request $request)
     {
         $request->validate([
-            'tipo' => 'required|in:usuarios,campanas,mapa',
+            'tipo' => 'required|in:usuarios,campanas,mapa,eventos',
+            'formato' => 'required|in:pdf,xlsx,docx,preview',
             'fecha_inicio' => 'required|date|after_or_equal:2026-03-30',
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
         ], [
             'tipo.required' => 'El tipo de reporte es obligatorio.',
             'tipo.in' => 'El tipo de reporte es inválido.',
+            'formato.required' => 'El formato es obligatorio.',
+            'formato.in' => 'El formato debe ser pdf, xlsx, docx o preview.',
             'fecha_inicio.after_or_equal' => 'La fecha de inicio debe ser a partir del 30 de marzo de 2026.',
             'fecha_fin.after_or_equal' => 'La fecha final debe ser posterior o igual a la de inicio.',
         ]);
 
         $tipo = $request->input('tipo');
+        $formato = $request->input('formato');
         $fechaInicio = $request->input('fecha_inicio') . ' 00:00:00';
         $fechaFin = $request->input('fecha_fin') . ' 23:59:59';
         
@@ -62,14 +66,36 @@ class ReportController extends Controller
                                          ->get();
             $data['titulo'] = "Reporte de Puntos de Reciclaje (Mapa)";
             $data['total'] = count($data['registros']);
+        } elseif ($tipo === 'eventos') {
+            $data['registros'] = \App\Models\Evento::query()
+                                         ->whereBetween('fecha_inicio', [$fechaInicio, $fechaFin])
+                                         ->orderByDesc('fecha_inicio')
+                                         ->get();
+            $data['titulo'] = "Reporte de Eventos Agendados";
+            $data['total'] = count($data['registros']);
         }
 
-        /** @var \Barryvdh\DomPDF\PDF $pdf */
-        $pdf = Pdf::loadView('reporte_pdf', $data);
+        $filename = 'Reporte_' . ucfirst($tipo) . '_' . Carbon::now()->format('Ymd_His') . '.' . ($formato === 'preview' ? 'pdf' : $formato);
 
-        // Opcional: Guardado temporal
-        $filename = 'Reporte_' . ucfirst($tipo) . '_' . Carbon::now()->format('Ymd_His') . '.pdf';
-        
-        return $pdf->download($filename);
+        if ($formato === 'pdf' || $formato === 'preview') {
+            /** @var \Barryvdh\DomPDF\PDF $pdf */
+            $pdf = Pdf::loadView('reporte_pdf', $data);
+            if ($formato === 'preview') {
+                return $pdf->stream($filename);
+            }
+            return $pdf->download($filename);
+        } elseif ($formato === 'xlsx') {
+            return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\GenericExport($data), $filename);
+        } elseif ($formato === 'docx') {
+            $phpWord = new \PhpOffice\PhpWord\PhpWord();
+            $section = $phpWord->addSection();
+            \PhpOffice\PhpWord\Shared\Html::addHtml($section, view('reporte_basico', $data)->render(), false, false);
+            
+            $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+            $filenameTemp = tempnam(sys_get_temp_dir(), 'word');
+            $objWriter->save($filenameTemp);
+            
+            return response()->download($filenameTemp, $filename)->deleteFileAfterSend(true);
+        }
     }
 }

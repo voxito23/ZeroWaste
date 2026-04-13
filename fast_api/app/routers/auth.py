@@ -1,17 +1,25 @@
 """
 Router de autenticación — login y registro con JWT.
+Incluye rate limiting y validación estricta de inputs.
 """
 
 import os
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form
+from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.data.database import get_db
 from app.models.domain_models import Usuario
 from app.models.schemas import Token, UsuarioResponse, MessageResponse
 from app.security.jwt_auth import verify_password, hash_password, create_access_token
+
+# Constantes de seguridad
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5MB
 
 UPLOAD_DIR = "/app/static/img/perfiles"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -86,7 +94,23 @@ def registro(
         )
 
     # B) Guardado de Imagen en la Nueva Ruta
-    extension = foto_perfil.filename.split(".")[-1] if "." in foto_perfil.filename else "png"
+    # Validar extensión de archivo
+    extension = foto_perfil.filename.rsplit(".", 1)[-1].lower() if "." in foto_perfil.filename else ""
+    if extension not in ALLOWED_IMAGE_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Formato de imagen no permitido. Usa: {', '.join(ALLOWED_IMAGE_EXTENSIONS)}",
+        )
+
+    # Validar tamaño de archivo
+    contents = foto_perfil.file.read()
+    if len(contents) > MAX_UPLOAD_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="La imagen no debe superar 5MB.",
+        )
+    foto_perfil.file.seek(0)
+
     nombre_archivo_unico = f"{uuid.uuid4().hex}.{extension}"
     ruta_destino = f"{UPLOAD_DIR}/{nombre_archivo_unico}"
 

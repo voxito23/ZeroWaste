@@ -46,10 +46,10 @@ def _verify_bcrypt(plain_password: str, hashed_password: str) -> bool:
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
-    Verifica la contraseña contra múltiples formatos de hash:
+    Verifica la contraseña contra formatos de hash seguros:
       1. bcrypt ($2b$ / $2y$) — hashes de Laravel.
       2. pbkdf2:sha256 — hashes de werkzeug / Flask.
-      3. Texto plano — contraseñas legacy almacenadas sin hash.
+    NOTA: NO se acepta comparación en texto plano (eliminado por seguridad).
     """
     # 1. Hash bcrypt (Laravel)
     if hashed_password.startswith(("$2b$", "$2y$", "$2a$")):
@@ -59,13 +59,14 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
             return False
 
     # 2. Hash werkzeug / pbkdf2 (Flask)
-    try:
-        return check_password_hash(hashed_password, plain_password)
-    except Exception:
-        pass
+    if hashed_password.startswith("pbkdf2:"):
+        try:
+            return check_password_hash(hashed_password, plain_password)
+        except Exception:
+            return False
 
-    # 3. Contraseñas legacy almacenadas sin hash
-    return plain_password == hashed_password
+    # Cualquier otro formato se rechaza por seguridad
+    return False
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:

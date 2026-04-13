@@ -65,11 +65,11 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: "#00E096",
-                        "primary-hover": "#00C281",
+                        primary: '#059669', /* Emerald 600 - Matte, Deep UI Green */
+                        'primary-hover': '#047857', /* Emerald 700 */
                         secondary: "#064E3B",
                         "forest-dark": "#022C22",
-                        "surface-light": "#ECFDF5",
+                        "surface-light": "#F8FAFC",
                         "surface-dark": "#062C25",
                         "text-light": "#064E3B",
                         "text-dark": "#D1FAE5",
@@ -79,7 +79,11 @@
                         sans: ['Inter', 'sans-serif'],
                         display: ['Montserrat', 'sans-serif'],
                     },
-                    maxWidth: { 'desktop': '1440px' }
+                    maxWidth: { 'desktop': '1440px' },
+                    animation: {
+                        'slow-spin': 'spin 4s linear infinite',
+                        'glow-pulse': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
                 },
             },
         };
@@ -92,9 +96,9 @@
           --text-main: #064E3B;
           --text-sec: #475569;
           --border-color: #e2e8f0;
-          --green-primary: #00FF7F; /* FASE 1: Verde Primera / Neón vibrante */
-          --green-hover: #00FA9A;
-          --green-bg-light: rgba(0, 255, 127, 0.15);
+          --green-primary: #059669; /* Emerald 600 */
+          --green-hover: #047857;   /* Emerald 700 */
+          --green-bg-light: rgba(5, 150, 105, 0.15);
         }
 
         /* --- Variables Modo Oscuro Ergonómico (Anti-Fatiga Visual) --- */
@@ -104,9 +108,9 @@
           --text-main: #D1FAE5;
           --text-sec: #A7F3D0;
           --border-color: #333333;
-          --green-primary: #00FA9A; /* FASE 1: Resplandor Neón en Oscuro */
-          --green-hover: #2ecc71;
-          --green-bg-light: rgba(0, 250, 154, 0.15);
+          --green-primary: #10B981; /* Emerald 500 (Enough for dark mode legibility, no neon) */
+          --green-hover: #059669;   /* Emerald 600 */
+          --green-bg-light: rgba(16, 185, 129, 0.15);
         }
         
         
@@ -114,6 +118,52 @@
             background-color: var(--bg-main);
             color: var(--text-main);
         }
+
+        /* --- Barra de Desplazamiento Transparente y Flotante --- */
+        ::-webkit-scrollbar {
+            width: 14px;
+            height: 14px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #ECFDF5;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #34D399, #059669);
+            border-radius: 10px;
+            border: 4px solid #ECFDF5;
+            background-clip: padding-box;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #10B981, #047857);
+            border: 3px solid #ECFDF5;
+        }
+        ::-webkit-scrollbar-button {
+            display: none;
+        }
+
+        /* Variante Oscura — track y borde con color explícito */
+        .dark ::-webkit-scrollbar-track {
+            background: #062C25;
+        }
+        .dark ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #059669, #022C22);
+            border: 4px solid #062C25;
+            background-clip: padding-box;
+        }
+        .dark ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #34D399, #059669);
+            border: 3px solid #062C25;
+        }
+
+        /* Soporte para Firefox */
+        html {
+            scrollbar-width: thin;
+            scrollbar-color: #10B981 #ECFDF5;
+        }
+        html.dark {
+            scrollbar-color: #059669 #062C25;
+        }
+        
         
         a, button, .transition-base {
           transition: all 0.3s ease;
@@ -123,11 +173,25 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .no-hyphens { hyphens: none !important; word-break: keep-all !important; overflow-wrap: normal !important; }
 
-        /* Mejora global de renderizado de imágenes para evitar pixeleo */
-        img { 
-            image-rendering: -webkit-optimize-contrast; 
-            image-rendering: high-quality; 
+        /* Perpetual Draw — en dark mode reemplazar el barrido tipo "radar" 
+           por un brillo parejo de borde esmeralda, sutil y elegante */
+        .dark .animate-slow-spin {
+            background: conic-gradient(
+                from 0deg,
+                rgba(5, 150, 105, 0.15) 0deg,
+                rgba(16, 185, 129, 0.4) 90deg,
+                rgba(5, 150, 105, 0.15) 180deg,
+                rgba(16, 185, 129, 0.4) 270deg,
+                rgba(5, 150, 105, 0.15) 360deg
+            ) !important;
+            opacity: 0.6 !important;
+            transition: opacity 0.5s ease;
         }
+        .dark .group:hover .animate-slow-spin {
+            opacity: 1 !important;
+        }
+
+
 
         /* BOTÓN TEMA */
         .theme-toggle-btn { background: transparent; border: none; box-shadow: none; }
@@ -223,6 +287,8 @@
             {% include 'includes/footer.html' %}
         {% endif %}
     </div>
+    
+    {% block modals %}{% endblock %}
     
     {% block scripts %}{% endblock %}
 

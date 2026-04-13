@@ -60,7 +60,7 @@
 {% block content %}
 
 
-<main class="relative z-10 max-w-desktop mx-auto px-6 lg:px-10 py-12 pt-24 text-left flex-grow">
+<main class="relative z-10 max-w-desktop mx-auto px-6 lg:px-10 pb-12 pt-28 md:pt-32 text-left flex-grow">
 <nav class="flex flex-col gap-4 mb-8">
 <ol class="flex items-center space-x-2 text-sm font-medium text-gray-500 dark:text-gray-400">
 <li><a class="hover:text-primary transition-colors" href="{{ url_for('index') }}">Inicio</a></li>
@@ -71,7 +71,7 @@
 </ol>
 
 <div class="mb-10 -mt-2">
-<a href="{{ url_for('foro') }}" class="inline-flex items-center gap-3 text-secondary dark:text-primary font-black text-xl lg:text-2xl group hover:text-primary-hover dark:hover:text-white transition-colors z-10 w-fit">
+<a href="{{ url_for('foro') }}" class="inline-flex items-center gap-3 text-[#10B981] font-black text-xl lg:text-2xl group hover:text-[#34D399] transition-all z-10 w-fit drop-shadow-[0_0_8px_rgba(16,185,129,0.4)] hover:drop-shadow-[0_0_15px_rgba(52,211,153,0.8)]">
     <span class="material-symbols-outlined text-4xl transition-transform group-hover:-translate-x-2 z-10 relative">arrow_left_alt</span>
     <span class="border-b-2 border-current pb-1">Regresar al foro</span>
 </a>
@@ -116,31 +116,43 @@
     'Eventos': 'border-violet-500 bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 dark:border-violet-400',
     'Dudas': 'border-rose-500 bg-rose-50 dark:bg-rose-900/20 text-rose-700 dark:text-rose-300 dark:border-rose-400'
 } %}
-<article class="bg-white dark:bg-white/5 border-2 {{ colores_cat[post.categoria_rel.nombre] | default('border-gray-300 dark:border-gray-600') }} rounded-[2rem] p-8 md:p-10 shadow-xl {{ glow_cat[post.categoria_rel.nombre] | default('') }} relative overflow-hidden">
-<div class="absolute top-0 left-0 w-full h-[2px] {{ bg_cat[post.categoria_rel.nombre] | default('bg-gray-300 dark:bg-gray-600') }}"></div>
-<div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-<div class="flex items-center gap-4">
-    <img alt="{{ post.autor_rel.nombre }}" class="w-14 h-14 rounded-full border-2 border-emerald-50 object-cover shadow-sm" src="{{ post.autor_rel.foto_perfil if 'http' in post.autor_rel.foto_perfil|string else url_for('static', filename='img/perfiles/' ~ post.autor_rel.foto_perfil) if post.autor_rel.foto_perfil else url_for('static', filename='img/perfiles/perfil_default.png') }}"/>
-<div>
-<h3 class="font-bold text-secondary dark:text-white text-lg leading-tight">{{ post.autor_rel.nombre }}</h3>
-<div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-<span>Miembro</span>
-<span class="w-1 h-1 bg-gray-300 rounded-full"></span>
-<span>{{ post.created_at | datetime_mx }}</span>
-</div>
-</div>
-</div>
-<span class="px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider self-start md:self-center flex items-center gap-1 border {{ badge_colors[post.categoria_rel.nombre] | default('bg-emerald-100 text-secondary') }}">
-    <span class="material-symbols-outlined text-sm">{{ icon_cat[post.categoria_rel.nombre] | default('forum') }}</span>
-    {{ post.categoria_rel.nombre }}
-</span>
-</div>
-<h1 class="font-display text-3xl md:text-4xl font-black text-secondary dark:text-white mb-6 leading-tight">
-    {{ post.titulo }}
-</h1>
-<div class="prose prose-lg prose-emerald dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 mb-8 no-hyphens contenido-post" style="white-space: pre-wrap;">
-{{ post.contenido | safe }}
-</div>
+    {% set draw_cat = {
+        'Reciclaje': 'bg-[conic-gradient(from_0deg,transparent_0_300deg,#f59e0b_360deg)]',
+        'Compostaje': 'bg-[conic-gradient(from_0deg,transparent_0_300deg,#10b981_360deg)]',
+        'Reducción de residuos': 'bg-[conic-gradient(from_0deg,transparent_0_300deg,#06b6d4_360deg)]',
+        'Eventos': 'bg-[conic-gradient(from_0deg,transparent_0_300deg,#8b5cf6_360deg)]',
+        'Dudas': 'bg-[conic-gradient(from_0deg,transparent_0_300deg,#f43f5e_360deg)]'
+    } %}
+    <div class="relative rounded-[2rem] p-[3px] shadow-xl overflow-hidden {{ glow_cat[post.categoria_rel.nombre] | default('') }}">
+        <div class="absolute inset-0 z-0 overflow-hidden rounded-[2rem]">
+            <div class="absolute left-1/2 top-1/2 w-[250%] aspect-square -translate-x-1/2 -translate-y-1/2 opacity-80 transition-opacity">
+                <div class="w-full h-full animate-slow-spin {{ draw_cat[post.categoria_rel.nombre] | default('bg-[conic-gradient(from_0deg,transparent_0_300deg,#d1d5db_360deg)]') }}"></div>
+            </div>
+        </div>
+        <article class="relative z-10 bg-white dark:bg-[#022018] w-full h-full rounded-[1.85rem] p-8 md:p-10 flex flex-col">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                <div class="flex items-center gap-4">
+                    <img alt="{{ post.autor_rel.nombre }}" class="w-14 h-14 rounded-full border-2 border-emerald-50 object-cover shadow-sm" src="{{ post.autor_rel.foto_perfil if 'http' in post.autor_rel.foto_perfil|string else url_for('static', filename='img/perfiles/' ~ post.autor_rel.foto_perfil) if post.autor_rel.foto_perfil else url_for('static', filename='img/perfiles/perfil_default.png') }}"/>
+                    <div>
+                        <h3 class="font-bold text-secondary dark:text-white text-lg leading-tight">{{ post.autor_rel.nombre }}</h3>
+                        <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                            <span>Miembro</span>
+                            <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                            <span>{{ post.created_at | datetime_mx }}</span>
+                        </div>
+                    </div>
+                </div>
+                <span class="px-4 py-1.5 rounded-full text-sm font-bold uppercase tracking-wider self-start md:self-center flex items-center gap-1 border {{ badge_colors[post.categoria_rel.nombre] | default('bg-emerald-100 text-secondary') }}">
+                    <span class="material-symbols-outlined text-sm">{{ icon_cat[post.categoria_rel.nombre] | default('forum') }}</span>
+                    {{ post.categoria_rel.nombre }}
+                </span>
+            </div>
+            <h1 class="font-display text-3xl md:text-4xl font-black text-secondary dark:text-white mb-6 leading-tight">
+                {{ post.titulo }}
+            </h1>
+            <div class="prose prose-lg prose-emerald dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 mb-8 no-hyphens contenido-post" style="white-space: pre-wrap;">
+            {{ post.contenido | safe }}
+            </div>
 {% if post.imagen %}
 <div class="rounded-2xl overflow-hidden mb-8 shadow-md border border-gray-100 dark:border-white/10">
     <img alt="Post Imagen" class="w-full h-auto max-h-[500px] object-cover hover:scale-105 transition-transform duration-700" src="/static/img/posts/{{ post.imagen }}"/>
@@ -159,6 +171,7 @@
 </div>
 </div>
 </article>
+</div>
 
 <section id="respuestas" class="space-y-6">
 <div class="flex items-center justify-between px-2">
@@ -202,7 +215,7 @@
         
         <div class="flex justify-end gap-3 mt-4">
             <button type="button" onclick="toggleReplyForm()" class="px-6 py-2 rounded-full text-secondary dark:text-gray-300 font-bold hover:bg-gray-100 dark:hover:bg-white/10 transition-colors">Cancelar</button>
-            <button type="submit" class="px-8 py-2 rounded-full bg-primary text-secondary font-bold hover:bg-primary-hover shadow-md transition-all flex items-center gap-2">
+            <button type="submit" class="px-8 py-2 rounded-full bg-primary !text-white font-bold hover:bg-primary-hover shadow-md transition-all flex items-center gap-2">
                 Enviar <span class="material-symbols-outlined text-lg">send</span>
             </button>
         </div>
@@ -210,7 +223,7 @@
 </div>
 
 <!-- Modal Confirmación Respuesta -->
-<div id="confirmReplyModal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4">
+<div id="confirmReplyModal" class="fixed inset-0 z-[99999] hidden items-center justify-center p-4">
     <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="cerrarReplyModal()"></div>
     <div class="relative bg-white dark:bg-forest-dark rounded-3xl border border-gray-100 dark:border-emerald-800 p-8 shadow-2xl max-w-sm w-full text-center">
         <span class="material-symbols-outlined text-5xl text-emerald-400 mb-4 block animate-bounce">send</span>
@@ -218,7 +231,7 @@
         <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Tu consejo ayudará a la comunidad a ser más ecológica.</p>
         <div class="flex justify-center gap-4">
             <button type="button" onclick="cerrarReplyModal()" class="font-bold text-gray-500 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/5 py-2 px-4 rounded-full transition-colors">Cancelar</button>
-            <button type="button" onclick="confirmarReply()" class="font-bold bg-primary text-secondary hover:bg-primary-hover py-2 px-6 rounded-full transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-sm">check</span> Sí, enviar</button>
+            <button type="button" onclick="confirmarReply()" class="font-bold bg-primary !text-white hover:bg-primary-hover py-2 px-6 rounded-full transition-colors flex items-center gap-2"><span class="material-symbols-outlined text-sm">check</span> Sí, enviar</button>
         </div>
     </div>
 </div>

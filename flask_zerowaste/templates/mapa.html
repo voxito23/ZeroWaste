@@ -23,8 +23,12 @@
         <div class="flex flex-col lg:flex-row gap-4 lg:gap-6 h-[85vh] min-h-[600px]">
 
             <!-- Panel Lateral -->
-            <div class="w-full lg:w-96 h-[45%] lg:h-auto shrink-0 bg-white dark:bg-forest-dark/95 backdrop-blur-md rounded-2xl shadow-[0_15px_40px_rgba(0,0,0,0.12)] border-[3px] border-emerald-400 dark:border-primary flex flex-col overflow-hidden relative z-10">
-                <div class="p-6 pb-3">
+            <div class="relative w-full lg:w-96 h-[45%] lg:h-auto shrink-0 rounded-2xl p-[3px] overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.12)] z-10 group flex flex-col">
+                <!-- Perpetual Draw Animated Layer -->
+                <div class="absolute -inset-[150%] z-0 bg-[conic-gradient(from_0deg,transparent_0_300deg,var(--green-primary)_360deg)] animate-slow-spin opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                <!-- Inner Solid Card -->
+                <div class="relative z-10 bg-white dark:bg-forest-dark/95 backdrop-blur-md w-full h-full flex-1 rounded-[0.85rem] flex flex-col overflow-hidden">
+                    <div class="p-6 pb-3">
                     <h2 class="font-display font-bold text-2xl text-secondary dark:text-white mb-4">Puntos de Reciclaje</h2>
                     <div class="relative flex items-center rounded-full shadow-md bg-white/90 dark:bg-emerald-900/40 border-2 border-transparent focus-within:border-primary transition duration-300">
                         <span class="pl-4 flex items-center pointer-events-none">
@@ -125,10 +129,16 @@
                     </div>
                 </div>
             </div>
+            </div>
 
             <!-- Mapa -->
-            <div class="flex-1 min-h-[50%] lg:min-h-0 rounded-2xl overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.12)] border-[3px] border-emerald-400 dark:border-primary relative z-0">
-                <div id="map-container" class="w-full h-full z-0"></div>
+            <div class="relative flex-1 flex flex-col min-h-[50%] lg:min-h-0 rounded-2xl p-[3px] overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.12)] z-0 group">
+                <!-- Perpetual Draw Animated Layer -->
+                <div class="absolute -inset-[150%] z-0 bg-[conic-gradient(from_0deg,transparent_0_300deg,var(--green-primary)_360deg)] animate-slow-spin opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+                <!-- Inner Solid Card -->
+                <div class="relative z-10 bg-gray-50 dark:bg-forest-dark w-full h-full flex-1 rounded-[0.85rem] overflow-hidden flex flex-col">
+                    <div id="map-container" class="w-full h-full flex-1 z-0 relative"></div>
+                </div>
             </div>
 
         </div>
@@ -169,7 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const imgHtml = `<img src="/static/img/${p.imagen || 'default_punto.png'}" alt="Punto image" style="width:100%; height:120px; object-fit:cover; border-radius:12px; margin-bottom:8px;">`;
             
             // Estrellas interactivas
-            let starsHtml = `<div class="rating-stars mb-2" data-id="${p.id}" style="display:flex; justify-content:center; gap:4px;">`;
+            let starsHtml = `<div class="rating-stars mb-2" data-id="${p.id}" data-promedio="${Math.round(p.promedio)}" style="display:flex; justify-content:center; gap:4px;">`;
             for (let i = 1; i <= 5; i++) {
                 const titles = ["1 - Muy Malo", "2 - Malo", "3 - Regular", "4 - Bueno", "5 - Excelente"];
                 starsHtml += `<span class="material-symbols-outlined star-btn cursor-pointer transition-transform duration-200 hover:scale-125 hover:text-amber-500 ${i <= Math.round(p.promedio) ? 'text-amber-400' : 'text-gray-300'}" data-val="${i}" title="${titles[i-1]}" style="font-variation-settings: 'FILL' 1; font-size:24px;">star</span>`;
@@ -178,7 +188,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let reviewBoxHtml = `<div id="review-box-${p.id}" style="display:none;" class="mb-2">
                 <textarea id="review-text-${p.id}" placeholder="Escribe tu reseña..." class="w-full text-xs rounded-lg p-2 border border-gray-300 dark:border-emerald-800 bg-white dark:bg-forest-dark text-secondary dark:text-white focus:ring-1 focus:ring-primary focus:outline-none placeholder-gray-400"></textarea>
-                <button class="send-review-btn mt-1 w-full bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg border-0 p-1.5 font-bold text-xs cursor-pointer shadow-md transition-colors" data-id="${p.id}">Enviar Reseña</button>
+                <button class="send-review-btn mt-1 w-full bg-primary hover:bg-primary-hover !text-white rounded-lg border-0 p-1.5 font-bold text-xs cursor-pointer shadow-md transition-colors" data-id="${p.id}">Enviar Reseña</button>
             </div>`;
 
             let resenasHtml = `<div id="resenas-list-${p.id}" class="max-h-[100px] overflow-y-auto text-left bg-gray-50 dark:bg-emerald-900/30 p-2.5 rounded-xl border border-gray-200 dark:border-emerald-800/50 no-scrollbar mt-2">
@@ -206,7 +216,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         ${reviewBoxHtml}
                         ${resenasHtml}
                         <a href="https://www.google.com/maps/search/?api=1&query=${p.latitud},${p.longitud}" target="_blank"
-                           class="inline-block bg-primary hover:bg-primary-hover text-secondary px-4 py-2 mt-3 rounded-full text-[11px] font-black tracking-wide shadow-lg hover:-translate-y-0.5 transition-transform no-underline uppercase">
+                           class="inline-block bg-primary hover:bg-primary-hover !text-white px-4 py-2 mt-3 rounded-full text-[11px] font-black tracking-wide shadow-lg hover:-translate-y-0.5 transition-transform no-underline uppercase">
                             📍 Ir con Maps
                         </a>
                     </div>
@@ -222,6 +232,44 @@ document.addEventListener("DOMContentLoaded", () => {
         let valSelected = {};
 
         // Agregar evento a estrellas globalmente
+        document.addEventListener('mouseover', function(e) {
+            if (e.target.classList.contains('star-btn')) {
+                const val = e.target.dataset.val;
+                const container = e.target.closest('.rating-stars');
+                const stars = container.querySelectorAll('.star-btn');
+                stars.forEach(s => {
+                    if (s.dataset.val <= val) {
+                        s.classList.add('text-amber-400');
+                        s.classList.remove('text-gray-300');
+                    } else {
+                        s.classList.remove('text-amber-400');
+                        s.classList.add('text-gray-300');
+                    }
+                });
+            }
+        });
+
+        document.addEventListener('mouseout', function(e) {
+            if (e.target.classList.contains('star-btn')) {
+                const container = e.target.closest('.rating-stars');
+                const id = container.dataset.id;
+                const origAvg = parseInt(container.dataset.promedio || 0);
+                const selectedVal = valSelected[id];
+                const activeVal = selectedVal ? selectedVal : origAvg;
+                
+                const stars = container.querySelectorAll('.star-btn');
+                stars.forEach(s => {
+                    if (s.dataset.val <= activeVal) {
+                        s.classList.add('text-amber-400');
+                        s.classList.remove('text-gray-300');
+                    } else {
+                        s.classList.remove('text-amber-400');
+                        s.classList.add('text-gray-300');
+                    }
+                });
+            }
+        });
+
         document.addEventListener('click', function(e) {
             if (e.target.classList.contains('star-btn')) {
                 const val = e.target.dataset.val;
@@ -246,6 +294,16 @@ document.addEventListener("DOMContentLoaded", () => {
                         s.classList.add('text-gray-300');
                     }
                 });
+                
+                // Mágicamente actualizar el texto de "⭐ X (X reseñas)" para dar feedback visual al instante
+                const infoLabel = document.querySelector('.rating-info-' + id);
+                if (infoLabel) {
+                    // Mantener formato original pero cambiar el número y dar pistas "Tu calificación"
+                    const currentHtml = infoLabel.innerHTML;
+                    const matches = currentHtml.match(/\(([^)]+)\)/); // match anything inside parenthesis e.g. "(0 reseñas)"
+                    const reseñasText = matches ? matches[0] : "";
+                    infoLabel.innerHTML = `⭐ ${val}.0 <span class="text-[10px] text-emerald-600 dark:text-emerald-400 ml-1 font-bold">Tu calificación</span> ${reseñasText}`;
+                }
             } else if (e.target.classList.contains('send-review-btn')) {
                 const id = e.target.dataset.id;
                 const val = valSelected[id];

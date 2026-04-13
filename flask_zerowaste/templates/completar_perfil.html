@@ -18,112 +18,141 @@
 {% endblock %}
 
 {% block content %}
-<main class="flex-grow pt-28 pb-16 bg-surface-light dark:bg-surface-dark transition-colors duration-300">
+<main class="flex-grow pt-20 pb-8 bg-surface-light dark:bg-surface-dark transition-colors duration-300">
 <div class="max-w-6xl mx-auto px-6">
-    <div class="bg-white dark:bg-forest-dark rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-emerald-100 dark:border-emerald-800 p-8 md:p-10 overflow-hidden relative">
+    <div class="bg-white dark:bg-forest-dark rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-emerald-100 dark:border-emerald-800 p-6 md:p-8 overflow-hidden relative">
         <div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2"></div>
-        <div class="text-center mb-8 relative z-10">
-            <div class="inline-flex p-1 rounded-full bg-gradient-to-br from-primary to-emerald-600 mb-4 shadow-lg shadow-emerald-400/20">
-                <div class="h-20 w-20 rounded-full bg-white dark:bg-forest-dark flex items-center justify-center overflow-hidden border-4 border-white dark:border-forest-dark relative">
-                    <span class="material-symbols-outlined text-gray-200 dark:text-emerald-900/40 text-5xl absolute z-0">person</span>
+        <div class="text-center mb-5 relative z-10">
+            <div class="inline-flex p-1 rounded-full bg-gradient-to-br from-primary to-emerald-600 mb-2 shadow-lg shadow-emerald-400/20">
+                <div class="h-16 w-16 rounded-full bg-white dark:bg-forest-dark flex items-center justify-center overflow-hidden border-4 border-white dark:border-forest-dark relative">
+                    <span class="material-symbols-outlined text-gray-200 dark:text-emerald-900/40 text-4xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">person</span>
                     {% set avatar_src = usuario.foto_perfil if usuario.foto_perfil and usuario.foto_perfil.startswith('http') else ('/static/img/perfiles/' + usuario.foto_perfil if usuario.foto_perfil and usuario.foto_perfil != 'None' else '') %}
                     <img id="preview-avatar" src="{{ avatar_src }}" alt="Avatar" class="h-full w-full object-cover relative z-10 {% if not avatar_src %}hidden{% endif %}" onerror="this.style.display='none';">
                 </div>
             </div>
-            <h1 class="font-display font-black text-3xl md:text-4xl text-secondary dark:text-white mb-1">¡Bienvenido, <span class="text-primary">{{ usuario.nombre.split(' ')[0] }}</span>!</h1>
-            <p class="text-gray-500 dark:text-gray-400 font-medium italic text-sm">"Tu primer paso hacia una vida sin residuos comienza aquí"</p>
+            <h1 class="font-display font-black text-2xl md:text-3xl text-secondary dark:text-white mb-1">¡Bienvenido, <span class="text-primary">{{ usuario.nombre.split(' ')[0] }}</span>!</h1>
+            <p class="text-gray-500 dark:text-gray-400 font-medium italic text-xs">"Tu primer paso hacia una vida sin residuos comienza aquí"</p>
         </div>
 
-        <form action="/completar-perfil" method="POST" enctype="multipart/form-data" class="space-y-6 relative z-10">
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <form id="completarForm" action="/completar-perfil" method="POST" enctype="multipart/form-data" class="space-y-4 relative z-10" novalidate>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                 <!-- Nombre -->
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-black text-secondary dark:text-emerald-100 flex items-center gap-2 uppercase tracking-[0.2em] opacity-70">
-                        <span class="material-symbols-outlined text-primary text-base">person</span> Nombre Completo
+                <div class="flex flex-col gap-1">
+                    <label class="text-[9px] font-black text-secondary dark:text-emerald-100 flex items-center gap-1.5 uppercase tracking-[0.2em] opacity-70">
+                        <span class="material-symbols-outlined text-primary text-sm">person</span> Nombre Completo <span class="text-red-500 ml-0.5">*</span>
                     </label>
-                    <input type="text" name="nombre" value="{{ usuario.nombre }}" required minlength="3"
-                        class="block w-full px-5 py-3.5 rounded-2xl border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all placeholder-gray-400 text-sm">
+                    <input type="text" id="nombre" name="nombre" value="{{ usuario.nombre }}" required minlength="10" maxlength="20"
+                        class="block w-full px-4 py-2.5 rounded-2xl border border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all placeholder-gray-400 text-sm">
+                    <p id="error-nombre" class="hidden text-[10px] text-red-500 font-bold leading-tight mt-1"></p>
                 </div>
 
                 <!-- Ubicación -->
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-black text-secondary dark:text-emerald-100 flex items-center gap-2 uppercase tracking-[0.2em] opacity-70">
-                        <span class="material-symbols-outlined text-primary text-base">location_on</span> Ubicación
+                <div class="flex flex-col gap-1">
+                    <label class="text-[9px] font-black text-secondary dark:text-emerald-100 flex items-center gap-1.5 uppercase tracking-[0.2em] opacity-70">
+                        <span class="material-symbols-outlined text-primary text-sm">location_on</span> Ubicación <span class="text-red-500 ml-0.5">*</span>
                     </label>
-                    <input type="text" name="ubicacion" value="{{ usuario.ubicacion or 'Querétaro' }}" placeholder="Querétaro, Qro."
-                        class="block w-full px-5 py-3.5 rounded-2xl border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-sm">
+                    <input type="text" id="ubicacion" name="ubicacion" value="{{ usuario.ubicacion or 'Querétaro' }}" placeholder="Querétaro, Qro." required minlength="10" maxlength="20"
+                        class="block w-full px-4 py-2.5 rounded-2xl border border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-sm">
+                    <p id="error-ubicacion" class="hidden text-[10px] text-red-500 font-bold leading-tight mt-1"></p>
                 </div>
 
                 <!-- Título -->
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-black text-secondary dark:text-emerald-100 flex items-center gap-2 uppercase tracking-[0.2em] opacity-70">
-                        <span class="material-symbols-outlined text-primary text-base">military_tech</span> Título Público
+                <div class="flex flex-col gap-1">
+                    <label class="text-[9px] font-black text-secondary dark:text-emerald-100 flex items-center gap-1.5 uppercase tracking-[0.2em] opacity-70">
+                        <span class="material-symbols-outlined text-primary text-sm">military_tech</span> Título Público <span class="text-red-500 ml-0.5">*</span>
                     </label>
-                    <input type="text" name="titulo_perfil" value="{{ usuario.titulo_perfil or 'Usuario Eco-consciente' }}"
-                        class="block w-full px-5 py-3.5 rounded-2xl border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-sm">
+                    <input type="text" id="titulo_perfil" name="titulo_perfil" value="{{ usuario.titulo_perfil or 'Usuario Eco-consciente' }}" required minlength="10" maxlength="30"
+                        class="block w-full px-4 py-2.5 rounded-2xl border border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-sm">
+                    <p id="error-titulo" class="hidden text-[10px] text-red-500 font-bold leading-tight mt-1"></p>
                 </div>
 
                 <!-- Foto de perfil -->
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-black text-secondary dark:text-emerald-100 flex items-center gap-2 uppercase tracking-[0.2em] opacity-70">
-                        <span class="material-symbols-outlined text-primary text-base">photo_camera</span> Foto de Perfil
+                <div class="flex flex-col gap-1">
+                    <label class="text-[9px] font-black text-secondary dark:text-emerald-100 flex items-center gap-1.5 uppercase tracking-[0.2em] opacity-70">
+                        <span class="material-symbols-outlined text-primary text-sm">photo_camera</span> Foto de Perfil <span class="text-red-500 ml-0.5">*</span>
                     </label>
                     <div class="relative">
-                        <input type="file" name="foto_perfil" accept="image/*"
-                            class="block w-full text-[10px] file:mr-4 file:py-3.5 file:px-4 file:rounded-2xl file:border-2 file:border-dashed file:border-emerald-200 dark:file:border-emerald-800 file:text-secondary dark:file:text-emerald-100 file:bg-white dark:file:bg-emerald-950/20 hover:file:border-primary transition-all cursor-pointer">
+                        <input type="file" id="foto_perfil" name="foto_perfil" accept="image/*"
+                            class="block w-full text-[9px] file:mr-3 file:py-2 file:px-3 file:rounded-xl file:border-2 file:border-dashed file:border-emerald-200 dark:file:border-emerald-800 file:text-secondary dark:file:text-emerald-100 file:bg-white dark:file:bg-emerald-950/20 hover:file:border-primary transition-all cursor-pointer">
                     </div>
+                    <p id="error-foto" class="hidden text-[10px] text-red-500 font-bold leading-tight mt-1"></p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <!-- Biografía -->
-                <div class="lg:col-span-2 flex flex-col gap-1.5">
-                    <label class="text-[10px] font-black text-secondary dark:text-emerald-100 flex items-center gap-2 uppercase tracking-[0.2em] opacity-70">
-                        <span class="material-symbols-outlined text-primary text-base">format_quote</span> Sobre Mí
+                <div class="lg:col-span-2 flex flex-col gap-1">
+                    <label class="text-[9px] font-black text-secondary dark:text-emerald-100 flex items-center gap-1.5 uppercase tracking-[0.2em] opacity-70">
+                        <span class="material-symbols-outlined text-primary text-sm">format_quote</span> Sobre Mí <span class="text-red-500 ml-0.5">*</span>
                     </label>
-                    <textarea name="biografia" rows="4" placeholder="Comparte tu motivación ecológica con la comunidad..."
-                        class="block w-full px-6 py-4 rounded-3xl border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-medium resize-none transition-all text-sm">{{ usuario.biografia or '' }}</textarea>
+                    <textarea id="biografia" name="biografia" rows="3" maxlength="100" placeholder="Comparte tu motivación ecológica con la comunidad (máx 100 caracteres)..." required
+                        class="block w-full px-4 py-3 rounded-2xl border border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-medium resize-none transition-all text-sm scrollbar-thin scrollbar-thumb-emerald-200 dark:scrollbar-thumb-emerald-800 scrollbar-track-transparent">{{ usuario.biografia or '' }}</textarea>
+                    <p id="error-biografia" class="hidden text-[10px] text-red-500 font-bold leading-tight mt-1"></p>
                 </div>
 
                 <!-- Contraseña -->
-                <div class="flex flex-col gap-1.5">
-                    <label class="text-[10px] font-black text-secondary dark:text-emerald-100 flex items-center gap-2 uppercase tracking-[0.2em] opacity-70">
-                        <span class="material-symbols-outlined text-primary text-base">lock</span> Nueva Contraseña
+                <div class="flex flex-col gap-1">
+                    <label class="text-[9px] font-black text-secondary dark:text-emerald-100 flex items-center gap-1.5 uppercase tracking-[0.2em] opacity-70">
+                        <span class="material-symbols-outlined text-primary text-sm">lock</span> Nueva Contraseña <span class="text-red-500 ml-1">*</span>
                     </label>
-                    <div class="p-6 h-full rounded-3xl bg-gray-50 dark:bg-emerald-950/20 border-2 border-dashed border-emerald-100 dark:border-emerald-800/50 flex flex-col justify-center gap-4">
-                        <input type="password" name="password" minlength="6" placeholder="Mínimo 6 caracteres"
-                            class="block w-full px-5 py-3.5 rounded-2xl border-white dark:border-emerald-800 bg-white dark:bg-black/20 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-sm shadow-sm">
-                        <p class="text-[9px] text-gray-500 uppercase font-black text-center tracking-widest">Opcional: Solo para login local</p>
+                    <div class="p-4 h-full rounded-2xl bg-gray-50 dark:bg-emerald-950/20 border-2 border-dashed border-emerald-100 dark:border-emerald-800/50 flex flex-col justify-center gap-3">
+                        <div class="relative">
+                            <input type="password" id="password" name="password" required minlength="6" placeholder="Nueva Contraseña (Mínimo 6 caracteres)"
+                                class="block w-full px-4 py-2.5 pr-12 rounded-xl border border-white dark:border-emerald-800 bg-white dark:bg-black/20 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-xs shadow-sm">
+                            <button type="button" onclick="togglePassVisibility('password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-base">visibility_off</span>
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <input type="password" id="confirm_password" name="confirm_password" required minlength="6" placeholder="Confirmar Contraseña"
+                                class="block w-full px-4 py-2.5 pr-12 rounded-xl border border-white dark:border-emerald-800 bg-white dark:bg-black/20 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-xs shadow-sm">
+                            <button type="button" onclick="togglePassVisibility('confirm_password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
+                                <span class="material-symbols-outlined text-base">visibility_off</span>
+                            </button>
+                        </div>
+                        <p id="password-error" class="hidden text-[10px] text-red-500 font-bold text-center leading-tight">Error text here</p>
                     </div>
                 </div>
             </div>
 
             <!-- Intereses: Grid ultra-compacto -->
-            <div class="p-8 rounded-[2.5rem] bg-emerald-50/30 dark:bg-emerald-950/20 border-2 border-emerald-100/50 dark:border-emerald-800/30">
-                <div class="flex items-center justify-between gap-4 mb-6">
-                    <label class="text-[10px] font-black text-secondary dark:text-emerald-100 flex items-center gap-2 uppercase tracking-[0.2em]">
-                        <span class="material-symbols-outlined text-primary">eco</span> Intereses Seleccionados
+            <div class="p-5 rounded-3xl bg-emerald-50/30 dark:bg-emerald-950/20 border-2 border-emerald-100/50 dark:border-emerald-800/30">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                    <label class="text-[9px] font-black text-secondary dark:text-emerald-100 flex items-center gap-1.5 uppercase tracking-[0.2em]">
+                        <span class="material-symbols-outlined text-primary text-base">eco</span> Intereses Seleccionados
                     </label>
-                    <span id="interests-count" class="text-[10px] bg-primary text-secondary font-black px-4 py-1.5 rounded-full shadow-lg shadow-primary/20">0 de 5</span>
+                    <span id="interests-count" class="text-[9px] bg-primary !text-white font-black px-3 py-1 rounded-full shadow-md shadow-primary/20">0 de 5</span>
                 </div>
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
                     {% for interes in ['Reciclaje', 'Compostaje', 'Energía Solar', 'Huertos Urbanos', 'Reducción de Plástico', 'Reforestación', 'Moda Sostenible', 'Movilidad Eléctrica'] %}
-                    <label class="interest-pill flex items-center gap-3 px-4 py-2.5 rounded-2xl border-2 border-white dark:border-emerald-800 bg-white dark:bg-emerald-900/10 cursor-pointer shadow-sm transition-all hover:translate-y-[-2px]">
+                    <label class="interest-pill flex items-center gap-2 px-3 py-2 rounded-xl border-2 border-white dark:border-emerald-800 bg-white dark:bg-emerald-900/10 cursor-pointer shadow-sm transition-all hover:translate-y-[-1px]">
                         <input type="checkbox" name="intereses" value="{{ interes }}" class="hidden checkbox-interest">
-                        <span class="material-symbols-outlined text-base checkbox-icon">radio_button_unchecked</span>
-                        <span class="text-[11px] font-bold text-secondary dark:text-emerald-50 whitespace-nowrap">{{ interes }}</span>
+                        <span class="material-symbols-outlined text-[14px] checkbox-icon">radio_button_unchecked</span>
+                        <span class="text-[10px] font-bold text-secondary dark:text-emerald-50 whitespace-nowrap">{{ interes }}</span>
                     </label>
                     {% endfor %}
                 </div>
             </div>
 
             <button type="submit"
-                class="w-full py-5 bg-primary hover:bg-emerald-400 text-secondary font-black rounded-3xl shadow-2xl shadow-primary/30 transition-all transform hover:-translate-y-2 text-base tracking-[0.3em] uppercase mt-2">
+                class="w-full py-4 bg-primary hover:bg-emerald-400 !text-white font-black rounded-2xl shadow-xl shadow-primary/30 transition-all transform hover:-translate-y-1 text-sm tracking-[0.3em] uppercase">
                 Actualizar e Ingresar
             </button>
         </form>
 
         <script>
+            function togglePassVisibility(inputId, btnElement) {
+                const input = document.getElementById(inputId);
+                const icon = btnElement.querySelector('span');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.textContent = 'visibility';
+                } else {
+                    input.type = 'password';
+                    icon.textContent = 'visibility_off';
+                }
+            }
+
             document.addEventListener('DOMContentLoaded', function() {
                 const maxIntereses = 5;
                 const checkboxes = document.querySelectorAll('.checkbox-interest');
@@ -169,7 +198,7 @@
                 updateInterestsUI();
 
                 // Live Preview Foto Perfil
-                const fotoInput = document.querySelector('input[name="foto_perfil"]');
+                const fotoInput = document.getElementById('foto_perfil');
                 const avatarImg = document.getElementById('preview-avatar');
 
                 fotoInput.addEventListener('change', function() {
@@ -182,6 +211,92 @@
                             avatarImg.style.display = 'block';
                         }
                         reader.readAsDataURL(file);
+                    }
+                });
+                
+                // Red Text Validator Helper
+                function checkField(id, errorId, minLen, maxLen, customCondition, customMsg) {
+                    const el = document.getElementById(id);
+                    const errorEl = document.getElementById(errorId);
+                    
+                    if (el.type === 'file') {
+                        el.classList.remove('file:border-red-500', 'file:text-red-500', 'file:bg-red-50');
+                        el.classList.add('file:border-emerald-200');
+                    } else {
+                        el.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+                    }
+                    errorEl.classList.add('hidden');
+                    
+                    let val = el.value.trim();
+                    if (customCondition !== null) {
+                        if (customCondition) {
+                            if (el.type === 'file') {
+                                el.classList.add('file:border-red-500', 'file:text-red-500', 'file:bg-red-50');
+                                el.classList.remove('file:border-emerald-200');
+                            } else {
+                                el.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+                            }
+                            errorEl.textContent = customMsg;
+                            errorEl.classList.remove('hidden');
+                            return false;
+                        }
+                        return true;
+                    }
+                    
+                    if (val.length < minLen) {
+                        el.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+                        errorEl.textContent = `Debe tener al menos ${minLen} caracteres.`;
+                        errorEl.classList.remove('hidden');
+                        return false;
+                    }
+                    if (val.length > maxLen) {
+                        el.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+                        errorEl.textContent = `Máximo ${maxLen} caracteres.`;
+                        errorEl.classList.remove('hidden');
+                        return false;
+                    }
+                    return true;
+                }
+
+                // Form Validation
+                document.getElementById('completarForm').addEventListener('submit', function(e) {
+                    let isValid = true;
+                    
+                    if (!checkField('nombre', 'error-nombre', 10, 20, null, null)) isValid = false;
+                    if (!checkField('ubicacion', 'error-ubicacion', 10, 20, null, null)) isValid = false;
+                    if (!checkField('titulo_perfil', 'error-titulo', 10, 30, null, null)) isValid = false;
+                    if (!checkField('biografia', 'error-biografia', 1, 100, null, null)) isValid = false;
+                    
+                    // Foto validacion (Fuerza siempre a subir una foto)
+                    const fotoInputFiles = document.getElementById('foto_perfil').files.length;
+                    if (!checkField('foto_perfil', 'error-foto', 0, 0, (fotoInputFiles === 0), 'Por favor, sube una foto de perfil.')) isValid = false;
+
+                    const pwd = document.getElementById('password');
+                    const pwdConfirm = document.getElementById('confirm_password');
+                    const errorPwd = document.getElementById('password-error');
+                    
+                    // Reset styling for password
+                    errorPwd.classList.add('hidden');
+                    pwd.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+                    pwdConfirm.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+
+                    if (pwd.value !== pwdConfirm.value) {
+                        errorPwd.textContent = 'Las contraseñas no coinciden.';
+                        errorPwd.classList.remove('hidden');
+                        pwdConfirm.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+                        isValid = false;
+                    } else if (pwd.value.length < 6) {
+                        errorPwd.textContent = 'La contraseña debe tener mínimo 6 caracteres.';
+                        errorPwd.classList.remove('hidden');
+                        pwd.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+                        isValid = false;
+                    }
+                    
+                    if (!isValid) {
+                        e.preventDefault();
+                        // Focus the first error element roughly
+                        const firstError = document.querySelector('.border-red-500');
+                        if (firstError) firstError.focus();
                     }
                 });
             });

@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $descripcion
  * @property string|null $tipo_etiqueta
  * @property string|null $imagen_url
+ * @property string|null $link_evento
  * @method static \Illuminate\Database\Eloquent\Builder|Evento query()
  */
 class Evento extends Model
@@ -25,7 +26,7 @@ class Evento extends Model
 
     protected $fillable = [
         'titulo', 'lugar', 'fecha_inicio', 'fecha_fin', 
-        'descripcion', 'tipo_etiqueta', 'imagen_url'
+        'descripcion', 'tipo_etiqueta', 'imagen_url', 'link_evento'
     ];
 
     protected $casts = [

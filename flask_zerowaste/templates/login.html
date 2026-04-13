@@ -24,15 +24,15 @@
         theme: {
             extend: {
                 colors: {
-                    primary: "#00E096",
-                    "primary-hover": "#00C281",
+                    primary: "#059669",
+                    "primary-hover": "#047857",
                     secondary: "#064E3B",
                     "forest-dark": "#022C22",
                     "surface-light": "#ECFDF5",
                     "surface-dark": "#062C25",
                     "text-light": "#064E3B",
                     "text-dark": "#D1FAE5",
-                    accent: "#34D399",
+                    accent: "#10B981",
                 },
                 fontFamily: {
                     sans: ['Inter', 'sans-serif'],
@@ -115,6 +115,47 @@
         transform: translateX(90px) scale(0.985);
         filter: blur(4px);
     }
+
+    /* Scrollbar global — mismo estilo que el index */
+    ::-webkit-scrollbar {
+        width: 14px;
+        height: 14px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #ECFDF5;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #34D399, #059669);
+        border-radius: 10px;
+        border: 4px solid #ECFDF5;
+        background-clip: padding-box;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #10B981, #047857);
+        border: 3px solid #ECFDF5;
+    }
+    ::-webkit-scrollbar-button {
+        display: none;
+    }
+    .dark ::-webkit-scrollbar-track {
+        background: #062C25;
+    }
+    .dark ::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, #059669, #022C22);
+        border: 4px solid #062C25;
+        background-clip: padding-box;
+    }
+    .dark ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, #34D399, #059669);
+        border: 3px solid #062C25;
+    }
+    html {
+        scrollbar-width: thin;
+        scrollbar-color: #10B981 #ECFDF5;
+    }
+    html.dark {
+        scrollbar-color: #059669 #062C25;
+    }
 </style>
 </head>
 
@@ -141,7 +182,7 @@
 </header>
 
 <main class="grow flex items-center justify-center bg-white dark:bg-forest-dark relative pt-20 pb-4">
-    <div id="auth-shell" class="auth-card page-enter w-full max-w-4xl min-h-[75vh] flex rounded-[2rem] overflow-hidden shadow-2xl bg-white dark:bg-surface-dark border border-emerald-50 dark:border-emerald-900 mx-4 lg:mx-8">
+    <div id="auth-shell" class="auth-card page-enter w-full max-w-4xl flex rounded-[2rem] overflow-hidden shadow-2xl bg-white dark:bg-surface-dark border border-emerald-50 dark:border-emerald-900 mx-4 lg:mx-8">
 
         <div class="hidden lg:block w-1/2 relative">
             <img alt="Environmental landscape" class="absolute inset-0 w-full h-full object-cover" src="/static/img/fondo-verde.png"/>
@@ -156,22 +197,60 @@
             </div>
         </div>
 
-        <div class="w-full lg:w-1/2 p-6 md:p-8 flex flex-col justify-center relative bg-white dark:bg-forest-dark overflow-y-auto overflow-x-hidden scrollbar-hide" style="-ms-overflow-style: none; scrollbar-width: none;">
+        <div class="w-full lg:w-1/2 p-5 md:p-6 flex flex-col justify-center relative bg-white dark:bg-forest-dark overflow-y-auto overflow-x-hidden auth-scroll">
             <style>
-                .scrollbar-hide::-webkit-scrollbar { display: none; }
+                .auth-scroll::-webkit-scrollbar {
+                    width: 10px;
+                }
+                .auth-scroll::-webkit-scrollbar-track {
+                    background: #f8fafc;
+                    border-radius: 0 2rem 2rem 0;
+                }
+                .auth-scroll::-webkit-scrollbar-thumb {
+                    background: linear-gradient(180deg, #34D399, #059669);
+                    border-radius: 10px;
+                    border: 3px solid #f8fafc;
+                    background-clip: padding-box;
+                }
+                .auth-scroll::-webkit-scrollbar-thumb:hover {
+                    background: linear-gradient(180deg, #10B981, #047857);
+                    border: 2px solid #f8fafc;
+                }
+                .auth-scroll::-webkit-scrollbar-button {
+                    display: none;
+                }
+                .dark .auth-scroll::-webkit-scrollbar-track {
+                    background: #022C22;
+                }
+                .dark .auth-scroll::-webkit-scrollbar-thumb {
+                    background: linear-gradient(180deg, #059669, #022C22);
+                    border: 3px solid #022C22;
+                    background-clip: padding-box;
+                }
+                .dark .auth-scroll::-webkit-scrollbar-thumb:hover {
+                    background: linear-gradient(180deg, #34D399, #059669);
+                    border: 2px solid #022C22;
+                }
+                .auth-scroll {
+                    scrollbar-width: thin;
+                    scrollbar-color: #10B981 #f8fafc;
+                }
+                .dark .auth-scroll {
+                    scrollbar-color: #059669 #022C22;
+                }
             </style>
             <div class="max-w-md mx-auto w-full">
-                <div class="text-center mb-4">
-                    <div class="inline-block p-3 rounded-full bg-surface-light dark:bg-emerald-900/30 mb-3">
-                        <img alt="Zero Waste Sprout Logo" class="h-10 w-auto" src="/static/img/logo.png"/>
+                <div class="text-center mb-3">
+                    <div class="inline-block p-2.5 rounded-full bg-surface-light dark:bg-emerald-900/30 mb-2">
+                        <img alt="Zero Waste Sprout Logo" class="h-8 w-auto" src="/static/img/logo.png"/>
                     </div>
-                    <h1 class="font-display font-black text-2xl md:text-3xl text-secondary dark:text-white mb-2">Bienvenido de nuevo</h1>
+                    <h1 class="font-display font-black text-2xl md:text-3xl text-secondary dark:text-white mb-1">Bienvenido de nuevo</h1>
                     <p class="text-gray-500 dark:text-gray-400 text-sm">Ingresa tus credenciales para continuar</p>
                 </div>
 
                 <div id="general-error" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-3 mb-4 rounded-md shadow-sm text-sm font-medium transition-all"></div>
 
-                <form id="login-form" class="space-y-3" onsubmit="validateLogin(event)" novalidate>
+                <form id="login-form" class="space-y-2.5" onsubmit="validateLogin(event)" novalidate>
                     <div class="space-y-2">
                         <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1" for="email">Email</label>
                         <div class="relative group">
@@ -209,7 +288,7 @@
 
 
 
-                    <button id="submit-btn" class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-emerald-400/30 text-base font-bold text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform hover:-translate-y-1 relative overflow-hidden" type="submit">
+                    <button id="submit-btn" class="w-full flex justify-center items-center gap-2 py-2.5 px-4 border border-transparent rounded-xl shadow-lg shadow-emerald-700/25 text-base font-bold text-white bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all transform hover:-translate-y-1 relative overflow-hidden" type="submit">
                         <span id="btn-text">Iniciar sesión</span>
                         <svg id="btn-spinner" class="hidden animate-spin-slow h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -234,7 +313,7 @@
                     </button>
                 </form>
 
-                <div class="mt-4 text-center">
+                <div class="mt-3 text-center">
                     <p class="text-gray-600 dark:text-gray-400 text-sm">
                         ¿No tienes cuenta?
                         <a class="font-bold text-secondary dark:text-emerald-200 hover:text-primary dark:hover:text-primary transition-colors ml-1" href="/registro" onclick="goWithSlide(event, '/registro', 'right')">
@@ -253,7 +332,7 @@
     <h2 class="font-display font-black text-3xl text-primary drop-shadow-sm tracking-tight" id="overlay-text">¡Bienvenido!</h2>
 </div>
 
-<div id="info-modal" class="fixed inset-0 z-[1000] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+<div id="info-modal" class="fixed inset-0 z-[99999] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
     <div class="bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-2xl p-6 md:p-8 w-full max-w-2xl shadow-2xl overflow-y-auto max-h-[85vh]">
         <div class="flex justify-between items-center mb-5">
             <h3 id="modal-title" class="text-2xl font-display font-black text-secondary dark:text-white">Aviso de Privacidad</h3>
@@ -264,13 +343,13 @@
         <div id="modal-body-text" class="text-gray-600 dark:text-gray-300 text-sm leading-relaxed text-justify space-y-4 font-medium">
         </div>
         <div class="mt-8 flex justify-end">
-            <button type="button" onclick="closeInfoModal()" class="py-2.5 px-6 font-bold text-white bg-primary hover:bg-primary-hover rounded-xl shadow-md transition-all">Aceptar y Cerrar</button>
+            <button type="button" onclick="closeInfoModal()" class="py-2.5 px-6 font-bold text-white bg-primary hover:bg-primary-hover rounded-xl shadow-md shadow-emerald-700/20 transition-all">Aceptar y Cerrar</button>
         </div>
     </div>
 </div>
 
 <!-- Modal: Olvidaste tu contraseña -->
-<div id="forgot-modal" class="fixed inset-0 z-[1000] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+<div id="forgot-modal" class="fixed inset-0 z-[99999] hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
     <div class="bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-2xl p-6 md:p-8 w-full max-w-md shadow-2xl">
         <div class="flex justify-between items-center mb-5">
             <h3 class="text-xl font-display font-black text-secondary dark:text-white">Recuperar Contraseña</h3>
@@ -278,22 +357,34 @@
                 <span class="material-symbols-outlined text-2xl">close</span>
             </button>
         </div>
-        <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Ingresa tu correo electrónico y nuestro equipo procesará tu solicitud de recuperación.</p>
+        <p class="text-gray-500 dark:text-gray-400 text-sm mb-6">Ingresa tu correo electrónico y te enviaremos una contraseña temporal válida por 15 minutos.</p>
         <div id="forgot-form-container">
             <div class="space-y-2 mb-4">
                 <label class="text-sm font-bold text-secondary dark:text-emerald-100 ml-1">Correo electrónico</label>
-                <input type="email" id="forgot-email" placeholder="correo@ejemplo.com" required
-                    class="block w-full px-4 py-3 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium">
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="material-symbols-outlined text-gray-400 group-focus-within:text-primary transition-colors text-lg">mail</span>
+                    </div>
+                    <input type="email" id="forgot-email" placeholder="correo@ejemplo.com" required
+                        class="block w-full pl-10 pr-3 py-3 rounded-xl border-gray-200 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-900/20 text-secondary dark:text-white placeholder-gray-400 focus:border-primary focus:ring-primary focus:ring-2 focus:ring-opacity-20 font-medium text-sm">
+                </div>
                 <span id="forgot-error" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
             </div>
-            <button type="button" onclick="submitForgotPassword()" class="w-full py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-1">Enviar Solicitud</button>
+            <button type="button" id="forgot-submit-btn" onclick="submitForgotPassword()" class="w-full flex justify-center items-center gap-2 py-3 bg-primary hover:bg-primary-hover text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-1">
+                <span id="forgot-btn-text">Enviar Contraseña Temporal</span>
+                <svg id="forgot-spinner" class="hidden animate-spin-slow h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </button>
         </div>
         <div id="forgot-success" class="hidden text-center py-6">
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 mb-4">
-                <span class="material-symbols-outlined text-4xl text-primary">check_circle</span>
+                <span class="material-symbols-outlined text-4xl text-primary">mark_email_read</span>
             </div>
-            <h4 class="font-display font-bold text-lg text-secondary dark:text-white mb-2">¡Solicitud Enviada!</h4>
-            <p class="text-gray-500 dark:text-gray-400 text-sm">Nuestro equipo revisará tu solicitud y se pondrá en contacto contigo.</p>
+            <h4 class="font-display font-bold text-lg text-secondary dark:text-white mb-2">¡Correo Enviado!</h4>
+            <p class="text-gray-500 dark:text-gray-400 text-sm mb-1">Revisa tu <strong>bandeja de entrada</strong> (o spam).</p>
+            <p class="text-gray-400 dark:text-gray-500 text-xs">La contraseña temporal expira en <strong>15 minutos</strong>.</p>
         </div>
     </div>
 </div>
@@ -456,7 +547,7 @@
         btnText.textContent = "Iniciando...";
         spinner.classList.remove('hidden');
 
-        fetch('/handle_login', {
+        fetch('/login', {
             method: 'POST',
             body: new FormData(form)
         })
@@ -511,7 +602,10 @@
             const provider = new GoogleAuthProvider();
 
             const result = await signInWithPopup(auth, provider);
-            const idToken = await result.user.getIdToken();
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+            const idToken = credential.idToken;
+            
+            if (!idToken) throw new Error("No se pudo obtener el token de Google.");
 
             const resp = await fetch('/auth/firebase', {
                 method: 'POST',
@@ -550,24 +644,47 @@
     }
 
     function submitForgotPassword() {
-        const email = document.getElementById('forgot-email').value.trim();
+        const email = document.getElementById('forgot-email').value.trim().toLowerCase();
         const errEl = document.getElementById('forgot-error');
+        const btn = document.getElementById('forgot-submit-btn');
+        const btnText = document.getElementById('forgot-btn-text');
+        const spinner = document.getElementById('forgot-spinner');
         errEl.classList.add('hidden');
 
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!email || !emailRegex.test(email)) {
-            errEl.textContent = 'Ingresa un correo electrónico válido.';
+        // Validar formato de email con @ y dominio válido
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        if (!email) {
+            errEl.textContent = 'El correo electrónico es obligatorio.';
+            errEl.classList.remove('hidden');
+            return;
+        }
+        if (!email.includes('@')) {
+            errEl.textContent = 'El correo debe contener @.';
+            errEl.classList.remove('hidden');
+            return;
+        }
+        if (!emailRegex.test(email)) {
+            errEl.textContent = 'Ingresa un correo con dominio válido (ej: usuario@gmail.com).';
             errEl.classList.remove('hidden');
             return;
         }
 
-        fetch('{{ API_URL }}/formularios/forgot-password', {
+        // Mostrar loading
+        btn.classList.add('btn-loading');
+        btnText.textContent = 'Enviando...';
+        spinner.classList.remove('hidden');
+
+        fetch('/forgot-password', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: email })
         })
         .then(r => r.json())
         .then(data => {
+            btn.classList.remove('btn-loading');
+            btnText.textContent = 'Enviar Contraseña Temporal';
+            spinner.classList.add('hidden');
+
             if (data.success) {
                 document.getElementById('forgot-form-container').classList.add('hidden');
                 document.getElementById('forgot-success').classList.remove('hidden');
@@ -577,7 +694,10 @@
             }
         })
         .catch(() => {
-            errEl.textContent = 'Error de conexión.';
+            btn.classList.remove('btn-loading');
+            btnText.textContent = 'Enviar Contraseña Temporal';
+            spinner.classList.add('hidden');
+            errEl.textContent = 'Error de conexión. Intenta de nuevo.';
             errEl.classList.remove('hidden');
         });
     }

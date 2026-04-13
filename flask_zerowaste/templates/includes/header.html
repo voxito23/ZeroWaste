@@ -1,89 +1,200 @@
 <style>
-  /* Header Nav y Botones */
-  /* FASE 3: Transición Fluida y Animación "Pasada de Lanza" */
+  /* ═══════════════════════════════════════════════ */
+  /*  HEADER — Bio-Deep Tech / Tablet-First         */
+  /* ═══════════════════════════════════════════════ */
   .nav-link-btn {
     display: flex; align-items: center; gap: 8px;
     font-weight: 600; font-size: 0.95rem;
-    color: var(--text-sec, #475569);
-    padding: 8px 16px; border-radius: 8px;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); text-decoration: none;
+    color: var(--text-sec, #4A5568);
+    padding: 8px 16px; border-radius: 10px;
+    transition: all 0.25s ease; text-decoration: none;
   }
   .nav-link-btn:hover {
-    color: #121212;
-    background-color: var(--green-primary);
-    border-radius: 8px;
-    /* Resplandor Neón y Rebote Épico */
-    box-shadow: 0 0 15px var(--green-primary), 0 0 35px var(--green-primary); 
-    transform: translateY(-5px) scale(1.1);
+    color: #1B3022;
+    background-color: #C7F9CC;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(199, 249, 204, 0.35);
+  }
+  .dark .nav-link-btn:hover {
+    color: #022C22;
+    background-color: #10B981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
   }
 
-  /* Base de Estado Activo de Fase 2 (Contraste Modo Claro/Oscuro) */
+  /* Estado Activo */
   .nav-link-btn.active {
-    color: #1b5e20;
-    background-color: #e8f5e9;
-    border-bottom: 2px solid #1b5e20;
+    color: #1B3022;
+    background-color: #C7F9CC;
+    font-weight: 700;
   }
   .dark .nav-link-btn.active {
-    color: var(--green-primary);
-    background-color: var(--green-bg-light);
-    border-bottom: 2px solid var(--green-primary);
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #34D399;
   }
-  .mobile-menu { display: none; }
-  
-  /* FASE 2: Layout Estético e Imágenes HD */
+
+  /* Header Acciones (Desktop) */
   .header-actions { display: flex; align-items: center; gap: 15px; }
   .profile-pic-desktop {
     width: 40px; height: 40px;
     min-width: 40px; min-height: 40px;
     flex-shrink: 0;
-    object-fit: cover; object-position: center;
     border: 2px solid var(--border-color);
     border-radius: 50%;
     display: block;
+    position: relative;
+    overflow: hidden;
   }
-
-  /* FASE 3: Compresión Tablets */
-  @media (max-width: 1024px) {
-    .desktop-nav { gap: 10px !important; }
-    .desktop-nav a.nav-link-btn { padding: 6px 12px; font-size: 0.85rem; }
-  }
-
-  /* FASE 3: Acomodo Lateral de Móviles */
-  #mobileNavContainer.menu-open {
-    display: flex !important;
-    flex-direction: column;
-    align-items: center; /* Asegura todo al centro */
-    text-align: center;
-    width: 100%;
-    transition: all 0.3s ease;
-    padding-top: 10px;
-  }
-  .profile-pic-mobile {
-    width: 60px; height: 60px;
-    object-fit: cover; object-position: center;
-    border: 3px solid var(--green-primary);
+  /* Fix direct interpolation on the img itself */
+  .profile-pic-desktop img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center;
     border-radius: 50%;
   }
 
-  @media (max-width: 768px) {
+  /* Desktop nav oculto por defecto, visible en lg */
+  .desktop-nav { display: none; }
+  @media (min-width: 1200px) {
+    .desktop-nav { display: flex !important; }
+    .desktop-actions { display: flex !important; }
+    .hamburger-btn { display: none !important; }
+  }
+  @media (max-width: 1199px) {
     .desktop-nav { display: none !important; }
-    .hamburger-btn { display: block !important; }
+    .desktop-actions { display: none !important; }
+    .hamburger-btn { display: flex !important; }
+  }
+
+  /* ═══════ SIDEBAR LATERAL MÓVIL/TABLET ═══════ */
+  .mobile-sidebar {
+    position: fixed;
+    top: 0; right: 0;
+    width: 85%; max-width: 380px;
+    height: 100vh; height: 100dvh;
+    z-index: 9998;
+    background: var(--bg-card, #FFFFFF);
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    box-shadow: -8px 0 30px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+  }
+  .dark .mobile-sidebar {
+    background: #022C22;
+    box-shadow: -8px 0 30px rgba(0,0,0,0.6);
+  }
+  .mobile-sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+
+  /* Overlay */
+  .sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9997;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+  .sidebar-overlay.overlay-active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Sidebar nav links */
+  .sidebar-link {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 20px; border-radius: 14px;
+    font-weight: 600; font-size: 1rem;
+    color: var(--text-main);
+    transition: all 0.2s ease;
+    text-decoration: none;
+  }
+  .sidebar-link:hover {
+    background: rgba(199, 249, 204, 0.2);
+    color: #2D6A4F;
+  }
+  .dark .sidebar-link:hover {
+    background: rgba(16, 185, 129, 0.15);
+    color: #10B981;
+  }
+  .sidebar-link.active {
+    background: #C7F9CC;
+    color: #1B3022;
+    font-weight: 700;
+  }
+  .dark .sidebar-link.active {
+    background: rgba(16, 185, 129, 0.25);
+    color: #34D399;
+  }
+
+  .profile-pic-mobile {
+    width: 70px; height: 70px;
+    border: 3px solid #C7F9CC;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+  .profile-pic-mobile img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transform: translateZ(0) scale(1.0);
+    backface-visibility: hidden;
+    will-change: transform;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Scroll lock */
+  body.menu-locked { overflow: hidden !important; }
+
+  /* Notificaciones Scrollbar Minimalista */
+  .noti-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #10B981 transparent;
+  }
+  .dark .noti-scrollbar {
+    scrollbar-color: #059669 transparent;
+  }
+  .noti-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .noti-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .noti-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #10B981;
+    border-radius: 20px;
+  }
+  .dark .noti-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #059669;
+  }
+  .noti-scrollbar::-webkit-scrollbar-button {
+    display: none !important;
+    height: 0;
+    width: 0;
   }
 </style>
-<header id="smart-header" class="fixed top-0 left-0 right-0 z-[999] bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md shadow-sm border-b border-emerald-100 dark:border-emerald-900 py-1 transition-transform duration-300 transform translate-y-0 text-left">
-<div class="max-w-desktop mx-auto px-6 lg:px-10">
+
+<!-- ═══════ HEADER BAR ═══════ -->
+<header id="smart-header" class="fixed top-0 left-0 right-0 z-[999] bg-white/95 dark:bg-[#022C22]/85 backdrop-blur-xl shadow-sm border-b border-gray-200 dark:border-[#059669]/20 py-1 transition-transform duration-300 transform translate-y-0 text-left">
+<div class="max-w-desktop mx-auto px-4 sm:px-6 lg:px-10">
 <div class="flex justify-between items-center h-16 relative">
-    <a href="{{ url_for('index') }}" class="flex items-center gap-4 group z-50 no-underline">
+    <!-- Logo -->
+    <a href="{{ url_for('index') }}" class="flex items-center gap-3 group z-50 no-underline">
         <img alt="Zero Waste Logo" class="h-10 w-auto object-contain drop-shadow-sm transition-transform group-hover:scale-105" src="/static/img/logo.png"/>
         <div class="flex flex-col"><span class="font-display font-extrabold text-xl tracking-tighter text-secondary dark:text-primary">ZERO WASTE</span></div>
     </a>
     
-    <!-- Hamburger Button -->
-    <button class="hamburger-btn hidden text-2xl text-[var(--text-sec)]" onclick="toggleMobileMenu()">
-        <i class="fas fa-bars"></i>
+    <!-- Hamburger Button (visible < lg) -->
+    <button class="hamburger-btn hidden items-center justify-center w-11 h-11 rounded-xl text-secondary dark:text-[#C7F9CC] hover:bg-gray-100 dark:hover:bg-[#2D6A4F] transition-colors" onclick="toggleSidebar()" aria-label="Abrir menú">
+        <i class="fas fa-bars text-xl"></i>
     </button>
 
-    <nav class="desktop-nav hidden lg:flex space-x-6 items-center absolute left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto">
+    <!-- Desktop Nav (visible >= lg) -->
+    <nav class="desktop-nav hidden lg:flex space-x-1 flex-1 justify-center z-50 pointer-events-auto">
         <a class="nav-link-btn px-3 py-2 flex items-center gap-2 {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
             <i class='bx bx-home'></i> Inicio
         </a>
@@ -97,10 +208,11 @@
         {% endif %}
     </nav>
 
-    <div class="hidden lg:flex items-center space-x-5 z-50 pointer-events-auto">
+    <!-- Desktop Actions (visible >= lg) -->
+    <div class="desktop-actions hidden lg:flex items-center space-x-4 z-50 pointer-events-auto">
         {% if session.get('usuario_id') %}
         <a class="nav-link-btn {% if request.endpoint == 'mapa' %}active{% endif %}" href="{{ url_for('mapa') }}">
-            <i class="fa-solid fa-map-location-dot"></i> Ver Mapa
+            <i class="fa-solid fa-map-location-dot"></i> Mapa
         </a>
         {% endif %}
         
@@ -118,16 +230,16 @@
 
             <!-- Campana de Notificaciones -->
             <div class="relative" id="noti-dropdown-container">
-                <button class="p-2 rounded-full transition-all duration-300 hover:bg-gray-100 dark:hover:bg-emerald-900 relative" onclick="toggleNotiDropdown(event)">
-                    <span class="material-symbols-outlined text-xl text-gray-600 dark:text-emerald-100">notifications</span>
+                <button class="p-2 rounded-full transition-all duration-300 hover:bg-gray-100 dark:hover:bg-[#059669]/20 relative" onclick="toggleNotiDropdown(event)">
+                    <span class="material-symbols-outlined text-xl text-gray-600 dark:text-[#34D399]">notifications</span>
                     <span id="noti-badge" class="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full hidden animate-pulse"></span>
                 </button>
-                <div id="noti-dropdown" class="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-xl shadow-2xl opacity-0 invisible transition-all duration-200 origin-top-right z-[60]">
-                    <div class="p-3 border-b border-gray-100 dark:border-emerald-800 flex justify-between items-center">
-                        <span class="font-bold text-sm text-secondary dark:text-emerald-100">Notificaciones</span>
-                        <button onclick="markAllRead()" class="text-xs text-primary hover:text-emerald-600 dark:text-emerald-400 font-bold">Marcar leídas</button>
+                <div id="noti-dropdown" class="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-[#022C22]/95 backdrop-blur-xl border border-gray-100 dark:border-[#059669]/20 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] opacity-0 invisible transition-all duration-200 origin-top-right z-[60]">
+                    <div class="p-3 border-b border-gray-100 dark:border-[#059669]/20 flex justify-between items-center">
+                        <span class="font-bold text-sm text-secondary dark:text-white">Notificaciones</span>
+                        <button onclick="markAllRead()" class="text-xs text-[#10B981] hover:text-[#34D399] dark:text-[#34D399] dark:hover:text-[#6EE7B7] font-bold">Marcar leídas</button>
                     </div>
-                    <div id="noti-list" class="max-h-60 overflow-y-auto">
+                    <div id="noti-list" class="max-h-60 overflow-y-auto noti-scrollbar pr-1">
                         <div class="p-4 text-center text-xs text-gray-500 dark:text-gray-400">Sin notificaciones</div>
                     </div>
                 </div>
@@ -136,20 +248,21 @@
             <!-- Perfil con dropdown click -->
             <div class="relative" id="profile-dropdown-container">
                 <button onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 bg-transparent border-0 outline-none cursor-pointer">
-                    <span class="font-bold text-sm text-secondary dark:text-emerald-100 hidden md:block">{{ session.get('nombre', 'Usuario').split(' ')[0] }}</span>
-                    <div class="profile-pic-desktop shadow-sm bg-gray-100 dark:bg-emerald-950/40 relative overflow-hidden flex items-center justify-center border-2 border-emerald-100 dark:border-emerald-800 transition-transform duration-300 hover:scale-105">
-                        <span class="material-symbols-outlined text-gray-300 dark:text-emerald-800 text-2xl absolute z-0">person</span>
+                    <span class="font-bold text-sm text-secondary dark:text-[#D4E7DC] hidden md:block max-w-[120px] truncate" title="{{ session.get('nombre', 'Usuario') }}">{{ session.get('nombre', 'Usuario').split(' ')[0] }}</span>
+                    <div class="profile-pic-desktop shadow-[0_2px_10px_rgba(0,0,0,0.1)] bg-gray-100 dark:bg-[#2D6A4F] relative flex items-center justify-center border-2 border-white dark:border-forest-dark transition-transform duration-300 hover:scale-105">
+                        <span class="material-symbols-outlined text-gray-300 dark:text-[#3B6B4F] text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">person</span>
                         {% set avatar = session.get('foto_perfil') or session.get('usuario_foto') or 'default.png' %}
-                        <img alt="User Avatar" class="w-full h-full object-cover relative z-10" 
+                        {% set avatar = (avatar.split('=')[0] ~ '=s400-c') if 'googleusercontent.com' in avatar else avatar %}
+                        <img alt="User Avatar" class="w-full h-full object-cover relative z-10 rounded-full border-2 border-white dark:border-forest-dark ring-2 ring-white/50" 
                              src="{{ avatar if avatar.startswith('http') else '/static/img/perfiles/' + avatar }}" 
                              onerror="this.style.display='none';">
                     </div>
                 </button>
                 
-                <div id="profile-dropdown" class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-forest-dark border border-gray-100 dark:border-emerald-800 rounded-xl shadow-2xl opacity-0 invisible transition-all duration-200 origin-top-right z-[60]">
-                    <a class="block px-6 py-3 text-sm font-semibold text-secondary dark:text-emerald-100 hover:bg-surface-light dark:hover:bg-emerald-900/50 hover:text-primary dark:hover:text-white first:rounded-t-xl transition-colors" href="{{ url_for('perfil') }}"> Ver perfil </a>
-                    <div class="h-px bg-gray-100 dark:bg-emerald-900 mx-2"></div>
-                    <a class="block px-6 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 last:rounded-b-xl transition-colors cursor-pointer" onclick="document.getElementById('logoutModal').classList.remove('hidden'); document.getElementById('logoutModal').classList.add('flex');"> Cerrar sesión </a>
+                <div id="profile-dropdown" class="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-[#022C22]/95 backdrop-blur-xl border border-gray-100 dark:border-[#059669]/20 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] opacity-0 invisible transition-all duration-200 origin-top-right z-[60]">
+                    <a class="block px-6 py-3 text-sm font-semibold text-secondary dark:text-[#F5F5F5] hover:bg-gray-50 dark:hover:bg-[#10B981]/15 hover:text-[#10B981] dark:hover:text-[#34D399] first:rounded-t-xl transition-colors" href="{{ url_for('perfil') }}"> Ver perfil </a>
+                    <div class="h-px bg-gray-100 dark:bg-[#059669]/20 mx-2"></div>
+                    <a class="block px-6 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/15 last:rounded-b-xl transition-colors cursor-pointer" onclick="document.getElementById('logoutModal').classList.remove('hidden'); document.getElementById('logoutModal').classList.add('flex');"> Cerrar sesión </a>
                 </div>
             </div>
         </div>
@@ -161,73 +274,123 @@
         {% endif %}
     </div>
 </div>
-
-<!-- Mobile Nav Container -->
-<div id="mobileNavContainer" class="mobile-menu bg-white/95 dark:bg-forest-dark/95 border-t border-emerald-100 dark:border-emerald-900 mt-2 p-4 hidden">
-    
-    {% if session.get('usuario_id') %}
-    <!-- FASE 3: Contenedor Usuario (Avatar Gigante y Tema) INCLUIDO en el menú lateral -->
-    <div class="flex flex-col items-center mb-6 pt-4">
-        {% set avatar = session.get('foto_perfil', session.get('usuario_foto', 'default.png')) %}
-        {% if avatar and avatar.startswith('http') %}
-        <img alt="User Avatar" class="profile-pic-mobile shadow-md mb-3" src="{{ avatar }}" onerror="this.src='/static/img/perfiles/default.png'"/>
-        {% else %}
-        <img alt="User Avatar" class="profile-pic-mobile shadow-md mb-3" src="/static/img/perfiles/{{ avatar }}" onerror="this.src='/static/img/perfiles/default.png'"/>
-        {% endif %}
-        <span class="font-bold text-xl text-secondary dark:text-white">{{ session.get('nombre', 'Usuario') }}</span>
-        
-        <button class="theme-toggle-btn p-2 mt-4 rounded-full transition-all duration-300 bg-gray-100 dark:bg-emerald-900" onclick="toggleTheme()">
-            <span class="material-symbols-outlined text-2xl theme-toggle-icon-light dark:hidden">dark_mode</span>
-            <span class="material-symbols-outlined hidden dark:block text-2xl theme-toggle-icon-dark">light_mode</span>
-        </button>
-    </div>
-    <div class="w-full h-px bg-gray-100 dark:bg-emerald-900 mb-4"></div>
-    {% endif %}
-
-    <!-- Enlaces (Usamos 'justify-center w-full' para anclarlos) -->
-    <a href="{{ url_for('index') }}" class="w-full justify-center py-3 px-4 rounded-lg flex items-center gap-3 font-semibold {% if request.endpoint == 'index' %}active{% else %}text-secondary dark:text-gray-200{% endif %}">
-        <i class='bx bx-home'></i> Inicio
-    </a>
-    {% if session.get('usuario_id') %}
-    <a href="{{ url_for('foro') }}" class="w-full justify-center py-3 px-4 rounded-lg flex items-center gap-3 font-semibold mt-2 {% if request.endpoint == 'foro' %}active{% else %}text-secondary dark:text-gray-200{% endif %}">
-        <i class='bx bx-message-rounded-dots'></i> Foro
-    </a>
-    <a href="{{ url_for('mapa') }}" class="w-full justify-center py-3 px-4 rounded-lg flex items-center gap-3 font-semibold mt-2 {% if request.endpoint == 'mapa' %}active{% else %}text-secondary dark:text-gray-200{% endif %}">
-        <i class="fa-solid fa-map-location-dot"></i> Mapa
-    </a>
-    {% endif %}
-    <a href="{{ url_for('contacto') }}" class="w-full justify-center py-3 px-4 rounded-lg flex items-center gap-3 font-semibold mt-2 {% if request.endpoint == 'contacto' %}active{% else %}text-secondary dark:text-gray-200{% endif %}">
-        <i class='bx bx-envelope'></i> Contacto
-    </a>
-    <a href="{{ url_for('perfil') }}" class="w-full justify-center py-3 px-4 rounded-lg flex items-center gap-3 font-semibold mt-2 {% if request.endpoint == 'perfil' %}active{% else %}text-secondary dark:text-gray-200{% endif %}">
-        <i class='bx bx-user'></i> Ver mi perfil
-    </a>
-</div>
 </div>
 </header>
+
+<!-- ═══════ SIDEBAR OVERLAY ═══════ -->
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- ═══════ MOBILE SIDEBAR PANEL ═══════ -->
+<div id="mobileSidebar" class="mobile-sidebar">
+    <!-- Sidebar Header -->
+    <div class="flex items-center justify-between p-5 border-b border-gray-200 dark:border-[#3B6B4F]">
+        <a href="{{ url_for('index') }}" class="flex items-center gap-3 no-underline">
+            <img alt="Logo" class="h-8 w-auto" src="/static/img/logo.png"/>
+            <span class="font-display font-extrabold text-lg tracking-tighter text-secondary dark:text-primary">ZERO WASTE</span>
+        </a>
+        <button onclick="closeSidebar()" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-[#2D6A4F] transition-colors" aria-label="Cerrar menú">
+            <span class="material-symbols-outlined text-2xl text-gray-500 dark:text-[#D4E7DC]">close</span>
+        </button>
+    </div>
+
+    {% if session.get('usuario_id') %}
+    <!-- User Profile Section -->
+    <div class="flex flex-col items-center py-6 px-5 border-b border-gray-200 dark:border-[#3B6B4F]">
+        {% set avatar = session.get('foto_perfil', session.get('usuario_foto', 'default.png')) %}
+        {% set avatar = (avatar.split('=')[0] ~ '=s400-c') if 'googleusercontent.com' in avatar else avatar %}
+        {% if avatar and avatar.startswith('http') %}
+        <img alt="User Avatar" class="profile-pic-mobile shadow-md mb-3 rounded-full object-cover" src="{{ avatar }}" onerror="this.src='/static/img/perfiles/default.png'"/>
+        {% else %}
+        <img alt="User Avatar" class="profile-pic-mobile shadow-md mb-3 rounded-full object-cover" src="/static/img/perfiles/{{ avatar }}" onerror="this.src='/static/img/perfiles/default.png'"/>
+        {% endif %}
+        <span class="font-bold text-lg text-secondary dark:text-white">{{ session.get('nombre', 'Usuario') }}</span>
+        
+        <!-- Modo oscuro toggle dentro del sidebar -->
+        <button class="theme-toggle-btn p-2 mt-3 rounded-full transition-all duration-300 bg-gray-100 dark:bg-[#2D6A4F]" onclick="toggleTheme()">
+            <span class="material-symbols-outlined text-xl theme-toggle-icon-light dark:hidden">dark_mode</span>
+            <span class="material-symbols-outlined hidden dark:block text-xl theme-toggle-icon-dark">light_mode</span>
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- Navigation Links -->
+    <nav class="flex-1 p-4 space-y-1">
+        <a href="{{ url_for('index') }}" class="sidebar-link {% if request.endpoint == 'index' %}active{% endif %}" onclick="closeSidebar()">
+            <i class='bx bx-home text-xl'></i> Inicio
+        </a>
+        {% if session.get('usuario_id') %}
+        <a href="{{ url_for('foro') }}" class="sidebar-link {% if request.endpoint == 'foro' %}active{% endif %}" onclick="closeSidebar()">
+            <i class='bx bx-message-rounded-dots text-xl'></i> Foro
+        </a>
+        <a href="{{ url_for('mapa') }}" class="sidebar-link {% if request.endpoint == 'mapa' %}active{% endif %}" onclick="closeSidebar()">
+            <i class="fa-solid fa-map-location-dot text-lg"></i> Mapa
+        </a>
+        <a href="{{ url_for('Acercade') }}" class="sidebar-link {% if request.endpoint == 'Acercade' %}active{% endif %}" onclick="closeSidebar()">
+            <i class='bx bx-info-circle text-xl'></i> Acerca de
+        </a>
+        {% endif %}
+        <a href="{{ url_for('contacto') }}" class="sidebar-link {% if request.endpoint == 'contacto' %}active{% endif %}" onclick="closeSidebar()">
+            <i class='bx bx-envelope text-xl'></i> Contacto
+        </a>
+        {% if session.get('usuario_id') %}
+        <div class="h-px bg-gray-200 dark:bg-[#3B6B4F] my-3"></div>
+        <a href="{{ url_for('perfil') }}" class="sidebar-link {% if request.endpoint == 'perfil' %}active{% endif %}" onclick="closeSidebar()">
+            <i class='bx bx-user text-xl'></i> Mi Perfil
+        </a>
+        <a class="sidebar-link text-red-500 dark:text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/20 cursor-pointer" onclick="closeSidebar(); setTimeout(function(){ document.getElementById('logoutModal').classList.remove('hidden'); document.getElementById('logoutModal').classList.add('flex'); }, 200);">
+            <span class="material-symbols-outlined text-xl">logout</span> Cerrar sesión
+        </a>
+        {% endif %}
+    </nav>
+
+    <!-- Sidebar Footer -->
+    <div class="p-4 border-t border-gray-200 dark:border-[#3B6B4F] text-center">
+        <p class="text-xs text-gray-400 dark:text-[#3B6B4F] font-medium">© 2026 Zero Waste</p>
+    </div>
+</div>
+
+<!-- ═══════ SCRIPTS ═══════ -->
 <script>
-  function toggleMobileMenu() {
-    document.getElementById('mobileNavContainer').classList.toggle('menu-open');
+  // Sidebar Toggle con Body Scroll Lock
+  function toggleSidebar() {
+    const sidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (sidebar.classList.contains('sidebar-open')) {
+      closeSidebar();
+    } else {
+      sidebar.classList.add('sidebar-open');
+      overlay.classList.add('overlay-active');
+      document.body.classList.add('menu-locked');
+    }
   }
 
-  // Lógica de Smart Header (Ocultar al bajar, Mostrar al subir)
+  function closeSidebar() {
+    const sidebar = document.getElementById('mobileSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    sidebar.classList.remove('sidebar-open');
+    overlay.classList.remove('overlay-active');
+    document.body.classList.remove('menu-locked');
+  }
+
+  // Cerrar sidebar con tecla Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeSidebar();
+  });
+
+  // Smart Header (Ocultar al bajar, Mostrar al subir)
   let lastScrollY = window.scrollY;
   const header = document.getElementById('smart-header');
   
   window.addEventListener('scroll', () => {
       if (window.scrollY > 50 && window.scrollY > lastScrollY) {
-          // Scroll hacia abajo
           header.classList.remove('translate-y-0');
           header.classList.add('-translate-y-full');
       } else {
-          // Scroll hacia arriba
           header.classList.remove('-translate-y-full');
           header.classList.add('translate-y-0');
       }
       lastScrollY = window.scrollY;
   });
-
-  // ========== Lógica de Notificaciones (AJAX Polling) ==========
 </script>
 
 {% if session.get('usuario_id') %}
@@ -250,10 +413,10 @@
                   var html = '';
                   for(var i = 0; i < data.data.length; i++) {
                       var n = data.data[i];
-                      html += '<a href="' + (n.url || '#') + '" class="block p-3 border-b border-gray-50 dark:border-emerald-900/50 hover:bg-gray-50 dark:hover:bg-emerald-900/30 transition-colors">' +
-                          '<p class="font-bold text-xs text-secondary dark:text-emerald-100">' + n.titulo + '</p>' +
-                          '<p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">' + n.mensaje + '</p>' +
-                          '<p class="text-[10px] text-gray-400 mt-1">' + n.created_at + '</p>' +
+                      html += '<a href="' + (n.url || '#') + '" class="block p-4 border-b border-gray-50 dark:border-[#059669]/10 hover:bg-gray-50 dark:hover:bg-[#10B981]/10 transition-colors">' +
+                          '<p class="font-bold text-[13px] text-secondary dark:text-white mb-1">' + n.titulo + '</p>' +
+                          '<p class="text-xs text-gray-500 dark:text-[#A7F3D0] line-clamp-2 leading-relaxed">' + n.mensaje + '</p>' +
+                          '<p class="text-[10px] text-gray-400 dark:text-[#34D399]/70 mt-2 font-medium">' + n.created_at + '</p>' +
                       '</a>';
                   }
                   list.innerHTML = html;
@@ -307,7 +470,7 @@
 <!-- Modal Cerrar Sesión -->
 <div id="logoutModal" class="fixed inset-0 z-[9999] hidden items-center justify-center p-4">
     <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" onclick="document.getElementById('logoutModal').classList.add('hidden'); document.getElementById('logoutModal').classList.remove('flex');"></div>
-    <div class="relative bg-white dark:bg-forest-dark rounded-3xl border border-gray-100 dark:border-emerald-800 p-8 shadow-2xl max-w-sm w-full text-center">
+    <div class="relative bg-white dark:bg-[#1B3022] rounded-3xl border border-gray-100 dark:border-[#3B6B4F] p-8 shadow-2xl max-w-sm w-full text-center">
         <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center">
             <span class="material-symbols-outlined text-3xl text-red-500">logout</span>
         </div>

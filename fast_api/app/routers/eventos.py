@@ -46,11 +46,12 @@ def create_evento(
     nuevo_evento = Evento(
         titulo=evento_in.titulo,
         fecha_inicio=evento_in.fecha_inicio,
-        ubicacion=evento_in.ubicacion,
+        fecha_fin=evento_in.fecha_fin,
+        lugar=evento_in.lugar,
         descripcion=evento_in.descripcion,
-        categoria=evento_in.categoria,
-        imagen=evento_in.imagen,
-        link_unirse=evento_in.link_unirse,
+        tipo_etiqueta=evento_in.tipo_etiqueta,
+        imagen_url=evento_in.imagen_url,
+        link_evento=evento_in.link_evento,
     )
     db.add(nuevo_evento)
     db.commit()

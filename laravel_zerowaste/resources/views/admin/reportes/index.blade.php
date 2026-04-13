@@ -82,16 +82,40 @@
                 const formToSubmit = this;
                 const dateStartStr = inicioInput.value;
                 const dateEndStr = finInput.value;
+                // Capture format
+                let currentFormato = e.submitter ? e.submitter.dataset.formato : 'pdf';
+                formToSubmit.querySelector('.formato_input').value = currentFormato;
+                
+                let formatoNombre = currentFormato.toUpperCase();
+                let accionNombre = 'descargar el archivo de';
+                let btnColor = '#EF4444'; // PDF Default
+
+                if(currentFormato === 'xlsx') {
+                    formatoNombre = 'EXCEL';
+                    btnColor = '#10B981';
+                }
+                if(currentFormato === 'docx') {
+                    formatoNombre = 'WORD';
+                    btnColor = '#3B82F6';
+                }
+                if(currentFormato === 'preview') {
+                    formatoNombre = 'PREVISUALIZACIÓN';
+                    accionNombre = 'abrir en una pestaña nueva el reporte de';
+                    btnColor = '#4B5563'; // Gray
+                    formToSubmit.target = '_blank'; // Opens in new tab
+                } else {
+                    formToSubmit.target = ''; // Downloads locally
+                }
 
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({
-                        title: '¿Generar Reporte PDF?',
-                        text: `¿Estás seguro de descargar el PDF de ${tipo} del ${dateStartStr} al ${dateEndStr}?`,
+                        title: `¿Generar Reporte en ${formatoNombre}?`,
+                        text: `¿Estás seguro de ${accionNombre} ${tipo} del ${dateStartStr} al ${dateEndStr}?`,
                         icon: 'question',
                         showCancelButton: true,
-                        confirmButtonColor: '#00E096',
-                        cancelButtonColor: '#EF4444',
-                        confirmButtonText: 'Sí, descargar',
+                        confirmButtonColor: btnColor,
+                        cancelButtonColor: '#9CA3AF',
+                        confirmButtonText: currentFormato === 'preview' ? 'Sí, Previsualizar' : 'Sí, Descargar',
                         cancelButtonText: 'Cancelar'
                     }).then((result) => {
                         if (result.isConfirmed) {
@@ -99,7 +123,7 @@
                         }
                     });
                 } else {
-                    if (confirm(`¿Estás seguro de descargar el PDF de ${tipo} del ${dateStartStr} al ${dateEndStr}?`)) {
+                    if (confirm(`¿Estás seguro de ${accionNombre} ${tipo} en ${formatoNombre} del ${dateStartStr} al ${dateEndStr}?`)) {
                         formToSubmit.submit();
                     }
                 }
@@ -112,89 +136,156 @@
 @section('content')
 
 <div class="mb-8">
-    <p class="text-gray-600 dark:text-emerald-100/80 text-lg">Selecciona un módulo para generar su respectivo reporte en PDF, filtrando por fechas dinámicamente.</p>
+    <p class="text-gray-600 dark:text-emerald-100/80 text-lg">Selecciona un módulo y rango de fechas para exportarlo o previsualizarlo dinámicamente.</p>
 </div>
 
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
     
     {{-- Reporte de Usuarios --}}
-    <div class="bg-white dark:bg-forest-card rounded-[2rem] p-8 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative overflow-hidden flex flex-col items-center group">
+    <div class="bg-white dark:bg-forest-card rounded-[2rem] p-6 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative overflow-hidden flex flex-col items-center group w-full">
         <div class="absolute -right-10 -top-10 w-32 h-32 bg-emerald-50 dark:bg-emerald-900/20 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-500"></div>
-        <div class="w-20 h-20 rounded-full bg-emerald-100 flex items-center justify-center mb-6 shadow-md z-10">
-            <span class="material-symbols-outlined text-4xl text-emerald-600">group</span>
+        <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mb-4 shadow-md z-10">
+            <span class="material-symbols-outlined text-3xl text-emerald-600">group</span>
         </div>
-        <h3 class="font-black text-2xl text-[#064E3B] dark:text-white mb-2 z-10">Usuarios</h3>
-        <p class="text-sm text-center text-gray-500 mb-8 z-10">Total de registros, historial y detalles de cada ecologista de la plataforma.</p>
+        <h3 class="font-black text-xl text-[#064E3B] dark:text-white mb-2 z-10 w-full text-center">Usuarios</h3>
+        <p class="text-xs text-center text-gray-500 mb-6 z-10 flex-grow">Total de registros, historial y detalles ecologistas.</p>
         
-        <form action="{{ route('reportes.exportar') }}" method="GET" class="w-full report-form z-10" data-tipo="usuarios" novalidate>
+        <form action="{{ route('reportes.exportar') }}" method="GET" class="w-full report-form z-10 flex flex-col justify-end" data-tipo="usuarios" novalidate>
             <input type="hidden" name="tipo" value="usuarios">
-            <div class="mb-4">
-                <label class="block text-xs font-black uppercase text-gray-500 mb-2">Fecha Inicio:</label>
-                <input type="text" name="fecha_inicio" id="fecha_inicio_usuarios" class="datepicker w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-[#00E096] dark:text-white transition-all bg-white" placeholder="Seleccionar...">
+            <input type="hidden" name="formato" class="formato_input" value="pdf">
+            <div class="mb-3">
+                <input type="text" name="fecha_inicio" id="fecha_inicio_usuarios" class="datepicker w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-[#00E096] dark:text-white text-sm bg-white" placeholder="Fecha Inicio">
                 <span id="err_inicio_usuarios" class="hidden text-red-500 text-xs font-bold mt-1 block"></span>
             </div>
-            <div class="mb-6">
-                <label class="block text-xs font-black uppercase text-gray-500 mb-2">Fecha Fin:</label>
-                <input type="text" name="fecha_fin" id="fecha_fin_usuarios" class="datepicker w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-[#00E096] dark:text-white transition-all bg-white" placeholder="Seleccionar...">
+            <div class="mb-4">
+                <input type="text" name="fecha_fin" id="fecha_fin_usuarios" class="datepicker w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-[#00E096] dark:text-white text-sm bg-white" placeholder="Fecha Fin">
                 <span id="err_fin_usuarios" class="hidden text-red-500 text-xs font-bold mt-1 block"></span>
             </div>
-            <button type="submit" class="w-full bg-[#064E3B] hover:bg-primary text-white font-bold py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all group-hover:scale-105">
-                <span class="material-symbols-outlined">download</span> Descargar
-            </button>
+            <div class="flex gap-2 w-full mt-auto">
+                <button type="submit" data-formato="preview" class="btn-export bg-gray-500 hover:bg-gray-400 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Previsualizar en Navegador">
+                    <span class="material-symbols-outlined text-lg">visibility</span>
+                </button>
+                <button type="submit" data-formato="pdf" class="btn-export bg-red-600 hover:bg-red-500 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Descargar PDF">
+                    <span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                </button>
+                <button type="submit" data-formato="xlsx" class="btn-export bg-green-600 hover:bg-green-500 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Descargar Excel">
+                    <span class="material-symbols-outlined text-lg">table_chart</span>
+                </button>
+                <button type="submit" data-formato="docx" class="btn-export bg-blue-500 hover:bg-blue-400 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Descargar Word">
+                    <span class="material-symbols-outlined text-lg">description</span>
+                </button>
+            </div>
         </form>
     </div>
 
     {{-- Reporte de Campañas --}}
-    <div class="bg-white dark:bg-forest-card rounded-[2rem] p-8 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative overflow-hidden flex flex-col items-center group">
+    <div class="bg-white dark:bg-forest-card rounded-[2rem] p-6 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative overflow-hidden flex flex-col items-center group w-full">
         <div class="absolute -right-10 -top-10 w-32 h-32 bg-blue-50 dark:bg-blue-900/10 rounded-full blur-3xl group-hover:bg-blue-400/20 transition-all duration-500"></div>
-        <div class="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mb-6 shadow-md z-10">
-            <span class="material-symbols-outlined text-4xl text-blue-600">military_tech</span>
+        <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4 shadow-md z-10">
+            <span class="material-symbols-outlined text-3xl text-blue-600">military_tech</span>
         </div>
-        <h3 class="font-black text-2xl text-[#064E3B] dark:text-white mb-2 z-10">Campañas</h3>
-        <p class="text-sm text-center text-gray-500 mb-8 z-10">Eventos organizados, fechas de inicio y estatus de visibilidad pública.</p>
+        <h3 class="font-black text-xl text-[#064E3B] dark:text-white mb-2 z-10 w-full text-center">Campañas</h3>
+        <p class="text-xs text-center text-gray-500 mb-6 z-10 flex-grow">Campañas organizadas y estatus de visibilidad.</p>
         
-        <form action="{{ route('reportes.exportar') }}" method="GET" class="w-full report-form z-10" data-tipo="campanas" novalidate>
+        <form action="{{ route('reportes.exportar') }}" method="GET" class="w-full report-form z-10 flex flex-col justify-end" data-tipo="campanas" novalidate>
             <input type="hidden" name="tipo" value="campanas">
-            <div class="mb-4">
-                <label class="block text-xs font-black uppercase text-gray-500 mb-2">Fecha Inicio:</label>
-                <input type="text" name="fecha_inicio" id="fecha_inicio_campanas" class="datepicker w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-blue-400 dark:text-white transition-all bg-white" placeholder="Seleccionar...">
+            <input type="hidden" name="formato" class="formato_input" value="pdf">
+            <div class="mb-3">
+                <input type="text" name="fecha_inicio" id="fecha_inicio_campanas" class="datepicker w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-blue-400 dark:text-white text-sm bg-white" placeholder="Fecha Inicio">
                 <span id="err_inicio_campanas" class="hidden text-red-500 text-xs font-bold mt-1 block"></span>
             </div>
-            <div class="mb-6">
-                <label class="block text-xs font-black uppercase text-gray-500 mb-2">Fecha Fin:</label>
-                <input type="text" name="fecha_fin" id="fecha_fin_campanas" class="datepicker w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-blue-400 dark:text-white transition-all bg-white" placeholder="Seleccionar...">
+            <div class="mb-4">
+                <input type="text" name="fecha_fin" id="fecha_fin_campanas" class="datepicker w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-blue-400 dark:text-white text-sm bg-white" placeholder="Fecha Fin">
                 <span id="err_fin_campanas" class="hidden text-red-500 text-xs font-bold mt-1 block"></span>
             </div>
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all group-hover:scale-105">
-                <span class="material-symbols-outlined">download</span> Descargar
-            </button>
+            <div class="flex gap-2 w-full mt-auto">
+                <button type="submit" data-formato="preview" class="btn-export bg-gray-500 hover:bg-gray-400 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Previsualizar en Navegador">
+                    <span class="material-symbols-outlined text-lg">visibility</span>
+                </button>
+                <button type="submit" data-formato="pdf" class="btn-export bg-red-600 hover:bg-red-500 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Descargar PDF">
+                    <span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                </button>
+                <button type="submit" data-formato="xlsx" class="btn-export bg-green-600 hover:bg-green-500 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Descargar Excel">
+                    <span class="material-symbols-outlined text-lg">table_chart</span>
+                </button>
+                <button type="submit" data-formato="docx" class="btn-export bg-blue-500 hover:bg-blue-400 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Descargar Word">
+                    <span class="material-symbols-outlined text-lg">description</span>
+                </button>
+            </div>
         </form>
     </div>
 
     {{-- Reporte de Mapa --}}
-    <div class="bg-white dark:bg-forest-card rounded-[2rem] p-8 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative overflow-hidden flex flex-col items-center group">
+    <div class="bg-white dark:bg-forest-card rounded-[2rem] p-6 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative overflow-hidden flex flex-col items-center group w-full">
         <div class="absolute -right-10 -top-10 w-32 h-32 bg-amber-50 dark:bg-amber-900/10 rounded-full blur-3xl group-hover:bg-amber-400/20 transition-all duration-500"></div>
-        <div class="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mb-6 shadow-md z-10">
-            <span class="material-symbols-outlined text-4xl text-amber-600">location_on</span>
+        <div class="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mb-4 shadow-md z-10">
+            <span class="material-symbols-outlined text-3xl text-amber-600">location_on</span>
         </div>
-        <h3 class="font-black text-2xl text-[#064E3B] dark:text-white mb-2 z-10">Mapa</h3>
-        <p class="text-sm text-center text-gray-500 mb-8 z-10">Puntos de reciclaje, centros de acopio y contenedores activos en la app.</p>
+        <h3 class="font-black text-xl text-[#064E3B] dark:text-white mb-2 z-10 w-full text-center">Mapa</h3>
+        <p class="text-xs text-center text-gray-500 mb-6 z-10 flex-grow">Puntos, centros de acopio y contenedores activos.</p>
         
-        <form action="{{ route('reportes.exportar') }}" method="GET" class="w-full report-form z-10" data-tipo="mapa" novalidate>
+        <form action="{{ route('reportes.exportar') }}" method="GET" class="w-full report-form z-10 flex flex-col justify-end" data-tipo="mapa" novalidate>
             <input type="hidden" name="tipo" value="mapa">
-            <div class="mb-4">
-                <label class="block text-xs font-black uppercase text-gray-500 mb-2">Fecha Inicio:</label>
-                <input type="text" name="fecha_inicio" id="fecha_inicio_mapa" class="datepicker w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-amber-500 dark:text-white transition-all bg-white" placeholder="Seleccionar...">
+            <input type="hidden" name="formato" class="formato_input" value="pdf">
+            <div class="mb-3">
+                <input type="text" name="fecha_inicio" id="fecha_inicio_mapa" class="datepicker w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-amber-500 dark:text-white text-sm bg-white" placeholder="Fecha Inicio">
                 <span id="err_inicio_mapa" class="hidden text-red-500 text-xs font-bold mt-1 block"></span>
             </div>
-            <div class="mb-6">
-                <label class="block text-xs font-black uppercase text-gray-500 mb-2">Fecha Fin:</label>
-                <input type="text" name="fecha_fin" id="fecha_fin_mapa" class="datepicker w-full px-4 py-2.5 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-amber-500 dark:text-white transition-all bg-white" placeholder="Seleccionar...">
+            <div class="mb-4">
+                <input type="text" name="fecha_fin" id="fecha_fin_mapa" class="datepicker w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-amber-500 dark:text-white text-sm bg-white" placeholder="Fecha Fin">
                 <span id="err_fin_mapa" class="hidden text-red-500 text-xs font-bold mt-1 block"></span>
             </div>
-            <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all group-hover:scale-105">
-                <span class="material-symbols-outlined">download</span> Descargar
-            </button>
+            <div class="flex gap-2 w-full mt-auto">
+                <button type="submit" data-formato="preview" class="btn-export bg-gray-500 hover:bg-gray-400 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Previsualizar en Navegador">
+                    <span class="material-symbols-outlined text-lg">visibility</span>
+                </button>
+                <button type="submit" data-formato="pdf" class="btn-export bg-red-600 hover:bg-red-500 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Descargar PDF">
+                    <span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                </button>
+                <button type="submit" data-formato="xlsx" class="btn-export bg-green-600 hover:bg-green-500 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Descargar Excel">
+                    <span class="material-symbols-outlined text-lg">table_chart</span>
+                </button>
+                <button type="submit" data-formato="docx" class="btn-export bg-blue-500 hover:bg-blue-400 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Descargar Word">
+                    <span class="material-symbols-outlined text-lg">description</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {{-- Reporte de Eventos (4TO REPORTE) --}}
+    <div class="bg-white dark:bg-forest-card rounded-[2rem] p-6 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative overflow-hidden flex flex-col items-center group w-full">
+        <div class="absolute -right-10 -top-10 w-32 h-32 bg-purple-50 dark:bg-purple-900/10 rounded-full blur-3xl group-hover:bg-purple-400/20 transition-all duration-500"></div>
+        <div class="w-16 h-16 rounded-full bg-purple-100 flex items-center justify-center mb-4 shadow-md z-10">
+            <span class="material-symbols-outlined text-3xl text-purple-600">event</span>
+        </div>
+        <h3 class="font-black text-xl text-[#064E3B] dark:text-white mb-2 z-10 w-full text-center">Eventos</h3>
+        <p class="text-xs text-center text-gray-500 mb-6 z-10 flex-grow">Jornadas comunitarias, talleres y limpiezas urbanas.</p>
+        
+        <form action="{{ route('reportes.exportar') }}" method="GET" class="w-full report-form z-10 flex flex-col justify-end" data-tipo="eventos" novalidate>
+            <input type="hidden" name="tipo" value="eventos">
+            <input type="hidden" name="formato" class="formato_input" value="pdf">
+            <div class="mb-3">
+                <input type="text" name="fecha_inicio" id="fecha_inicio_eventos" class="datepicker w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-purple-500 dark:text-white text-sm bg-white" placeholder="Fecha Inicio">
+                <span id="err_inicio_eventos" class="hidden text-red-500 text-xs font-bold mt-1 block"></span>
+            </div>
+            <div class="mb-4">
+                <input type="text" name="fecha_fin" id="fecha_fin_eventos" class="datepicker w-full px-3 py-2 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-purple-500 dark:text-white text-sm bg-white" placeholder="Fecha Fin">
+                <span id="err_fin_eventos" class="hidden text-red-500 text-xs font-bold mt-1 block"></span>
+            </div>
+            <div class="flex gap-2 w-full mt-auto">
+                <button type="submit" data-formato="preview" class="btn-export bg-gray-500 hover:bg-gray-400 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Previsualizar en Navegador">
+                    <span class="material-symbols-outlined text-lg">visibility</span>
+                </button>
+                <button type="submit" data-formato="pdf" class="btn-export bg-red-600 hover:bg-red-500 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Descargar PDF">
+                    <span class="material-symbols-outlined text-lg">picture_as_pdf</span>
+                </button>
+                <button type="submit" data-formato="xlsx" class="btn-export bg-green-600 hover:bg-green-500 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Descargar Excel">
+                    <span class="material-symbols-outlined text-lg">table_chart</span>
+                </button>
+                <button type="submit" data-formato="docx" class="btn-export bg-blue-500 hover:bg-blue-400 flex-1 text-white font-bold py-2 rounded-xl flex items-center justify-center transition-all" title="Descargar Word">
+                    <span class="material-symbols-outlined text-lg">description</span>
+                </button>
+            </div>
         </form>
     </div>
 

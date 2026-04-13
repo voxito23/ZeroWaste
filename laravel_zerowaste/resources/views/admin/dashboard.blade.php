@@ -49,76 +49,8 @@
             });
         }
 
-        // Gráfica de usuarios por día (Iceberg Azul)
-        const chartData = @json($usuariosPorMes);
-        const ctxUsers = document.getElementById('usersChart');
-        if (chartData.length > 0 && ctxUsers) {
-            const ctx = ctxUsers.getContext('2d');
-            const gradientIceberg = ctx.createLinearGradient(0, 0, 0, 300);
-            gradientIceberg.addColorStop(0, 'rgba(14, 165, 233, 0.4)'); // Light blue transparent top
-            gradientIceberg.addColorStop(1, 'rgba(14, 165, 233, 0.0)'); // Transparent bottom
-
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: chartData.map(d => d.mes),
-                    datasets: [{
-                        label: 'ventas',
-                        data: chartData.map(d => d.total),
-                        borderColor: '#0ea5e9', // Blue line
-                        backgroundColor: gradientIceberg,
-                        borderWidth: 3,
-                        tension: 0.4, // Smooth curve
-                        fill: true,
-                        pointBackgroundColor: '#fff',
-                        pointBorderColor: '#0ea5e9',
-                        pointBorderWidth: 2,
-                        pointRadius: 0,
-                        pointHoverRadius: 6,
-                        pointHoverBackgroundColor: '#0ea5e9',
-                        pointHoverBorderColor: '#fff',
-                        pointHoverBorderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#ffffff',
-                            titleColor: '#6B7280',
-                            bodyColor: '#374151',
-                            borderColor: '#E5E7EB',
-                            borderWidth: 1,
-                            padding: 12,
-                            cornerRadius: 6,
-                            displayColors: true,
-                            boxPadding: 4,
-                            usePointStyle: true,
-                            callbacks: {
-                                label: function(ctx) { return ' ' + ctx.raw + ' usuarios'; }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: { 
-                            beginAtZero: true, 
-                            ticks: { stepSize: 10, color: '#9ca3af', font: { family: 'Inter', size: 12 } }, 
-                            grid: { color: '#F3F4F6', drawBorder: false } 
-                        },
-                        x: { 
-                            grid: { display: true, color: '#F3F4F6', drawBorder: false, borderDash: [5, 5] }, 
-                            ticks: { color: '#6B7280', font: { family: 'Inter', size: 12 } } 
-                        }
-                    }
-                }
-            });
-        }
+        // Gráfica de usuarios por día (Pandas)
+        // La gráfica ahora es generada por el backend en Python (FastAPI).
 
         // Gráfica de sentimiento (Dona)
         const sentData = @json($sentimiento);
@@ -253,8 +185,8 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
     <div class="bg-white dark:bg-forest-card rounded-[2rem] p-6 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-2xl transition-all duration-500">
         <h3 class="font-bold text-lg text-[#064E3B] dark:text-emerald-100 mb-4">Usuarios registrados</h3>
-        <div class="relative h-[250px] w-full">
-            <canvas id="usersChart"></canvas>
+        <div class="relative h-[250px] w-full flex items-center justify-center">
+            <img src="http://127.0.0.1:6001/analisis/grafica_usuarios" alt="Gráfica de Usuarios Registrados" class="w-full h-full object-contain">
         </div>
     </div>
     <div class="bg-white dark:bg-forest-card rounded-[2rem] p-6 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col items-center">
