@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.data.database import get_db
 from app.models.domain_models import (
-    Usuario, Categoria, Foro, RespuestaForo, LikeForo, Actividad
+    Usuario, Categoria, Foro, RespuestaForo, LikeForo, Actividad, Notificacion
 )
 from app.models.schemas import (
     PostCreate, PostUpdate, PostResponse, PostDetailResponse,
@@ -229,6 +229,17 @@ def create_respuesta(
         contenido=respuesta_in.contenido,
     )
     db.add(nueva_respuesta)
+
+    # Notificar al autor del post (si no es el mismo que responde)
+    if post.autor_id != current_user.id:
+        noti = Notificacion(
+            user_id=post.autor_id,
+            titulo=f"{current_user.nombre} respondió a tu post",
+            mensaje=respuesta_in.contenido[:100],
+            url=f"/foro",
+        )
+        db.add(noti)
+
     db.commit()
     db.refresh(nueva_respuesta)
 
@@ -269,6 +280,18 @@ def toggle_like(
         db.add(nuevo_like)
         action = "liked"
         liked = True
+
+        # Notificar al autor del post (si no es el mismo que da like)
+        if post.autor_id != usuario_id:
+            quien = db.query(Usuario).filter(Usuario.id == usuario_id).first()
+            nombre = quien.nombre if quien else "Alguien"
+            noti = Notificacion(
+                user_id=post.autor_id,
+                titulo=f"A {nombre} le gustó tu post",
+                mensaje=f"Tu publicación \"{post.titulo[:50]}\" recibió un like",
+                url=f"/foro",
+            )
+            db.add(noti)
 
     db.commit()
     total_likes = db.query(LikeForo).filter(LikeForo.post_id == post_id).count()
