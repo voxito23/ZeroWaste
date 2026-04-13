@@ -49,7 +49,7 @@ class DashboardController extends Controller
         // Sentimiento NLP
         $sentimiento = ['POS' => 0, 'NEU' => 0, 'NEG' => 0];
         try {
-            $response = Http::timeout(3)->get('http://fastapi_app:6000/analisis/sentimiento');
+            $response = Http::timeout(60)->get('http://fastapi_app:6000/analisis/sentimiento');
             if ($response->successful()) {
                 $sentimiento = $response->json()['data'];
             } else {
@@ -93,7 +93,7 @@ class DashboardController extends Controller
         ];
 
         try {
-            $response = Http::timeout(3)->get('http://fastapi_app:6000/analisis/sentimiento');
+            $response = Http::timeout(60)->get('http://fastapi_app:6000/analisis/sentimiento');
             if ($response->successful()) {
                 $data['sentimiento'] = $response->json()['data'];
             }
