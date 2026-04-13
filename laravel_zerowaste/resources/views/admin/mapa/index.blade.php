@@ -38,7 +38,7 @@
 
         locations.forEach(loc => {
             if(loc.latitud && loc.longitud) {
-                let imgHtml = loc.imagen ? `<img src="http://127.0.0.1:5001/static/img/${loc.imagen}" class="w-full h-32 object-cover rounded-xl mb-3 shadow-md">` : '';
+                let imgHtml = loc.imagen ? `<img src="https://zerowaste-qro.com/static/img/${loc.imagen}" class="w-full h-32 object-cover rounded-xl mb-3 shadow-md">` : '';
                 L.marker([loc.latitud, loc.longitud], {icon: ecoIcon}).addTo(map)
                     .bindPopup(`
                         <div class="font-sans text-left min-w-[200px] p-1">
@@ -106,7 +106,7 @@
                 <div class="flex items-center gap-3">
                     <div class="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-gray-100 border-2 border-emerald-100 shadow-sm">
                         @if($loc->imagen)
-                        <img src="http://127.0.0.1:5001/static/img/{{ $loc->imagen }}" alt="{{ $loc->nombre }}" class="w-full h-full object-cover">
+                        <img src="https://zerowaste-qro.com/static/img/{{ $loc->imagen }}" alt="{{ $loc->nombre }}" class="w-full h-full object-cover">
                         @else
                         <div class="w-full h-full flex items-center justify-center bg-emerald-50 text-emerald-500">
                             <span class="material-symbols-outlined text-lg">image_not_supported</span>
@@ -118,7 +118,7 @@
                         <p class="text-[10px] text-gray-500 dark:text-gray-400 truncate">{{ $loc->direccion }}</p>
                         <div class="flex items-center gap-1.5 mt-1">
                             <span class="px-1.5 py-0.5 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full text-[9px] font-bold uppercase">{{ $loc->tipo }}</span>
-                            <span class="text-[9px] text-gray-400 truncate">{{ Str::limit($loc->materiales ?? 'Sin materiales', 20) }}</span>
+                            <span class="text-[9px] text-gray-400 truncate">{{ \Illuminate\Support\Str::limit($loc->materiales ?? 'Sin materiales', 20) }}</span>
                         </div>
                     </div>
                     <div class="flex gap-1 shrink-0">

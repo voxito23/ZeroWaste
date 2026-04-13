@@ -48,7 +48,7 @@
     <!-- Barra lateral de navegación -->
     <aside class="w-64 bg-white/95 dark:bg-forest-card border-r border-emerald-100 dark:border-emerald-900/50 shadow-xl flex flex-col hidden lg:flex">
         <div class="h-24 flex items-center justify-center border-b border-emerald-50 dark:border-emerald-900/50 gap-3">
-            <img src="{{ asset('img/logo.png') }}" alt="ZeroWaste" class="h-10 w-auto" onerror="this.style.display='none'">
+            <img src="{{ url('/static/img/logo.png') }}" alt="ZeroWaste" class="h-10 w-auto" onerror="this.style.display='none'">
             <span class="font-extrabold text-xl text-secondary dark:text-white">ZEROWASTE</span>
         </div>
         <nav class="p-4 flex flex-col gap-1 flex-1">
@@ -108,7 +108,7 @@
                     $uName = $isAuth ? \Illuminate\Support\Facades\Auth::user()->nombre : 'Visitante';
                     $uRole = ($isAuth && \Illuminate\Support\Facades\Auth::user()->is_admin) ? 'Administrador' : 'Usuario';
                     $fotoPerfil = ($isAuth && \Illuminate\Support\Facades\Auth::user()->foto_perfil) ? \Illuminate\Support\Facades\Auth::user()->foto_perfil : 'default.png';
-                    $fotoUrl = asset('img/perfiles/' . $fotoPerfil);
+                $fotoUrl = url('/static/img/perfiles/' . $fotoPerfil);
                 @endphp
                 <div class="relative group cursor-pointer">
                     <div class="flex items-center gap-3">
@@ -118,7 +118,7 @@
                         </div>
                         <img src="{{ $fotoUrl }}" alt="Avatar"
                              class="w-11 h-11 rounded-full border-[3px] border-primary object-cover shadow-lg shadow-primary/20 transition-transform group-hover:scale-105"
-                             onerror="this.onerror=null; this.src='{{ asset('img/perfiles/default.png') }}';">
+                             onerror="this.onerror=null; this.src='{{ url('/static/img/perfiles/default.png') }}';">
                     </div>
                     
                     <!-- Dropdown Menu -->

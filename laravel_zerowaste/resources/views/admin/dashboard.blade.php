@@ -186,7 +186,7 @@
     <div class="bg-white dark:bg-forest-card rounded-[2rem] p-6 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-2xl transition-all duration-500">
         <h3 class="font-bold text-lg text-[#064E3B] dark:text-emerald-100 mb-4">Usuarios registrados</h3>
         <div class="relative h-[250px] w-full flex items-center justify-center">
-            <img src="http://127.0.0.1:6001/analisis/grafica_usuarios" alt="Gráfica de Usuarios Registrados" class="w-full h-full object-contain">
+            <img src="https://zerowaste-qro.com/api/analisis/grafica_usuarios" alt="Gráfica de Usuarios Registrados" class="w-full h-full object-contain">
         </div>
     </div>
     <div class="bg-white dark:bg-forest-card rounded-[2rem] p-6 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col items-center">

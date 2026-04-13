@@ -52,7 +52,7 @@
             <label class="block font-bold mb-2 dark:text-emerald-200">Imagen del punto</label>
             @if($location->imagen && $location->imagen !== 'default_punto.png')
             <div class="mb-3 flex items-center gap-3">
-                <img src="http://127.0.0.1:5001/static/img/{{ $location->imagen }}" alt="Imagen actual" class="h-16 w-24 object-cover rounded-lg border-2 border-emerald-200 dark:border-emerald-700" onerror="this.style.display='none'">
+                <img src="https://zerowaste-qro.com/static/img/{{ $location->imagen }}" alt="Imagen actual" class="h-16 w-24 object-cover rounded-lg border-2 border-emerald-200 dark:border-emerald-700" onerror="this.style.display='none'">
                 <span class="text-xs text-gray-400 dark:text-emerald-500">Imagen actual: {{ $location->imagen }}</span>
             </div>
             @endif
