@@ -32,7 +32,6 @@ app = FastAPI(
         "Comparte la base de datos PostgreSQL con Flask y Laravel."
     ),
     version="2.0.0",
-    root_path="/api",
     redoc_url=None,
     # En producción, deshabilitar docs interactivos
     docs_url=None if IS_PRODUCTION else "/docs",

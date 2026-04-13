@@ -5,7 +5,7 @@ zerowaste-qro.com, www.zerowaste-qro.com {
     }
 
     # FastAPI (Backend / API)
-    handle /api* {
+    handle_path /api* {
         reverse_proxy fast_api:6000
     }
 
