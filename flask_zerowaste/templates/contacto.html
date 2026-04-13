@@ -155,7 +155,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Teléfono</p>
-                        <p class="text-base font-bold text-secondary dark:text-white">+52 442 123 4567</p>
+                        <a href="tel:+14697890156" class="text-base font-bold text-secondary dark:text-white hover:text-primary transition-colors hover:underline">+1 4697890156</a>
                     </div>
                 </div>
                 <div class="flex items-center gap-4 group">
@@ -164,7 +164,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-gray-400 font-bold uppercase tracking-wider">Correo Directo</p>
-                        <p class="text-base font-bold text-secondary dark:text-white">hola@zerowaste.org</p>
+                        <a href="mailto:contacto@zerowaste-qro.com?subject=Consula%20ZeroWaste" class="text-base font-bold text-secondary dark:text-white hover:text-primary transition-colors hover:underline">contacto@zerowaste-qro.com</a>
                     </div>
                 </div>
             </div>
@@ -228,7 +228,7 @@
 
         if (!isValid) return;
 
-        fetch('{{ API_URL }}/formularios/contacto', {
+        fetch('/api/formularios/contacto', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre: name, email: email, ubicacion: ubicacion, mensaje: message })
