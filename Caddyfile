@@ -1,0 +1,16 @@
+zerowaste-qro.com, www.zerowaste-qro.com {
+    # Laravel (Panel Admin)
+    handle /admin* {
+        reverse_proxy admin:80
+    }
+
+    # FastAPI (Backend / API)
+    handle /api* {
+        reverse_proxy fast_api:6000
+    }
+
+    # Flask (Resto del sitio - Página Principal)
+    handle {
+        reverse_proxy cliente:5000
+    }
+}
