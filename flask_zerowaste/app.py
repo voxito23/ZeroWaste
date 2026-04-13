@@ -27,7 +27,7 @@ from models import (db, Usuario, Categoria, PuntoMapa, CalificacionPunto,
 #  Constantes de Seguridad
 # ==========================================================================
 ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-MAX_UPLOAD_SIZE_MB = 5
+MAX_UPLOAD_SIZE_MB = 50
 EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
 def allowed_file(filename):
@@ -589,7 +589,7 @@ def forgot_password():
     # Siempre retornamos éxito instantáneamente; el envío real ocurre en background o DO lo bloquea silenciosamente en el log.
     return jsonify({'success': True, 'message': 'Se envió una contraseña temporal a tu correo.'})
 
-@app.route('/api/mis_mensajes_contacto')
+@app.route('/ajax/mis_mensajes_contacto')
 def mis_mensajes_contacto():
     """Devuelve los mensajes de contacto del usuario logueado con hilo de respuestas."""
     if 'usuario_id' not in session:
@@ -626,7 +626,7 @@ def mis_mensajes_contacto():
     return jsonify({'success': True, 'mensajes': result})
 
 
-@app.route('/api/responder_contacto/<int:msg_id>', methods=['POST'])
+@app.route('/ajax/responder_contacto/<int:msg_id>', methods=['POST'])
 def responder_contacto(msg_id):
     """Permite al usuario responder a un hilo de contacto."""
     if 'usuario_id' not in session:
@@ -769,7 +769,7 @@ def calificar_punto():
         db.session.rollback()
         return jsonify({'success': False, 'error': 'Error de servidor.'})
 
-@app.route('/api/recomendaciones_ia')
+@app.route('/ajax/recomendaciones_ia')
 def recomendaciones_ia():
     try:
         puntos = get_puntos_con_promedio()
@@ -1090,7 +1090,7 @@ def like_post(post_id):
 #  Notificaciones 
 # ==========================================================================
 
-@app.route('/api/notificaciones/unread')
+@app.route('/ajax/notificaciones/unread')
 def get_unread_notificaciones():
     if 'usuario_id' not in session:
         return jsonify({'success': False, 'error': 'No autenticado.'}), 401
@@ -1101,7 +1101,7 @@ def get_unread_notificaciones():
     lista = [{'id': n.id, 'titulo': n.titulo, 'mensaje': n.mensaje, 'url': n.url, 'created_at': datetime_mx_filter(n.created_at)} for n in unread]
     return jsonify({'success': True, 'count': len(lista), 'data': lista})
 
-@app.route('/api/notificaciones/mark_read', methods=['POST'])
+@app.route('/ajax/notificaciones/mark_read', methods=['POST'])
 def mark_read_notificaciones():
     if 'usuario_id' not in session:
         return jsonify({'success': False})
