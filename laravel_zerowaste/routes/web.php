@@ -13,12 +13,13 @@ use App\Http\Controllers\PasswordResetRequestController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\ReportController;
 
-Route::get('/', function () {
+Route::get('/admin/login', function () {
     return view('welcome');
 })->name('login');
 
-Route::redirect('/login', '/');
-Route::redirect('/admin', '/');
+Route::redirect('/admin', '/admin/login');
+Route::redirect('/', '/admin/login');
+
 Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login');
 Route::get('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
 

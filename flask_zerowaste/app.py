@@ -377,7 +377,7 @@ def noticia_queretaro():
 
 @app.route('/Acercade')
 def Acercade():
-    return render_template('acercade.html')
+    return render_template('Acercade.html')
 
 @app.route('/contacto')
 def contacto():
