@@ -131,7 +131,7 @@ def login():
             return jsonify({'success': False, 'error': 'Credenciales inválidas.'}), 401
             
         import bcrypt
-        if isinstance(usuario.password, str) and bcrypt.checkpw(password.encode('utf-8'), usuario.password.encode('utf-8')):
+        if isinstance(usuario.password, str) and bcrypt.checkpw(password.encode('utf-8'), usuario.password.replace('$2y$', '$2b$', 1).encode('utf-8')):
             if remember:
                 session.permanent = True
             else:
@@ -166,7 +166,7 @@ def registro():
             return jsonify({'success': False, 'error': 'El correo ya está registrado.'}), 400
             
         import bcrypt
-        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8').replace('$2b$', '$2y$')
         
         nuevo = Usuario(
             nombre=nombre,
@@ -260,7 +260,7 @@ def auth_firebase():
         else:
             # Crear usuario nuevo con perfil incompleto
             import bcrypt
-            random_pass = bcrypt.hashpw(uuid.uuid4().hex.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            random_pass = bcrypt.hashpw(uuid.uuid4().hex.encode('utf-8'), bcrypt.gensalt()).decode('utf-8').replace('$2b$', '$2y$')
             nuevo = Usuario(
                 nombre=name,
                 email=email,
@@ -334,7 +334,7 @@ def completar_perfil_save():
     # Contraseña local opcional (bcrypt para compatibilidad con Laravel)
     if password_local and len(password_local) >= 6:
         import bcrypt
-        hashed = bcrypt.hashpw(password_local.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        hashed = bcrypt.hashpw(password_local.encode('utf-8'), bcrypt.gensalt()).decode('utf-8').replace('$2b$', '$2y$')
         usuario.password = hashed
         if usuario.auth_provider == 'google':
             usuario.auth_provider = 'google+local'
@@ -460,7 +460,7 @@ def forgot_password():
     # Generar contraseña temporal
     temp_password = generar_password_temporal(8)
     import bcrypt
-    temp_hash = bcrypt.hashpw(temp_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    temp_hash = bcrypt.hashpw(temp_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8').replace('$2b$', '$2y$')
 
     # Guardar en BD con expiración de 15 minutos
     nueva_solicitud = PasswordResetRequest(
@@ -907,7 +907,7 @@ def editar_perfil():
                 else:
                     hash_comparable = usuario.password.replace('$2y$', '$2b$', 1).encode('utf-8')
                     if bcrypt.checkpw(password_actual.encode('utf-8'), hash_comparable):
-                        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8').replace('$2b$', '$2y$')
                         usuario.password = hashed
                     else:
                         if request.headers.get('Accept') == 'application/json':
@@ -915,7 +915,7 @@ def editar_perfil():
                         return redirect(url_for('perfil'))
             else:
                 # Usuario de Google sin contraseña local - permitir crear una nueva sin verificar
-                hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+                hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8').replace('$2b$', '$2y$')
                 usuario.password = hashed
                 if getattr(usuario, 'auth_provider', '') == 'google':
                     usuario.auth_provider = 'google+local'
@@ -1269,7 +1269,7 @@ def handle_registro():
 
     # Usar bcrypt para compatibilidad con Laravel
     import bcrypt
-    password_hasheado = bcrypt.hashpw(password_usuario.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    password_hasheado = bcrypt.hashpw(password_usuario.encode('utf-8'), bcrypt.gensalt()).decode('utf-8').replace('$2b$', '$2y$')
 
     nuevo_usuario = Usuario(nombre=nombre_usuario, email=email_usuario, password=password_hasheado, foto_perfil=nombre_foto)
     db.session.add(nuevo_usuario)
@@ -1378,7 +1378,7 @@ def cambiar_contrasena_save():
         return jsonify({'success': False, 'error': 'Error al verificar. Intenta de nuevo.'}), 500
 
     # Actualizar la contraseña del usuario
-    nueva_hash = bcrypt.hashpw(nueva_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    nueva_hash = bcrypt.hashpw(nueva_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8').replace('$2b$', '$2y$')
     usuario.password = nueva_hash
     
     # Marcar la solicitud como usada
