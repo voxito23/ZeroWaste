@@ -1,12 +1,31 @@
 version: '3.8'
 
 services:
+  # ===========================
+  # Nginx — Proxy Inverso
+  # ===========================
+  nginx:
+    image: nginx:alpine
+    container_name: nginx_proxy
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - cliente
+      - admin
+      - fast_api
+
+  # ===========================
+  # Flask — Sitio Principal
+  # ===========================
   cliente:
     build: ./flask_zerowaste
     container_name: flask_app
     restart: always
-    ports:
-      - "5001:5000"
+    expose:
+      - "5000"
     volumes:
       - ./flask_zerowaste:/app
       - perfiles_compartidos:/app/static/img/perfiles
@@ -19,12 +38,15 @@ services:
       db:
         condition: service_healthy
 
+  # ===========================
+  # Laravel — Panel Admin
+  # ===========================
   admin:
     build: ./laravel_zerowaste
     container_name: laravel_admin
     restart: always
-    ports:
-      - "8001:80"
+    expose:
+      - "80"
     volumes:
       - ./laravel_zerowaste:/var/www/html
       - /var/www/html/vendor
@@ -32,7 +54,7 @@ services:
       - ./flask_zerowaste/static/img:/var/www/flask_zerowaste/static/img
     environment:
       - APP_ENV=production
-      - APP_DEBUG=true
+      - APP_DEBUG=false
       - DB_CONNECTION=pgsql
       - DB_HOST=db
       - DB_PORT=5432
@@ -43,29 +65,35 @@ services:
       db:
         condition: service_healthy
 
+  # ===========================
+  # FastAPI — API Backend
+  # ===========================
   fast_api:
     build: ./fast_api
     container_name: fastapi_app
     restart: always
-    ports:
-      - "6001:6000"
+    expose:
+      - "6000"
     volumes:
       - ./fast_api:/app
       - perfiles_compartidos:/app/static/img/perfiles
     env_file:
       - ./fast_api/.env
     environment:
-      - APP_ENV=development
+      - APP_ENV=production
     depends_on:
       db:
         condition: service_healthy
 
+  # ===========================
+  # PostgreSQL — Base de Datos
+  # ===========================
   db:
     image: postgres:16-alpine
     container_name: postgres_db
     restart: always
-    ports:
-      - "5433:5432"
+    expose:
+      - "5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgrespassword
@@ -78,6 +106,9 @@ services:
       retries: 5
       timeout: 5s
 
+  # ===========================
+  # Tailwind — CSS Builder
+  # ===========================
   tailwind:
     image: node:20-alpine
     container_name: tailwind_builder
