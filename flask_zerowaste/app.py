@@ -583,7 +583,9 @@ def mis_mensajes_contacto():
     if not usuario:
         return jsonify({'success': False, 'error': 'Usuario no encontrado.'}), 404
     
-    mensajes = ContactMessage.query.filter_by(email=usuario.email).order_by(ContactMessage.created_at.desc()).all()
+    mensajes = ContactMessage.query.filter(
+        db.or_(ContactMessage.email == usuario.email, ContactMessage.usuario_id == usuario.id)
+    ).order_by(ContactMessage.created_at.desc()).all()
     
     result = []
     for m in mensajes:
