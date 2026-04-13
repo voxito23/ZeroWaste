@@ -59,6 +59,7 @@ class ContactMessageController extends Controller
                 'titulo' => 'Soporte Administrativo',
                 'mensaje' => 'Respuesta a tu mensaje: "' . mb_strimwidth($msg->respuesta_admin, 0, 60, '...') . '"',
                 'url' => '/perfil?open_contact=1',
+                'leida' => false,
             ]);
         }
 

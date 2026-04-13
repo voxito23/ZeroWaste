@@ -1078,7 +1078,10 @@ def like_post(post_id):
 def get_unread_notificaciones():
     if 'usuario_id' not in session:
         return jsonify({'success': False, 'error': 'No autenticado.'}), 401
-    unread = Notificacion.query.filter_by(user_id=session['usuario_id'], leida=False).order_by(Notificacion.created_at.desc()).all()
+    unread = Notificacion.query.filter(
+        Notificacion.user_id == session['usuario_id'],
+        db.or_(Notificacion.leida == False, Notificacion.leida == None)
+    ).order_by(Notificacion.created_at.desc()).all()
     lista = [{'id': n.id, 'titulo': n.titulo, 'mensaje': n.mensaje, 'url': n.url, 'created_at': datetime_mx_filter(n.created_at)} for n in unread]
     return jsonify({'success': True, 'count': len(lista), 'data': lista})
 
@@ -1086,7 +1089,10 @@ def get_unread_notificaciones():
 def mark_read_notificaciones():
     if 'usuario_id' not in session:
         return jsonify({'success': False})
-    Notificacion.query.filter_by(user_id=session['usuario_id'], leida=False).update({'leida': True})
+    Notificacion.query.filter(
+        Notificacion.user_id == session['usuario_id'],
+        db.or_(Notificacion.leida == False, Notificacion.leida == None)
+    ).update({'leida': True})
     db.session.commit()
     return jsonify({'success': True})
 
