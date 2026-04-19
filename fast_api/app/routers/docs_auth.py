@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
-from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 import os
 
 from app.data.database import get_db
@@ -67,24 +66,17 @@ async def get_current_user_from_cookie(request: Request):
     return token
 
 
-@router.get("/docs", include_in_schema=False)
+@router.get("/docs", response_class=HTMLResponse, include_in_schema=False)
 async def custom_swagger_ui_html(request: Request, _=Depends(get_current_user_from_cookie)):
-    """Swagger UI Protegido."""
-    return get_swagger_ui_html(
-        openapi_url="/openapi.json",
-        title="ZeroWaste API - Swagger UI",
-        oauth2_redirect_url="/docs/oauth2-redirect",
-        swagger_js_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js",
-        swagger_css_url="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css",
-        swagger_ui_parameters={"defaultModelsExpandDepth": -1, "syntaxHighlight.theme": "monokai"}
-    )
+    """Swagger UI Privado y Premium."""
+    with open(os.path.join(templates_dir, "custom_swagger.html"), "r", encoding="utf-8") as f:
+        html_content = f.read()
+    return HTMLResponse(content=html_content)
 
 
-@router.get("/redoc_auth", include_in_schema=False)
+@router.get("/redoc_auth", response_class=HTMLResponse, include_in_schema=False)
 async def custom_redoc_html(request: Request, _=Depends(get_current_user_from_cookie)):
-    """ReDoc Protegido."""
-    return get_redoc_html(
-        openapi_url="/openapi.json",
-        title="ZeroWaste API - ReDoc",
-        redoc_js_url="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js",
-    )
+    """ReDoc Privado y Premium."""
+    with open(os.path.join(templates_dir, "custom_redoc.html"), "r", encoding="utf-8") as f:
+        html_content = f.read()
+    return HTMLResponse(content=html_content)

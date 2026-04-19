@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>ZeroWaste API Docs - ReDoc Backend</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* GitHub Dark Mode Base */
+            color: #c9d1d9;
+        }
+        
+        /* Loading Customization before ReDoc loads */
+        .loading-container {
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
+            background-color: #0d1117; color: #10b981; font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div id="redoc-container">
+        <div class="loading-container">Cargando Documentación ZeroWaste...</div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
+    <script>
+        Redoc.init('/openapi.json', {
+            theme: {
+                colors: {
+                    primary: { main: '#10b981' },
+                    success: { main: '#34d399' },
+                    warning: { main: '#fbbf24' },
+                    error: { main: '#ef4444' },
+                    text: {
+                        primary: '#c9d1d9',
+                        secondary: '#8b949e'
+                    },
+                    responses: {
+                        success: { color: '#34d399', backgroundColor: 'rgba(52, 211, 153, 0.1)' },
+                        error: { color: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)' }
+                    },
+                    http: {
+                        get: '#3b82f6', post: '#10b981', put: '#f59e0b', delete: '#ef4444'
+                    }
+                },
+                typography: {
+                    fontFamily: '"Inter", sans-serif',
+                    headings: { fontFamily: '"Inter", sans-serif', fontWeight: '800' },
+                    code: { fontFamily: 'Consolas, Monaco, "Andale Mono", monospace', fontSize: '13px', backgroundColor: '#161b22', color: '#e5e7eb' }
+                },
+                sidebar: {
+                    backgroundColor: '#161b22',
+                    textColor: '#c9d1d9',
+                    activeTextColor: '#10b981'
+                },
+                rightPanel: {
+                    backgroundColor: '#0d1117',
+                    width: '40%'
+                }
+            },
+            scrollYOffset: 50,
+            hideDownloadButton: false,
+            expandResponses: '200,201',
+            nativeScrollbars: true
+        }, document.getElementById('redoc-container'));
+    </script>
+</body>
+</html>
