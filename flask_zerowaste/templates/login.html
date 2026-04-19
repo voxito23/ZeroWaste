@@ -572,14 +572,19 @@
                 btnText.textContent = "Iniciar sesión";
                 spinner.classList.add('hidden');
                 
+                const isDarkTheme = document.documentElement.classList.contains('dark');
                 Swal.fire({
                     icon: 'error',
                     title: 'Acceso Denegado',
                     text: 'Usuario bloqueado por subir contenido indebido.',
                     footer: 'Contáctanos a <b>soporte@zerowaste-qro.com</b> para dar seguimiento a tu caso.',
                     confirmButtonColor: '#059669',
+                    background: isDarkTheme ? '#062C25' : '#ffffff',
+                    color: isDarkTheme ? '#d1fae5' : '#064E3B',
                     customClass: {
-                        popup: 'rounded-3xl',
+                        popup: 'rounded-[2rem] border border-emerald-100 dark:border-emerald-800/50 shadow-2xl',
+                        confirmButton: 'rounded-xl font-bold px-6 py-2.5',
+                        footer: 'border-t border-emerald-50 dark:border-emerald-800/50 text-gray-500 dark:text-gray-400'
                     }
                 });
             } else {

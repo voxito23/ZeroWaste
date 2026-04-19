@@ -161,6 +161,10 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        if ($user->email === 'vichdz@gmail.com') {
+            return redirect()->route('usuarios.index')->with('error_admin', 'Sin autorización de eliminar admin principal error');
+        }
+
         // Limpiar posteos y datos relacionados con posteos
         $postIds = \Illuminate\Support\Facades\DB::table('posts')->where('autor_id', $user->id)->pluck('id');
         if ($postIds->isNotEmpty()) {

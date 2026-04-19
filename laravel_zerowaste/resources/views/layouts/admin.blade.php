@@ -280,6 +280,26 @@
         </script>
     @endif
 
+    @if(session('error_admin'))
+        <script>
+            {!! "const isDarkTheme = document.documentElement.classList.contains('dark');" !!}
+            Swal.fire({
+                icon: 'error',
+                title: 'Acceso Denegado',
+                text: '{!! session("error_admin") !!}',
+                footer: 'Contáctanos a <b>soporte@zerowaste-qro.com</b> para dar seguimiento a tu caso.',
+                confirmButtonColor: '#059669',
+                background: isDarkTheme ? '#0F2A20' : '#ffffff',
+                color: isDarkTheme ? '#d1fae5' : '#064E3B',
+                customClass: {
+                    popup: 'rounded-[2rem] border border-emerald-100 dark:border-emerald-800/50 shadow-2xl',
+                    confirmButton: 'rounded-xl font-bold px-6 py-2.5',
+                    footer: 'border-t border-emerald-50 dark:border-emerald-800/50 text-gray-500 dark:text-gray-400'
+                }
+            });
+        </script>
+    @endif
+
     @stack('scripts')
 </body>
 </html>

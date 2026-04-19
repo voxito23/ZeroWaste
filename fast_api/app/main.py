@@ -13,7 +13,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-from app.routers import auth, usuarios, foro, mapa, eventos, analisis, formularios
+from app.routers import auth, usuarios, foro, mapa, eventos, analisis, formularios, docs_auth
 
 # ==========================================================================
 #  Rate Limiter global
@@ -33,8 +33,7 @@ app = FastAPI(
     ),
     version="2.0.0",
     redoc_url=None,
-    # En producción, deshabilitar docs interactivos
-    docs_url=None if IS_PRODUCTION else "/docs",
+    docs_url=None,
 )
 
 # Registrar rate limiter
@@ -65,6 +64,7 @@ app.include_router(mapa.router)
 app.include_router(eventos.router)
 app.include_router(analisis.router)
 app.include_router(formularios.router)
+app.include_router(docs_auth.router)
 
 
 @app.get("/", tags=["Salud"])
@@ -75,14 +75,4 @@ def health_check():
 @app.get("/favicon.ico", include_in_schema=False)
 async def favicon():
     return FileResponse("static/favicon/faviconZeroWaste.svg", media_type="image/svg+xml")
-
-
-@app.get("/redoc", include_in_schema=False)
-async def redoc_html():
-    """Documentación ReDoc con URL corregida del CDN."""
-    return get_redoc_html(
-        openapi_url=app.openapi_url,
-        title=app.title + " - ReDoc",
-        redoc_js_url="https://cdn.jsdelivr.net/npm/redoc/bundles/redoc.standalone.js",
-    )
 

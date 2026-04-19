@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZeroWaste API Docs - Acceso Privado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#059669",
+                        secondary: "#064E3B",
+                        "forest-dark": "#022C22",
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        };
+
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('dark')) {
+                document.documentElement.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.documentElement.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 dark:bg-forest-dark text-secondary dark:text-emerald-100 font-sans min-h-screen flex items-center justify-center p-4 transition-colors duration-300 relative overflow-hidden">
+    <!-- Decorative background elements -->
+    <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-emerald-400/20 dark:bg-emerald-900/30 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-primary/20 dark:bg-emerald-800/20 rounded-full blur-3xl"></div>
+
+    <div class="absolute top-6 right-6 z-50">
+        <button onclick="toggleTheme()" class="p-2.5 rounded-full bg-white dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800/50 shadow-md text-emerald-600 dark:text-emerald-300 hover:scale-105 transition-transform">
+            <span class="material-symbols-outlined dark:hidden">dark_mode</span>
+            <span class="material-symbols-outlined hidden dark:block">light_mode</span>
+        </button>
+    </div>
+
+    <div class="w-full max-w-md bg-white dark:bg-emerald-900/40 backdrop-blur-xl border border-emerald-100 dark:border-emerald-800/50 rounded-3xl p-8 shadow-2xl relative z-10">
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-800/50 text-emerald-600 dark:text-emerald-300 mb-4 shadow-inner">
+                <span class="material-symbols-outlined text-4xl">api</span>
+            </div>
+            <h1 class="text-2xl font-black text-secondary dark:text-white tracking-tight">API Documentation</h1>
+            <p class="text-gray-500 dark:text-emerald-400/80 text-sm mt-2 font-medium">Acceso exclusivo para desarrolladores principales.</p>
+        </div>
+
+        <form id="docs-login-form" onsubmit="handleLogin(event)" class="space-y-5">
+            <div id="error-message" class="hidden bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 text-red-700 dark:text-red-300 p-3 rounded-lg text-sm font-bold flex items-center gap-2">
+                <span class="material-symbols-outlined text-[1.2rem]">error</span>
+                <span id="error-text">Credenciales inválidas.</span>
+            </div>
+
+            <div class="space-y-1.5">
+                <label for="email" class="text-sm font-bold ml-1 text-secondary dark:text-emerald-200">Correo Electrónico</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="material-symbols-outlined text-gray-400">mail</span>
+                    </div>
+                    <input type="email" id="email" name="email" required autocomplete="email" placeholder="admin@ejemplo.com"
+                        class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-emerald-800/60 rounded-xl text-secondary dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                </div>
+            </div>
+
+            <div class="space-y-1.5">
+                <label for="password" class="text-sm font-bold ml-1 text-secondary dark:text-emerald-200">Contraseña</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="material-symbols-outlined text-gray-400">lock</span>
+                    </div>
+                    <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="••••••••"
+                        class="w-full pl-10 pr-10 py-3 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-emerald-800/60 rounded-xl text-secondary dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                    <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-primary transition-colors">
+                        <span id="eye-icon" class="material-symbols-outlined">visibility</span>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" id="submit-btn" class="w-full mt-6 py-3 px-4 bg-primary hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-primary/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 group">
+                <span id="btn-text">Ver Documentación</span>
+                <span id="spinner" class="material-symbols-outlined animate-spin hidden">progress_activity</span>
+                <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform" id="arrow-icon">arrow_forward</span>
+            </button>
+        </form>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const pwd = document.getElementById('password');
+            const icon = document.getElementById('eye-icon');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                icon.textContent = 'visibility_off';
+            } else {
+                pwd.type = 'password';
+                icon.textContent = 'visibility';
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errBox = document.getElementById('error-message');
+            const errTxt = document.getElementById('error-text');
+            const btnText = document.getElementById('btn-text');
+            const spinner = document.getElementById('spinner');
+            const arrow = document.getElementById('arrow-icon');
+            const submitBtn = document.getElementById('submit-btn');
+
+            errBox.classList.add('hidden');
+            submitBtn.disabled = true;
+            btnText.textContent = "Autenticando...";
+            spinner.classList.remove('hidden');
+            arrow.classList.add('hidden');
+
+            try {
+                const formData = new FormData();
+                formData.append('username', email);
+                formData.append('password', password);
+
+                const response = await fetch('/docs/auth', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    window.location.href = '/docs';
+                } else {
+                    const data = await response.json();
+                    errTxt.textContent = data.detail || 'Credenciales inválidas.';
+                    errBox.classList.remove('hidden');
+                    
+                    submitBtn.disabled = false;
+                    btnText.textContent = "Ver Documentación";
+                    spinner.classList.add('hidden');
+                    arrow.classList.remove('hidden');
+                }
+            } catch (error) {
+                errTxt.textContent = 'Error de conexión.';
+                errBox.classList.remove('hidden');
+                
+                submitBtn.disabled = false;
+                btnText.textContent = "Ver Documentación";
+                spinner.classList.add('hidden');
+                arrow.classList.remove('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

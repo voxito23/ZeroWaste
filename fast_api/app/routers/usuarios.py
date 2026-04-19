@@ -201,6 +201,12 @@ def delete_user(
             detail="Usuario no encontrado.",
         )
 
+    if usuario_a_eliminar.email == "vichdz@gmail.com":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Error: Sin autorización de eliminar admin principal."
+        )
+
     db.delete(usuario_a_eliminar)
     db.commit()
     return MessageResponse(success=True, message="Usuario eliminado correctamente.")
