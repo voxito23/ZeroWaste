@@ -34,6 +34,7 @@ app = FastAPI(
     version="2.0.0",
     redoc_url=None,
     docs_url=None,
+    root_path="/api",
 )
 
 # Registrar rate limiter
