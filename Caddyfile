@@ -9,6 +9,17 @@ zerowaste-qro.com, www.zerowaste-qro.com {
         reverse_proxy fast_api:6000
     }
 
+    # FastAPI Docs y Redoc
+    handle /docs* {
+        reverse_proxy fast_api:6000
+    }
+    handle /openapi.json {
+        reverse_proxy fast_api:6000
+    }
+    handle /redoc_auth* {
+        reverse_proxy fast_api:6000
+    }
+
     # Flask (Resto del sitio - Página Principal)
     handle {
         reverse_proxy cliente:5000
