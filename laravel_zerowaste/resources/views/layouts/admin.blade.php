@@ -70,13 +70,21 @@
 
 
             <div class="border-t border-emerald-100 dark:border-emerald-900/50 my-3"></div>
-            <span class="text-xs text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1">Desarrollo</span>
             
-            <a href="/docs" target="_blank" class="nav-link flex items-center gap-3 font-bold text-secondary dark:text-emerald-200">
-                <span class="material-symbols-outlined text-xl">api</span> FastAPI Docs
-            </a>
+            @if(\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->email === 'vichdz@gmail.com')
+                <span class="text-xs text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1">Desarrollo</span>
+                
+                <a href="/docs" target="_blank" class="nav-link flex items-center gap-3 font-bold text-secondary dark:text-emerald-200">
+                    <span class="material-symbols-outlined text-xl">api</span> FastAPI Docs
+                </a>
 
-            <div class="border-t border-emerald-100 dark:border-emerald-900/50 my-3"></div>
+                <a href="/" target="_blank" class="nav-link flex items-center gap-3 font-bold text-secondary dark:text-emerald-200">
+                    <span class="material-symbols-outlined text-xl">storefront</span> Tienda (Flask)
+                </a>
+
+                <div class="border-t border-emerald-100 dark:border-emerald-900/50 my-3"></div>
+            @endif
+
             <span class="text-xs text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1">Soporte</span>
 
             <a href="{{ route('mensajes.index') }}" class="nav-link flex items-center gap-3 font-bold text-secondary dark:text-emerald-200 {{ request()->routeIs('mensajes.*') ? 'active' : '' }}">
