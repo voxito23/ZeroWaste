@@ -26,7 +26,7 @@ class MapController extends Controller
             'latitud' => 'required|numeric',
             'longitud' => 'required|numeric',
             'tipo' => 'required|string|max:100',
-            'imagen_archivo' => 'nullable|image|max:2048',
+            'imagen_archivo' => 'nullable|image|max:256000',
             'materiales' => 'nullable|string|max:255',
         ]);
 
@@ -66,7 +66,7 @@ class MapController extends Controller
             'latitud' => 'required|numeric',
             'longitud' => 'required|numeric',
             'tipo' => 'required|string|max:100',
-            'imagen_archivo' => 'nullable|image|max:2048',
+            'imagen_archivo' => 'nullable|image|max:256000',
             'materiales' => 'nullable|string|max:255',
         ]);
 

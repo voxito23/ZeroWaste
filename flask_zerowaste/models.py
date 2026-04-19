@@ -18,6 +18,7 @@ class Usuario(db.Model):
     firebase_uid = db.Column(db.String(255), nullable=True, unique=True)
     auth_provider = db.Column(db.String(50), default='local')
     profile_completed = db.Column(db.Boolean, default=True)
+    bloqueado = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     posts = db.relationship('Foro', backref='autor_rel', lazy=True)

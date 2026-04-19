@@ -43,7 +43,7 @@ class User extends Authenticatable
     protected $fillable = [
         'nombre', 'email', 'password', 'is_admin', 'foto_perfil',
         'ubicacion', 'titulo_perfil', 'biografia', 'intereses',
-        'firebase_uid', 'auth_provider', 'profile_completed'
+        'firebase_uid', 'auth_provider', 'profile_completed', 'bloqueado'
     ];
 
     protected $hidden = [
@@ -57,6 +57,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'profile_completed' => 'boolean',
+            'bloqueado' => 'boolean',
         ];
     }
 }

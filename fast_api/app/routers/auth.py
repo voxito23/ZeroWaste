@@ -19,7 +19,7 @@ from app.security.jwt_auth import verify_password, hash_password, create_access_
 
 # Constantes de seguridad
 ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5MB
+MAX_UPLOAD_SIZE = 250 * 1024 * 1024  # 250MB
 
 UPLOAD_DIR = "/app/static/img/perfiles"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -43,6 +43,12 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Correo o contraseña incorrectos.",
             headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if usuario.bloqueado:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Usuario bloqueado por subir contenido indebido."
         )
 
     # --- Validación de rol inyectada ---
@@ -107,7 +113,7 @@ def registro(
     if len(contents) > MAX_UPLOAD_SIZE:
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="La imagen no debe superar 5MB.",
+            detail="La imagen no debe superar 250MB.",
         )
     foto_perfil.file.seek(0)
 

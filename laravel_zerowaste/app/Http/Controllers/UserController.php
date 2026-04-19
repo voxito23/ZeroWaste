@@ -38,7 +38,7 @@ class UserController extends Controller
             'ubicacion' => 'required|string|min:10|max:20',
             'titulo_perfil' => 'required|string|min:10|max:30',
             'biografia' => 'nullable|string|max:100',
-            'foto_perfil' => 'nullable|image|max:2048',
+            'foto_perfil' => 'nullable|image|max:256000',
         ];
 
         $messages = [
@@ -58,7 +58,7 @@ class UserController extends Controller
             'titulo_perfil.max' => 'El título del perfil no puede exceder los 30 caracteres.',
             'biografia.max' => 'La biografía no puede exceder los 100 caracteres.',
             'foto_perfil.image' => 'El archivo debe ser una imagen.',
-            'foto_perfil.max' => 'La imagen no debe pesar más de 2MB.',
+            'foto_perfil.max' => 'La imagen no debe pesar más de 250MB.',
             'foto_perfil.uploaded' => 'Error al subir la imagen. Intenta con una de menor tamaño.',
         ];
 
@@ -105,7 +105,7 @@ class UserController extends Controller
             'ubicacion' => 'required|string|min:10|max:20',
             'titulo_perfil' => 'required|string|min:10|max:30',
             'biografia' => 'nullable|string|max:100',
-            'foto_perfil' => 'nullable|image|max:2048',
+            'foto_perfil' => 'nullable|image|max:256000',
         ];
 
         $messages = [
@@ -124,7 +124,7 @@ class UserController extends Controller
             'titulo_perfil.max' => 'El título del perfil no puede exceder los 30 caracteres.',
             'biografia.max' => 'La biografía no puede exceder los 100 caracteres.',
             'foto_perfil.image' => 'El archivo debe ser una imagen.',
-            'foto_perfil.max' => 'La imagen no debe pesar más de 2MB.',
+            'foto_perfil.max' => 'La imagen no debe pesar más de 250MB.',
             'foto_perfil.uploaded' => 'Error al subir la imagen. Intenta con una de menor tamaño.',
         ];
 
@@ -132,6 +132,7 @@ class UserController extends Controller
 
         $data = $request->only(['nombre', 'email', 'ubicacion', 'titulo_perfil', 'biografia']);
         $data['is_admin'] = $request->has('is_admin') ? true : false;
+        $data['bloqueado'] = $request->has('bloqueado') ? true : false;
 
         if ($request->filled('password')) {
             $data['password'] = $request->input('password');

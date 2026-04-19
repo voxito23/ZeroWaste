@@ -30,6 +30,7 @@ class Usuario(Base):
     firebase_uid = Column(String(255), nullable=True, unique=True)
     auth_provider = Column(String(50), default='local')
     profile_completed = Column(Boolean, default=True)
+    bloqueado = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     posts = relationship("Foro", back_populates="autor_rel")

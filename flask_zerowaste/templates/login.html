@@ -17,6 +17,7 @@
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
     tailwind.config = {
@@ -566,6 +567,21 @@
                 setTimeout(() => {
                     window.location.href = data.redirect;
                 }, 1400);
+            } else if (data.is_blocked) {
+                btn.classList.remove('btn-loading');
+                btnText.textContent = "Iniciar sesión";
+                spinner.classList.add('hidden');
+                
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Acceso Denegado',
+                    text: 'Usuario bloqueado por subir contenido indebido.',
+                    footer: 'Contáctanos a <b>soporte@zerowaste-qro.com</b> para dar seguimiento a tu caso.',
+                    confirmButtonColor: '#059669',
+                    customClass: {
+                        popup: 'rounded-3xl',
+                    }
+                });
             } else {
                 btn.classList.remove('btn-loading');
                 btnText.textContent = "Iniciar sesión";

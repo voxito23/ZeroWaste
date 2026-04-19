@@ -72,9 +72,15 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-3 pt-2">
-            <input type="checkbox" name="is_admin" id="is_admin" {{ $user->is_admin ? 'checked' : '' }} class="w-5 h-5 accent-emerald-500 rounded">
-            <label for="is_admin" class="font-bold text-sm text-gray-700 dark:text-emerald-200">Permisos de Administrador</label>
+        <div class="flex items-center gap-6 pt-2">
+            <div class="flex items-center gap-3">
+                <input type="checkbox" name="is_admin" id="is_admin" {{ $user->is_admin ? 'checked' : '' }} class="w-5 h-5 accent-emerald-500 rounded">
+                <label for="is_admin" class="font-bold text-sm text-gray-700 dark:text-emerald-200">Permisos de Administrador</label>
+            </div>
+            <div class="flex items-center gap-3 bg-red-50 dark:bg-red-900/10 px-3 py-1.5 rounded-lg border border-red-100 dark:border-red-900/30">
+                <input type="checkbox" name="bloqueado" id="bloqueado" {{ $user->bloqueado ? 'checked' : '' }} class="w-5 h-5 accent-red-500 rounded">
+                <label for="bloqueado" class="font-bold text-sm text-red-700 dark:text-red-400">Bloquear Usuario</label>
+            </div>
         </div>
 
         <div class="flex justify-end gap-4 mt-6">

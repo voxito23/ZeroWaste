@@ -63,7 +63,7 @@
             <div class="relative">
                 <input type="file" name="imagen_archivo" accept="image/*" id="camp-img-input"
                        class="w-full border-2 border-dashed border-emerald-200 dark:border-emerald-700 rounded-xl p-4 dark:bg-forest-dark dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-primary file:text-secondary hover:file:bg-emerald-400 file:cursor-pointer cursor-pointer">
-                <p class="text-xs text-gray-400 dark:text-emerald-600 mt-1">Formatos: JPG, PNG, WEBP. Tamaño máximo: 2MB</p>
+                <p class="text-xs text-gray-400 dark:text-emerald-600 mt-1">Formatos: JPG, PNG, WEBP. Tamaño máximo: 250MB</p>
             </div>
         </div>
 

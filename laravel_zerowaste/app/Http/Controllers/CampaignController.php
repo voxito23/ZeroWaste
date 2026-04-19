@@ -28,7 +28,7 @@ class CampaignController extends Controller
             'fecha_fin' => 'nullable|date',
             'tipo_etiqueta' => 'nullable|string|max:50',
             'link_evento' => 'nullable|string|max:500',
-            'imagen_archivo' => 'nullable|image|max:2048',
+            'imagen_archivo' => 'nullable|image|max:256000',
         ]);
 
         // Manejar subida de imagen
@@ -69,7 +69,7 @@ class CampaignController extends Controller
             'fecha_fin' => 'nullable|date',
             'tipo_etiqueta' => 'nullable|string|max:50',
             'link_evento' => 'nullable|string|max:500',
-            'imagen_archivo' => 'nullable|image|max:2048',
+            'imagen_archivo' => 'nullable|image|max:256000',
         ]);
 
         // Manejar subida de imagen

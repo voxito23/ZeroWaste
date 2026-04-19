@@ -27,7 +27,7 @@ from models import (db, Usuario, Categoria, PuntoMapa, CalificacionPunto,
 #  Constantes de Seguridad
 # ==========================================================================
 ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-MAX_UPLOAD_SIZE_MB = 50
+MAX_UPLOAD_SIZE_MB = 250
 EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
 
 def allowed_file(filename):
@@ -58,7 +58,7 @@ app.config['SESSION_COOKIE_NAME'] = 'zerowaste_session'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('HTTPS_ENABLED', 'false').lower() == 'true'
-app.config['MAX_CONTENT_LENGTH'] = MAX_UPLOAD_SIZE_MB * 1024 * 1024  # 5MB max upload
+app.config['MAX_CONTENT_LENGTH'] = MAX_UPLOAD_SIZE_MB * 1024 * 1024  # 250MB max upload
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # Para "Recordarme"
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:postgrespassword@127.0.0.1:5432/zerowaste_db')
@@ -154,6 +154,9 @@ def login():
         usuario = Usuario.query.filter_by(email=email).first()
         if not usuario:
             return jsonify({'success': False, 'error': 'Credenciales inválidas.'}), 401
+            
+        if usuario.bloqueado:
+            return jsonify({'success': False, 'is_blocked': True, 'error': 'Usuario bloqueado por subir contenido indebido. Contáctanos a administrador@zerowaste-qro.com para dar seguimiento a tu caso.'}), 403
             
         import bcrypt
         if isinstance(usuario.password, str) and bcrypt.checkpw(password.encode('utf-8'), usuario.password.replace('$2y$', '$2b$', 1).encode('utf-8')):
