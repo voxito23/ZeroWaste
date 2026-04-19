@@ -62,12 +62,12 @@
         }
 
         .swagger-ui .info { margin: 50px 0; }
-        .swagger-ui .info .title { color: #fff; font-family: 'Inter'; font-weight: 900; }
+        .swagger-ui .info .title { color: var(--text-color); font-family: 'Inter'; font-weight: 900; }
         .swagger-ui .info p { color: #8b949e; }
         
         /* Blocks and parameters */
         .swagger-ui .opblock-tag {
-            color: #fff;
+            color: var(--text-color);
             border-bottom: 1px solid var(--border-color);
             font-size: 20px;
             font-weight: 700;
@@ -88,7 +88,7 @@
         .swagger-ui .opblock .opblock-summary { border-radius: 12px; }
         .swagger-ui .opblock .opblock-summary-operation-id, 
         .swagger-ui .opblock .opblock-summary-path {
-            color: #c9d1d9; font-family: 'Inter', monospace;
+            color: var(--text-color); font-family: 'Inter', monospace;
         }
         .swagger-ui .opblock .opblock-summary-description { color: #8b949e; }
 
@@ -109,7 +109,7 @@
         
         .swagger-ui input[type=text], .swagger-ui input[type=password], .swagger-ui select, .swagger-ui textarea {
             background-color: var(--input-bg);
-            color: #fff;
+            color: var(--text-color);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             font-family: 'Inter', sans-serif;
@@ -123,9 +123,9 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         }
         .swagger-ui .dialog-ux .modal-ux-header { border-bottom: 1px solid var(--border-color); }
-        .swagger-ui .dialog-ux .modal-ux-header h3 { color: #fff; font-family: 'Inter'; }
+        .swagger-ui .dialog-ux .modal-ux-header h3 { color: var(--text-color); font-family: 'Inter'; }
         .swagger-ui .dialog-ux .modal-ux-content { padding: 20px; }
-        .swagger-ui .dialog-ux .modal-ux-content h4 { color: #c9d1d9; }
+        .swagger-ui .dialog-ux .modal-ux-content h4 { color: var(--text-color); }
         .swagger-ui .dialog-ux .modal-ux-content p { color: #8b949e; }
         .swagger-ui label { color: #8b949e; font-family: 'Inter'; }
         
@@ -134,27 +134,105 @@
             border-radius: 16px; border: 1px solid var(--border-color);
             background: var(--container-bg); margin-top: 3rem;
         }
-        .swagger-ui section.models h4 { color: #fff; border-bottom: 1px solid var(--border-color); }
+        .swagger-ui section.models h4 { color: var(--text-color); border-bottom: 1px solid var(--border-color); }
         
+        /* FIX FOR WHITE SCHEME CONTAINER */
+        .swagger-ui .scheme-container {
+            background-color: var(--bg-color) !important;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            box-shadow: none;
+        }
+
+        /* FIX FOR AUTHORIZE TEXT */
+        .swagger-ui .auth-wrapper .authorize { padding-right: 20px; }
+        .swagger-ui .wrapper { color: var(--text-color); }
+        .swagger-ui .authorization__btn { fill: var(--text-color); }
+
         /* General Colors */
         .swagger-ui .parameter__name, .swagger-ui .parameter__type { color: #e5e7eb; }
         .swagger-ui .tab li { color: #8b949e; }
-        .swagger-ui .tab li.active { color: #fff; border-bottom: 2px solid #10b981; }
+        .swagger-ui .tab li.active { color: var(--text-color); border-bottom: 2px solid #10b981; }
         .swagger-ui table thead tr th { color: #8b949e; border-bottom: 1px solid var(--border-color); }
-        .swagger-ui table tbody tr td { border-bottom: 1px solid var(--border-color); color: #c9d1d9; }
+        .swagger-ui table tbody tr td { border-bottom: 1px solid var(--border-color); color: var(--text-color); }
 
         /* Authorize Wrapper Container */
         .swagger-ui .auth-wrapper { justify-content: flex-end; }
         .swagger-ui .auth-container { border-bottom: 1px solid var(--border-color); }
         
         /* Dark Theme JSON backgrounds */
-        .swagger-ui .microlight { background-color: #0d1117 !important; border-radius: 8px; }
+        .swagger-ui .microlight { background-color: var(--input-bg) !important; border-radius: 8px; color: var(--text-color) !important;}
+
+        /* Theme Toggle Button */
+        .theme-toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--container-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            z-index: 9999;
+        }
+        .theme-toggle-btn:hover {
+            transform: scale(1.1);
+            border-color: #10b981;
+            color: #10b981;
+        }
     </style>
+    <!-- Material icons for toggle -->
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 </head>
 <body>
+    <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn" aria-label="Toggle Theme">
+        <span class="material-symbols-outlined" id="themeIcon">light_mode</span>
+    </button>
     <div id="swagger-ui"></div>
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
     <script>
+        function setTheme(isDark) {
+            const root = document.documentElement;
+            if (isDark) {
+                root.style.setProperty('--bg-color', '#0d1117');
+                root.style.setProperty('--text-color', '#c9d1d9');
+                root.style.setProperty('--container-bg', '#161b22');
+                root.style.setProperty('--border-color', '#30363d');
+                root.style.setProperty('--input-bg', '#0d1117');
+                root.style.setProperty('--header-bg', '#161b22');
+                document.getElementById('themeIcon').innerText = 'light_mode';
+            } else {
+                root.style.setProperty('--bg-color', '#f8fafc');
+                root.style.setProperty('--text-color', '#1e293b');
+                root.style.setProperty('--container-bg', '#ffffff');
+                root.style.setProperty('--border-color', '#e2e8f0');
+                root.style.setProperty('--input-bg', '#f1f5f9');
+                root.style.setProperty('--header-bg', '#ffffff');
+                document.getElementById('themeIcon').innerText = 'dark_mode';
+            }
+        }
+
+        function toggleTheme() {
+            const currentIsDark = document.documentElement.style.getPropertyValue('--bg-color') === '#0d1117' || !document.documentElement.style.getPropertyValue('--bg-color');
+            setTheme(!currentIsDark);
+            localStorage.setItem('swagger-theme-dark', !currentIsDark);
+        }
+
+        const savedTheme = localStorage.getItem('swagger-theme-dark');
+        if (savedTheme === 'false') {
+            setTheme(false);
+        } else {
+            setTheme(true); // default dark
+        }
+
         window.onload = function() {
             window.ui = SwaggerUIBundle({
                 url: "/openapi.json",
