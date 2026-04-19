@@ -17,6 +17,7 @@
             --border-color: #30363d;
             --input-bg: #0d1117;
             --header-bg: #161b22;
+            --code-bg: #0d1117;
         }
         
         body {
@@ -162,7 +163,12 @@
         .swagger-ui .auth-container { border-bottom: 1px solid var(--border-color); }
         
         /* Dark Theme JSON backgrounds */
-        .swagger-ui .microlight { background-color: var(--input-bg) !important; border-radius: 8px; color: var(--text-color) !important;}
+        .swagger-ui .microlight { 
+            background-color: var(--code-bg) !important; 
+            border-radius: 8px; 
+            color: #e5e7eb !important; 
+            text-shadow: none !important;
+        }
 
         /* Theme Toggle Button */
         .theme-toggle-btn {
@@ -263,6 +269,7 @@
                 root.style.setProperty('--border-color', '#30363d');
                 root.style.setProperty('--input-bg', '#0d1117');
                 root.style.setProperty('--header-bg', '#161b22');
+                root.style.setProperty('--code-bg', '#0d1117'); /* Oscuro nativo */
                 document.getElementById('themeIcon').innerText = 'light_mode';
             } else {
                 root.style.setProperty('--bg-color', '#f8fafc');
@@ -271,6 +278,7 @@
                 root.style.setProperty('--border-color', '#e2e8f0');
                 root.style.setProperty('--input-bg', '#f1f5f9');
                 root.style.setProperty('--header-bg', '#ffffff');
+                root.style.setProperty('--code-bg', '#1e293b'); /* Siempre oscuro para contraste alto */
                 document.getElementById('themeIcon').innerText = 'dark_mode';
             }
         }
