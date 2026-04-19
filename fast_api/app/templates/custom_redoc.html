@@ -65,6 +65,29 @@
             transform: scale(1.1);
             background: #2563eb;
         }
+
+        .logout-btn {
+            position: fixed;
+            bottom: 160px;
+            right: 30px;
+            background: #ef4444;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(239,68,68,0.4);
+            transition: all 0.3s;
+            z-index: 9999;
+        }
+        .logout-btn:hover {
+            transform: scale(1.1);
+            background: #dc2626;
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 </head>
@@ -74,6 +97,9 @@
     </button>
     <button class="nav-toggle-btn" onclick="window.location.href='/docs'" title="Ir a Swagger UI (Documentación interactiva)">
         <span class="material-symbols-outlined">api</span>
+    </button>
+    <button class="logout-btn" onclick="window.location.href='/docs/logout'" title="Cerrar Sesión API y volver al Dashboard">
+        <span class="material-symbols-outlined">exit_to_app</span>
     </button>
     
     <div id="redoc-container">

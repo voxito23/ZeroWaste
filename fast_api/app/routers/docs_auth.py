@@ -66,6 +66,14 @@ async def get_current_user_from_cookie(request: Request):
     return token
 
 
+@router.get("/docs/logout", include_in_schema=False)
+async def logout_for_docs():
+    """Cierra sesión eliminando la cookie JWT y redirige a Laravel Admin."""
+    response = RedirectResponse(url="/admin", status_code=status.HTTP_303_SEE_OTHER)
+    response.delete_cookie("docs_access_token")
+    return response
+
+
 @router.get("/docs", response_class=HTMLResponse, include_in_schema=False)
 async def custom_swagger_ui_html(request: Request, _=Depends(get_current_user_from_cookie)):
     """Swagger UI Privado y Premium."""
