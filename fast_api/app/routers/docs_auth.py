@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.openapi.docs import get_swagger_ui_html, get_redoc_html
 import os
@@ -13,24 +12,11 @@ from app.security.jwt_auth import create_access_token
 
 router = APIRouter(tags=["Docs Auth"])
 
-# Se asume que el template existe en app/templates/
-# Si Jinja2Templates no está instalado, fallará, pero en FastAPI suele estar junto con python-multipart.
-# Se usará lectura de archivo directa si no hay templates.
 templates_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
-try:
-    templates = Jinja2Templates(directory=templates_dir)
-    USE_TEMPLATES = True
-except ImportError:
-    USE_TEMPLATES = False
-
 
 @router.get("/docs/login", response_class=HTMLResponse, include_in_schema=False)
 async def login_for_docs(request: Request):
     """Página de inicio de sesión hermosamente diseñada para desarrolladores."""
-    if USE_TEMPLATES:
-        return templates.TemplateResponse("docs_login.html", {"request": request})
-    
-    # Fallback si no hay jinja2 instalado
     with open(os.path.join(templates_dir, "docs_login.html"), "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content)
