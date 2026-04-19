@@ -15,6 +15,17 @@ class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ2aWNoZHpAZ2...",
+                    "token_type": "bearer"
+                }
+            ]
+        }
+    }
+
 
 class TokenData(BaseModel):
     email: Optional[str] = None
@@ -78,7 +89,24 @@ class UsuarioResponse(UsuarioBase):
     intereses: Optional[str] = None
     created_at: Optional[datetime] = None
 
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "nombre": "Juan Pérez",
+                    "email": "juan@gmail.com",
+                    "id": 1,
+                    "foto_perfil": "perfil_juan.png",
+                    "titulo_perfil": "Activista Ambiental",
+                    "biografia": "Apasionado por el medio ambiente y el reciclaje.",
+                    "ubicacion": "Querétaro, México",
+                    "intereses": "Reciclaje, Compostaje, Energía Solar",
+                    "created_at": "2026-05-15T14:30:00Z"
+                }
+            ]
+        }
+    }
 
 
 class LoginRequest(BaseModel):
@@ -103,7 +131,17 @@ class CategoriaResponse(BaseModel):
     id: int
     nombre: str
 
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "id": 1,
+                    "nombre": "Reciclaje de Plásticos"
+                }
+            ]
+        }
+    }
 
 
 # Esquemas del foro — publicaciones
@@ -157,7 +195,22 @@ class PostResponse(BaseModel):
     imagen: Optional[str] = None
     created_at: Optional[datetime] = None
 
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "id": 42,
+                    "titulo": "Tips para compostar en casa",
+                    "contenido": "Hoy quiero compartir mi experiencia compostando residuos orgánicos en un departamento pequeño.",
+                    "categoria_id": 1,
+                    "autor_id": 5,
+                    "imagen": "compostaje_tips.jpg",
+                    "created_at": "2026-05-20T10:15:30Z"
+                }
+            ]
+        }
+    }
 
 
 class PostDetailResponse(PostResponse):
@@ -165,6 +218,27 @@ class PostDetailResponse(PostResponse):
     categoria_nombre: Optional[str] = None
     total_respuestas: int = 0
     total_likes: int = 0
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "id": 42,
+                    "titulo": "Tips para compostar en casa",
+                    "contenido": "Hoy quiero compartir mi experiencia compostando residuos...",
+                    "categoria_id": 1,
+                    "autor_id": 5,
+                    "imagen": "compostaje_tips.jpg",
+                    "created_at": "2026-05-20T10:15:30Z",
+                    "autor_nombre": "Ana Sánchez",
+                    "categoria_nombre": "Compostaje",
+                    "total_respuestas": 15,
+                    "total_likes": 240
+                }
+            ]
+        }
+    }
 
 
 # Esquemas del foro — respuestas
@@ -191,7 +265,21 @@ class RespuestaResponse(BaseModel):
     created_at: Optional[datetime] = None
     autor_nombre: Optional[str] = None
 
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "id": 105,
+                    "post_id": 42,
+                    "autor_id": 8,
+                    "contenido": "¡Excelente post! Yo uso un bote de 20 litros y funciona perfecto.",
+                    "created_at": "2026-05-21T08:30:00Z",
+                    "autor_nombre": "Carlos Gómez"
+                }
+            ]
+        }
+    }
 
 
 # Esquemas del foro — likes
@@ -264,7 +352,25 @@ class PuntoMapaResponse(BaseModel):
     promedio: float = 0.0
     total_reviews: int = 0
 
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "id": 1,
+                    "nombre": "Centro de Reciclaje Querétaro Norte",
+                    "direccion": "Av. Universidad 500, Col. Centro, Querétaro",
+                    "latitud": 20.5937,
+                    "longitud": -100.3906,
+                    "tipo": "Centro de acopio",
+                    "materiales": "PET, Cartón, Vidrio",
+                    "imagen": "default_punto.png",
+                    "promedio": 4.5,
+                    "total_reviews": 12
+                }
+            ]
+        }
+    }
 
 
 # Esquemas del mapa — calificaciones
@@ -287,6 +393,18 @@ class CalificacionResponse(BaseModel):
     success: bool
     promedio: float
     total: int
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "success": True,
+                    "promedio": 4.5,
+                    "total": 12
+                }
+            ]
+        }
+    }
 
 
 # Esquemas de eventos
@@ -356,7 +474,24 @@ class EventoResponse(BaseModel):
     imagen_url: Optional[str] = None
     link_evento: Optional[str] = None
 
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "id": 15,
+                    "titulo": "Limpieza del Parque Querétaro 2026",
+                    "fecha_inicio": "2026-05-15T09:00:00Z",
+                    "lugar": "Parque Querétaro 2000, Querétaro",
+                    "fecha_fin": "2026-05-15T13:00:00Z",
+                    "descripcion": "Jornada comunitaria de limpieza y reforestación en el parque principal.",
+                    "tipo_etiqueta": "Limpieza",
+                    "imagen_url": "limpieza_parque.jpg",
+                    "link_evento": "https://zerowaste.com/eventos/limpieza-parque"
+                }
+            ]
+        }
+    }
 
 
 # Esquemas de respuestas genéricas
@@ -365,6 +500,17 @@ class MessageResponse(BaseModel):
     """Respuesta genérica para operaciones que retornan un mensaje."""
     success: bool
     message: str
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "success": True,
+                    "message": "Operación realizada con éxito."
+                }
+            ]
+        }
+    }
 
 
 # Esquemas de Formularios (Migrados desde Flask)
@@ -375,5 +521,28 @@ class ContactMessageCreate(BaseModel):
     ubicacion: Optional[str] = None
     mensaje: str
 
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "nombre": "Ana López",
+                    "email": "ana@empresa.com",
+                    "ubicacion": "Qro, México",
+                    "mensaje": "Me gustaría cotizar la recolección industrial de PET."
+                }
+            ]
+        }
+    }
+
 class PasswordResetRequestCreate(BaseModel):
     email: EmailStr
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "email": "juan@gmail.com"
+                }
+            ]
+        }
+    }
