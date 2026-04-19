@@ -6,7 +6,7 @@ Incluye TODOS los routers del proyecto + hardening de seguridad.
 import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.docs import get_redoc_html
+
 from fastapi.responses import FileResponse, JSONResponse
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -23,7 +23,7 @@ limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
 # ==========================================================================
 #  Inicialización de la app
 # ==========================================================================
-IS_PRODUCTION = os.getenv("APP_ENV", "development") == "production"
+# (IS_PRODUCTION ya no se usa porque bloqueamos docs_url siempre)
 
 app = FastAPI(
     title="ZeroWaste API Completa",
