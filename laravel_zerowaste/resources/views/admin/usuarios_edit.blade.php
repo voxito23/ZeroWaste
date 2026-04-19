@@ -48,15 +48,27 @@
             <span id="err-email" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
         </div>
 
-        <div>
-            <label class="block font-bold mb-2 dark:text-emerald-200">Nueva Contraseña <span class="text-gray-400 dark:text-emerald-600 text-xs font-normal">(Dejar en blanco para mantener la actual)</span></label>
-            <div class="relative">
-                <input type="password" name="password" id="edit-password" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 pr-12 focus:border-emerald-400 outline-none transition-colors">
-                <button type="button" onclick="togglePass('edit-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined">visibility_off</span>
-                </button>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block font-bold mb-2 dark:text-emerald-200">Nueva Contraseña <span class="text-gray-400 dark:text-emerald-600 text-xs font-normal">(Opcional)</span></label>
+                <div class="relative">
+                    <input type="password" name="password" id="edit-password" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 pr-12 focus:border-emerald-400 outline-none transition-colors">
+                    <button type="button" onclick="togglePass('edit-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined">visibility_off</span>
+                    </button>
+                </div>
+                <span id="err-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
             </div>
-            <span id="err-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+            <div>
+                <label class="block font-bold mb-2 dark:text-emerald-200">Confirmar Contraseña</label>
+                <div class="relative">
+                    <input type="password" name="password_confirmation" id="confirm-password" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 pr-12 focus:border-emerald-400 outline-none transition-colors">
+                    <button type="button" onclick="togglePass('confirm-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined">visibility_off</span>
+                    </button>
+                </div>
+                <span id="err-confirm-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -118,18 +130,20 @@ document.addEventListener('DOMContentLoaded', function() {
         const nombre = form.querySelector('input[name="nombre"]');
         const email = form.querySelector('input[name="email"]');
         const password = form.querySelector('input[name="password"]');
+        const confirmPassword = form.querySelector('input[name="password_confirmation"]');
         const ubicacion = form.querySelector('input[name="ubicacion"]');
         const titulo = form.querySelector('input[name="titulo_perfil"]');
 
         const errNombre = document.getElementById('err-nombre');
         const errEmail = document.getElementById('err-email');
         const errPass = document.getElementById('err-password');
+        const errConfirmPass = document.getElementById('err-confirm-password');
         const errUbicacion = document.getElementById('err-ubicacion');
         const errTitulo = document.getElementById('err-titulo');
 
         // Reset
-        [errNombre, errEmail, errPass, errUbicacion, errTitulo].forEach(el => el.classList.add('hidden'));
-        [nombre, email, password, ubicacion, titulo].forEach(el => el.classList.remove('border-red-500'));
+        [errNombre, errEmail, errPass, errConfirmPass, errUbicacion, errTitulo].forEach(el => el.classList.add('hidden'));
+        [nombre, email, password, confirmPassword, ubicacion, titulo].forEach(el => el.classList.remove('border-red-500'));
 
         let isValid = true;
 
@@ -149,11 +163,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Solo validar contraseña si se ingresó algo (en edición es opcional)
-        if (password.value && password.value.length < 6) {
-            errPass.textContent = 'La contraseña debe tener al menos 6 caracteres.';
-            errPass.classList.remove('hidden');
-            password.classList.add('border-red-500');
-            isValid = false;
+        if (password.value) {
+            if (password.value.length < 6) {
+                errPass.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+                errPass.classList.remove('hidden');
+                password.classList.add('border-red-500');
+                isValid = false;
+            }
+            if (password.value !== confirmPassword.value) {
+                errConfirmPass.textContent = 'Las contraseñas no coinciden.';
+                errConfirmPass.classList.remove('hidden');
+                confirmPassword.classList.add('border-red-500');
+                isValid = false;
+            }
         }
 
         if (!ubicacion.value.trim()) {

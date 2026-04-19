@@ -101,7 +101,7 @@ class UserController extends Controller
         $rules = [
             'nombre' => 'required|string|min:10|max:20',
             'email' => 'required|email|max:100|unique:usuarios,email,'.$user->id,
-            'password' => 'nullable|string|min:6',
+            'password' => 'nullable|string|min:6|confirmed',
             'ubicacion' => 'required|string|min:10|max:20',
             'titulo_perfil' => 'required|string|min:10|max:30',
             'biografia' => 'nullable|string|max:100',
