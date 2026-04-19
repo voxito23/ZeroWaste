@@ -42,12 +42,38 @@
             transform: scale(1.1);
             background: #059669;
         }
+
+        .nav-toggle-btn {
+            position: fixed;
+            bottom: 95px;
+            right: 30px;
+            background: #3b82f6;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            border-radius: 50%;
+            width: 55px;
+            height: 55px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(59,130,246,0.4);
+            transition: all 0.3s;
+            z-index: 9999;
+        }
+        .nav-toggle-btn:hover {
+            transform: scale(1.1);
+            background: #2563eb;
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 </head>
 <body>
     <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn" aria-label="Toggle Theme">
         <span class="material-symbols-outlined" id="themeIcon">light_mode</span>
+    </button>
+    <button class="nav-toggle-btn" onclick="window.location.href='/docs'" title="Ir a Swagger UI (Documentación interactiva)">
+        <span class="material-symbols-outlined">api</span>
     </button>
     
     <div id="redoc-container">

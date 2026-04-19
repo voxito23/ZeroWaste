@@ -188,6 +188,31 @@
             border-color: #10b981;
             color: #10b981;
         }
+
+        /* Navigation Toggle Button */
+        .nav-toggle-btn {
+            position: absolute;
+            top: 75px;
+            right: 20px;
+            background: var(--container-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            cursor: pointer;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            z-index: 9999;
+        }
+        .nav-toggle-btn:hover {
+            transform: scale(1.1);
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
     </style>
     <!-- Material icons for toggle -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -195,6 +220,9 @@
 <body>
     <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn" aria-label="Toggle Theme">
         <span class="material-symbols-outlined" id="themeIcon">light_mode</span>
+    </button>
+    <button class="nav-toggle-btn" onclick="window.location.href='/redoc_auth'" title="Ir a ReDoc (Documentación estática)">
+        <span class="material-symbols-outlined">menu_book</span>
     </button>
     <div id="swagger-ui"></div>
     <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>

@@ -35,7 +35,7 @@ async def authenticate_for_docs(
         )
 
     user = db.query(Usuario).filter(Usuario.email == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.password):
+    if not user or not verify_password(form_data.password, str(user.password)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales incorrectas."
