@@ -46,7 +46,7 @@
 <body class="bg-[#ECFDF5] dark:bg-forest-dark text-[#064E3B] dark:text-emerald-100 font-sans flex min-h-screen transition-colors duration-300">
 
     <!-- Barra lateral de navegación -->
-    <aside class="w-64 bg-white/95 dark:bg-forest-card border-r border-emerald-100 dark:border-emerald-900/50 shadow-xl flex flex-col hidden lg:flex">
+    <aside id="sidebar" class="w-64 bg-white/95 dark:bg-forest-card border-r border-emerald-100 dark:border-emerald-900/50 shadow-xl flex flex-col hidden lg:flex transition-all duration-300 ease-in-out relative">
         <div class="h-24 flex items-center justify-center border-b border-emerald-50 dark:border-emerald-900/50 gap-3">
             <img src="/static/img/logo.png" alt="ZeroWaste" class="h-10 w-auto" onerror="this.style.display='none'">
             <span class="font-extrabold text-xl text-secondary dark:text-white">ZEROWASTE</span>
@@ -79,7 +79,7 @@
                 </a>
 
                 <a href="/" target="_blank" class="nav-link flex items-center gap-3 font-bold text-secondary dark:text-emerald-200">
-                    <span class="material-symbols-outlined text-xl">storefront</span> Tienda (Flask)
+                    <span class="material-symbols-outlined text-xl">storefront</span> ZeroWaste Cliente
                 </a>
 
                 <div class="border-t border-emerald-100 dark:border-emerald-900/50 my-3"></div>
@@ -114,9 +114,14 @@
         </nav>
     </aside>
 
-    <main class="flex-1 p-4 md:p-6 lg:p-10 flex flex-col overflow-auto">
+    <main class="flex-1 p-4 md:p-6 lg:p-10 flex flex-col overflow-auto w-full transition-all duration-300">
         <header class="flex justify-between items-center mb-8">
-            <h1 class="text-3xl font-extrabold dark:text-white">@yield('page_title', 'Dashboard')</h1>
+            <div class="flex items-center gap-4">
+                <button id="sidebar-toggle" class="p-2 rounded-xl bg-white dark:bg-forest-card shadow-sm border border-emerald-100 dark:border-emerald-800/50 text-secondary dark:text-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 transition-colors hidden lg:flex">
+                    <span class="material-symbols-outlined transition-transform duration-300" id="sidebar-icon">menu_open</span>
+                </button>
+                <h1 class="text-3xl font-extrabold dark:text-white truncate">@yield('page_title', 'Dashboard')</h1>
+            </div>
             <div class="flex items-center gap-3">
                 @php
                     $isAuth = \Illuminate\Support\Facades\Auth::check();
@@ -169,6 +174,36 @@
             themeSwitch.checked = true;
             themeIcon.textContent = 'light_mode';
             themeLabel.textContent = 'Modo Claro';
+        }
+
+        // Sidebar Toggle Logic
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarIcon = document.getElementById('sidebar-icon');
+
+        if (sidebarToggle && sidebar) {
+            // Restore state
+            if (localStorage.getItem('zw-sidebar-collapsed') === 'true') {
+                sidebar.classList.add('-ml-64');
+                sidebarIcon.textContent = 'menu';
+                sidebarIcon.style.transform = 'scaleX(-1)';
+            } else {
+                sidebarIcon.style.transform = 'scaleX(1)';
+            }
+
+            sidebarToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('-ml-64');
+                const isCollapsed = sidebar.classList.contains('-ml-64');
+                localStorage.setItem('zw-sidebar-collapsed', isCollapsed);
+                
+                if (isCollapsed) {
+                    sidebarIcon.textContent = 'menu';
+                    sidebarIcon.style.transform = 'scaleX(-1)';
+                } else {
+                    sidebarIcon.textContent = 'menu_open';
+                    sidebarIcon.style.transform = 'scaleX(1)';
+                }
+            });
         }
 
         themeSwitch.addEventListener('change', () => {
