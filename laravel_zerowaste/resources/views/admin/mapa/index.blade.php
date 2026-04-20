@@ -57,18 +57,28 @@
 
     // Confirmación SweetAlert para eliminar punto
     function confirmarEliminar(formId, nombre) {
+        const isDark = document.documentElement.classList.contains('dark');
         Swal.fire({
-            title: '¿Eliminar este punto?',
-            html: `<p class="text-gray-600">El punto <b>"${nombre}"</b> será eliminado permanentemente del mapa.</p>`,
-            icon: 'warning',
+            html: `<div class="text-center">
+                <div class="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center" style="background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.2)); border: 2px solid rgba(239,68,68,0.2);">
+                    <span class="material-symbols-outlined text-red-500" style="font-size: 36px;">location_off</span>
+                </div>
+                <h3 style="font-size: 1.3rem; font-weight: 900; margin-bottom: 8px;">¿Eliminar punto?</h3>
+                <p style="font-size: 0.875rem; opacity: 0.7;">El punto <b>"${nombre}"</b> será eliminado permanentemente del mapa.</p>
+            </div>`,
             showCancelButton: true,
             confirmButtonColor: '#EF4444',
-            cancelButtonColor: '#6B7280',
-            confirmButtonText: '<span class="flex items-center gap-1">Sí, eliminar</span>',
-            cancelButtonText: 'Cancelar',
-            background: document.documentElement.classList.contains('dark') ? '#0B1F18' : '#fff',
-            color: document.documentElement.classList.contains('dark') ? '#D1FAE5' : '#064E3B',
-            customClass: { popup: 'rounded-2xl' }
+            cancelButtonColor: isDark ? '#1a3a2d' : '#E5E7EB',
+            confirmButtonText: '<span class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-base">delete</span>Eliminar</span>',
+            cancelButtonText: '<span class="font-bold">Cancelar</span>',
+            background: isDark ? '#0F2A20' : '#fff',
+            color: isDark ? '#D1FAE5' : '#064E3B',
+            width: 380,
+            customClass: {
+                popup: 'rounded-[2rem] border shadow-2xl',
+                confirmButton: 'rounded-full px-6 py-2.5',
+                cancelButton: 'rounded-full px-6 py-2.5'
+            }
         }).then((result) => {
             if (result.isConfirmed) {
                 document.getElementById(formId).submit();
@@ -122,13 +132,13 @@
                         </div>
                     </div>
                     <div class="flex gap-1 shrink-0">
-                        <a href="{{ route('mapa.edit', $loc) }}" class="text-[10px] bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded-lg font-bold transition-colors">
-                            <span class="material-symbols-outlined text-[12px]">edit</span>
+                        <a href="{{ route('mapa.edit', $loc) }}" class="w-8 h-8 rounded-lg bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-110" title="Editar punto">
+                            <span class="material-symbols-outlined text-[14px]">edit</span>
                         </a>
                         <form id="delete-form-{{ $loc->id }}" action="{{ route('mapa.destroy', $loc) }}" method="POST">
                             @csrf @method('DELETE')
-                            <button type="button" onclick="confirmarEliminar('delete-form-{{ $loc->id }}', '{{ $loc->nombre }}')" class="text-[10px] bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded-lg font-bold transition-colors">
-                                <span class="material-symbols-outlined text-[12px]">delete</span>
+                            <button type="button" onclick="confirmarEliminar('delete-form-{{ $loc->id }}', '{{ $loc->nombre }}')" class="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-110" title="Eliminar punto">
+                                <span class="material-symbols-outlined text-[14px]">delete</span>
                             </button>
                         </form>
                     </div>

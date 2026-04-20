@@ -296,20 +296,25 @@
                 const isDark = html.classList.contains('dark');
                 
                 Swal.fire({
-                    title: 'Confirmación',
-                    text: text,
-                    icon: 'warning',
+                    html: `<div class="text-center">
+                        <div class="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center" style="background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.2)); border: 2px solid rgba(239,68,68,0.2);">
+                            <span class="material-symbols-outlined text-red-500" style="font-size: 36px;">delete_forever</span>
+                        </div>
+                        <h3 style="font-size: 1.3rem; font-weight: 900; margin-bottom: 8px;">¿Eliminar registro?</h3>
+                        <p style="font-size: 0.875rem; opacity: 0.7;">${text}</p>
+                    </div>`,
                     showCancelButton: true,
-                    confirmButtonColor: '#00E096',
-                    cancelButtonColor: '#ef4444',
-                    confirmButtonText: 'Sí, continuar',
-                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#EF4444',
+                    cancelButtonColor: isDark ? '#1a3a2d' : '#E5E7EB',
+                    confirmButtonText: '<span class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-base">delete</span>Eliminar</span>',
+                    cancelButtonText: '<span class="font-bold">Cancelar</span>',
                     background: isDark ? '#0F2A20' : '#ffffff',
                     color: isDark ? '#d1fae5' : '#064E3B',
+                    width: 380,
                     customClass: {
-                        popup: 'rounded-3xl border border-emerald-100 dark:border-emerald-800/50 shadow-2xl',
-                        confirmButton: 'rounded-xl',
-                        cancelButton: 'rounded-xl'
+                        popup: 'rounded-[2rem] border shadow-2xl',
+                        confirmButton: 'rounded-full px-6 py-2.5',
+                        cancelButton: 'rounded-full px-6 py-2.5'
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
@@ -328,20 +333,25 @@
                 const isDark = html.classList.contains('dark');
                 
                 Swal.fire({
-                    title: '¿Editar registro?',
-                    text: '¿Estás seguro de que deseas editar este elemento?',
-                    icon: 'question',
+                    html: `<div class="text-center">
+                        <div class="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center" style="background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(59,130,246,0.2)); border: 2px solid rgba(59,130,246,0.2);">
+                            <span class="material-symbols-outlined text-blue-500" style="font-size: 36px;">edit_note</span>
+                        </div>
+                        <h3 style="font-size: 1.3rem; font-weight: 900; margin-bottom: 8px;">¿Editar registro?</h3>
+                        <p style="font-size: 0.875rem; opacity: 0.7;">Serás redirigido al formulario de edición.</p>
+                    </div>`,
                     showCancelButton: true,
-                    confirmButtonColor: '#00E096',
-                    cancelButtonColor: '#ef4444',
-                    confirmButtonText: 'Sí, editar',
-                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#3B82F6',
+                    cancelButtonColor: isDark ? '#1a3a2d' : '#E5E7EB',
+                    confirmButtonText: '<span class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-base">edit</span>Editar</span>',
+                    cancelButtonText: '<span class="font-bold">Cancelar</span>',
                     background: isDark ? '#0F2A20' : '#ffffff',
                     color: isDark ? '#d1fae5' : '#064E3B',
+                    width: 380,
                     customClass: {
-                        popup: 'rounded-3xl border border-emerald-100 dark:border-emerald-800/50 shadow-2xl',
-                        confirmButton: 'rounded-xl',
-                        cancelButton: 'rounded-xl'
+                        popup: 'rounded-[2rem] border shadow-2xl',
+                        confirmButton: 'rounded-full px-6 py-2.5',
+                        cancelButton: 'rounded-full px-6 py-2.5'
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {

@@ -215,14 +215,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 </td>
                 <td class="p-4 text-gray-400 text-xs">{{ $user->created_at ? $user->created_at->format('d M Y') : '—' }}</td>
                 <td class="p-4 text-right">
-                    <div class="flex items-center justify-end gap-2">
-                        <a href="{{ route('usuarios.edit', $user) }}" class="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-600 transition-colors inline-flex items-center gap-1">
-                            <span class="material-symbols-outlined text-sm">edit</span> Editar
+                    <div class="flex items-center justify-end gap-1.5">
+                        <a href="{{ route('usuarios.edit', $user) }}" class="w-9 h-9 rounded-xl bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/25" title="Editar usuario">
+                            <span class="material-symbols-outlined text-[18px]">edit</span>
                         </a>
                         <form action="{{ route('usuarios.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('¿Eliminar este usuario y todos sus datos relacionados?')">
                             @csrf @method('DELETE')
-                            <button type="submit" class="text-xs bg-red-500 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-red-600 transition-colors inline-flex items-center gap-1">
-                                <span class="material-symbols-outlined text-sm">delete</span> Eliminar
+                            <button type="submit" class="w-9 h-9 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-red-500/25" title="Eliminar usuario">
+                                <span class="material-symbols-outlined text-[18px]">delete</span>
                             </button>
                         </form>
                     </div>
