@@ -1,5 +1,11 @@
 <!DOCTYPE html>
 <html lang="es">
+<script>
+    (function() {
+        var t = localStorage.getItem('zw-admin-theme');
+        if (t === 'dark') document.documentElement.classList.add('dark');
+    })();
+</script>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -32,7 +38,7 @@
             <img src="{{ asset('img/logo.png') }}" alt="ZeroWaste" class="h-9 w-auto" onerror="this.style.display='none'">
             <span class="font-['Montserrat'] font-extrabold text-xl dark:text-white uppercase tracking-tighter">Zero Waste</span>
         </div>
-        <button class="p-2 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-all border border-transparent dark:border-emerald-800" onclick="document.documentElement.classList.toggle('dark')">
+        <button class="p-2 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-all border border-transparent dark:border-emerald-800" onclick="document.documentElement.classList.toggle('dark'); localStorage.setItem('zw-admin-theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light')">
             <span class="material-symbols-outlined dark:hidden text-secondary">dark_mode</span>
             <span class="material-symbols-outlined hidden dark:block text-primary">light_mode</span>
         </button>
