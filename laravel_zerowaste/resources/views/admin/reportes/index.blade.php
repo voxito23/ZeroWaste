@@ -6,7 +6,7 @@
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
-    /* Professional Calendar Styling */
+    /* Estilo profesional del calendario */
     .date-input-wrap {
         position: relative;
         display: flex;
@@ -50,7 +50,7 @@
         padding: 0 4px;
     }
 
-    /* Filter Dropdowns */
+    /* Menús desplegables de filtro */
     .filter-btn {
         display: flex;
         align-items: center;
@@ -106,7 +106,7 @@
     .filter-dropdown button.active-item { color: #059669; background: rgba(0, 224, 150, 0.06); }
     .dark .filter-dropdown button.active-item { color: #34D399; background: rgba(52, 211, 153, 0.06); }
 
-    /* Active Filter Badge (Green) */
+    /* Etiqueta de filtro activo (Verde) */
     .filter-badge {
         display: inline-flex;
         align-items: center;
@@ -138,13 +138,13 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Flatpickr overrides - Light mode */
+    /* Sobrescrituras de Flatpickr - Modo claro */
     .flatpickr-calendar { border-radius: 20px !important; border: 1px solid #E5E7EB !important; box-shadow: 0 25px 60px rgba(0,0,0,0.12) !important; }
     .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange { background: #059669 !important; border-color: #059669 !important; color: #fff !important; font-weight: 800 !important; }
     .flatpickr-day.inRange { background: rgba(0, 224, 150, 0.15) !important; border-color: transparent !important; box-shadow: none !important; }
     .flatpickr-day:hover { background: rgba(0, 224, 150, 0.2) !important; color: #064E3B !important; }
 
-    /* Dark mode flatpickr */
+    /* Flatpickr en modo oscuro */
     .dark .flatpickr-calendar { background: #0F2A20 !important; border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: 0 25px 60px rgba(0,0,0,0.7) !important; }
     .dark .flatpickr-months .flatpickr-month { color: #fff !important; }
     .dark .flatpickr-current-month .flatpickr-monthDropdown-months { font-weight: 800 !important; color: #fff !important; }
@@ -169,7 +169,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let dateEnd = null;
     let pickerStart, pickerEnd;
 
-    // Init Flatpickr
+    // Inicializar Flatpickr
     const fpConfig = { dateFormat: "d/m/Y", locale: "es", disableMobile: true, animate: true };
 
     pickerStart = flatpickr("#date-start", {
@@ -186,7 +186,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     });
 
-    // Dropdowns
+    // Menús desplegables
     window.toggleDD = function(id) {
         ['period-dd'].forEach(dd => { if (dd !== id) document.getElementById(dd)?.classList.add('hidden'); });
         document.getElementById(id)?.classList.toggle('hidden');
@@ -264,7 +264,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     };
 
-    // Generate report with date filter
+    // Generar reporte con filtro de fecha
     window.generateReport = function(tipo, formato) {
         if (!dateStart || !dateEnd) {
             const isDark = document.documentElement.classList.contains('dark');
@@ -321,7 +321,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Preview in modal (like Macuin)
+    // Previsualización en modal (estilo Macuin)
     window.previewReport = function(tipo) {
         if (!dateStart || !dateEnd) {
             const isDark = document.documentElement.classList.contains('dark');
@@ -352,7 +352,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     };
 
-    // Init with 7 days preset
+    // Inicializar con preajuste de 7 días
     setPeriodPreset('7d', 'Últimos 7 días');
 });
 </script>

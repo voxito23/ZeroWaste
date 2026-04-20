@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <script>
-    // Prevent dark mode flash — apply theme before paint
+    // Prevenir destello del modo oscuro — aplicar tema antes de renderizar
     (function() {
         var t = localStorage.getItem('zw-admin-theme');
         if (t === 'dark') {
@@ -80,7 +80,7 @@
             transform: scale(1.02);
             box-shadow: inset 4px 0 0 #00E096;
         }
-        /* Page Entry Animation */
+        /* Animación de entrada a la página */
         .fade-in-up {
             animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             opacity: 0;
@@ -92,7 +92,7 @@
                 transform: translateY(0);
             }
         }
-        /* Toggle dark mode switch */
+        /* Interruptor de Modo Oscuro */
         .theme-toggle { position: relative; width: 48px; height: 26px; border-radius: 9999px; cursor: pointer; }
         .theme-toggle input { display: none; }
         .theme-toggle .slider { position: absolute; inset: 0; background: #cbd5e1; border-radius: 9999px; transition: 0.3s; }
@@ -154,8 +154,7 @@
             </a>
 
             <div class="mt-auto pt-4 border-t border-emerald-100 dark:border-emerald-900/50">
-                <!-- Toggle Dark Mode -->
-                <!-- Toggle Dark Mode -->
+                <!-- Interruptor de Modo Oscuro -->
                 <button type="button" class="nav-link flex items-center justify-between w-full text-left mb-2 group" id="theme-switch-btn">
                     <div class="flex items-center gap-3 font-bold text-secondary dark:text-emerald-200 text-sm">
                         <span class="material-symbols-outlined text-xl dark:hidden text-secondary group-hover:text-primary transition-colors">dark_mode</span>
@@ -199,7 +198,7 @@
                              onerror="this.onerror=null; this.src='/static/img/perfiles/default.png';">
                     </div>
                     
-                    <!-- Dropdown Menu -->
+                    <!-- Menú Desplegable -->
                     <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-forest-card rounded-2xl shadow-xl border border-emerald-50 dark:border-emerald-800/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top-right z-50 overflow-hidden">
                         <a href="{{ route('admin.perfil.edit') }}" class="flex items-center gap-2 px-4 py-3 text-sm font-bold text-secondary dark:text-emerald-100 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 transition-colors">
                             <span class="material-symbols-outlined text-lg">manage_accounts</span>
@@ -229,13 +228,13 @@
             html.classList.remove('light');
         }
 
-        // Sidebar Toggle Logic
+        // Lógica de alternancia de la barra lateral
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebar-toggle');
         const sidebarIcon = document.getElementById('sidebar-icon');
 
         if (sidebarToggle && sidebar) {
-            // Restore state
+            // Restaurar estado guardado
             if (localStorage.getItem('zw-sidebar-collapsed') === 'true') {
                 sidebar.classList.add('-ml-64');
                 sidebarIcon.textContent = 'menu';
@@ -298,7 +297,7 @@
                     confirmButtonColor: '#EF4444',
                     cancelButtonColor: isDark ? '#1a3a2d' : '#E5E7EB',
                     confirmButtonText: '<span class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-base">delete</span>Eliminar</span>',
-                    cancelButtonText: '<span class="font-bold">Cancelar</span>',
+                    cancelButtonText: `<span class="font-bold" style="color: ${isDark ? '#d1fae5' : '#1f2937'};">Cancelar</span>`,
                     background: isDark ? '#0F2A20' : '#ffffff',
                     color: isDark ? '#d1fae5' : '#064E3B',
                     width: 380,
@@ -335,7 +334,7 @@
                     confirmButtonColor: '#3B82F6',
                     cancelButtonColor: isDark ? '#1a3a2d' : '#E5E7EB',
                     confirmButtonText: '<span class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-base">edit</span>Editar</span>',
-                    cancelButtonText: '<span class="font-bold">Cancelar</span>',
+                    cancelButtonText: `<span class="font-bold" style="color: ${isDark ? '#d1fae5' : '#1f2937'};">Cancelar</span>`,
                     background: isDark ? '#0F2A20' : '#ffffff',
                     color: isDark ? '#d1fae5' : '#064E3B',
                     width: 380,

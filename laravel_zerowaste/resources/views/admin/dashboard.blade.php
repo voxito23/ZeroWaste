@@ -8,7 +8,7 @@
 <script>
     document.addEventListener("DOMContentLoaded", function() {
 
-        // CountUp Animation
+        // Animación CountUp
         document.querySelectorAll('[data-count]').forEach(el => {
             const target = parseInt(el.dataset.count);
             const duration = 1200;
@@ -28,11 +28,11 @@
             }, frameDuration);
         });
 
-        // Chart.js Global Config
+        // Configuración Global Chart.js
         Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#71717a' : '#9CA3AF';
         Chart.defaults.font.family = 'Inter';
 
-        // Usuarios Line Chart (Macuin-style gradient)
+        // Gráfico de líneas de Usuarios (gradiente estilo Macuin)
         const chartData = @json($usuariosPorMes);
         const usersCanvas = document.getElementById('usersLineChart');
         if (usersCanvas) {
@@ -116,7 +116,7 @@
         }
 
 
-        // Stagger animation for table rows
+        // Animación escalonada para filas de tabla
         document.querySelectorAll('.stagger-row').forEach((row, i) => {
             row.style.opacity = '0';
             row.style.transform = 'translateY(10px)';
