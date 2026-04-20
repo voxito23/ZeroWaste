@@ -161,8 +161,14 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        // Proteger al admin principal
         if ($user->email === 'vichdz@gmail.com') {
-            return redirect()->route('usuarios.index')->with('error_admin', 'Sin autorización de eliminar admin principal error');
+            return redirect()->route('usuarios.index')->with('error_admin', 'No se puede eliminar la cuenta de administrador principal.');
+        }
+
+        // Proteger al admin logueado de eliminarse a sí mismo
+        if (auth()->check() && auth()->id() === $user->id) {
+            return redirect()->route('usuarios.index')->with('error_admin', 'No puedes eliminar tu propia cuenta.');
         }
 
         // Limpiar posteos y datos relacionados con posteos

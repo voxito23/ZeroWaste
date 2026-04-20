@@ -219,12 +219,18 @@ document.addEventListener("DOMContentLoaded", function() {
                         <a href="{{ route('usuarios.edit', $user) }}" class="w-9 h-9 rounded-xl bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/25" title="Editar usuario">
                             <span class="material-symbols-outlined text-[18px]">edit</span>
                         </a>
+                        @if($user->email !== 'vichdz@gmail.com' && (!auth()->check() || auth()->id() !== $user->id))
                         <form action="{{ route('usuarios.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('¿Eliminar este usuario y todos sus datos relacionados?')">
                             @csrf @method('DELETE')
                             <button type="submit" class="w-9 h-9 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-red-500/25" title="Eliminar usuario">
                                 <span class="material-symbols-outlined text-[18px]">delete</span>
                             </button>
                         </form>
+                        @else
+                        <span class="w-9 h-9 rounded-xl bg-gray-100 dark:bg-white/5 text-gray-300 dark:text-gray-600 flex items-center justify-center cursor-not-allowed" title="Protegido">
+                            <span class="material-symbols-outlined text-[18px]">lock</span>
+                        </span>
+                        @endif
                     </div>
                 </td>
             </tr>
