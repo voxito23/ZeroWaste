@@ -32,8 +32,40 @@ class DashboardController extends Controller
         $totalMensajes = ContactMessage::query()->count();
         $totalSolicitudes = PasswordResetRequest::query()->count();
 
+        // Desglose por roles y estado
+        $totalAdmins = User::query()->where('is_admin', true)->count();
+        $totalNormales = User::query()->where('is_admin', false)->count();
+        $totalBloqueados = User::query()->where('bloqueado', true)->count();
+
+        // Tendencias (últimos 7 días vs 7 días anteriores)
+        $now = Carbon::now();
+        $hace7 = $now->copy()->subDays(7);
+        $hace14 = $now->copy()->subDays(14);
+
+        $usersLast7 = User::where('created_at', '>=', $hace7)->count();
+        $usersPrev7 = User::whereBetween('created_at', [$hace14, $hace7])->count();
+        $trendUsuarios = $usersPrev7 > 0 ? round((($usersLast7 - $usersPrev7) / $usersPrev7) * 100) : ($usersLast7 > 0 ? 100 : 0);
+
+        $postsLast7 = Post::where('created_at', '>=', $hace7)->count();
+        $postsPrev7 = Post::whereBetween('created_at', [$hace14, $hace7])->count();
+        $trendPosts = $postsPrev7 > 0 ? round((($postsLast7 - $postsPrev7) / $postsPrev7) * 100) : ($postsLast7 > 0 ? 100 : 0);
+
+        $msgsLast7 = ContactMessage::where('created_at', '>=', $hace7)->count();
+        $msgsPrev7 = ContactMessage::whereBetween('created_at', [$hace14, $hace7])->count();
+        $trendMensajes = $msgsPrev7 > 0 ? round((($msgsLast7 - $msgsPrev7) / $msgsPrev7) * 100) : ($msgsLast7 > 0 ? 100 : 0);
+
+        $campsLast7 = Campaign::where('created_at', '>=', $hace7)->count();
+        $campsPrev7 = Campaign::whereBetween('created_at', [$hace14, $hace7])->count();
+        $trendCampanas = $campsPrev7 > 0 ? round((($campsLast7 - $campsPrev7) / $campsPrev7) * 100) : ($campsLast7 > 0 ? 100 : 0);
+
+        // Último registro
+        $ultimoRegistro = User::query()->orderByDesc('created_at')->first();
+
         // Usuarios recientes
         $usuariosRecientes = User::query()->orderByDesc('created_at')->limit(5)->get();
+
+        // Todos los usuarios para el directorio del dashboard
+        $todosUsuarios = User::query()->orderByDesc('created_at')->get();
 
         // Datos para gráfica: usuarios por día (últimos 7 días)
         $usuariosPorMes = DB::table('usuarios')
@@ -62,7 +94,10 @@ class DashboardController extends Controller
         return view('admin.dashboard', compact(
             'campaignCount', 'totalUsuarios', 'totalPosts', 'totalPuntos',
             'totalActividades', 'sentimiento', 'totalMensajes', 'totalSolicitudes',
-            'usuariosRecientes', 'usuariosPorMes'
+            'usuariosRecientes', 'usuariosPorMes',
+            'totalAdmins', 'totalNormales', 'totalBloqueados',
+            'trendUsuarios', 'trendPosts', 'trendMensajes', 'trendCampanas',
+            'ultimoRegistro', 'todosUsuarios'
         ));
     }
 

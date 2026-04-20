@@ -135,8 +135,68 @@
 
 @section('content')
 
-<div class="mb-8">
-    <p class="text-gray-600 dark:text-emerald-100/80 text-lg">Selecciona un módulo y rango de fechas para exportarlo o previsualizarlo dinámicamente.</p>
+{{-- Header descriptivo --}}
+<div class="mb-6">
+    <p class="text-gray-500 dark:text-emerald-100/70 text-base">Informes consolidados y análisis de volumen del ecosistema ZeroWaste.</p>
+</div>
+
+{{-- Métricas rápidas estilo Macuin --}}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white dark:bg-forest-card rounded-2xl p-5 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                <span class="material-symbols-outlined text-white text-xl">group</span>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-[#064E3B] dark:text-white">{{ $totalUsuarios }}</p>
+                <p class="text-xs text-gray-400 dark:text-emerald-500 font-semibold">Usuarios registrados</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-forest-card rounded-2xl p-5 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <span class="material-symbols-outlined text-white text-xl">military_tech</span>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-[#064E3B] dark:text-white">{{ $totalCampanas }}</p>
+                <p class="text-xs text-gray-400 dark:text-emerald-500 font-semibold">Campañas activas</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-forest-card rounded-2xl p-5 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <span class="material-symbols-outlined text-white text-xl">location_on</span>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-[#064E3B] dark:text-white">{{ $totalPuntos }}</p>
+                <p class="text-xs text-gray-400 dark:text-emerald-500 font-semibold">Puntos de acopio</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-forest-card rounded-2xl p-5 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                <span class="material-symbols-outlined text-white text-xl">event</span>
+            </div>
+            <div>
+                <p class="text-2xl font-black text-[#064E3B] dark:text-white">{{ $totalEventos }}</p>
+                <p class="text-xs text-gray-400 dark:text-emerald-500 font-semibold">Eventos programados</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Título de sección --}}
+<div class="flex items-center gap-3 mb-6">
+    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center shadow-lg shadow-red-500/30">
+        <span class="material-symbols-outlined text-white">description</span>
+    </div>
+    <div>
+        <h3 class="font-bold text-lg text-[#064E3B] dark:text-white">Exportar Reportes</h3>
+        <p class="text-xs text-gray-400 dark:text-emerald-500">Selecciona un módulo y rango de fechas para exportarlo o previsualizarlo.</p>
+    </div>
 </div>
 
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

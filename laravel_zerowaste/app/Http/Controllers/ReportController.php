@@ -13,7 +13,14 @@ class ReportController extends Controller
 {
     public function index()
     {
-        return view('admin.reportes.index');
+        $totalUsuarios = User::query()->count();
+        $totalCampanas = Campaign::query()->count();
+        $totalPuntos = Location::query()->count();
+        $totalEventos = \App\Models\Evento::query()->count();
+
+        return view('admin.reportes.index', compact(
+            'totalUsuarios', 'totalCampanas', 'totalPuntos', 'totalEventos'
+        ));
     }
 
     public function exportar(Request $request)
