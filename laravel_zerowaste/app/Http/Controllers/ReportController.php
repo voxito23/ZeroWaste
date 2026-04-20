@@ -48,7 +48,7 @@ class ReportController extends Controller
         
         $data = [
             'tipo' => $tipo,
-            'fecha_generada' => Carbon::now()->format('d/m/Y - H:i'),
+            'fecha_generada' => Carbon::now('America/Mexico_City')->format('d/m/Y - h:i A'),
             'rango_inicio' => Carbon::parse($request->input('fecha_inicio'))->format('d M Y'),
             'rango_fin' => Carbon::parse($request->input('fecha_fin'))->format('d M Y'),
         ];

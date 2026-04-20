@@ -118,12 +118,12 @@
                         </div>
                         @endif
                     </div>
-                    <div class="flex-1 min-w-0">
-                        <h4 class="font-bold text-xs text-[#064E3B] dark:text-white truncate">{{ $loc->nombre }}</h4>
-                        <p class="text-[10px] text-gray-500 dark:text-gray-400 truncate">{{ $loc->direccion }}</p>
-                        <div class="flex items-center gap-1.5 mt-1">
-                            <span class="px-1.5 py-0.5 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full text-[9px] font-bold uppercase">{{ $loc->tipo }}</span>
-                            <span class="text-[9px] text-gray-400 truncate">{{ \Illuminate\Support\Str::limit($loc->materiales ?? 'Sin materiales', 20) }}</span>
+                    <div class="flex-1 min-w-0 pr-2">
+                        <h4 class="font-bold text-[13px] text-[#064E3B] dark:text-white leading-tight break-words">{{ $loc->nombre }}</h4>
+                        <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 leading-tight break-words">{{ $loc->direccion }}</p>
+                        <div class="flex items-center flex-wrap gap-1.5 mt-2">
+                            <span class="px-2 py-0.5 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full text-[9px] font-bold uppercase tracking-wide">{{ $loc->tipo }}</span>
+                            <span class="text-[9px] text-gray-400 flex-1 truncate">{{ $loc->materiales ?? 'Sin materiales' }}</span>
                         </div>
                     </div>
                     <div class="flex gap-1 shrink-0">
