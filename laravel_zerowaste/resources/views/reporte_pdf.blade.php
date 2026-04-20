@@ -17,8 +17,8 @@
 
         /* === HEADER === */
         .header { 
-            background: linear-gradient(135deg, #064E3B 0%, #065F46 40%, #047857 100%);
-            color: white; 
+            background-color: #064E3B;
+            color: #ffffff; 
             padding: 35px 45px;
             position: relative;
             overflow: hidden;
@@ -67,7 +67,7 @@
         
         .header .subtitle { 
             font-size: 13px; 
-            color: #A7F3D0; 
+            color: #E2E8F0; 
             margin: 4px 0 0 0;
             font-weight: 400;
         }
@@ -77,10 +77,10 @@
             top: 35px;
             right: 45px;
             font-size: 10px;
-            background: rgba(255,255,255,0.12);
+            background-color: #047857;
             padding: 6px 14px;
             border-radius: 20px;
-            color: #D1FAE5;
+            color: #ffffff;
             letter-spacing: 0.3px;
         }
 
@@ -201,7 +201,7 @@
             font-size: 9px;
             text-transform: uppercase;
             font-weight: 700;
-            color: #D1FAE5;
+            color: #ffffff;
             border: none;
             letter-spacing: 0.5px;
         }

@@ -329,8 +329,8 @@ document.addEventListener("DOMContentLoaded", function() {
             <span class="material-symbols-outlined text-[28px]">insights</span>
         </div>
         <div>
-            <h2 class="text-3xl font-black tracking-tight leading-none text-[#064E3B] dark:text-white">Métricas Inteligentes</h2>
-            <p class="text-gray-500 dark:text-gray-400 text-sm font-medium mt-1">Informes consolidados y análisis de volumen.</p>
+            <h2 class="text-3xl font-black tracking-tight leading-none text-[#064E3B] dark:text-white">Panel de Análisis y Reportes</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-sm font-medium mt-1">Exportación y generación de informes clave del ecosistema.</p>
         </div>
     </div>
 </div>

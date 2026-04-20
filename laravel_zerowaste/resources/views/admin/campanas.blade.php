@@ -9,9 +9,9 @@
 @endif
 
 <div class="flex justify-end mb-6">
-    <a href="{{ route('campanas.create') }}" class="bg-primary hover:bg-emerald-500 text-secondary font-bold py-3 px-6 rounded-xl shadow-lg flex items-center gap-2 transition-all hover:-translate-y-1">
-        <span class="material-symbols-outlined">add</span>
-        Nueva Campaña
+    <a href="{{ route('campanas.create') }}" class="bg-primary hover:bg-[#00c281] text-secondary font-black py-3 px-8 rounded-full shadow-[0_4px_20px_rgba(0,224,150,0.3)] hover:shadow-[0_6px_25px_rgba(0,224,150,0.5)] flex items-center gap-2 transition-all hover:-translate-y-1">
+        <span class="material-symbols-outlined text-[20px]">add_circle</span>
+        <span>Nueva Campaña</span>
     </a>
 </div>
 
@@ -37,9 +37,13 @@
                 </td>
                 <td class="p-4">
                     @if($camp->activa)
-                        <span class="text-green-600 dark:text-green-400 flex items-center gap-1 text-xs font-bold"><span class="material-symbols-outlined text-[1rem]">check_circle</span> Activa</span>
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/20 text-[11px] font-black uppercase tracking-wider">
+                            <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div> Activa
+                        </div>
                     @else
-                        <span class="text-red-500 dark:text-red-400 flex items-center gap-1 text-xs font-bold"><span class="material-symbols-outlined text-[1rem]">cancel</span> Inactiva</span>
+                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20 text-[11px] font-black uppercase tracking-wider">
+                            <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div> Inactiva
+                        </div>
                     @endif
                 </td>
                 <td class="p-4">

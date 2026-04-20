@@ -110,9 +110,9 @@
                 <span class="material-symbols-outlined text-sm">add</span> Nuevo
             </a>
         </div>
-        <div class="max-h-[600px] overflow-y-auto">
+        <div class="max-h-[600px] overflow-y-auto p-3">
             @forelse ($locations as $loc)
-            <div class="p-4 border-b border-emerald-50 dark:border-emerald-800/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-colors group">
+            <div class="mb-3 bg-white dark:bg-forest-dark p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-500/50 transition-all group">
                 <div class="flex items-center gap-3">
                     <div class="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-gray-100 border-2 border-emerald-100 shadow-sm">
                         @if($loc->imagen)

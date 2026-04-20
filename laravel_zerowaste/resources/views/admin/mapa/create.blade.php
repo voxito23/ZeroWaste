@@ -7,18 +7,23 @@
 <div class="grid lg:grid-cols-2 gap-8">
 
     <!-- Mapa Interactivo -->
-    <div class="bg-white dark:bg-forest-card rounded-2xl shadow-lg border border-gray-100 dark:border-emerald-800/50 overflow-hidden">
-        <div class="p-4 border-b border-gray-100 dark:border-emerald-800/50 bg-gray-50 dark:bg-emerald-900/20">
-            <h3 class="font-bold text-lg text-[#064E3B] dark:text-white flex items-center gap-2">
-                <span class="material-symbols-outlined text-[#00E096]">pin_drop</span>
-                Haz clic en el mapa para seleccionar ubicación
+    <div class="bg-white dark:bg-forest-card rounded-[2rem] shadow-xl border-2 border-emerald-100 dark:border-emerald-800/50 overflow-hidden flex flex-col relative group">
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none transition group-hover:bg-emerald-400/20"></div>
+        <div class="p-6 border-b border-emerald-50 dark:border-emerald-800/50 flex flex-col gap-2 relative z-10">
+            <h3 class="font-black text-2xl text-[#064E3B] dark:text-white flex items-center gap-3">
+                <div class="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-500/20 shadow-inner">
+                    <span class="material-symbols-outlined text-[24px]">pin_drop</span>
+                </div>
+                Ubicación Geográfica
             </h3>
+            <p class="text-sm font-bold text-gray-500 dark:text-gray-400 ml-[60px]">Haz clic en el mapa interactivo para fijar el punto exacto.</p>
         </div>
-        <div id="admin-map" style="height: 500px; width: 100%;"></div>
+        <div id="admin-map" class="w-full flex-1 min-h-[500px]"></div>
     </div>
 
     <!-- Formulario -->
-    <div class="bg-white dark:bg-forest-card rounded-2xl p-8 shadow-lg border border-gray-100 dark:border-emerald-800/50">
+    <div class="bg-white dark:bg-forest-card rounded-[2rem] p-8 shadow-xl border-2 border-emerald-100 dark:border-emerald-800/50 relative overflow-hidden group">
+        <div class="absolute -bottom-20 -left-10 w-60 h-60 bg-blue-400/5 rounded-full blur-3xl pointer-events-none transition group-hover:bg-blue-400/10"></div>
         <form id="customForm" novalidate action="{{ route('mapa.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 

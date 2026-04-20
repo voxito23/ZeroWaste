@@ -28,14 +28,14 @@ class ReportController extends Controller
         $request->validate([
             'tipo' => 'required|in:usuarios,campanas,mapa,eventos',
             'formato' => 'required|in:pdf,xlsx,docx,preview',
-            'fecha_inicio' => 'required|date|after_or_equal:2026-03-30',
+            'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
         ], [
             'tipo.required' => 'El tipo de reporte es obligatorio.',
             'tipo.in' => 'El tipo de reporte es inválido.',
             'formato.required' => 'El formato es obligatorio.',
             'formato.in' => 'El formato debe ser pdf, xlsx, docx o preview.',
-            'fecha_inicio.after_or_equal' => 'La fecha de inicio debe ser a partir del 30 de marzo de 2026.',
+            'formato.in' => 'El formato debe ser pdf, xlsx, docx o preview.',
             'fecha_fin.after_or_equal' => 'La fecha final debe ser posterior o igual a la de inicio.',
         ]);
 

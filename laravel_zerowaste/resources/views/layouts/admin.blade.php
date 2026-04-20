@@ -155,16 +155,15 @@
 
             <div class="mt-auto pt-4 border-t border-emerald-100 dark:border-emerald-900/50">
                 <!-- Toggle Dark Mode -->
-                <div class="nav-link flex items-center justify-between mb-2">
+                <!-- Toggle Dark Mode -->
+                <button type="button" class="nav-link flex items-center justify-between w-full text-left mb-2 group" id="theme-switch-btn">
                     <div class="flex items-center gap-3 font-bold text-secondary dark:text-emerald-200 text-sm">
-                        <span class="material-symbols-outlined text-xl" id="theme-icon">dark_mode</span>
-                        <span id="theme-label">Modo Oscuro</span>
+                        <span class="material-symbols-outlined text-xl dark:hidden text-secondary group-hover:text-primary transition-colors">dark_mode</span>
+                        <span class="material-symbols-outlined text-xl hidden dark:block text-primary">light_mode</span>
+                        <span class="dark:hidden">Modo Oscuro</span>
+                        <span class="hidden dark:inline">Modo Claro</span>
                     </div>
-                    <label class="theme-toggle">
-                        <input type="checkbox" id="theme-switch">
-                        <span class="slider"></span>
-                    </label>
-                </div>
+                </button>
 
                 <a href="{{ route('admin.logout') }}" class="nav-link flex items-center gap-3 font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
                     <span class="material-symbols-outlined text-xl">logout</span> Cerrar Sesión
@@ -221,18 +220,13 @@
 
     <!-- Script Dark Mode -->
     <script>
-        const themeSwitch = document.getElementById('theme-switch');
+        const themeBtn = document.getElementById('theme-switch-btn');
         const html = document.documentElement;
-        const themeIcon = document.getElementById('theme-icon');
-        const themeLabel = document.getElementById('theme-label');
 
         // Restaurar preferencia guardada
         if (localStorage.getItem('zw-admin-theme') === 'dark') {
             html.classList.add('dark');
             html.classList.remove('light');
-            themeSwitch.checked = true;
-            themeIcon.textContent = 'light_mode';
-            themeLabel.textContent = 'Modo Claro';
         }
 
         // Sidebar Toggle Logic
@@ -265,21 +259,18 @@
             });
         }
 
-        themeSwitch.addEventListener('change', () => {
-            if (themeSwitch.checked) {
-                html.classList.add('dark');
-                html.classList.remove('light');
-                localStorage.setItem('zw-admin-theme', 'dark');
-                themeIcon.textContent = 'light_mode';
-                themeLabel.textContent = 'Modo Claro';
-            } else {
-                html.classList.remove('dark');
-                html.classList.add('light');
-                localStorage.setItem('zw-admin-theme', 'light');
-                themeIcon.textContent = 'dark_mode';
-                themeLabel.textContent = 'Modo Oscuro';
-            }
-        });
+        if (themeBtn) {
+            themeBtn.addEventListener('click', () => {
+                html.classList.toggle('dark');
+                if (html.classList.contains('dark')) {
+                    html.classList.remove('light');
+                    localStorage.setItem('zw-admin-theme', 'dark');
+                } else {
+                    html.classList.add('light');
+                    localStorage.setItem('zw-admin-theme', 'light');
+                }
+            });
+        }
 
         // Reemplazar todos los onsubmit nativos confirmables por SweetAlert al cargar la página
         document.querySelectorAll('form[onsubmit*="confirm"]').forEach(form => {

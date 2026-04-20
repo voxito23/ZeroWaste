@@ -102,10 +102,10 @@ class DashboardController extends Controller
     public function exportarPDF(Request $request)
     {
         $request->validate([
-            'fecha_inicio' => 'required|date|after_or_equal:2026-03-30',
+            'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
         ], [
-            'fecha_inicio.after_or_equal' => 'La fecha de inicio debe ser a partir del 30 de marzo de 2026.',
+        ], [
             'fecha_fin.after_or_equal' => 'La fecha final debe ser posterior o igual a la de inicio.',
         ]);
 

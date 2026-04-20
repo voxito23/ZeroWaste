@@ -4,8 +4,18 @@
 @section('page_title', 'Crear Nueva Campaña')
 
 @section('content')
-<div class="bg-white dark:bg-forest-card rounded-3xl shadow-lg border border-emerald-100 dark:border-emerald-800/50 p-8 max-w-3xl">
-    <form id="customForm" novalidate action="{{ route('campanas.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-col gap-6">
+<div class="bg-white dark:bg-forest-card rounded-[2rem] p-8 shadow-xl border-2 border-emerald-100 dark:border-emerald-800/50 relative overflow-hidden group max-w-4xl mx-auto">
+    <div class="absolute -top-20 -right-10 w-60 h-60 bg-emerald-400/5 rounded-full blur-3xl pointer-events-none transition group-hover:bg-emerald-400/10"></div>
+    <div class="flex items-center gap-4 mb-8 relative z-10 border-b border-emerald-50 dark:border-emerald-800/50 pb-6">
+        <div class="w-14 h-14 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-500/20 shadow-inner">
+            <span class="material-symbols-outlined text-[28px]">campaign</span>
+        </div>
+        <div>
+            <h2 class="text-3xl font-black text-[#064E3B] dark:text-white tracking-tight">Nueva Campaña</h2>
+            <p class="text-gray-500 dark:text-gray-400 text-sm font-bold mt-1">Registra información sobre eventos, talleres y voluntariados.</p>
+        </div>
+    </div>
+    <form id="customForm" novalidate action="{{ route('campanas.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-col gap-6 relative z-10">
         @csrf
 
         @if ($errors->any())
@@ -72,9 +82,11 @@
             <label for="activa" class="font-bold text-gray-700 dark:text-emerald-200">Campaña Activa</label>
         </div>
 
-        <div class="flex justify-end gap-4 mt-6">
-            <a href="{{ route('campanas.index') }}" class="py-3 px-6 text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-100 dark:hover:bg-emerald-900/30 rounded-xl">Cancelar</a>
-            <button type="submit" class="bg-primary hover:bg-emerald-500 text-secondary font-bold py-3 px-8 rounded-xl shadow-md transition-transform hover:-translate-y-1">Guardar Campaña</button>
+        <div class="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-emerald-800/50">
+            <a href="{{ route('campanas.index') }}" class="px-6 py-3 text-gray-500 dark:text-gray-400 font-bold hover:text-gray-700 dark:hover:text-white transition-colors">← Cancelar</a>
+            <button type="submit" class="px-8 py-3 bg-[#064E3B] text-white rounded-xl font-bold hover:bg-[#00E096] hover:text-[#064E3B] transition-colors shadow-lg shadow-[#00E096]/20 flex items-center gap-2">
+                <span class="material-symbols-outlined">save</span> Guardar Campaña
+            </button>
         </div>
     </form>
 </div>
