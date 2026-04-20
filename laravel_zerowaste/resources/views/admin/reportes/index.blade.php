@@ -377,6 +377,23 @@ document.addEventListener("DOMContentLoaded", function() {
             <h2 class="text-3xl font-black tracking-tight leading-none text-[#064E3B] dark:text-white">Panel de Análisis y Reportes</h2>
             <p class="text-gray-500 dark:text-gray-400 text-sm font-medium mt-1">Exportación y generación de informes clave del ecosistema.</p>
         </div>
+</div>
+
+{{-- ========== PREMIUM SEARCH BAR & CATEGORIES ========== --}}
+<div class="bg-white dark:bg-forest-card rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-emerald-50 dark:border-emerald-800/40 p-2 flex flex-col md:flex-row items-center gap-2 mb-6 transition-all focus-within:shadow-[0_8px_30px_rgba(0,224,150,0.15)] focus-within:border-emerald-300 dark:focus-within:border-emerald-500/50">
+    <div class="flex items-center flex-1 w-full pl-4 pr-2">
+        <span class="material-symbols-outlined text-emerald-400 dark:text-emerald-500 text-[24px]">search</span>
+        <input type="text" id="search-report" placeholder="Buscar por nombre, descripción, lugar..." class="w-full bg-transparent border-none focus:ring-0 text-gray-700 dark:text-gray-200 placeholder-gray-400 font-semibold text-[15px] outline-none px-4 py-3">
+    </div>
+    <div class="w-full md:w-[1px] h-[1px] md:h-10 bg-gray-100 dark:bg-emerald-800/50 hidden md:block"></div>
+    <div class="flex items-center w-full md:w-auto px-4 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-xl transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
+        <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[20px]">category</span>
+        <select id="categoria-report" class="bg-transparent border-none focus:ring-0 text-[#064E3B] dark:text-emerald-200 font-bold text-[14px] cursor-pointer outline-none py-3 px-3 appearance-none min-w-[200px]">
+            <option value="" class="dark:bg-[#0F2A20]">Todas las Categorías</option>
+            <option value="admins" class="dark:bg-[#0F2A20]">Solo Administradores</option>
+            <option value="users" class="dark:bg-[#0F2A20]">Solo Usuarios Base</option>
+        </select>
+        <span class="material-symbols-outlined text-gray-400 text-[20px] pointer-events-none -ml-2">expand_more</span>
     </div>
 </div>
 
@@ -419,24 +436,8 @@ document.addEventListener("DOMContentLoaded", function() {
         <span class="material-symbols-outlined text-gray-400 text-[20px]">filter_alt_off</span>
     </button>
     
-    {{-- Search & Categoria --}}
-    <div class="flex items-center gap-2 ml-auto w-full md:w-auto">
-        <div class="date-input-wrap">
-            <span class="material-symbols-outlined text-gray-400 text-[20px]">search</span>
-            <input type="text" id="search-report" placeholder="Buscar por texto..." style="width: 140px;">
-        </div>
-        <div class="date-input-wrap">
-            <span class="material-symbols-outlined text-gray-400 text-[20px]">category</span>
-            <select id="categoria-report" style="background: transparent; border: none; outline: none; color: #064E3B; font-weight: 700; width: 140px;" class="dark:text-white">
-                <option value="" class="dark:bg-forest-dark">Todas las Categorías</option>
-                <option value="admins" class="dark:bg-forest-dark">Solo Administradores</option>
-                <option value="users" class="dark:bg-forest-dark">Solo Usuarios Base</option>
-            </select>
-        </div>
-    </div>
-
     {{-- Active Badge --}}
-    <div id="filter-badge" class="filter-badge hidden">
+    <div id="filter-badge" class="filter-badge hidden ml-auto">
         <span class="dot"></span>
         <span id="filter-badge-text">07-abr → 14-abr</span>
     </div>

@@ -357,21 +357,24 @@
             {!! "const isDarkThemeToast = document.documentElement.classList.contains('dark');" !!}
             Swal.fire({
                 toast: true,
-                position: 'top-end',
+                position: 'top',
                 showConfirmButton: false,
-                timer: 3500,
-                timerProgressBar: true,
+                timer: 3000,
+                timerProgressBar: false,
                 background: isDarkThemeToast ? '#0F2A20' : '#ffffff',
+                color: isDarkThemeToast ? '#d1fae5' : '#064E3B',
                 customClass: {
-                    popup: 'rounded-2xl border shadow-xl border-emerald-100 dark:border-emerald-800/50 p-2',
+                    popup: 'rounded-full border border-emerald-100 dark:border-emerald-800/50 shadow-2xl mt-4 px-2 py-1',
                 },
+                showClass: { popup: 'animate__animated animate__fadeInDown animate__faster' },
+                hideClass: { popup: 'animate__animated animate__fadeOutUp animate__faster' },
                 html: `
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center flex-shrink-0 border border-emerald-200 dark:border-emerald-700 text-primary">
-                        <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    <div class="w-8 h-8 rounded-full bg-[#00E096] shadow-[0_0_15px_rgba(0,224,150,0.5)] flex items-center justify-center text-[#064E3B] shrink-0">
+                        <span class="material-symbols-outlined text-[18px] font-black">done</span>
                     </div>
-                    <div>
-                        <h4 class="text-sm font-bold text-secondary dark:text-emerald-100 m-0 leading-tight">{!! session('success') !!}</h4>
+                    <div class="text-left pr-4">
+                        <h4 class="text-[14px] font-black m-0 leading-none tracking-tight">{!! session('success') !!}</h4>
                     </div>
                 </div>`
             });
