@@ -497,33 +497,41 @@ document.addEventListener("DOMContentLoaded", function() {
 {{-- ========== LIVE KPIs ========== --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
     <div class="bg-white dark:bg-white/[0.02] border-2 border-emerald-100 dark:border-white/5 rounded-2xl p-6 hover:border-emerald-300 dark:hover:border-emerald-500/20 transition group">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="material-symbols-outlined text-emerald-500 text-[20px]">group</span>
-            <span class="text-[10px] text-gray-500 uppercase font-black tracking-widest">Usuarios</span>
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-[0_4px_15px_rgba(52,211,153,0.4)] text-white group-hover:scale-110 transition-transform">
+                <span class="material-symbols-outlined text-[20px]">group</span>
+            </div>
+            <span class="text-[11px] text-gray-500 uppercase font-black tracking-widest">Usuarios</span>
         </div>
         <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight">{{ $totalUsuarios }}</p>
         <p class="text-[10px] text-gray-400 font-bold mt-1">Registrados en plataforma</p>
     </div>
     <div class="bg-white dark:bg-white/[0.02] border-2 border-emerald-100 dark:border-white/5 rounded-2xl p-6 hover:border-blue-300 dark:hover:border-blue-500/20 transition group">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="material-symbols-outlined text-blue-500 text-[20px]">military_tech</span>
-            <span class="text-[10px] text-gray-500 uppercase font-black tracking-widest">Campañas</span>
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-[0_4px_15px_rgba(96,165,250,0.4)] text-white group-hover:scale-110 transition-transform">
+                <span class="material-symbols-outlined text-[20px]">military_tech</span>
+            </div>
+            <span class="text-[11px] text-gray-500 uppercase font-black tracking-widest">Campañas</span>
         </div>
         <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight">{{ $totalCampanas }}</p>
         <p class="text-[10px] text-gray-400 font-bold mt-1">Total organizadas</p>
     </div>
     <div class="bg-white dark:bg-white/[0.02] border-2 border-emerald-100 dark:border-white/5 rounded-2xl p-6 hover:border-amber-300 dark:hover:border-yellow-500/20 transition group">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="material-symbols-outlined text-amber-500 text-[20px]">location_on</span>
-            <span class="text-[10px] text-gray-500 uppercase font-black tracking-widest">Puntos</span>
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-[0_4px_15px_rgba(251,191,36,0.4)] text-white group-hover:scale-110 transition-transform">
+                <span class="material-symbols-outlined text-[20px]">location_on</span>
+            </div>
+            <span class="text-[11px] text-gray-500 uppercase font-black tracking-widest">Puntos</span>
         </div>
         <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight">{{ $totalPuntos }}</p>
         <p class="text-[10px] text-gray-400 font-bold mt-1">Centros de acopio</p>
     </div>
     <div class="bg-white dark:bg-white/[0.02] border-2 border-emerald-100 dark:border-white/5 rounded-2xl p-6 hover:border-purple-300 dark:hover:border-pink-500/20 transition group">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="material-symbols-outlined text-purple-500 text-[20px]">event</span>
-            <span class="text-[10px] text-gray-500 uppercase font-black tracking-widest">Eventos</span>
+        <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-[0_4px_15px_rgba(192,132,252,0.4)] text-white group-hover:scale-110 transition-transform">
+                <span class="material-symbols-outlined text-[20px]">event</span>
+            </div>
+            <span class="text-[11px] text-gray-500 uppercase font-black tracking-widest">Eventos</span>
         </div>
         <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight">{{ $totalEventos }}</p>
         <p class="text-[10px] text-gray-400 font-bold mt-1">Programados</p>
@@ -538,8 +546,8 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-emerald-400/20 to-teal-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">
-                <div class="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover:scale-110 transition">
-                    <span class="material-symbols-outlined text-[24px]">group</span>
+                <div class="w-14 h-14 rounded-[1.25rem] bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-[0_8px_20px_rgba(52,211,153,0.3)] group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300">
+                    <span class="material-symbols-outlined text-[28px]">group</span>
                 </div>
                 <span class="px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-[10px] uppercase tracking-widest rounded-full border border-emerald-500/20">Módulo Usuarios</span>
             </div>
@@ -561,8 +569,8 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-blue-400/20 to-cyan-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">
-                <div class="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 border border-blue-500/20 group-hover:scale-110 transition">
-                    <span class="material-symbols-outlined text-[24px]">military_tech</span>
+                <div class="w-14 h-14 rounded-[1.25rem] bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white shadow-[0_8px_20px_rgba(96,165,250,0.3)] group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300">
+                    <span class="material-symbols-outlined text-[28px]">military_tech</span>
                 </div>
                 <span class="px-3 py-1 bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-[10px] uppercase tracking-widest rounded-full border border-blue-500/20">Módulo Campañas</span>
             </div>
@@ -584,8 +592,8 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-amber-400/20 to-orange-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">
-                <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-500/20 group-hover:scale-110 transition">
-                    <span class="material-symbols-outlined text-[24px]">location_on</span>
+                <div class="w-14 h-14 rounded-[1.25rem] bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white shadow-[0_8px_20px_rgba(251,191,36,0.3)] group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300">
+                    <span class="material-symbols-outlined text-[28px]">location_on</span>
                 </div>
                 <span class="px-3 py-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-[10px] uppercase tracking-widest rounded-full border border-amber-500/20">Módulo Mapa</span>
             </div>
@@ -607,8 +615,8 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-purple-400/20 to-pink-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">
-                <div class="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-500 border border-purple-500/20 group-hover:scale-110 transition">
-                    <span class="material-symbols-outlined text-[24px]">event</span>
+                <div class="w-14 h-14 rounded-[1.25rem] bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white shadow-[0_8px_20px_rgba(192,132,252,0.3)] group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300">
+                    <span class="material-symbols-outlined text-[28px]">event</span>
                 </div>
                 <span class="px-3 py-1 bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold text-[10px] uppercase tracking-widest rounded-full border border-purple-500/20">Módulo Eventos</span>
             </div>
