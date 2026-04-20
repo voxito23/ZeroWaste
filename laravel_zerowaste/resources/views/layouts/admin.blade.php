@@ -30,9 +30,43 @@
     <style>
         /* Transiciones suaves para dark mode */
         * { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
-        .nav-link { transition: all 0.2s ease; border-radius: 0.75rem; padding: 0.6rem 1rem; }
-        .nav-link:hover { background: rgba(0, 224, 150, 0.1); transform: translateX(4px); }
-        .nav-link.active { background: rgba(0, 224, 150, 0.15); color: #00E096; }
+        .nav-link { 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+            border-radius: 0.85rem; 
+            padding: 0.7rem 1rem; 
+            position: relative;
+            overflow: hidden;
+        }
+        /* Efecto Ripple en clic */
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            background: rgba(0, 224, 150, 0.3);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            transform: translate(-50%, -50%);
+            transition: width 0.4s ease-out, height 0.4s ease-out, opacity 0.4s ease-out;
+            opacity: 0;
+        }
+        .nav-link:active::after {
+            width: 300px;
+            height: 300px;
+            opacity: 1;
+            transition: 0s;
+        }
+        .nav-link:hover { 
+            background: rgba(0, 224, 150, 0.08); 
+            transform: translateX(6px); 
+        }
+        .nav-link.active { 
+            background: rgba(0, 224, 150, 0.15); 
+            color: #00E096; 
+            transform: scale(1.02);
+            box-shadow: inset 4px 0 0 #00E096;
+        }
         /* Toggle dark mode switch */
         .theme-toggle { position: relative; width: 48px; height: 26px; border-radius: 9999px; cursor: pointer; }
         .theme-toggle input { display: none; }
