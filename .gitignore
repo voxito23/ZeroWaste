@@ -197,3 +197,6 @@ Thumbs.db
 
 # Node modules (frontend build tools)
 node_modules/
+
+# Scratch / temp files
+scratch/
