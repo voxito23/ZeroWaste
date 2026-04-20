@@ -28,6 +28,59 @@
             }, frameDuration);
         });
 
+        // Chart.js Global Config
+        Chart.defaults.color = document.documentElement.classList.contains('dark') ? '#71717a' : '#9CA3AF';
+        Chart.defaults.font.family = 'Inter';
+
+        // Usuarios Line Chart (Macuin-style gradient)
+        const chartData = @json($usuariosPorMes);
+        const usersCanvas = document.getElementById('usersLineChart');
+        if (usersCanvas) {
+            const ctx = usersCanvas.getContext('2d');
+            const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+            gradient.addColorStop(0, 'rgba(0, 224, 150, 0.45)');
+            gradient.addColorStop(1, 'rgba(0, 224, 150, 0.0)');
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.map(d => d.mes),
+                    datasets: [{
+                        label: 'Usuarios',
+                        data: chartData.map(d => d.total),
+                        borderColor: '#00E096',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: document.documentElement.classList.contains('dark') ? '#0F2A20' : '#fff',
+                        pointBorderColor: '#00E096',
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index', intersect: false,
+                            backgroundColor: '#064E3B',
+                            titleFont: { family: 'Inter', weight: 'bold' },
+                            bodyFont: { family: 'Inter' },
+                            cornerRadius: 12, padding: 12
+                        }
+                    },
+                    scales: {
+                        x: { grid: { display: false }, border: { display: false } },
+                        y: { beginAtZero: true, border: { display: false }, grid: { color: document.documentElement.classList.contains('dark') ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)' }, ticks: { precision: 0 } }
+                    }
+                }
+            });
+        }
+
         // Gráfica de sentimiento (Dona)
         const sentData = @json($sentimiento);
         if (document.getElementById('sentChart')) {
@@ -52,22 +105,12 @@
                             backgroundColor: '#064E3B',
                             titleFont: { family: 'Inter', weight: 'bold' },
                             bodyFont: { family: 'Inter' },
-                            cornerRadius: 12,
-                            padding: 12,
-                            callbacks: {
-                                label: function(ctx) {
-                                    return ' ' + ctx.label + ': ' + ctx.raw + '%';
-                                }
-                            }
+                            cornerRadius: 12, padding: 12,
+                            callbacks: { label: function(ctx) { return ' ' + ctx.label + ': ' + ctx.raw + '%'; } }
                         }
                     },
                     cutout: '75%',
-                    animation: {
-                        animateScale: true,
-                        animateRotate: true,
-                        duration: 1200,
-                        easing: 'easeOutQuart'
-                    }
+                    animation: { animateScale: true, animateRotate: true, duration: 1200, easing: 'easeOutQuart' }
                 }
             });
         }
@@ -251,13 +294,13 @@
 
 {{-- Gráficas --}}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-    <div class="bg-white dark:bg-forest-card rounded-[2rem] p-6 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-2xl transition-all duration-500">
-        <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-lg text-[#064E3B] dark:text-emerald-100">Usuarios registrados</h3>
-            <span class="text-xs px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full font-bold text-emerald-600 dark:text-emerald-400">Últimos 7 días</span>
+    <div class="bg-white dark:bg-forest-card rounded-[2rem] p-8 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-2xl transition-all duration-500 min-h-[350px] flex flex-col">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="font-bold text-xl tracking-tight text-[#064E3B] dark:text-white">Registro de Usuarios</h3>
+            <span class="p-2 bg-emerald-50 dark:bg-white/5 rounded-full"><span class="material-symbols-outlined text-emerald-500 dark:text-gray-400 text-[20px]">bar_chart</span></span>
         </div>
-        <div class="relative h-[250px] w-full flex items-center justify-center">
-            <img src="https://zerowaste-qro.com/api/analisis/grafica_usuarios" alt="Gráfica de Usuarios Registrados" class="w-full h-full object-contain">
+        <div class="flex-1 relative w-full">
+            <canvas id="usersLineChart"></canvas>
         </div>
     </div>
     <div class="bg-white dark:bg-forest-card rounded-[2rem] p-6 border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col items-center">
