@@ -7,47 +7,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Validación inline del formulario de PDF
-        const pdfForm = document.getElementById('pdfForm');
-        if (pdfForm) {
-            pdfForm.addEventListener('submit', function(e) {
-                const inicioInput = document.getElementById('fecha_inicio');
-                const finInput = document.getElementById('fecha_fin');
-                const errInicio = document.getElementById('err-fecha-inicio');
-                const errFin = document.getElementById('err-fecha-fin');
-
-                // Reset
-                errInicio.classList.add('hidden');
-                errFin.classList.add('hidden');
-                inicioInput.classList.remove('border-red-500');
-                finInput.classList.remove('border-red-500');
-
-                let isValid = true;
-
-                if (!inicioInput.value) {
-                    errInicio.textContent = 'Selecciona la fecha de inicio.';
-                    errInicio.classList.remove('hidden');
-                    inicioInput.classList.add('border-red-500');
-                    isValid = false;
-                } else if (new Date(inicioInput.value) < new Date('2026-03-30')) {
-                    errInicio.textContent = 'Solo fechas a partir del 30 de marzo de 2026.';
-                    errInicio.classList.remove('hidden');
-                    inicioInput.classList.add('border-red-500');
-                    isValid = false;
-                }
-
-                if (!finInput.value) {
-                    errFin.textContent = 'Selecciona la fecha de fin.';
-                    errFin.classList.remove('hidden');
-                    finInput.classList.add('border-red-500');
-                    isValid = false;
-                }
-
-                if (!isValid) {
-                    e.preventDefault();
-                }
-            });
-        }
 
         // CountUp Animation
         document.querySelectorAll('[data-count]').forEach(el => {
