@@ -146,35 +146,35 @@
 
 {{-- Modal de Conversación --}}
 <div id="replyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden text-left">
-    <div class="bg-white rounded-[2rem] p-8 max-w-lg w-full shadow-2xl transform transition-all max-h-[90vh] flex flex-col">
-        <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-4 shrink-0">
-            <h3 class="text-xl font-black text-[#064E3B] flex items-center gap-2" id="replyModalTitle">
+    <div class="bg-white dark:bg-forest-card rounded-[2rem] p-8 max-w-lg w-full shadow-2xl transform transition-all max-h-[90vh] flex flex-col border-2 border-emerald-100 dark:border-emerald-800/50">
+        <div class="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-emerald-800/50 pb-4 shrink-0">
+            <h3 class="text-xl font-black text-[#064E3B] dark:text-white flex items-center gap-2" id="replyModalTitle">
                 <span class="material-symbols-outlined text-emerald-500">forum</span> Conversación
             </h3>
-            <button type="button" onclick="closeReplyModal()" class="text-gray-400 hover:text-red-500">
-                <span class="material-symbols-outlined">close</span>
+            <button type="button" onclick="closeReplyModal()" class="w-9 h-9 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-all duration-200">
+                <span class="material-symbols-outlined text-[18px]">close</span>
             </button>
         </div>
         
         {{-- Thread de conversación --}}
         <div id="replyThread" class="overflow-y-auto mb-4 grow pr-1" style="max-height: 350px;">
-            <div class="text-center py-4 text-gray-400">Cargando...</div>
+            <div class="text-center py-4 text-gray-400 dark:text-gray-500">Cargando...</div>
         </div>
         
         {{-- Formulario de respuesta --}}
-        <form id="replyModalForm" action="" method="POST" class="shrink-0 border-t border-gray-100 pt-4">
+        <form id="replyModalForm" action="" method="POST" class="shrink-0 border-t border-gray-100 dark:border-emerald-800/50 pt-4">
             @csrf 
             @method('PUT')
             <div class="mb-4">
-                <label class="block text-xs font-bold uppercase text-gray-500 mb-2">Tu Respuesta (Admin)</label>
-                <textarea name="respuesta_admin" required minlength="2" rows="3" class="w-full px-4 py-3 rounded-xl bg-white border border-emerald-200 focus:ring-2 focus:ring-[#00E096] transition-all resize-none" placeholder="Escribe tu respuesta..."></textarea>
+                <label class="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-emerald-400 mb-2">Tu Respuesta (Admin)</label>
+                <textarea name="respuesta_admin" required minlength="2" rows="3" class="w-full px-4 py-3 rounded-xl bg-white dark:bg-forest-dark border-2 border-emerald-200 dark:border-emerald-800 dark:text-white focus:ring-2 focus:ring-[#00E096] transition-all resize-none" placeholder="Escribe tu respuesta..."></textarea>
                 @error('respuesta_admin')
                     <p class="text-red-500 text-xs font-bold mt-2"><span class="material-symbols-outlined text-[14px] align-middle">error</span> {{ $message }}</p>
                 @enderror
             </div>
             <div class="flex justify-end gap-3">
-                <button type="button" onclick="closeReplyModal()" class="px-5 py-2.5 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors">Cancelar</button>
-                <button type="submit" class="bg-[#00E096] hover:bg-emerald-400 text-secondary font-black px-6 py-2.5 rounded-xl shadow-lg flex items-center gap-2">
+                <button type="button" onclick="closeReplyModal()" class="px-5 py-2.5 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">Cancelar</button>
+                <button type="submit" class="bg-[#00E096] hover:bg-emerald-400 text-secondary font-black px-6 py-2.5 rounded-xl shadow-lg flex items-center gap-2 transition-all hover:-translate-y-0.5">
                     <span class="material-symbols-outlined text-[18px]">send</span> Enviar
                 </button>
             </div>
