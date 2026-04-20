@@ -11,12 +11,38 @@ use Illuminate\Support\Carbon;
 
 class ReportController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $totalUsuarios = User::query()->count();
-        $totalCampanas = Campaign::query()->count();
-        $totalPuntos = Location::query()->count();
-        $totalEventos = \App\Models\Evento::query()->count();
+        $search = $request->input('search');
+        $categoria = $request->input('categoria');
+        $hasFilters = $search || $categoria || $request->has('start_date') || $request->has('fecha_inicio');
+
+        if (!$hasFilters) {
+            $totalUsuarios = 0;
+            $totalCampanas = 0;
+            $totalPuntos = 0;
+            $totalEventos = 0;
+        } else {
+            $uQ = clone User::query();
+            if ($search) $uQ->where(function($q) use ($search) { $q->where('nombre', 'ilike', "%{$search}%")->orWhere('email', 'ilike', "%{$search}%"); });
+            if ($categoria === 'admins') $uQ->where('is_admin', true);
+            else if ($categoria === 'users') $uQ->where('is_admin', false);
+            $totalUsuarios = $uQ->count();
+
+            $cQ = clone Campaign::query();
+            if ($search) $cQ->where(function($q) use ($search) { $q->where('nombre', 'ilike', "%{$search}%")->orWhere('descripcion', 'ilike', "%{$search}%"); });
+            if ($categoria) $cQ->where('tipo_etiqueta', 'ilike', "%{$categoria}%");
+            $totalCampanas = $cQ->count();
+
+            $pQ = clone Location::query();
+            if ($search) $pQ->where(function($q) use ($search) { $q->where('nombre', 'ilike', "%{$search}%")->orWhere('direccion', 'ilike', "%{$search}%"); });
+            if ($categoria) $pQ->where('tipo', 'ilike', "%{$categoria}%");
+            $totalPuntos = $pQ->count();
+
+            $eQ = clone \App\Models\Evento::query();
+            if ($search) $eQ->where('titulo', 'ilike', "%{$search}%");
+            $totalEventos = $eQ->count();
+        }
 
         return view('admin.reportes.index', compact(
             'totalUsuarios', 'totalCampanas', 'totalPuntos', 'totalEventos'

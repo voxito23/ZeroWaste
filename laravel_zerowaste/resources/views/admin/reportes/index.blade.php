@@ -199,13 +199,30 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
-    window.setCategoriaPreset = function(val, label) {
+    window.setCategoriaPreset = function(val, label, preventSubmit = false) {
         document.getElementById('categoria-report').value = val;
         document.getElementById('cat-label').textContent = label;
         document.getElementById('cat-dd').classList.add('hidden');
         document.querySelectorAll('#cat-dd button').forEach(b => b.classList.remove('active-item'));
-        event.target.closest('button')?.classList.add('active-item');
+        if(event && event.target) {
+            event.target.closest('button')?.classList.add('active-item');
+        }
+        if(!preventSubmit) {
+            document.getElementById('filter-form').submit();
+        }
     };
+
+    // Preload categoria from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentCat = urlParams.get('categoria');
+    if (currentCat) {
+        const btn = document.querySelector(`button[onclick*="'${currentCat}'"]`);
+        if (btn) {
+            document.getElementById('cat-label').textContent = btn.innerText.trim();
+            document.querySelectorAll('#cat-dd button').forEach(b => b.classList.remove('active-item'));
+            btn.classList.add('active-item');
+        }
+    }
 
     window.setPeriodPreset = function(val, label) {
         document.getElementById('period-label').textContent = label;
@@ -399,10 +416,10 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 
 {{-- ========== PREMIUM SEARCH BAR & CATEGORIES ========== --}}
-<div class="bg-white dark:bg-forest-card rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-emerald-50 dark:border-emerald-800/40 p-2 flex flex-col md:flex-row items-center gap-2 mb-6 transition-all focus-within:shadow-[0_8px_30px_rgba(0,224,150,0.15)] focus-within:border-emerald-300 dark:focus-within:border-emerald-500/50">
+<form action="{{ route('reportes.index') }}" method="GET" id="filter-form" class="bg-white dark:bg-forest-card rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-emerald-50 dark:border-emerald-800/40 p-2 flex flex-col md:flex-row items-center gap-2 mb-6 transition-all focus-within:shadow-[0_8px_30px_rgba(0,224,150,0.15)] focus-within:border-emerald-300 dark:focus-within:border-emerald-500/50">
     <div class="flex items-center flex-1 w-full pl-4 pr-2">
         <span class="material-symbols-outlined text-emerald-400 dark:text-emerald-500 text-[24px]">search</span>
-        <input type="text" id="search-report" placeholder="Buscar por nombre, descripción, lugar..." class="w-full bg-transparent border-none focus:ring-0 text-gray-700 dark:text-gray-200 placeholder-gray-400 font-semibold text-[15px] outline-none px-4 py-3">
+        <input type="text" name="search" id="search-report" value="{{ request('search') }}" placeholder="Buscar por nombre, descripción, lugar..." class="w-full bg-transparent border-none focus:ring-0 text-gray-700 dark:text-gray-200 placeholder-gray-400 font-semibold text-[15px] outline-none px-4 py-3">
     </div>
     <div class="w-full md:w-[1px] h-[1px] md:h-10 bg-gray-100 dark:bg-emerald-800/50 hidden md:block"></div>
     <div class="relative w-full md:w-auto" id="cat-wrap">
@@ -426,9 +443,10 @@ document.addEventListener("DOMContentLoaded", function() {
             <button onclick="setCategoriaPreset('Impacto Positivo', 'Campañas Impacto Positivo')"><span class="material-symbols-outlined text-[18px] text-green-500">verified</span> Impacto Positivo</button>
             <button onclick="setCategoriaPreset('Educación', 'Campañas de Educación')"><span class="material-symbols-outlined text-[18px] text-blue-500">school</span> Educación y Concientización</button>
         </div>
-        <input type="hidden" id="categoria-report" value="">
+        <input type="hidden" name="categoria" id="categoria-report" value="{{ request('categoria') }}">
+        <button type="submit" class="hidden"></button>
     </div>
-</div>
+</form>
 
 {{-- ========== PROFESSIONAL FILTER BAR ========== --}}
 <div class="flex flex-wrap items-center gap-3 mb-8">
