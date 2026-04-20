@@ -424,6 +424,33 @@
         </script>
     @endif
 
+    @if($errors->any())
+        <script>
+            {!! "const isDarkThemeValidation = document.documentElement.classList.contains('dark');" !!}
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 5000,
+                timerProgressBar: true,
+                background: isDarkThemeValidation ? '#0F2A20' : '#ffffff',
+                customClass: {
+                    popup: 'rounded-2xl border shadow-xl border-orange-100 dark:border-orange-900/50 p-2',
+                },
+                html: `
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center flex-shrink-0 border border-orange-200 dark:border-orange-500/30 text-orange-500">
+                        <span class="material-symbols-outlined text-[18px]">warning</span>
+                    </div>
+                    <div class="text-left">
+                        <h4 class="text-sm font-bold text-orange-700 dark:text-orange-300 m-0 leading-tight">Revise los campos</h4>
+                        <p class="text-[11px] text-orange-600 dark:text-orange-400 m-0 mt-0.5 leading-tight">{!! $errors->first() !!}</p>
+                    </div>
+                </div>`
+            });
+        </script>
+    @endif
+
     @stack('scripts')
 </body>
 </html>

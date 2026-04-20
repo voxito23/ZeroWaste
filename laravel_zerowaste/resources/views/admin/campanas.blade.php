@@ -4,9 +4,7 @@
 @section('page_title', 'Campañas')
 
 @section('content')
-@if(session('success'))
-<div class="mb-4 bg-emerald-50 dark:bg-emerald-900/30 border-l-4 border-emerald-400 text-emerald-800 dark:text-emerald-200 p-4 rounded-xl font-bold text-sm">{{ session('success') }}</div>
-@endif
+
 
 <div class="flex justify-end mb-6">
     <a href="{{ route('campanas.create') }}" class="bg-primary hover:bg-[#00c281] text-secondary font-black py-3 px-8 rounded-full shadow-[0_4px_20px_rgba(0,224,150,0.3)] hover:shadow-[0_6px_25px_rgba(0,224,150,0.5)] flex items-center gap-2 transition-all hover:-translate-y-1">

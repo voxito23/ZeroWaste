@@ -7,15 +7,7 @@
 <div class="max-w-3xl mx-auto">
     <div class="bg-white dark:bg-forest-card rounded-[2rem] border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm p-8 hover:shadow-2xl transition-all duration-500">
         
-        @if ($errors->any())
-            <div class="mb-6 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 p-4 rounded-xl border border-red-200 dark:border-red-800/50">
-                <ul class="list-disc pl-5">
-                    @foreach ($errors->all() as $error)
-                        <li class="font-bold text-sm">{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+
 
         <form id="perfilForm" novalidate action="{{ route('admin.perfil.update') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
             @csrf

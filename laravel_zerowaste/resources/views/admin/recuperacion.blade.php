@@ -4,9 +4,7 @@
 @section('page_title', 'Solicitudes de Recuperación')
 
 @section('content')
-@if(session('success'))
-<div class="mb-4 bg-emerald-50 border-l-4 border-emerald-400 text-emerald-800 p-4 rounded-xl font-bold text-sm">{{ session('success') }}</div>
-@endif
+
 
 <div class="bg-white dark:bg-forest-card rounded-3xl shadow-lg border border-emerald-100 dark:border-emerald-800/50 overflow-hidden">
     <table class="w-full text-left text-sm">

@@ -18,16 +18,7 @@
     <form id="customForm" novalidate action="{{ route('campanas.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-col gap-6 relative z-10">
         @csrf
 
-        @if ($errors->any())
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mb-4">
-                <strong class="font-bold">Error de validación:</strong>
-                <ul class="list-disc pl-5 mt-2">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
+
 
         <div>
             <label class="block font-bold mb-2 dark:text-emerald-200">Nombre de la Campaña</label>

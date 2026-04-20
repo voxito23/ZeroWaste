@@ -86,9 +86,7 @@
 </script>
 @endpush
 
-@if(session('success'))
-<div class="mb-4 bg-emerald-50 border-l-4 border-emerald-400 text-emerald-800 p-4 rounded-xl font-bold text-sm">{{ session('success') }}</div>
-@endif
+
 
 @if($errors->any())
 <div class="mb-4 bg-red-50 border-l-4 border-red-500 text-red-800 p-4 rounded-xl font-bold text-sm">

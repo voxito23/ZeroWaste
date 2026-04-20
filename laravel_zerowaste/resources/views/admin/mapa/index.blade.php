@@ -89,12 +89,7 @@
 @endpush
 
 @section('content')
-@if(session('success'))
-<div class="mb-4 bg-emerald-50 dark:bg-emerald-900/30 border-l-4 border-emerald-400 text-emerald-800 dark:text-emerald-200 p-4 rounded-xl font-bold text-sm flex items-center gap-2">
-    <span class="material-symbols-outlined text-emerald-500">check_circle</span>
-    {{ session('success') }}
-</div>
-@endif
+
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
     {{-- Sidebar con listado de puntos --}}

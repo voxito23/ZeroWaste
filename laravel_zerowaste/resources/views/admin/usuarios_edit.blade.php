@@ -9,15 +9,7 @@
         @csrf
         @method('PUT')
 
-        @if ($errors->any())
-        <div class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 p-4 rounded-xl text-sm font-bold">
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>• {{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
+
 
         <!-- Foto de perfil con preview -->
         <div class="flex flex-col items-center gap-4 pb-6 border-b border-emerald-100 dark:border-emerald-800/50">

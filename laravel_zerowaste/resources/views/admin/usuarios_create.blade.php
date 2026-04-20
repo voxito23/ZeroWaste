@@ -7,15 +7,7 @@
 <div class="max-w-2xl bg-white dark:bg-forest-card rounded-3xl shadow-lg border border-emerald-100 dark:border-emerald-800/50 p-8">
     <h2 class="text-xl font-bold mb-6 text-secondary dark:text-white">Ingresa los datos del nuevo usuario</h2>
     
-    @if ($errors->any())
-    <div class="bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-300 p-4 rounded-xl text-sm font-bold mb-6">
-        <ul>
-            @foreach ($errors->all() as $error)
-                <li>• {{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-    @endif
+
 
     <form id="userForm" novalidate action="{{ route('usuarios.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-col gap-5">
         @csrf

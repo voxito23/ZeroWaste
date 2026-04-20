@@ -196,7 +196,7 @@ class UserController extends Controller
         \Illuminate\Support\Facades\DB::table('calificaciones_puntos')->where('usuario_id', $user->id)->delete();
         \Illuminate\Support\Facades\DB::table('actividades')->where('usuario_id', $user->id)->delete();
         \Illuminate\Support\Facades\DB::table('notificaciones')->where('user_id', $user->id)->delete();
-        \Illuminate\Support\Facades\DB::table('password_reset_requests')->where('usuario_id', $user->id)->delete();
+        \Illuminate\Support\Facades\DB::table('password_reset_requests')->where('email', $user->email)->delete();
 
         $user->delete();
         return redirect()->route('usuarios.index')->with('success', 'Usuario y todos sus datos relacionados eliminados correctamente.');
