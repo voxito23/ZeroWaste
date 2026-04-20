@@ -64,8 +64,6 @@ class DashboardController extends Controller
         // Usuarios recientes
         $usuariosRecientes = User::query()->orderByDesc('created_at')->limit(5)->get();
 
-        // Todos los usuarios para el directorio del dashboard
-        $todosUsuarios = User::query()->orderByDesc('created_at')->get();
 
         // Datos para gráfica: usuarios por día (últimos 7 días)
         $usuariosPorMes = DB::table('usuarios')
@@ -97,7 +95,7 @@ class DashboardController extends Controller
             'usuariosRecientes', 'usuariosPorMes',
             'totalAdmins', 'totalNormales', 'totalBloqueados',
             'trendUsuarios', 'trendPosts', 'trendMensajes', 'trendCampanas',
-            'ultimoRegistro', 'todosUsuarios'
+            'ultimoRegistro'
         ));
     }
 

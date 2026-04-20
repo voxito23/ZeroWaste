@@ -459,8 +459,26 @@
                         @if($tipo === 'usuarios')
                             <td style="color: #9CA3AF; font-weight: 600;">{{ $idx + 1 }}</td>
                             <td>
-                                @php $avatarColor = $item->is_admin ? 'avatar-purple' : $avatarColors[$idx % count($avatarColors)]; @endphp
-                                <span class="user-avatar {{ $avatarColor }}">{{ strtoupper(substr($item->nombre, 0, 1)) }}</span>
+                                @php
+                                    $avatarColor = $item->is_admin ? 'avatar-purple' : $avatarColors[$idx % count($avatarColors)];
+                                    $fotoName = $item->foto_perfil ?? null;
+                                    $fotoBase64 = '';
+                                    if ($fotoName && $fotoName !== 'default.png') {
+                                        $fotoPath = public_path('img/perfiles/' . $fotoName);
+                                        if (!file_exists($fotoPath)) {
+                                            $fotoPath = app()->basePath('../flask_zerowaste/static/img/perfiles/' . $fotoName);
+                                        }
+                                        if (file_exists($fotoPath)) {
+                                            $ext = pathinfo($fotoPath, PATHINFO_EXTENSION);
+                                            $fotoBase64 = 'data:image/' . $ext . ';base64,' . base64_encode(file_get_contents($fotoPath));
+                                        }
+                                    }
+                                @endphp
+                                @if($fotoBase64)
+                                    <img src="{{ $fotoBase64 }}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 8px; border: 2px solid {{ $item->is_admin ? '#8B5CF6' : '#10B981' }};">
+                                @else
+                                    <span class="user-avatar {{ $avatarColor }}">{{ strtoupper(substr($item->nombre, 0, 1)) }}</span>
+                                @endif
                                 <span class="item-title">{{ $item->nombre }}</span>
                                 <span class="item-subtitle">{{ $item->titulo_perfil ?? 'Ecologista' }}</span>
                             </td>

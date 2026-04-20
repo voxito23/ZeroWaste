@@ -1,5 +1,18 @@
 <!DOCTYPE html>
-<html lang="es" class="light">
+<html lang="es">
+<script>
+    // Prevent dark mode flash — apply theme before paint
+    (function() {
+        var t = localStorage.getItem('zw-admin-theme');
+        if (t === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+        } else {
+            document.documentElement.classList.add('light');
+            document.documentElement.classList.remove('dark');
+        }
+    })();
+</script>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

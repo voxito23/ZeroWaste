@@ -72,51 +72,6 @@
             });
         }
 
-        // Directory Tabs
-        const tabBtns = document.querySelectorAll('[data-tab-target]');
-        const tabRows = document.querySelectorAll('#directoryTable tbody tr[data-role]');
-        tabBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                tabBtns.forEach(b => {
-                    b.classList.remove('bg-primary', 'text-secondary', 'shadow-lg');
-                    b.classList.add('bg-gray-100', 'dark:bg-emerald-900/30', 'text-gray-600', 'dark:text-emerald-300');
-                });
-                btn.classList.remove('bg-gray-100', 'dark:bg-emerald-900/30', 'text-gray-600', 'dark:text-emerald-300');
-                btn.classList.add('bg-primary', 'text-secondary', 'shadow-lg');
-
-                const filter = btn.dataset.tabTarget;
-                tabRows.forEach(row => {
-                    if (filter === 'all' || row.dataset.role === filter) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-            });
-        });
-
-        // Directory search
-        const searchInput = document.getElementById('directorySearch');
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                const query = this.value.toLowerCase();
-                tabRows.forEach(row => {
-                    const text = row.textContent.toLowerCase();
-                    if (text.includes(query)) {
-                        row.style.display = '';
-                    } else {
-                        row.style.display = 'none';
-                    }
-                });
-                // Reset tab to "all" on search
-                tabBtns.forEach(b => {
-                    b.classList.remove('bg-primary', 'text-secondary', 'shadow-lg');
-                    b.classList.add('bg-gray-100', 'dark:bg-emerald-900/30', 'text-gray-600', 'dark:text-emerald-300');
-                });
-                tabBtns[0].classList.remove('bg-gray-100', 'dark:bg-emerald-900/30', 'text-gray-600', 'dark:text-emerald-300');
-                tabBtns[0].classList.add('bg-primary', 'text-secondary', 'shadow-lg');
-            });
-        }
 
         // Stagger animation for table rows
         document.querySelectorAll('.stagger-row').forEach((row, i) => {
@@ -334,41 +289,20 @@
     </div>
 </div>
 
-{{-- Directorio de Usuarios (estilo Macuin) --}}
+{{-- Usuarios Recientes --}}
 <div class="bg-white dark:bg-forest-card rounded-[2rem] border-2 border-emerald-100 dark:border-emerald-800/50 shadow-sm overflow-hidden mb-8 hover:shadow-2xl transition-all duration-500">
-    <div class="p-5 border-b border-emerald-50 dark:border-emerald-800/50">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h3 class="font-bold text-lg text-[#064E3B] dark:text-emerald-100">Directorio de Usuarios</h3>
-                <p class="text-xs text-gray-400 dark:text-emerald-500 mt-0.5">Gestión de roles y accesos del ecosistema</p>
-            </div>
-            <div class="flex items-center gap-3 flex-wrap">
-                {{-- Tabs --}}
-                <button data-tab-target="all" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-primary text-secondary shadow-lg">
-                    Todos <span class="ml-1 opacity-70">{{ $totalUsuarios }}</span>
-                </button>
-                <button data-tab-target="admin" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-gray-100 dark:bg-emerald-900/30 text-gray-600 dark:text-emerald-300">
-                    <span class="material-symbols-outlined text-[0.8rem] align-middle">shield</span> Admins <span class="ml-1 opacity-70">{{ $totalAdmins }}</span>
-                </button>
-                <button data-tab-target="user" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-gray-100 dark:bg-emerald-900/30 text-gray-600 dark:text-emerald-300">
-                    <span class="material-symbols-outlined text-[0.8rem] align-middle">person</span> Usuarios <span class="ml-1 opacity-70">{{ $totalNormales }}</span>
-                </button>
-                @if($totalBloqueados > 0)
-                <button data-tab-target="blocked" class="px-4 py-1.5 rounded-full text-xs font-bold transition-all bg-gray-100 dark:bg-emerald-900/30 text-gray-600 dark:text-emerald-300">
-                    <span class="material-symbols-outlined text-[0.8rem] align-middle">block</span> Bloqueados <span class="ml-1 opacity-70">{{ $totalBloqueados }}</span>
-                </button>
-                @endif
-            </div>
+    <div class="p-5 flex items-center justify-between border-b border-emerald-50 dark:border-emerald-800/50">
+        <div>
+            <h3 class="font-bold text-lg text-[#064E3B] dark:text-emerald-100">Usuarios Recientes</h3>
+            <p class="text-xs text-gray-400 dark:text-emerald-500 mt-0.5">Últimos 5 registros del ecosistema</p>
         </div>
-        <div class="mt-4">
-            <div class="relative">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
-                <input type="text" id="directorySearch" placeholder="Buscar por nombre o correo..." class="w-full sm:w-80 pl-10 pr-4 py-2.5 rounded-xl bg-gray-50 dark:bg-forest-dark border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-[#00E096] dark:text-white text-sm font-medium transition-all focus:shadow-lg">
-            </div>
-        </div>
+        <a href="{{ route('usuarios.index') }}" class="bg-primary hover:bg-emerald-500 text-secondary font-bold py-2 px-4 rounded-xl shadow-md flex items-center gap-2 transition-all hover:-translate-y-0.5 text-sm">
+            <span class="material-symbols-outlined text-lg">group</span>
+            Ver todos
+        </a>
     </div>
     <div class="overflow-x-auto">
-    <table id="directoryTable" class="w-full text-left text-sm">
+    <table class="w-full text-left text-sm">
         <thead class="bg-emerald-50 dark:bg-emerald-900/30 text-[#064E3B] dark:text-emerald-200 font-bold text-xs uppercase tracking-wider">
             <tr>
                 <th class="p-3 pl-5">Usuario</th>
@@ -376,16 +310,11 @@
                 <th class="p-3">Estado</th>
                 <th class="p-3">Ubicación</th>
                 <th class="p-3">Registro</th>
-                <th class="p-3 text-right pr-5">Acción</th>
             </tr>
         </thead>
         <tbody class="dark:text-emerald-100">
-            @forelse ($todosUsuarios as $u)
-            @php
-                $role = $u->is_admin ? 'admin' : 'user';
-                if ($u->bloqueado ?? false) $role = 'blocked';
-            @endphp
-            <tr class="border-b border-emerald-50 dark:border-emerald-800/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-colors stagger-row" data-role="{{ $role }}">
+            @forelse ($usuariosRecientes as $u)
+            <tr class="border-b border-emerald-50 dark:border-emerald-800/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-colors stagger-row">
                 <td class="p-3 pl-5">
                     <div class="flex items-center gap-3">
                         @php $userFoto = $u->foto_perfil ?? 'default.png'; @endphp
@@ -424,22 +353,15 @@
                 </td>
                 <td class="p-3 text-gray-500 dark:text-gray-400 text-xs">{{ $u->ubicacion ?? '—' }}</td>
                 <td class="p-3 text-gray-400 text-xs">{{ $u->created_at ? $u->created_at->format('d M Y') : '—' }}</td>
-                <td class="p-3 text-right pr-5">
-                    <a href="{{ route('usuarios.edit', $u) }}" class="px-3 py-1 rounded-lg text-xs font-bold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors">
-                        <span class="material-symbols-outlined text-sm align-middle">edit</span> Editar
-                    </a>
-                </td>
             </tr>
             @empty
             <tr>
-                <td colspan="6" class="p-6 text-center text-gray-400 italic">Sin usuarios registrados.</td>
+                <td colspan="5" class="p-6 text-center text-gray-400 italic">Sin usuarios registrados.</td>
             </tr>
             @endforelse
         </tbody>
     </table>
     </div>
 </div>
-
-
 
 @endsection
