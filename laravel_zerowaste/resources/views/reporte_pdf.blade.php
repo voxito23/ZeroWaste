@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <title>Reporte de {{ ucfirst($tipo) }}</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800;900&display=swap');
         @page { margin: 0cm 0cm; }
         body { 
-            font-family: 'Montserrat', 'Helvetica', 'Arial', sans-serif; 
+            font-family: 'DM Sans', 'Helvetica', 'Arial', sans-serif; 
             color: #1F2937; 
             font-size: 11px; 
             line-height: 1.6;
@@ -372,21 +372,27 @@
 
     {{-- HEADER --}}
     <div class="header">
-        <div class="date-tag">{{ $fecha_generada }}</div>
         <div class="header-flex">
-            <!-- Center Logo + Title in DomPDF using table approach to guarantee horizontal alignment with text-align center -->
-            <table width="100%" style="border:none; border-collapse:collapse; margin: 0 auto;">
+            <!-- Left-aligned Logo + Title inside table -->
+            <table width="100%" style="border:none; border-collapse:collapse; margin: 0;">
                 <tr>
-                    <td align="center" style="vertical-align: middle;">
-                        <div class="logo-box">
+                    <td align="left" style="vertical-align: middle; width: 65px;">
+                        <div class="logo-box" style="margin: 0;">
                             @if($logoSrc)
                                 <img src="{{ $logoSrc }}" alt="Logo">
                             @else
-                                <span style="font-size: 22px; font-weight: 800; color: white;">♻</span>
+                                <span style="font-size: 24px; font-weight: 800; color: white;">♻</span>
                             @endif
                         </div>
-                        <h1 style="margin-top: 10px;">ZEROWASTE</h1>
-                        <p class="subtitle" style="margin-top: 5px;">{{ $titulo }}</p>
+                    </td>
+                    <td align="left" style="vertical-align: middle; padding-left: 15px;">
+                        <h1 style="margin: 0; font-family: 'DM Sans', sans-serif; font-size: 26px; tracking: -0.5px;">ZEROWASTE</h1>
+                        <p class="subtitle" style="margin-top: 2px; font-family: 'DM Sans', sans-serif; font-size: 13px;">{{ $titulo }}</p>
+                    </td>
+                    <td align="right" style="vertical-align: top;">
+                        <div style="background: rgba(255,255,255,0.1); display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; color: #fff;">
+                            {{ $fecha_generada }}
+                        </div>
                     </td>
                 </tr>
             </table>

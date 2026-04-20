@@ -352,9 +352,15 @@ document.addEventListener("DOMContentLoaded", function() {
             });
             return;
         }
-        const start = dateStart.toISOString().split('T')[0];
-        const end = dateEnd.toISOString().split('T')[0];
+        const formatDate = (date) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+        const start = formatDate(dateStart);
+        const end = formatDate(dateEnd);
+        const search = document.getElementById('search-report')?.value || '';
+        const categoria = document.getElementById('categoria-report')?.value || '';
+
         let pdfUrl = `{{ route('reportes.exportar') }}?tipo=${tipo}&formato=preview&fecha_inicio=${start}&fecha_fin=${end}`;
+        if (search) pdfUrl += `&search=${encodeURIComponent(search)}`;
+        if (categoria) pdfUrl += `&categoria=${encodeURIComponent(categoria)}`;
         const isDark = document.documentElement.classList.contains('dark');
 
         Swal.fire({
@@ -407,10 +413,18 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
             <span class="material-symbols-outlined text-gray-400 text-[20px]">expand_more</span>
         </button>
-        <div id="cat-dd" class="filter-dropdown hidden" style="min-width: 240px; right: 0; left: auto;">
+        <div id="cat-dd" class="filter-dropdown hidden" style="min-width: 280px; right: 0; left: auto;">
+            <div class="px-4 py-2 text-[10px] font-black tracking-widest text-emerald-600/60 uppercase">General</div>
             <button onclick="setCategoriaPreset('', 'Todas las Categorías')" class="active-item"><span class="material-symbols-outlined text-[18px] text-emerald-400">grid_view</span> Todas las Categorías</button>
+            <div class="px-4 py-2 text-[10px] font-black tracking-widest text-emerald-600/60 uppercase border-t border-gray-100 dark:border-emerald-800/30 mt-1">Módulo Usuarios</div>
             <button onclick="setCategoriaPreset('admins', 'Solo Administradores')"><span class="material-symbols-outlined text-[18px] text-purple-400">admin_panel_settings</span> Solo Administradores</button>
             <button onclick="setCategoriaPreset('users', 'Solo Usuarios Base')"><span class="material-symbols-outlined text-[18px] text-blue-400">person</span> Solo Usuarios Base</button>
+            <div class="px-4 py-2 text-[10px] font-black tracking-widest text-emerald-600/60 uppercase border-t border-gray-100 dark:border-emerald-800/30 mt-1">Módulo Mapa</div>
+            <button onclick="setCategoriaPreset('centro principal', 'Centros Principales')"><span class="material-symbols-outlined text-[18px] text-amber-500">star</span> Centros Principales</button>
+            <button onclick="setCategoriaPreset('organización ambiental', 'Organizaciones Ambientales')"><span class="material-symbols-outlined text-[18px] text-emerald-500">nature_people</span> Organizaciones Ambientales</button>
+            <div class="px-4 py-2 text-[10px] font-black tracking-widest text-emerald-600/60 uppercase border-t border-gray-100 dark:border-emerald-800/30 mt-1">Módulo Campañas</div>
+            <button onclick="setCategoriaPreset('Impacto Positivo', 'Campañas Impacto Positivo')"><span class="material-symbols-outlined text-[18px] text-green-500">verified</span> Impacto Positivo</button>
+            <button onclick="setCategoriaPreset('Educación', 'Campañas de Educación')"><span class="material-symbols-outlined text-[18px] text-blue-500">school</span> Educación y Concientización</button>
         </div>
         <input type="hidden" id="categoria-report" value="">
     </div>
@@ -502,8 +516,8 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 
     {{-- 1. Usuarios --}}
-    <div class="report-card bg-white dark:bg-[#0F2A20] rounded-[2rem] p-8 border-2 border-emerald-100 dark:border-emerald-800/30 flex flex-col justify-between group overflow-hidden relative min-h-[280px]">
-        <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-emerald-400/5 rounded-full blur-3xl pointer-events-none transition group-hover:bg-emerald-400/15"></div>
+    <div class="report-card bg-gradient-to-br from-white to-emerald-50/50 dark:from-[#0F2A20] dark:to-[#064E3B]/40 rounded-[2rem] p-8 border border-white dark:border-emerald-800/30 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col justify-between group overflow-hidden relative min-h-[280px]">
+        <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-emerald-400/20 to-teal-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">
                 <div class="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-500/20 group-hover:scale-110 transition">
@@ -525,8 +539,8 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     {{-- 2. Campañas --}}
-    <div class="report-card bg-white dark:bg-[#0F2A20] rounded-[2rem] p-8 border-2 border-emerald-100 dark:border-emerald-800/30 flex flex-col justify-between group overflow-hidden relative min-h-[280px]">
-        <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-400/5 rounded-full blur-3xl pointer-events-none transition group-hover:bg-blue-400/15"></div>
+    <div class="report-card bg-gradient-to-br from-white to-blue-50/50 dark:from-[#0F2A20] dark:to-blue-900/20 rounded-[2rem] p-8 border border-white dark:border-blue-900/30 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col justify-between group overflow-hidden relative min-h-[280px]">
+        <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-blue-400/20 to-cyan-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">
                 <div class="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 border border-blue-500/20 group-hover:scale-110 transition">
@@ -548,8 +562,8 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     {{-- 3. Mapa --}}
-    <div class="report-card bg-white dark:bg-[#0F2A20] rounded-[2rem] p-8 border-2 border-emerald-100 dark:border-emerald-800/30 flex flex-col justify-between group overflow-hidden relative min-h-[280px]">
-        <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-amber-400/5 rounded-full blur-3xl pointer-events-none transition group-hover:bg-amber-400/15"></div>
+    <div class="report-card bg-gradient-to-br from-white to-amber-50/50 dark:from-[#0F2A20] dark:to-amber-900/20 rounded-[2rem] p-8 border border-white dark:border-amber-900/30 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col justify-between group overflow-hidden relative min-h-[280px]">
+        <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-amber-400/20 to-orange-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">
                 <div class="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-500/20 group-hover:scale-110 transition">
@@ -571,8 +585,8 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     {{-- 4. Eventos --}}
-    <div class="report-card bg-white dark:bg-[#0F2A20] rounded-[2rem] p-8 border-2 border-emerald-100 dark:border-emerald-800/30 flex flex-col justify-between group overflow-hidden relative min-h-[280px]">
-        <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-purple-400/5 rounded-full blur-3xl pointer-events-none transition group-hover:bg-purple-400/15"></div>
+    <div class="report-card bg-gradient-to-br from-white to-purple-50/50 dark:from-[#0F2A20] dark:to-purple-900/20 rounded-[2rem] p-8 border border-white dark:border-purple-900/30 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col justify-between group overflow-hidden relative min-h-[280px]">
+        <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-purple-400/20 to-pink-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">
                 <div class="w-12 h-12 bg-purple-500/10 rounded-2xl flex items-center justify-center text-purple-500 border border-purple-500/20 group-hover:scale-110 transition">

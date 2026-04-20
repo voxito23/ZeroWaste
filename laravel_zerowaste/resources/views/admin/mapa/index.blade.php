@@ -149,8 +149,6 @@
         </div>
     </div>
 
-    </div>
-
     {{-- Mapa Ultra Premium --}}
     <div class="lg:col-span-3 relative w-full h-[700px] border-[6px] border-white dark:border-forest-card rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.08)] z-0">
         <div id="qro-map" class="w-full h-full z-0"></div>
