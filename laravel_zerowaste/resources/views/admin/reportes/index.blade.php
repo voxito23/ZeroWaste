@@ -188,16 +188,24 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Menús desplegables
     window.toggleDD = function(id) {
-        ['period-dd'].forEach(dd => { if (dd !== id) document.getElementById(dd)?.classList.add('hidden'); });
+        ['period-dd', 'cat-dd'].forEach(dd => { if (dd !== id) document.getElementById(dd)?.classList.add('hidden'); });
         document.getElementById(id)?.classList.toggle('hidden');
     };
 
     document.addEventListener('click', (e) => {
-        ['period-wrap'].forEach(wId => {
+        ['period-wrap', 'cat-wrap'].forEach(wId => {
             const w = document.getElementById(wId);
             if (w && !w.contains(e.target)) w.querySelector('.filter-dropdown')?.classList.add('hidden');
         });
     });
+
+    window.setCategoriaPreset = function(val, label) {
+        document.getElementById('categoria-report').value = val;
+        document.getElementById('cat-label').textContent = label;
+        document.getElementById('cat-dd').classList.add('hidden');
+        document.querySelectorAll('#cat-dd button').forEach(b => b.classList.remove('active-item'));
+        event.target.closest('button')?.classList.add('active-item');
+    };
 
     window.setPeriodPreset = function(val, label) {
         document.getElementById('period-label').textContent = label;
@@ -237,6 +245,9 @@ document.addEventListener("DOMContentLoaded", function() {
         if (pickerEnd) pickerEnd.clear();
         document.getElementById('search-report').value = '';
         document.getElementById('categoria-report').value = '';
+        document.getElementById('cat-label').textContent = 'Todas las Categorías';
+        document.querySelectorAll('#cat-dd button').forEach(b => b.classList.remove('active-item'));
+        document.querySelector('#cat-dd button:first-child').classList.add('active-item');
         document.getElementById('wrap-start').classList.remove('active');
         document.getElementById('wrap-end').classList.remove('active');
         document.getElementById('period-label').textContent = 'Últimos 7 días';
@@ -378,6 +389,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <h2 class="text-3xl font-black tracking-tight leading-none text-[#064E3B] dark:text-white">Panel de Análisis y Reportes</h2>
             <p class="text-gray-500 dark:text-gray-400 text-sm font-medium mt-1">Exportación y generación de informes clave del ecosistema.</p>
         </div>
+    </div>
 </div>
 
 {{-- ========== PREMIUM SEARCH BAR & CATEGORIES ========== --}}
@@ -387,14 +399,20 @@ document.addEventListener("DOMContentLoaded", function() {
         <input type="text" id="search-report" placeholder="Buscar por nombre, descripción, lugar..." class="w-full bg-transparent border-none focus:ring-0 text-gray-700 dark:text-gray-200 placeholder-gray-400 font-semibold text-[15px] outline-none px-4 py-3">
     </div>
     <div class="w-full md:w-[1px] h-[1px] md:h-10 bg-gray-100 dark:bg-emerald-800/50 hidden md:block"></div>
-    <div class="flex items-center w-full md:w-auto px-4 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-xl transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
-        <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[20px]">category</span>
-        <select id="categoria-report" class="bg-transparent border-none focus:ring-0 text-[#064E3B] dark:text-emerald-200 font-bold text-[14px] cursor-pointer outline-none py-3 px-3 appearance-none min-w-[200px]">
-            <option value="" class="dark:bg-[#0F2A20]">Todas las Categorías</option>
-            <option value="admins" class="dark:bg-[#0F2A20]">Solo Administradores</option>
-            <option value="users" class="dark:bg-[#0F2A20]">Solo Usuarios Base</option>
-        </select>
-        <span class="material-symbols-outlined text-gray-400 text-[20px] pointer-events-none -ml-2">expand_more</span>
+    <div class="relative w-full md:w-auto" id="cat-wrap">
+        <button type="button" onclick="toggleDD('cat-dd')" class="w-full md:w-auto flex items-center justify-between gap-3 px-4 py-3 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-xl transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[20px]">category</span>
+                <span id="cat-label" class="text-[#064E3B] dark:text-emerald-200 font-bold text-[14px] whitespace-nowrap">Todas las Categorías</span>
+            </div>
+            <span class="material-symbols-outlined text-gray-400 text-[20px]">expand_more</span>
+        </button>
+        <div id="cat-dd" class="filter-dropdown hidden" style="min-width: 240px; right: 0; left: auto;">
+            <button onclick="setCategoriaPreset('', 'Todas las Categorías')" class="active-item"><span class="material-symbols-outlined text-[18px] text-emerald-400">grid_view</span> Todas las Categorías</button>
+            <button onclick="setCategoriaPreset('admins', 'Solo Administradores')"><span class="material-symbols-outlined text-[18px] text-purple-400">admin_panel_settings</span> Solo Administradores</button>
+            <button onclick="setCategoriaPreset('users', 'Solo Usuarios Base')"><span class="material-symbols-outlined text-[18px] text-blue-400">person</span> Solo Usuarios Base</button>
+        </div>
+        <input type="hidden" id="categoria-report" value="">
     </div>
 </div>
 
