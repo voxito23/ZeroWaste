@@ -67,6 +67,18 @@
             transform: scale(1.02);
             box-shadow: inset 4px 0 0 #00E096;
         }
+        /* Page Entry Animation */
+        .fade-in-up {
+            animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
         /* Toggle dark mode switch */
         .theme-toggle { position: relative; width: 48px; height: 26px; border-radius: 9999px; cursor: pointer; }
         .theme-toggle input { display: none; }
@@ -189,7 +201,7 @@
                 </div>
         </header>
 
-        <div class="flex-1">
+        <div class="flex-1 fade-in-up">
             @yield('content')
         </div>
     </main>
