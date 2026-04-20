@@ -48,9 +48,22 @@
             <span id="err-email" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="col-span-1 md:col-span-2 mb-2">
+                <label class="block font-bold mb-2 dark:text-emerald-200">Contraseña Anterior <span class="text-gray-400 dark:text-emerald-600 text-xs font-normal">(Requerido si cambiará la contraseña)</span></label>
+                <div class="relative">
+                    <input type="password" name="password_actual" id="old-password" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 pr-12 focus:border-emerald-400 outline-none transition-colors">
+                    <button type="button" onclick="togglePass('old-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
+                        <span class="material-symbols-outlined">visibility_off</span>
+                    </button>
+                </div>
+                @error('password_actual')
+                    <span class="text-red-500 text-sm mt-1 font-medium">{{ $message }}</span>
+                @enderror
+                <span id="err-old-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+            </div>
+
             <div>
-                <label class="block font-bold mb-2 dark:text-emerald-200">Nueva Contraseña <span class="text-gray-400 dark:text-emerald-600 text-xs font-normal">(Opcional)</span></label>
+                <label class="block font-bold mb-2 dark:text-emerald-200">Nueva Contraseña</label>
                 <div class="relative">
                     <input type="password" name="password" id="edit-password" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 pr-12 focus:border-emerald-400 outline-none transition-colors">
                     <button type="button" onclick="togglePass('edit-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
@@ -135,17 +148,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const titulo = form.querySelector('input[name="titulo_perfil"]');
 
         const errNombre = document.getElementById('err-nombre');
-        const errEmail = document.getElementById('err-email');
-        const errPass = document.getElementById('err-password');
+        const passwordActual = form.querySelector('input[name="password_actual"]');
+        const errPassActual = document.getElementById('err-old-password');
         const errConfirmPass = document.getElementById('err-confirm-password');
         const errUbicacion = document.getElementById('err-ubicacion');
         const errTitulo = document.getElementById('err-titulo');
 
         // Reset
-        [errNombre, errEmail, errPass, errConfirmPass, errUbicacion, errTitulo].forEach(el => el.classList.add('hidden'));
-        [nombre, email, password, confirmPassword, ubicacion, titulo].forEach(el => el.classList.remove('border-red-500'));
+        [errNombre, errEmail, errPass, errConfirmPass, errUbicacion, errTitulo, errPassActual].forEach(el => el.classList.add('hidden'));
+        [nombre, email, password, confirmPassword, ubicacion, titulo, passwordActual].forEach(el => el.classList.remove('border-red-500'));
 
         let isValid = true;
+
+        if (password.value || confirmPassword.value) {
+            if (!passwordActual.value) {
+                errPassActual.textContent = 'Debes ingresar la contraseña anterior para confirmar el cambio.';
+                errPassActual.classList.remove('hidden');
+                passwordActual.classList.add('border-red-500');
+                isValid = false;
+            }
+        }
 
         if (!nombre.value.trim() || nombre.value.trim().length < 11) {
             errNombre.textContent = 'El nombre completo debe tener al menos 11 caracteres.';

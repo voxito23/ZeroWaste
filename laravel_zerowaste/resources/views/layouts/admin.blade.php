@@ -353,39 +353,54 @@
         });
     </script>
     
-    @php
-        $swalBg = "document.documentElement.classList.contains('dark') ? '#0F2A20' : '#ffffff'";
-        $swalColor = "document.documentElement.classList.contains('dark') ? '#d1fae5' : '#064E3B'";
-    @endphp
-
     @if(session('success'))
         <script>
+            {!! "const isDarkThemeToast = document.documentElement.classList.contains('dark');" !!}
             Swal.fire({
                 toast: true,
                 position: 'top-end',
-                icon: 'success',
-                title: "{!! session('success') !!}",
                 showConfirmButton: false,
                 timer: 3500,
                 timerProgressBar: true,
-                background: eval({!! json_encode($swalBg) !!}),
-                color: eval({!! json_encode($swalColor) !!})
+                background: isDarkThemeToast ? '#0F2A20' : '#ffffff',
+                customClass: {
+                    popup: 'rounded-2xl border shadow-xl border-emerald-100 dark:border-emerald-800/50 p-2',
+                },
+                html: `
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center flex-shrink-0 border border-emerald-200 dark:border-emerald-700 text-primary">
+                        <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-secondary dark:text-emerald-100 m-0 leading-tight">{!! session('success') !!}</h4>
+                    </div>
+                </div>`
             });
         </script>
     @endif
 
     @if(session('error'))
         <script>
+            {!! "const isDarkThemeErr = document.documentElement.classList.contains('dark');" !!}
             Swal.fire({
                 toast: true,
                 position: 'top-end',
-                icon: 'error',
-                title: "{!! session('error') !!}",
                 showConfirmButton: false,
                 timer: 4500,
                 timerProgressBar: true,
-                background: eval({!! json_encode($swalBg) !!}),
-                color: eval({!! json_encode($swalColor) !!})
+                background: isDarkThemeErr ? '#0F2A20' : '#ffffff',
+                customClass: {
+                    popup: 'rounded-2xl border shadow-xl border-red-100 dark:border-red-900/50 p-2',
+                },
+                html: `
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/40 flex items-center justify-center flex-shrink-0 border border-red-200 dark:border-red-500/30 text-red-500">
+                        <span class="material-symbols-outlined text-[18px]">error</span>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-red-700 dark:text-red-300 m-0 leading-tight">{!! session('error') !!}</h4>
+                    </div>
+                </div>`
             });
         </script>
     @endif

@@ -241,7 +241,26 @@ document.addEventListener("DOMContentLoaded", function() {
         syncBadge();
         if (typeof Swal !== 'undefined') {
             const isDark = document.documentElement.classList.contains('dark');
-            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Filtros restablecidos', timer: 2000, showConfirmButton: false, background: isDark ? '#0F2A20' : '#fff', color: isDark ? '#d1fae5' : '#064E3B', customClass: { popup: 'rounded-2xl' } });
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true,
+                background: isDark ? '#0F2A20' : '#ffffff',
+                customClass: {
+                    popup: 'rounded-2xl border shadow-xl border-emerald-100 dark:border-emerald-800/50 p-2',
+                },
+                html: `
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center flex-shrink-0 border border-emerald-200 dark:border-emerald-700 text-primary">
+                        <span class="material-symbols-outlined text-[18px]">check_circle</span>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-secondary dark:text-emerald-100 m-0 leading-tight">Filtros restablecidos</h4>
+                    </div>
+                </div>`
+            });
         }
     };
 
@@ -280,7 +299,26 @@ document.addEventListener("DOMContentLoaded", function() {
             window.location.href = url;
         }
         const isDark = document.documentElement.classList.contains('dark');
-        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Generando documento...', timer: 2500, showConfirmButton: false, background: isDark ? '#0F2A20' : '#fff', color: isDark ? '#d1fae5' : '#064E3B', customClass: { popup: 'rounded-2xl' } });
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3500,
+            timerProgressBar: true,
+            background: isDark ? '#0F2A20' : '#ffffff',
+            customClass: {
+                popup: 'rounded-2xl border shadow-xl border-blue-100 dark:border-blue-900/50 p-2',
+            },
+            html: `
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0 border border-blue-200 dark:border-blue-700 text-blue-500">
+                    <span class="material-symbols-outlined text-[18px]">info</span>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-secondary dark:text-emerald-100 m-0 leading-tight">Generando documento...</h4>
+                </div>
+            </div>`
+        });
     }
 
     // Preview in modal (like Macuin)

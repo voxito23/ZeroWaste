@@ -115,6 +115,7 @@ class UserController extends Controller
             'email.required' => 'El correo electrónico es obligatorio.',
             'email.email' => 'Debe ingresar un correo válido.',
             'email.unique' => 'Este correo ya está registrado.',
+            'password_actual' => 'required_with:password|string',
             'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
             'ubicacion.required' => 'La ubicación es obligatoria.',
             'ubicacion.min' => 'La ubicación debe tener al menos 10 caracteres.',
@@ -135,7 +136,10 @@ class UserController extends Controller
         $data['bloqueado'] = $request->has('bloqueado') ? true : false;
 
         if ($request->filled('password')) {
-            $data['password'] = $request->input('password');
+            if (!\Illuminate\Support\Facades\Hash::check($request->input('password_actual'), $user->password)) {
+                return back()->withErrors(['password_actual' => 'La contraseña anterior es incorrecta.'])->withInput();
+            }
+            $data['password'] = \Illuminate\Support\Facades\Hash::make($request->input('password'));
         }
 
         // Manejar subida de foto de perfil
