@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <title>Reporte de {{ ucfirst($tipo) }}</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800&display=swap');
         @page { margin: 0cm 0cm; }
         body { 
-            font-family: 'Helvetica', 'Arial', sans-serif; 
-            color: #374151; 
+            font-family: 'Montserrat', 'Helvetica', 'Arial', sans-serif; 
+            color: #1F2937; 
             font-size: 11px; 
             line-height: 1.6;
             background-color: #ffffff;
@@ -36,33 +37,33 @@
         }
 
         .header-flex {
-            display: flex;
-            align-items: center;
+            text-align: center;
             position: relative;
             z-index: 1;
         }
 
         .logo-box {
-            width: 55px;
-            height: 55px;
+            width: 60px;
+            height: 60px;
             background: rgba(255,255,255,0.15);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 18px;
+            border-radius: 16px;
+            display: inline-block;
+            margin: 0 auto 15px auto;
+            text-align: center;
         }
 
         .logo-box img { 
-            width: 40px; 
-            height: 40px; 
+            width: 44px; 
+            height: 44px; 
+            margin-top: 8px; /* rough center hack for DomPDF */
         }
 
         .header h1 { 
-            font-size: 28px; 
+            font-size: 32px; 
             font-weight: 800; 
             margin: 0; 
             letter-spacing: -0.5px;
+            text-transform: uppercase;
         }
         
         .header .subtitle { 
@@ -369,17 +370,22 @@
     <div class="header">
         <div class="date-tag">{{ $fecha_generada }}</div>
         <div class="header-flex">
-            <div class="logo-box">
-                @if($logoSrc)
-                    <img src="{{ $logoSrc }}" alt="Logo">
-                @else
-                    <span style="font-size: 22px; font-weight: 800; color: white;">♻</span>
-                @endif
-            </div>
-            <div>
-                <h1>ZEROWASTE</h1>
-                <p class="subtitle">{{ $titulo }}</p>
-            </div>
+            <!-- Center Logo + Title in DomPDF using table approach to guarantee horizontal alignment with text-align center -->
+            <table width="100%" style="border:none; border-collapse:collapse; margin: 0 auto;">
+                <tr>
+                    <td align="center" style="vertical-align: middle;">
+                        <div class="logo-box">
+                            @if($logoSrc)
+                                <img src="{{ $logoSrc }}" alt="Logo">
+                            @else
+                                <span style="font-size: 22px; font-weight: 800; color: white;">♻</span>
+                            @endif
+                        </div>
+                        <h1 style="margin-top: 10px;">ZEROWASTE</h1>
+                        <p class="subtitle" style="margin-top: 5px;">{{ $titulo }}</p>
+                    </td>
+                </tr>
+            </table>
         </div>
     </div>
 

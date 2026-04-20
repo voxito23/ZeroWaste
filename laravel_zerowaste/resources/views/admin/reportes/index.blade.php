@@ -285,8 +285,9 @@ document.addEventListener("DOMContentLoaded", function() {
             }).then(r => { if (r.isConfirmed) doExport(tipo, formato, '', ''); });
             return;
         }
-        const start = dateStart.toISOString().split('T')[0];
-        const end = dateEnd.toISOString().split('T')[0];
+        const formatDate = (date) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+        const start = formatDate(dateStart);
+        const end = formatDate(dateEnd);
         doExport(tipo, formato, start, end);
     };
 

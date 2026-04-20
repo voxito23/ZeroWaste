@@ -91,30 +91,30 @@
 @section('content')
 
 
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
     {{-- Sidebar con listado de puntos --}}
-    <div class="bg-white dark:bg-forest-card rounded-[2rem] shadow-lg border-2 border-emerald-100 dark:border-emerald-800/50 overflow-hidden">
-        <div class="p-5 border-b border-emerald-50 dark:border-emerald-800/50 flex items-center justify-between">
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-teal-600 dark:text-teal-400 text-lg">location_on</span>
+    <div class="bg-white dark:bg-forest-card rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 dark:border-emerald-800/40 overflow-hidden flex flex-col h-[700px]">
+        <div class="p-6 border-b border-slate-50 dark:border-emerald-800/30 flex items-center justify-between shrink-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-[#00E096]/10 dark:bg-[#00E096]/20 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[#00E096] dark:text-[#00E096] text-[20px]">pin_drop</span>
                 </div>
-                <h3 class="font-bold text-[#064E3B] dark:text-emerald-100">Puntos Registrados <span class="text-primary">({{ $locations->count() }})</span></h3>
+                <h3 class="font-extrabold text-[#064E3B] dark:text-white text-[15px]">Puntos de Acopio <span class="bg-[#00E096] text-[#064E3B] px-2 py-0.5 rounded-full text-[11px] ml-1">{{ $locations->count() }}</span></h3>
             </div>
-            <a href="{{ route('mapa.create') }}" class="text-xs bg-primary hover:bg-emerald-500 text-secondary px-4 py-2 rounded-full font-bold flex items-center gap-1 transition-all hover:-translate-y-0.5 shadow-md shadow-primary/20">
-                <span class="material-symbols-outlined text-sm">add</span> Nuevo
+            <a href="{{ route('mapa.create') }}" class="text-xs bg-[#00E096] hover:bg-[#00c986] text-[#064E3B] px-4 py-2.5 rounded-full font-extrabold flex items-center gap-1 transition-transform hover:-translate-y-0.5 shadow-[0_4px_15px_rgba(0,224,150,0.3)]">
+                <span class="material-symbols-outlined text-[16px]">add</span> Nuevo
             </a>
         </div>
-        <div class="max-h-[600px] overflow-y-auto p-3">
+        <div class="flex-1 overflow-y-auto p-4 custom-scrollbar">
             @forelse ($locations as $loc)
-            <div class="mb-3 bg-white dark:bg-forest-dark p-4 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 shadow-sm hover:shadow-md hover:border-emerald-300 dark:hover:border-emerald-500/50 transition-all group">
-                <div class="flex items-center gap-3">
-                    <div class="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-gray-100 border-2 border-emerald-100 shadow-sm">
+            <div class="mb-4 bg-white dark:bg-forest-dark p-4 rounded-2xl border border-slate-100 dark:border-emerald-800/30 shadow-sm hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] transition-all group">
+                <div class="flex items-start gap-4">
+                    <div class="shrink-0 w-12 h-12 rounded-full overflow-hidden bg-slate-50 border border-slate-100 dark:border-emerald-800/50 flex-shrink-0">
                         @if($loc->imagen)
                         <img src="https://zerowaste-qro.com/static/img/{{ $loc->imagen }}" alt="{{ $loc->nombre }}" class="w-full h-full object-cover">
                         @else
-                        <div class="w-full h-full flex items-center justify-center bg-emerald-50 text-emerald-500">
-                            <span class="material-symbols-outlined text-lg">image_not_supported</span>
+                        <div class="w-full h-full flex items-center justify-center bg-emerald-50 text-emerald-400">
+                            <span class="material-symbols-outlined text-[20px]">image_not_supported</span>
                         </div>
                         @endif
                     </div>
@@ -149,8 +149,10 @@
         </div>
     </div>
 
-    {{-- Mapa --}}
-    <div class="lg:col-span-2 relative w-full h-[700px] border-2 border-emerald-200 dark:border-emerald-800/50 rounded-[2rem] overflow-hidden shadow-2xl">
+    </div>
+
+    {{-- Mapa Ultra Premium --}}
+    <div class="lg:col-span-3 relative w-full h-[700px] border-[6px] border-white dark:border-forest-card rounded-[2.5rem] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.08)] z-0">
         <div id="qro-map" class="w-full h-full z-0"></div>
     </div>
 </div>

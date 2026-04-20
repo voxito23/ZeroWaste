@@ -40,8 +40,8 @@
             <span id="err-email" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
         </div>
 
-            <div class="col-span-1 md:col-span-2 mb-2">
-                <label class="block font-bold mb-2 dark:text-emerald-200">Contraseña Anterior <span class="text-gray-400 dark:text-emerald-600 text-xs font-normal">(Requerido si cambiará la contraseña)</span></label>
+            <div class="col-span-1 md:col-span-2 mb-2 border-t border-emerald-50 dark:border-emerald-900/30 pt-6 mt-2">
+                <label class="block font-bold mb-2 dark:text-emerald-200">Contraseña Anterior <span class="text-gray-400 dark:text-emerald-600 text-xs font-normal">(Requerido para cambiar perfil o contraseña)</span></label>
                 <div class="relative">
                     <input type="password" name="password_actual" id="old-password" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 pr-12 focus:border-emerald-400 outline-none transition-colors">
                     <button type="button" onclick="togglePass('old-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
@@ -54,27 +54,28 @@
                 <span id="err-old-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
             </div>
 
-            <div>
-                <label class="block font-bold mb-2 dark:text-emerald-200">Nueva Contraseña</label>
-                <div class="relative">
-                    <input type="password" name="password" id="edit-password" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 pr-12 focus:border-emerald-400 outline-none transition-colors">
-                    <button type="button" onclick="togglePass('edit-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
-                        <span class="material-symbols-outlined">visibility_off</span>
-                    </button>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block font-bold mb-2 dark:text-emerald-200">Nueva Contraseña</label>
+                    <div class="relative">
+                        <input type="password" name="password" id="edit-password" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 pr-12 focus:border-emerald-400 outline-none transition-colors">
+                        <button type="button" onclick="togglePass('edit-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined">visibility_off</span>
+                        </button>
+                    </div>
+                    <span id="err-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
                 </div>
-                <span id="err-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
-            </div>
-            <div>
-                <label class="block font-bold mb-2 dark:text-emerald-200">Confirmar Contraseña</label>
-                <div class="relative">
-                    <input type="password" name="password_confirmation" id="confirm-password" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 pr-12 focus:border-emerald-400 outline-none transition-colors">
-                    <button type="button" onclick="togglePass('confirm-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
-                        <span class="material-symbols-outlined">visibility_off</span>
-                    </button>
+                <div>
+                    <label class="block font-bold mb-2 dark:text-emerald-200">Confirmar Contraseña</label>
+                    <div class="relative">
+                        <input type="password" name="password_confirmation" id="confirm-password" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 pr-12 focus:border-emerald-400 outline-none transition-colors">
+                        <button type="button" onclick="togglePass('confirm-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
+                            <span class="material-symbols-outlined">visibility_off</span>
+                        </button>
+                    </div>
+                    <span id="err-confirm-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
                 </div>
-                <span id="err-confirm-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
             </div>
-        </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
