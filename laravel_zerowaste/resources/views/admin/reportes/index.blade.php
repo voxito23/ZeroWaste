@@ -235,6 +235,8 @@ document.addEventListener("DOMContentLoaded", function() {
         dateStart = null; dateEnd = null;
         if (pickerStart) { pickerStart.clear(); pickerEnd.set('minDate', null); }
         if (pickerEnd) pickerEnd.clear();
+        document.getElementById('search-report').value = '';
+        document.getElementById('categoria-report').value = '';
         document.getElementById('wrap-start').classList.remove('active');
         document.getElementById('wrap-end').classList.remove('active');
         document.getElementById('period-label').textContent = 'Últimos 7 días';
@@ -289,9 +291,14 @@ document.addEventListener("DOMContentLoaded", function() {
     };
 
     function doExport(tipo, formato, start, end) {
+        const search = document.getElementById('search-report')?.value || '';
+        const categoria = document.getElementById('categoria-report')?.value || '';
+
         let url = `{{ route('reportes.exportar') }}?tipo=${tipo}&formato=${formato}`;
         if (start) url += `&fecha_inicio=${start}`;
         if (end) url += `&fecha_fin=${end}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
 
         if (formato === 'preview') {
             window.open(url, '_blank');
@@ -411,6 +418,22 @@ document.addEventListener("DOMContentLoaded", function() {
     <button onclick="limpiarFiltro()" class="filter-btn" style="padding: 0 14px;" title="Limpiar Filtros">
         <span class="material-symbols-outlined text-gray-400 text-[20px]">filter_alt_off</span>
     </button>
+    
+    {{-- Search & Categoria --}}
+    <div class="flex items-center gap-2 ml-auto w-full md:w-auto">
+        <div class="date-input-wrap">
+            <span class="material-symbols-outlined text-gray-400 text-[20px]">search</span>
+            <input type="text" id="search-report" placeholder="Buscar por texto..." style="width: 140px;">
+        </div>
+        <div class="date-input-wrap">
+            <span class="material-symbols-outlined text-gray-400 text-[20px]">category</span>
+            <select id="categoria-report" style="background: transparent; border: none; outline: none; color: #064E3B; font-weight: 700; width: 140px;" class="dark:text-white">
+                <option value="" class="dark:bg-forest-dark">Todas las Categorías</option>
+                <option value="admins" class="dark:bg-forest-dark">Solo Administradores</option>
+                <option value="users" class="dark:bg-forest-dark">Solo Usuarios Base</option>
+            </select>
+        </div>
+    </div>
 
     {{-- Active Badge --}}
     <div id="filter-badge" class="filter-badge hidden">

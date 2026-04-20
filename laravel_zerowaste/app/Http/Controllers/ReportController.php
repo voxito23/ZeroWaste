@@ -43,6 +43,8 @@ class ReportController extends Controller
         $formato = $request->input('formato');
         $fechaInicio = $request->input('fecha_inicio') . ' 00:00:00';
         $fechaFin = $request->input('fecha_fin') . ' 23:59:59';
+        $search = $request->input('search');
+        $categoria = $request->input('categoria');
         
         $data = [
             'tipo' => $tipo,
@@ -53,31 +55,56 @@ class ReportController extends Controller
 
         // Recolectar datos según el tipo
         if ($tipo === 'usuarios') {
-            $data['registros'] = User::query()
-                                     ->whereBetween('created_at', [$fechaInicio, $fechaFin])
-                                     ->orderByDesc('created_at')
-                                     ->get();
+            $query = User::query()->whereBetween('created_at', [$fechaInicio, $fechaFin]);
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('nombre', 'ilike', "%{$search}%")->orWhere('email', 'ilike', "%{$search}%");
+                });
+            }
+            if ($categoria) {
+                if ($categoria === 'admins') $query->where('is_admin', true);
+                else if ($categoria === 'users') $query->where('is_admin', false);
+            }
+            $data['registros'] = $query->orderByDesc('created_at')->get();
             $data['titulo'] = "Reporte de Usuarios Registrados";
             $data['total'] = count($data['registros']);
         } elseif ($tipo === 'campanas') {
-            $data['registros'] = Campaign::query()
-                                         ->whereBetween('created_at', [$fechaInicio, $fechaFin])
-                                         ->orderByDesc('created_at')
-                                         ->get();
+            $query = Campaign::query()->whereBetween('created_at', [$fechaInicio, $fechaFin]);
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('nombre', 'ilike', "%{$search}%")->orWhere('descripcion', 'ilike', "%{$search}%")->orWhere('lugar', 'ilike', "%{$search}%");
+                });
+            }
+            if ($categoria) {
+                $query->where('tipo_etiqueta', 'ilike', "%{$categoria}%");
+            }
+            $data['registros'] = $query->orderByDesc('created_at')->get();
             $data['titulo'] = "Reporte de Campañas Realizadas";
             $data['total'] = count($data['registros']);
         } elseif ($tipo === 'mapa') {
-            $data['registros'] = Location::query()
-                                         ->whereBetween('created_at', [$fechaInicio, $fechaFin])
-                                         ->orderByDesc('created_at')
-                                         ->get();
+            $query = Location::query()->whereBetween('created_at', [$fechaInicio, $fechaFin]);
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('nombre', 'ilike', "%{$search}%")->orWhere('direccion', 'ilike', "%{$search}%")->orWhere('materiales', 'ilike', "%{$search}%");
+                });
+            }
+            if ($categoria) {
+                $query->where('tipo', 'ilike', "%{$categoria}%");
+            }
+            $data['registros'] = $query->orderByDesc('created_at')->get();
             $data['titulo'] = "Reporte de Puntos de Reciclaje (Mapa)";
             $data['total'] = count($data['registros']);
         } elseif ($tipo === 'eventos') {
-            $data['registros'] = \App\Models\Evento::query()
-                                         ->whereBetween('fecha_inicio', [$fechaInicio, $fechaFin])
-                                         ->orderByDesc('fecha_inicio')
-                                         ->get();
+            $query = \App\Models\Evento::query()->whereBetween('fecha_inicio', [$fechaInicio, $fechaFin]);
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('titulo', 'ilike', "%{$search}%")->orWhere('descripcion', 'ilike', "%{$search}%")->orWhere('lugar', 'ilike', "%{$search}%");
+                });
+            }
+            if ($categoria) {
+                $query->where('tipo_etiqueta', 'ilike', "%{$categoria}%");
+            }
+            $data['registros'] = $query->orderByDesc('fecha_inicio')->get();
             $data['titulo'] = "Reporte de Eventos Agendados";
             $data['total'] = count($data['registros']);
         }
