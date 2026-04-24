@@ -399,8 +399,26 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     };
 
-    // Inicializar con preajuste de 7 días
-    setPeriodPreset('hoy', 'Hoy');
+    // Inicializar: restaurar fechas desde URL params si existen
+    const urlFechaInicio = urlParams.get('fecha_inicio');
+    const urlFechaFin = urlParams.get('fecha_fin');
+    if (urlFechaInicio && urlFechaFin) {
+        dateStart = new Date(urlFechaInicio + 'T00:00:00');
+        dateEnd = new Date(urlFechaFin + 'T23:59:59');
+        if (pickerStart) { pickerStart.setDate(dateStart, false); document.getElementById('wrap-start').classList.add('active'); }
+        if (pickerEnd) { pickerEnd.setDate(dateEnd, false); document.getElementById('wrap-end').classList.add('active'); }
+        // Mostrar badge sin re-submit
+        const badge = document.getElementById('filter-badge');
+        const text = document.getElementById('filter-badge-text');
+        if (badge && text) {
+            badge.classList.remove('hidden');
+            const f = (d) => d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
+            text.textContent = `${f(dateStart)} → ${f(dateEnd)}`;
+        }
+    } else {
+        // Solo setear preset si no hay fechas en URL
+        setPeriodPreset('hoy', 'Hoy');
+    }
 });
 </script>
 @endpush
@@ -421,7 +439,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 
 {{-- ========== PREMIUM SEARCH BAR & CATEGORIES ========== --}}
-<form action="{{ route('reportes.index') }}" method="GET" id="filter-form" class="glass-card p-2 flex flex-col md:flex-row items-center gap-2 mb-6">
+<form action="{{ route('reportes.index') }}" method="GET" id="filter-form" class="glass-card p-2 flex flex-col md:flex-row items-center gap-2 mb-6 relative z-[60]">
     <div class="flex items-center flex-1 w-full pl-4 pr-2">
         <span class="material-symbols-outlined text-emerald-400 dark:text-emerald-500 text-[24px]">search</span>
         <input type="text" name="search" id="search-report" value="{{ request('search') }}" placeholder="Buscar por nombre, descripción, lugar..." class="w-full bg-transparent border-none focus:ring-0 text-gray-700 dark:text-gray-200 placeholder-gray-400 font-semibold text-[15px] outline-none px-4 py-3">

@@ -276,7 +276,7 @@ document.querySelectorAll('.stagger-row').forEach((row,i)=>{row.style.opacity='0
                     $points = $i === 0 ? '0,22 20,18 40,20 55,12 70,14 85,6 100,10 120,4'
                             : ($i === 1 ? '0,8 20,12 40,10 55,18 70,14 85,20 100,16 120,22'
                             : ($i === 2 ? '0,16 20,12 40,18 55,8 70,10 85,14 100,6 120,2'
-                            : '0,14 20,14 40,14 55,14 70,14 85,14 100,14 120,14'));
+                            : '0,20 20,16 40,18 55,10 70,14 85,8 100,12 120,6'));
                 @endphp
                 <polygon fill="url(#spark-{{$i}})" points="0,28 {{$points}} 120,28" />
                 <polyline fill="none" stroke="{{$c['color']}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="{{$points}}" />
