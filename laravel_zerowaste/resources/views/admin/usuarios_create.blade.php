@@ -80,7 +80,14 @@
                         <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Título del Perfil</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">psychology</span></div>
-                            <input type="text" name="titulo_perfil" required placeholder="Eco-guerrero..." class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                            <select name="titulo_perfil" required class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 appearance-none">
+                                <option value="">Selecciona un título...</option>
+                                <option value="Usuario Eco-consciente">Usuario Eco-consciente</option>
+                                <option value="Entusiasta del Desarrollo Sostenible">Entusiasta del Desarrollo Sostenible</option>
+                                <option value="Guardián de la Tierra">Guardián de la Tierra</option>
+                                <option value="Reciclador Estrella">Reciclador Estrella</option>
+                                <option value="Eco-guerrero">Eco-guerrero</option>
+                            </select>
                         </div>
                         <span id="err-titulo" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
                     </div>

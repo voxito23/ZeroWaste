@@ -139,6 +139,39 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Geocoding automático
+    const inCalle = document.getElementById('input-calle');
+    const inNum = document.getElementById('input-numero');
+    const inCP = document.getElementById('input-cp');
+    const inLat = document.getElementById('input-lat');
+    const inLng = document.getElementById('input-lng');
+
+    function geocodeAddress() {
+        const calle = inCalle.value.trim();
+        const num = inNum.value.trim();
+        const cp = inCP.value.trim();
+
+        if (calle && num && cp) {
+            const query = `${calle} ${num}, ${cp}, Querétaro, Mexico`;
+            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.length > 0) {
+                        const lat = parseFloat(data[0].lat);
+                        const lng = parseFloat(data[0].lon);
+                        
+                        inLat.value = lat.toFixed(6);
+                        inLng.value = lng.toFixed(6);
+                    }
+                })
+                .catch(err => console.error('Geocoding error:', err));
+        }
+    }
+
+    inCalle.addEventListener('blur', geocodeAddress);
+    inNum.addEventListener('blur', geocodeAddress);
+    inCP.addEventListener('blur', geocodeAddress);
+
     const form = document.getElementById('customForm');
     if (!form) return;
 

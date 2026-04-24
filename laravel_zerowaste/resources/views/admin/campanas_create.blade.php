@@ -4,6 +4,25 @@
 @section('page_title', 'Crear Nueva Campaña')
 
 @section('content')
+
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    /* Flatpickr Premium Overrides */
+    .flatpickr-calendar { border-radius: 20px !important; border: 1px solid #E5E7EB !important; box-shadow: 0 25px 60px rgba(0,0,0,0.12) !important; }
+    .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange { background: #059669 !important; border-color: #059669 !important; color: #fff !important; font-weight: 800 !important; }
+    .flatpickr-day.inRange { background: rgba(0, 224, 150, 0.15) !important; border-color: transparent !important; box-shadow: none !important; }
+    .flatpickr-day:hover { background: rgba(0, 224, 150, 0.2) !important; color: #064E3B !important; }
+    .dark .flatpickr-calendar { background: #0F2A20 !important; border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: 0 25px 60px rgba(0,0,0,0.7) !important; }
+    .dark .flatpickr-months .flatpickr-month { color: #fff !important; }
+    .dark .flatpickr-current-month .flatpickr-monthDropdown-months { font-weight: 800 !important; color: #fff !important; }
+    .dark .flatpickr-weekday { color: rgba(255,255,255,0.3) !important; font-weight: 700 !important; }
+    .dark .flatpickr-day { color: #ccc !important; }
+    .dark .flatpickr-day.flatpickr-disabled { color: #333 !important; }
+    .dark span.flatpickr-prev-month, .dark span.flatpickr-next-month { color: #fff !important; fill: #fff !important; }
+</style>
+@endpush
+
 <div class="bg-white/80 dark:bg-[#0B1F18]/80 backdrop-blur-xl rounded-[2rem] p-8 lg:p-10 shadow-2xl border border-white/50 dark:border-emerald-800/30 relative overflow-hidden group max-w-4xl mx-auto">
     <div class="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-emerald-400/20 to-teal-500/10 rounded-full blur-3xl pointer-events-none transition group-hover:bg-emerald-400/20"></div>
     <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
@@ -53,7 +72,14 @@
                     <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Tipo / Etiqueta</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">sell</span></div>
-                        <input type="text" name="tipo_etiqueta" placeholder="Taller, Acopio, Educación..." class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                        <select name="tipo_etiqueta" required class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 appearance-none">
+                            <option value="">Selecciona un tipo...</option>
+                            <option value="Taller">Taller</option>
+                            <option value="Acopio">Acopio</option>
+                            <option value="Educación">Educación</option>
+                            <option value="Voluntariado">Voluntariado</option>
+                            <option value="Evento Público">Evento Público</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -63,14 +89,14 @@
                     <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Fecha Inicio</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">event</span></div>
-                        <input type="date" name="fecha_inicio" min="2026-03-30" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                        <input type="text" id="fecha_inicio" name="fecha_inicio" required placeholder="Seleccionar fecha" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 cursor-pointer">
                     </div>
                 </div>
                 <div>
                     <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Fecha Fin</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">event_available</span></div>
-                        <input type="date" name="fecha_fin" min="2026-03-30" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                        <input type="text" id="fecha_fin" name="fecha_fin" required placeholder="Seleccionar fecha" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 cursor-pointer">
                     </div>
                 </div>
             </div>
@@ -121,8 +147,22 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar Flatpickr
+    flatpickr("#fecha_inicio", {
+        locale: "es",
+        dateFormat: "Y-m-d",
+        minDate: "today"
+    });
+    flatpickr("#fecha_fin", {
+        locale: "es",
+        dateFormat: "Y-m-d",
+        minDate: "today"
+    });
+
     const form = document.getElementById('customForm');
     if (!form) return;
 

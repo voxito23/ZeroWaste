@@ -68,99 +68,7 @@ const rc=document.getElementById('rolesChart');
 if(rc){new Chart(rc,{type:'bar',data:{labels:['Admins','Usuarios','Bloqueados'],datasets:[{data:[{{$totalAdmins}},{{$totalNormales}},{{$totalBloqueados}}],backgroundColor:['#8B5CF6','#10B981','#F43F5E'],borderRadius:8,borderSkipped:false,barThickness:32}]},
 options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:isDark?'#0F2A20':'#fff',titleColor:isDark?'#fff':'#064E3B',bodyColor:cText,borderColor:isDark?'rgba(255,255,255,0.1)':'#e5e7eb',borderWidth:1,cornerRadius:12,padding:12}},scales:{x:{grid:{display:false},border:{display:false},ticks:{font:{size:11,weight:'600'}}},y:{beginAtZero:true,border:{display:false},grid:{color:cGrid},ticks:{precision:0,font:{size:11}}}}}});}
 
-// Three.js Globe — Ultra Premium
-const gc=document.getElementById('globe-canvas');
-if(gc){
-    const scene=new THREE.Scene();
-    const cam=new THREE.PerspectiveCamera(40, gc.clientWidth/gc.clientHeight, 0.1, 1000);
-    const renderer=new THREE.WebGLRenderer({canvas:gc, alpha:true, antialias:true});
-    renderer.setSize(gc.clientWidth, gc.clientHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // Globe group (everything rotates together)
-    const globeGroup = new THREE.Group();
-    scene.add(globeGroup);
-
-    globeGroup.rotation.x = Math.PI / 12;
-
-    // --- 5. Floating particles (star field) ---
-    const starsGeo = new THREE.BufferGeometry(); const starPos = [];
-    for(let i=0;i<400;i++){
-        starPos.push((Math.random()-0.5)*12, (Math.random()-0.5)*12, (Math.random()-0.5)*12);
-    }
-    starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
-    const starsMat = new THREE.PointsMaterial({ color: isDark ? 0x6EE7B7 : 0x059669, size: 0.02, transparent: true, opacity: 0.5 });
-    const starsMesh = new THREE.Points(starsGeo, starsMat);
-    scene.add(starsMesh);
-
-    // --- 6. Orbital ring ---
-    const ringGeo = new THREE.TorusGeometry(2.1, 0.008, 8, 100);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x10B981, transparent: true, opacity: 0.3 });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2.5;
-    ring.rotation.z = 0.3;
-    globeGroup.add(ring);
-
-    // Second orbital ring
-    const ring2 = new THREE.Mesh(
-        new THREE.TorusGeometry(2.3, 0.005, 8, 100),
-        new THREE.MeshBasicMaterial({ color: 0x34D399, transparent: true, opacity: 0.15 })
-    );
-    ring2.rotation.x = Math.PI / 3;
-    ring2.rotation.z = -0.5;
-    globeGroup.add(ring2);    // --- Location pins moved to CSS overlay ---
-
-    // --- Camera & Mouse interaction ---
-    cam.position.z = 4.2;
-    let mouseX = 0, mouseY = 0;
-    gc.addEventListener('mousemove', (e) => {
-        const rect = gc.getBoundingClientRect();
-        mouseX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
-        mouseY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
-    });
-    gc.addEventListener('mouseleave', () => { mouseX = 0; mouseY = 0; });
-
-    const clock = new THREE.Clock();
-    function animate(){
-        requestAnimationFrame(animate);
-        const t = clock.getElapsedTime();
-
-        // Hover/sway instead of 360 spin for hologram plane
-        globeGroup.rotation.y = Math.sin(t * 0.5) * 0.1 + mouseX * 0.1;
-        globeGroup.rotation.x = Math.sin(t * 0.3) * 0.05 + mouseY * 0.1 - Math.PI / 12;
-
-        // Stars drift
-        starsMesh.rotation.y += 0.0002;
-        starsMesh.rotation.x += 0.0001;
-
-        // Pulse pins
-        globeGroup.children.forEach(child => {
-            if(child.userData && child.userData.basScale !== undefined){
-                const s = 1 + 0.5 * Math.sin(t * 2 + child.userData.phase);
-                child.scale.set(s, s, s);
-                child.material.opacity = 0.3 + 0.4 * Math.sin(t * 2 + child.userData.phase);
-            }
-        });
-
-        renderer.render(scene, cam);
-    }
-    animate();
-
-    const globeContainer = gc.parentElement;
-    const resizeObserver = new ResizeObserver(entries => {
-        for (let entry of entries) {
-            const { width, height } = entry.contentRect;
-            if (width && height) {
-                cam.aspect = width / height;
-                cam.updateProjectionMatrix();
-                renderer.setSize(width, height, false);
-            }
-        }
-    });
-    if (globeContainer) {
-        resizeObserver.observe(globeContainer);
-    }
-}
 
 // Ring animations
 document.querySelectorAll('.ring-fill').forEach(r=>{const v=r.dataset.value||0;const c=2*Math.PI*60;r.style.strokeDasharray=c;r.style.strokeDashoffset=c;setTimeout(()=>{r.style.strokeDashoffset=c-(c*v/100);},300);});
@@ -265,7 +173,7 @@ document.querySelectorAll('.stagger-row').forEach((row,i)=>{row.style.opacity='0
 {{-- Charts Row --}}
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
     {{-- Users Area Chart --}}
-    <div class="dash-card p-6 lg:col-span-2 fade-up">
+    <div class="dash-card p-6 lg:col-span-3 fade-up">
         <div class="flex items-center justify-between mb-5">
             <div>
                 <h3 class="font-bold text-lg text-[#064E3B] dark:text-white tracking-tight">Registro de Usuarios</h3>
@@ -277,65 +185,6 @@ document.querySelectorAll('.stagger-row').forEach((row,i)=>{row.style.opacity='0
             </div>
         </div>
         <div class="h-[220px]"><canvas id="usersAreaChart"></canvas></div>
-    </div>
-
-    {{-- 3D Globe Premium --}}
-    <div class="dash-card p-0 overflow-hidden fade-up h-full flex flex-col relative group">
-        <div class="globe-container relative" style="background: radial-gradient(ellipse at 40% 40%, {{ 'rgba(16,185,129,0.08)' }} 0%, transparent 60%), radial-gradient(ellipse at 60% 70%, {{ 'rgba(6,78,59,0.05)' }} 0%, transparent 50%); background-color: {{ 'rgba(240,253,244,0.5)' }};">
-            <canvas id="globe-canvas" class="w-full h-full absolute inset-0" style="cursor: grab; z-index: 0;"></canvas>
-            
-            {{-- Holographic Map of Mexico --}}
-            <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10 overflow-hidden">
-                <div class="w-[120%] h-[120%] relative flex items-center justify-center" style="animation: floatHologram 8s ease-in-out infinite;">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Mexico_States_blank_map.svg/1024px-Mexico_States_blank_map.svg.png" 
-                         class="w-full h-full object-contain opacity-80" 
-                         style="filter: drop-shadow(0 0 15px rgba(16,185,129,0.8)) brightness(0) invert(0.8) sepia(1) hue-rotate(100deg) saturate(400%);" 
-                         alt="Mapa de México">
-                    {{-- Hotspots mapped as percentages --}}
-                    <div class="absolute w-3 h-3 rounded-full bg-white shadow-[0_0_15px_#fff]" style="top: 56%; left: 54%; animation: pulse 2s infinite;"></div> {{-- Qro/CDMX --}}
-                    <div class="absolute w-3 h-3 rounded-full bg-white shadow-[0_0_15px_#fff]" style="top: 55%; left: 47%; animation: pulse 2s infinite 0.5s;"></div> {{-- GDL --}}
-                    <div class="absolute w-3 h-3 rounded-full bg-white shadow-[0_0_15px_#fff]" style="top: 36%; left: 53%; animation: pulse 2s infinite 1s;"></div> {{-- MTY --}}
-                </div>
-            </div>
-            
-            {{-- Vignette overlay --}}
-            <div class="absolute inset-0 pointer-events-none" style="box-shadow: inset 0 0 80px rgba(0,0,0,0.06); border-radius: 1.5rem;"></div>
-            
-            {{-- Top-right live badge --}}
-            <div class="absolute top-4 right-4 flex items-center gap-1.5 bg-white/60 dark:bg-black/30 backdrop-blur-md border border-emerald-200/30 dark:border-emerald-700/30 px-3 py-1.5 rounded-full shadow-sm">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">En vivo</span>
-            </div>
-
-            {{-- Floating Glass Info Card --}}
-            <div class="absolute bottom-5 left-1/2 -translate-x-1/2 w-[88%]">
-                <div class="bg-white/75 dark:bg-[#0B1F18]/70 backdrop-blur-xl border border-white/40 dark:border-emerald-800/30 p-4 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <div class="flex items-center gap-1.5 mb-0.5">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <h4 class="text-[11px] font-black text-[#064E3B] dark:text-white uppercase tracking-[0.15em]">Ecosistema Regional</h4>
-                            </div>
-                            <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Puntos de reciclaje activos</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-3xl font-black text-emerald-600 dark:text-emerald-400 leading-none">{{$totalPuntos}}</p>
-                            <p class="text-[9px] text-emerald-500/60 font-bold mt-0.5">QRO, MX</p>
-                        </div>
-                    </div>
-                    {{-- Mini location dots --}}
-                    <div class="flex items-center gap-3 mt-3 pt-3 border-t border-gray-200/40 dark:border-white/5">
-                        <div class="flex -space-x-1">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#0B1F18]"></span>
-                            <span class="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-[#0B1F18]"></span>
-                            <span class="w-2 h-2 rounded-full bg-teal-400 ring-2 ring-white dark:ring-[#0B1F18]"></span>
-                            <span class="w-2 h-2 rounded-full bg-cyan-400 ring-2 ring-white dark:ring-[#0B1F18]"></span>
-                        </div>
-                        <span class="text-[9px] text-gray-400 dark:text-gray-500 font-medium">4 ciudades monitoreadas</span>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
