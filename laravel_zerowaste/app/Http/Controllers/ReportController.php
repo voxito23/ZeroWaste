@@ -181,15 +181,15 @@ class ReportController extends Controller
             return $pdf->download($filename);
         } elseif ($formato === 'xlsx') {
             $html = view('reporte_excel', $data)->render();
-            // Use .xls extension with ms-excel MIME for HTML-as-Excel (avoids corruption)
+            // Use .xls extension with ms-excel MIME for HTML-as-Excel
             $filename = str_replace('.xlsx', '.xls', $filename);
             return response($html)
                 ->header('Content-Type', 'application/vnd.ms-excel')
                 ->header('Content-Disposition', 'attachment; filename="'.$filename.'"')
                 ->header('Cache-Control', 'max-age=0');
         } elseif ($formato === 'docx') {
-            $html = view('reporte_pdf', $data)->render();
-            // Use .doc extension with msword MIME for HTML-as-Word (avoids "unreadable content" error)
+            // Use dedicated Word template with Word-compatible CSS
+            $html = view('reporte_word', $data)->render();
             $filename = str_replace('.docx', '.doc', $filename);
             return response($html)
                 ->header('Content-Type', 'application/msword')

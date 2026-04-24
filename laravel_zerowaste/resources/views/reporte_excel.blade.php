@@ -46,31 +46,10 @@
     </style>
 </head>
 <body>
-    @php
-        $logoSrc = '';
-        $logoPaths = [
-            public_path('img/logo_texture.png'),
-            public_path('static/img/logo_texture.png'),
-            base_path('../flask_zerowaste/static/img/logo_texture.png'),
-            public_path('img/logo.png'),
-            public_path('static/img/logo.png'),
-        ];
-        foreach ($logoPaths as $lp) {
-            if (file_exists($lp)) {
-                $ext = pathinfo($lp, PATHINFO_EXTENSION);
-                $logoSrc = 'data:image/' . $ext . ';base64,' . base64_encode(file_get_contents($lp));
-                break;
-            }
-        }
-    @endphp
     {{-- HEADER --}}
     <table class="header-table">
         <tr>
-            <td style="width: 50px; text-align: center;">
-                @if($logoSrc)
-                    <img src="{{ $logoSrc }}" width="40" height="40" style="border-radius: 10px;">
-                @endif
-            </td>
+            <td style="width: 30px; text-align: center; font-size: 18px; color: #10B981; font-weight: bold;">♻</td>
             <td>
                 <span class="brand-name">ZEROWASTE</span>
                 <div class="report-title">{{ $titulo }}</div>
@@ -122,18 +101,9 @@
             @forelse($registros as $idx => $item)
                 <tr>
                     @if($tipo === 'usuarios')
-                        @php
-                            $avatarSrc = null;
-                            if(isset($item->foto_perfil) && $item->foto_perfil && $item->foto_perfil !== 'default.png') {
-                                $avatarSrc = url('/img/perfiles/' . $item->foto_perfil);
-                            }
-                        @endphp
                         <td style="color: #9CA3AF; font-weight: 600;">{{ $idx + 1 }}</td>
                         <td>
-                            @if($avatarSrc)
-                                <img src="{{ $avatarSrc }}" width="24" height="24" style="border-radius: 50%; vertical-align: middle; margin-right: 5px;">
-                            @endif
-                            <strong style="color: #064E3B; vertical-align: middle;">{{ $item->nombre }}</strong><br>
+                            <strong style="color: #064E3B;">{{ $item->nombre }}</strong><br>
                             <span style="font-size:9px; color:#9CA3AF;">{{ $item->titulo_perfil ?? 'Ecologista' }}</span>
                         </td>
                         <td style="font-size: 10px;">{{ $item->email }}</td>
