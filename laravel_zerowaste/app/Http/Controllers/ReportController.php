@@ -171,14 +171,12 @@ class ReportController extends Controller
             }
             return $pdf->download($filename);
         } elseif ($formato === 'xlsx') {
-            $filename = str_replace('.xlsx', '.xls', $filename);
             return response(view('reporte_excel', $data)->render())
-                ->header('Content-Type', 'application/vnd.ms-excel')
+                ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                 ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
         } elseif ($formato === 'docx') {
-            $filename = str_replace('.docx', '.doc', $filename);
             return response(view('reporte_pdf', $data)->render())
-                ->header('Content-Type', 'application/msword')
+                ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
                 ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
         }
     }

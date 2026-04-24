@@ -70,16 +70,32 @@
                 </div>
                 <div>
                     <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Tipo / Etiqueta</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">sell</span></div>
-                        <select name="tipo_etiqueta" required class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 appearance-none">
-                            <option value="">Selecciona un tipo...</option>
-                            <option value="Taller">Taller</option>
-                            <option value="Acopio">Acopio</option>
-                            <option value="Educación">Educación</option>
-                            <option value="Voluntariado">Voluntariado</option>
-                            <option value="Evento Público">Evento Público</option>
-                        </select>
+                    <div class="relative custom-dropdown" tabindex="0">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">sell</span></div>
+                        <input type="hidden" name="tipo_etiqueta" id="tipo_etiqueta" required>
+                        
+                        <div class="dropdown-selected w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-500 dark:text-gray-400 text-sm rounded-xl block pl-11 pr-10 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 cursor-pointer flex justify-between items-center" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                            <span class="selected-text flex items-center gap-2">Selecciona un tipo...</span>
+                            <span class="material-symbols-outlined text-gray-400 absolute right-3 pointer-events-none">expand_more</span>
+                        </div>
+                        
+                        <div class="dropdown-options hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden">
+                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Taller">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">build</span> Taller
+                            </div>
+                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Acopio">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">recycling</span> Acopio
+                            </div>
+                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Educación">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">school</span> Educación
+                            </div>
+                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Voluntariado">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">volunteer_activism</span> Voluntariado
+                            </div>
+                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Evento Público">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">festival</span> Evento Público
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -111,8 +127,11 @@
 
             <div>
                 <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Banner de la Campaña</label>
+                <div id="image-preview-container" class="mb-3 hidden">
+                    <img id="image-preview" src="" alt="Vista previa" class="h-32 w-auto object-cover rounded-xl border border-emerald-300 dark:border-emerald-700/50 shadow-md">
+                </div>
                 <div class="relative group mt-1">
-                    <input type="file" name="imagen_archivo" accept="image/*" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-dashed border-emerald-300 dark:border-emerald-700/50 rounded-xl p-4 dark:text-white text-sm file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 dark:file:bg-[#0B1F18] file:text-emerald-600 dark:file:text-emerald-400 hover:file:bg-emerald-100 dark:hover:file:bg-emerald-900/50 file:cursor-pointer cursor-pointer transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                    <input type="file" name="imagen_archivo" accept="image/*" onchange="previewFile(this)" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-dashed border-emerald-300 dark:border-emerald-700/50 rounded-xl p-4 dark:text-white text-sm file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 dark:file:bg-[#0B1F18] file:text-emerald-600 dark:file:text-emerald-400 hover:file:bg-emerald-100 dark:hover:file:bg-emerald-900/50 file:cursor-pointer cursor-pointer transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
                     <p class="text-xs text-gray-400 dark:text-emerald-600/70 mt-2 ml-1">JPG, PNG, WEBP permitidos. Máximo 250MB.</p>
                 </div>
             </div>
@@ -150,7 +169,46 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 <script>
+window.previewFile = function(input) {
+    const previewContainer = document.getElementById('image-preview-container');
+    const previewImage = document.getElementById('image-preview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            previewContainer.classList.remove('hidden');
+        }
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        previewContainer.classList.add('hidden');
+        previewImage.src = '';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Custom Dropdown JS
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.custom-dropdown')) {
+            document.querySelectorAll('.dropdown-options').forEach(el => el.classList.add('hidden'));
+        }
+    });
+
+    document.querySelectorAll('.option-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = this.closest('.custom-dropdown');
+            const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+            const selectedText = dropdown.querySelector('.selected-text');
+            
+            hiddenInput.value = this.dataset.value;
+            selectedText.innerHTML = this.innerHTML;
+            selectedText.classList.remove('text-gray-500', 'dark:text-gray-400');
+            selectedText.classList.add('text-gray-900', 'dark:text-white');
+            
+            dropdown.querySelector('.dropdown-options').classList.add('hidden');
+        });
+    });
+
     // Inicializar Flatpickr
     flatpickr("#fecha_inicio", {
         locale: "es",

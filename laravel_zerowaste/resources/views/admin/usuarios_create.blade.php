@@ -78,16 +78,32 @@
                     </div>
                     <div>
                         <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Título del Perfil</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">psychology</span></div>
-                            <select name="titulo_perfil" required class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 appearance-none">
-                                <option value="">Selecciona un título...</option>
-                                <option value="Usuario Eco-consciente">Usuario Eco-consciente</option>
-                                <option value="Entusiasta del Desarrollo Sostenible">Entusiasta del Desarrollo Sostenible</option>
-                                <option value="Guardián de la Tierra">Guardián de la Tierra</option>
-                                <option value="Reciclador Estrella">Reciclador Estrella</option>
-                                <option value="Eco-guerrero">Eco-guerrero</option>
-                            </select>
+                        <div class="relative custom-dropdown" tabindex="0">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">psychology</span></div>
+                            <input type="hidden" name="titulo_perfil" id="titulo_perfil" required>
+                            
+                            <div class="dropdown-selected w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-500 dark:text-gray-400 text-sm rounded-xl block pl-11 pr-10 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 cursor-pointer flex justify-between items-center" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                                <span class="selected-text flex items-center gap-2">Selecciona un título...</span>
+                                <span class="material-symbols-outlined text-gray-400 absolute right-3 pointer-events-none">expand_more</span>
+                            </div>
+                            
+                            <div class="dropdown-options hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden">
+                                <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Usuario Eco-consciente">
+                                    <span class="material-symbols-outlined text-emerald-500 text-lg">eco</span> Usuario Eco-consciente
+                                </div>
+                                <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Entusiasta del Desarrollo Sostenible">
+                                    <span class="material-symbols-outlined text-emerald-500 text-lg">public</span> Entusiasta del Desarrollo Sostenible
+                                </div>
+                                <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Guardián de la Tierra">
+                                    <span class="material-symbols-outlined text-emerald-500 text-lg">landscape</span> Guardián de la Tierra
+                                </div>
+                                <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Reciclador Estrella">
+                                    <span class="material-symbols-outlined text-emerald-500 text-lg">star</span> Reciclador Estrella
+                                </div>
+                                <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Eco-guerrero">
+                                    <span class="material-symbols-outlined text-emerald-500 text-lg">shield</span> Eco-guerrero
+                                </div>
+                            </div>
                         </div>
                         <span id="err-titulo" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
                     </div>
@@ -143,6 +159,32 @@ function previewImage(input) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Custom Dropdown JS
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.custom-dropdown')) {
+            document.querySelectorAll('.dropdown-options').forEach(el => el.classList.add('hidden'));
+        }
+    });
+
+    document.querySelectorAll('.option-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = this.closest('.custom-dropdown');
+            const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+            const selectedText = dropdown.querySelector('.selected-text');
+            
+            hiddenInput.value = this.dataset.value;
+            selectedText.innerHTML = this.innerHTML;
+            selectedText.classList.remove('text-gray-500', 'dark:text-gray-400');
+            selectedText.classList.add('text-gray-900', 'dark:text-white');
+            
+            dropdown.querySelector('.dropdown-options').classList.add('hidden');
+            dropdown.classList.remove('border-red-500'); // clear error state if any
+            const errSpan = dropdown.nextElementSibling;
+            if(errSpan && errSpan.id.startsWith('err-')) errSpan.classList.add('hidden');
+        });
+    });
+
     const form = document.getElementById('userForm');
     if (!form) return;
 
@@ -161,7 +203,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Reset
         [errNombre, errEmail, errPass, errUbicacion, errTitulo].forEach(el => el.classList.add('hidden'));
-        [nombre, email, password, ubicacion, titulo].forEach(el => el.classList.remove('border-red-500'));
+        [nombre, email, password, ubicacion].forEach(el => el.classList.remove('border-red-500'));
+        const tituloDropdown = titulo.closest('.custom-dropdown').querySelector('.dropdown-selected');
+        if (tituloDropdown) tituloDropdown.classList.remove('border-red-500');
 
         let isValid = true;
 
@@ -197,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!titulo.value.trim()) {
             errTitulo.textContent = 'El título del perfil es obligatorio.';
             errTitulo.classList.remove('hidden');
-            titulo.classList.add('border-red-500');
+            if (tituloDropdown) tituloDropdown.classList.add('border-red-500');
             isValid = false;
         }
 
