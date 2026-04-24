@@ -76,63 +76,47 @@ if(gc){
     const globeGroup = new THREE.Group();
     scene.add(globeGroup);
 
-    // --- 1. Inner Core (Premium Earth Map with Continents) ---
-    const coreGeo = new THREE.SphereGeometry(1.48, 64, 64);
+    // --- 1. Inner Core (Holographic Map of Mexico) ---
+    // We use a flat plane to display the country like a sci-fi hologram
+    const coreGeo = new THREE.PlaneGeometry(3.8, 2.5);
     
     // Lights for the premium material
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
     scene.add(ambientLight);
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(5, 3, 5);
+    dirLight.position.set(0, 5, 5);
     scene.add(dirLight);
 
     const textureLoader = new THREE.TextureLoader();
     textureLoader.crossOrigin = 'Anonymous';
     
     const coreMat = new THREE.MeshPhongMaterial({
-        color: isDark ? 0x064E3B : 0x10B981,
-        emissive: isDark ? 0x022c22 : 0x047857,
-        emissiveIntensity: 0.5,
+        color: isDark ? 0x34D399 : 0x10B981,
+        emissive: isDark ? 0x064E3B : 0x047857,
+        emissiveIntensity: 0.6,
         transparent: true,
-        opacity: 0.95,
-        shininess: 30
+        opacity: 0.9,
+        side: THREE.DoubleSide,
+        depthWrite: false
     });
     
-    textureLoader.load('https://unpkg.com/three-globe/example/img/earth-dark.jpg', (texture) => {
+    // Using a high-res transparent map of Mexico
+    textureLoader.load('https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Mexico_States_blank_map.svg/1024px-Mexico_States_blank_map.svg.png', (texture) => {
         coreMat.map = texture;
-        coreMat.color.setHex(isDark ? 0x34D399 : 0x059669);
-        coreMat.emissive.setHex(isDark ? 0x064E3B : 0x064E3B);
-        coreMat.emissiveIntensity = 0.2;
+        coreMat.alphaMap = texture;
         coreMat.needsUpdate = true;
     });
 
     const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    // Lay it down slightly for 3D perspective
+    coreMesh.rotation.x = -Math.PI / 8;
     globeGroup.add(coreMesh);
     
-    // Rotate to show Mexico / North America by default
-    globeGroup.rotation.y = -Math.PI / 1.5;
-    globeGroup.rotation.x = Math.PI / 8;
+    // Slight tilt to the whole group
+    globeGroup.rotation.x = Math.PI / 12;
 
-    // --- 2. Grid lines (latitude/longitude) ---
-    const gridMat = new THREE.MeshBasicMaterial({ color: isDark ? 0x34D399 : 0x059669, wireframe: true, transparent: true, opacity: 0.08 });
-    const gridMesh = new THREE.Mesh(new THREE.SphereGeometry(1.5, 36, 18), gridMat);
-    globeGroup.add(gridMesh);
-
-    // --- 3. Hex wireframe shell ---
-    const hexGeo = new THREE.IcosahedronGeometry(1.52, 2);
-    const hexMat = new THREE.MeshBasicMaterial({ color: isDark ? 0x10B981 : 0x047857, wireframe: true, transparent: true, opacity: 0.12 });
-    const hexMesh = new THREE.Mesh(hexGeo, hexMat);
-    globeGroup.add(hexMesh);
-
-    // --- 4. Atmosphere glow (additive blending sprite) ---
-    const glowGeo = new THREE.SphereGeometry(1.7, 32, 32);
-    const glowMat = new THREE.ShaderMaterial({
-        uniforms: { glowColor: { value: new THREE.Color(0x10B981) } },
-        vertexShader: `varying vec3 vNormal; void main(){ vNormal=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-        fragmentShader: `uniform vec3 glowColor; varying vec3 vNormal; void main(){ float intensity=pow(0.65-dot(vNormal,vec3(0,0,1.0)),3.0); gl_FragColor=vec4(glowColor,intensity*0.6); }`,
-        side: THREE.BackSide, transparent: true, blending: THREE.AdditiveBlending
-    });
-    scene.add(new THREE.Mesh(glowGeo, glowMat));
+    // Removed spherical grid, hex shell, and spherical glow.
+    // Keeping only the Holographic Map, Stars, and Rings.
 
     // --- 5. Floating particles (star field) ---
     const starsGeo = new THREE.BufferGeometry(); const starPos = [];
@@ -161,21 +145,19 @@ if(gc){
     ring2.rotation.z = -0.5;
     globeGroup.add(ring2);
 
-    // --- 7. Location pin markers (pulsing dots on surface) ---
+    // --- 5. Location pin markers (pulsing dots on 2D surface) ---
     const pinColor = new THREE.Color(0x00E096);
+    // Approximate 2D offset coordinates for cities on the Mexico plane
     const locations = [
-        {lat: 20.59, lon: -100.39}, // Querétaro
-        {lat: 19.43, lon: -99.13},  // CDMX
-        {lat: 20.67, lon: -103.35}, // Guadalajara
-        {lat: 25.69, lon: -100.32}, // Monterrey
+        {x: 0.1, y: -0.1},   // Querétaro
+        {x: 0.2, y: -0.3},   // CDMX
+        {x: -0.2, y: -0.1},  // Guadalajara
+        {x: 0.1, y: 0.4},    // Monterrey
     ];
     locations.forEach(loc => {
-        const phi = (90 - loc.lat) * Math.PI / 180;
-        const theta = (loc.lon + 180) * Math.PI / 180;
-        const r2 = 1.52;
-        const x = -r2 * Math.sin(phi) * Math.cos(theta);
-        const y = r2 * Math.cos(phi);
-        const z = r2 * Math.sin(phi) * Math.sin(theta);
+        const x = loc.x;
+        const y = loc.y;
+        const z = 0.02; // slightly above plane
 
         // Pin dot
         const dotGeo = new THREE.SphereGeometry(0.03, 8, 8);
@@ -209,10 +191,9 @@ if(gc){
         requestAnimationFrame(animate);
         const t = clock.getElapsedTime();
 
-        // Auto-rotation + mouse tilt
-        globeGroup.rotation.y += 0.0015;
-        globeGroup.rotation.y += mouseX * 0.003;
-        globeGroup.rotation.x = mouseY * 0.15 + Math.sin(t * 0.3) * 0.02;
+        // Hover/sway instead of 360 spin for hologram plane
+        globeGroup.rotation.y = Math.sin(t * 0.5) * 0.1 + mouseX * 0.1;
+        globeGroup.rotation.x = Math.sin(t * 0.3) * 0.05 + mouseY * 0.1 - Math.PI / 12;
 
         // Stars drift
         starsMesh.rotation.y += 0.0002;
@@ -319,24 +300,30 @@ document.querySelectorAll('.stagger-row').forEach((row,i)=>{row.style.opacity='0
         ['label'=>'Último Registro','icon'=>'person_add','val'=>null,'link'=>null,'color'=>'#0EA5E9'],
     ]; @endphp
     @foreach($cards2 as $c2)
-    <div class="dash-card p-5 fade-up">
-        <div class="flex items-center gap-3 mb-2">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:{{$c2['color']}}15">
-                <span class="material-symbols-outlined text-lg" style="color:{{$c2['color']}}">{{$c2['icon']}}</span>
-            </div>
-            <span class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">{{$c2['label']}}</span>
+    <div class="dash-card p-5 fade-up relative overflow-hidden group">
+        {{-- Faded icon watermark --}}
+        <div class="absolute -bottom-3 -right-3 pointer-events-none opacity-[0.15] group-hover:opacity-[0.25] transition-opacity duration-500">
+            <span class="material-symbols-outlined" style="font-size: 80px; color: {{$c2['color']}};">{{$c2['icon']}}</span>
         </div>
-        @if($c2['val']!==null)
-            <p class="text-xl font-black text-[#064E3B] dark:text-white" data-count="{{$c2['val']}}">0</p>
-        @else
-            @if($ultimoRegistro)
-                <p class="text-sm font-bold text-[#064E3B] dark:text-white truncate">{{$ultimoRegistro->nombre}}</p>
-                <span class="text-[11px] text-gray-400">{{$ultimoRegistro->created_at?$ultimoRegistro->created_at->diffForHumans():'Reciente'}}</span>
+        <div class="relative z-10">
+            <div class="flex items-center gap-3 mb-2">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background:{{$c2['color']}}15">
+                    <span class="material-symbols-outlined text-lg" style="color:{{$c2['color']}}">{{$c2['icon']}}</span>
+                </div>
+                <span class="text-xs text-gray-400 dark:text-gray-500 font-bold uppercase tracking-wider">{{$c2['label']}}</span>
+            </div>
+            @if($c2['val']!==null)
+                <p class="text-xl font-black text-[#064E3B] dark:text-white" data-count="{{$c2['val']}}">0</p>
             @else
-                <p class="text-sm text-gray-400">Sin registros</p>
+                @if($ultimoRegistro)
+                    <p class="text-sm font-bold text-[#064E3B] dark:text-white truncate">{{$ultimoRegistro->nombre}}</p>
+                    <span class="text-[11px] text-gray-400">{{$ultimoRegistro->created_at?$ultimoRegistro->created_at->diffForHumans():'Reciente'}}</span>
+                @else
+                    <p class="text-sm text-gray-400">Sin registros</p>
+                @endif
             @endif
-        @endif
-        @if($c2['link'])<a href="{{$c2['link']}}" class="text-[11px] font-bold mt-1 inline-block" style="color:{{$c2['color']}}">Ver detalles →</a>@endif
+            @if($c2['link'])<a href="{{$c2['link']}}" class="text-[11px] font-bold mt-1 inline-block" style="color:{{$c2['color']}}">Ver detalles →</a>@endif
+        </div>
     </div>
     @endforeach
 </div>
@@ -379,7 +366,7 @@ document.querySelectorAll('.stagger-row').forEach((row,i)=>{row.style.opacity='0
                         <div>
                             <div class="flex items-center gap-1.5 mb-0.5">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <h4 class="text-[11px] font-black text-[#064E3B] dark:text-white uppercase tracking-[0.15em]">Ecosistema Global</h4>
+                                <h4 class="text-[11px] font-black text-[#064E3B] dark:text-white uppercase tracking-[0.15em]">Ecosistema Regional</h4>
                             </div>
                             <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Puntos de reciclaje activos</p>
                         </div>

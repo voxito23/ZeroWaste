@@ -539,7 +539,10 @@ document.addEventListener("DOMContentLoaded", function() {
     {{-- 1. Usuarios --}}
     <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px] report-module" data-search-term="directorio usuarios registros roles fotos perfil">
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-emerald-400/20 to-teal-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
-        <div>
+        <div class="absolute -bottom-5 -right-5 pointer-events-none opacity-[0.15] group-hover:opacity-[0.25] transition-opacity duration-500">
+            <span class="material-symbols-outlined" style="font-size: 150px; color: #10B981;">group</span>
+        </div>
+        <div class="relative z-10">
             <div class="flex items-center justify-between mb-5">
                 <div class="w-14 h-14 rounded-[1.25rem] bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white shadow-[0_8px_20px_rgba(52,211,153,0.3)] group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300">
                     <span class="material-symbols-outlined text-[28px]">group</span>
@@ -562,7 +565,10 @@ document.addEventListener("DOMContentLoaded", function() {
     {{-- 2. Campañas --}}
     <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px] report-module" data-search-term="campañas ecologicas organizadas visibilidad clasificacion">
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-blue-400/20 to-cyan-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
-        <div>
+        <div class="absolute -bottom-5 -right-5 pointer-events-none opacity-[0.15] group-hover:opacity-[0.25] transition-opacity duration-500">
+            <span class="material-symbols-outlined" style="font-size: 150px; color: #3B82F6;">military_tech</span>
+        </div>
+        <div class="relative z-10">
             <div class="flex items-center justify-between mb-5">
                 <div class="w-14 h-14 rounded-[1.25rem] bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white shadow-[0_8px_20px_rgba(96,165,250,0.3)] group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300">
                     <span class="material-symbols-outlined text-[28px]">military_tech</span>
@@ -585,7 +591,10 @@ document.addEventListener("DOMContentLoaded", function() {
     {{-- 3. Mapa --}}
     <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px] report-module" data-search-term="puntos acopio centros reciclaje mapa coordenadas ubicacion">
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-amber-400/20 to-orange-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
-        <div>
+        <div class="absolute -bottom-5 -right-5 pointer-events-none opacity-[0.15] group-hover:opacity-[0.25] transition-opacity duration-500">
+            <span class="material-symbols-outlined" style="font-size: 150px; color: #F59E0B;">location_on</span>
+        </div>
+        <div class="relative z-10">
             <div class="flex items-center justify-between mb-5">
                 <div class="w-14 h-14 rounded-[1.25rem] bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white shadow-[0_8px_20px_rgba(251,191,36,0.3)] group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300">
                     <span class="material-symbols-outlined text-[28px]">location_on</span>
@@ -608,7 +617,10 @@ document.addEventListener("DOMContentLoaded", function() {
     {{-- 4. Eventos --}}
     <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px] report-module" data-search-term="jornadas eventos talleres limpiezas comunitarias">
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-purple-400/20 to-pink-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
-        <div>
+        <div class="absolute -bottom-5 -right-5 pointer-events-none opacity-[0.15] group-hover:opacity-[0.25] transition-opacity duration-500">
+            <span class="material-symbols-outlined" style="font-size: 150px; color: #8B5CF6;">event</span>
+        </div>
+        <div class="relative z-10">
             <div class="flex items-center justify-between mb-5">
                 <div class="w-14 h-14 rounded-[1.25rem] bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white shadow-[0_8px_20px_rgba(192,132,252,0.3)] group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300">
                     <span class="material-symbols-outlined text-[28px]">event</span>
