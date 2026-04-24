@@ -3,75 +3,39 @@
 @section('title', 'Usuarios')
 @section('page_title', 'Gestión de Usuarios')
 
-@push('scripts')
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    const tabBtns = document.querySelectorAll('[data-user-tab]');
-    const rows = document.querySelectorAll('#usersTable tbody tr[data-user-role]');
-    const searchInput = document.getElementById('userSearch');
-    const countAll = document.getElementById('count-all');
-    const countAdmin = document.getElementById('count-admin');
-    const countUser = document.getElementById('count-user');
-    
-    let currentTab = 'all';
-
-    function filterTable() {
-        const query = searchInput ? searchInput.value.toLowerCase() : '';
-        rows.forEach(row => {
-            const matchesRole = (currentTab === 'all' || row.dataset.userRole === currentTab);
-            const matchesSearch = row.textContent.toLowerCase().includes(query);
-            row.style.display = (matchesRole && matchesSearch) ? '' : 'none';
-        });
-    }
-
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            tabBtns.forEach(b => {
-                b.classList.remove('bg-emerald-500', 'text-white', 'shadow-md');
-                b.classList.add('bg-gray-100', 'dark:bg-white/5', 'text-gray-500', 'dark:text-gray-400');
-            });
-            btn.classList.remove('bg-gray-100', 'dark:bg-white/5', 'text-gray-500', 'dark:text-gray-400');
-            btn.classList.add('bg-emerald-500', 'text-white', 'shadow-md');
-            currentTab = btn.dataset.userTab;
-            filterTable();
-        });
-    });
-
-    if (searchInput) {
-        searchInput.addEventListener('input', filterTable);
-    }
-
-    // Stagger animation
-    document.querySelectorAll('.user-row').forEach((row, i) => {
-        row.style.opacity = '0';
-        row.style.transform = 'translateY(8px)';
-        setTimeout(() => {
-            row.style.transition = 'all 0.25s ease';
-            row.style.opacity = '1';
-            row.style.transform = 'translateY(0)';
-        }, 50 * i);
-    });
-});
-</script>
-@endpush
-
 @section('content')
 
-
-
-{{-- Estadísticas rápidas --}}
+{{-- Estadísticas rápidas (clickables) --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    @php $stats=[['Total','group','#10B981',$totalCount,'count-all'],['Admins','shield_person','#8B5CF6',$adminCount,'count-admin'],['Usuarios','person','#3B82F6',$userCount,'count-user'],['Bloqueados','block','#F43F5E',$blockedCount,null]]; @endphp
+    @php $stats=[
+        ['Total','group','#10B981',$totalCount,'all'],
+        ['Admins','shield_person','#8B5CF6',$adminCount,'admin'],
+        ['Usuarios','person','#3B82F6',$userCount,'user'],
+        ['Bloqueados','block','#F43F5E',$blockedCount,'blocked'],
+    ]; @endphp
     @foreach($stats as $s)
-    <div class="glass-card p-5">
+    <div class="glass-card p-5 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 stat-card {{ $s[4] === 'all' ? 'ring-2 ring-emerald-500/40' : '' }}" data-stat-tab="{{ $s[4] }}">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:{{$s[2]}}15">
                 <span class="material-symbols-outlined text-lg" style="color:{{$s[2]}}">{{$s[1]}}</span>
             </div>
             <div>
                 <p class="text-[11px] text-gray-400 font-bold uppercase tracking-wider">{{$s[0]}}</p>
-                <p class="text-xl font-black text-[#064E3B] dark:text-white" @if($s[4]) id="{{$s[4]}}" @endif>{{$s[3]}}</p>
+                <p class="text-xl font-black text-[#064E3B] dark:text-white">{{$s[3]}}</p>
             </div>
+        </div>
+        {{-- Mini trend SVG --}}
+        <div class="mt-3 h-6 opacity-60">
+            <svg viewBox="0 0 100 24" class="w-full h-full" preserveAspectRatio="none">
+                <polyline fill="none" stroke="{{$s[2]}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    points="0,20 15,16 30,18 45,10 55,12 70,6 85,8 100,4" />
+                <linearGradient id="grad-{{$loop->index}}" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="{{$s[2]}}" stop-opacity="0.2"/>
+                    <stop offset="100%" stop-color="{{$s[2]}}" stop-opacity="0"/>
+                </linearGradient>
+                <polygon fill="url(#grad-{{$loop->index}})"
+                    points="0,24 0,20 15,16 30,18 45,10 55,12 70,6 85,8 100,4 100,24" />
+            </svg>
         </div>
     </div>
     @endforeach
@@ -90,11 +54,9 @@ document.addEventListener("DOMContentLoaded", function() {
             <button data-user-tab="user" class="px-4 py-2 rounded-lg text-xs font-bold transition-all bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400">
                 Usuarios <span class="opacity-60">{{ $userCount }}</span>
             </button>
-            @if($blockedCount > 0)
             <button data-user-tab="blocked" class="px-4 py-2 rounded-lg text-xs font-bold transition-all bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400">
                 Bloqueados <span class="opacity-60">{{ $blockedCount }}</span>
             </button>
-            @endif
         </div>
         <div class="flex items-center gap-3 w-full sm:w-auto">
             <div class="relative flex-1 sm:flex-initial">
@@ -124,29 +86,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const tableContainer = document.getElementById('tableContainer');
     const searchInput = document.getElementById('userSearch');
     const tabButtons = document.querySelectorAll('[data-user-tab]');
+    const statCards = document.querySelectorAll('.stat-card');
 
     // Función para actualizar tabla
     function fetchTable(url) {
-        // Animación de opacidad
         const tbody = document.getElementById('usersTableBody');
         if(tbody) tbody.style.opacity = '0.3';
 
         fetch(url, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(response => response.text())
         .then(html => {
             tableContainer.innerHTML = html;
-            // Restaurar opacidad
             const newTbody = document.getElementById('usersTableBody');
             if(newTbody) {
                 newTbody.style.opacity = '0';
                 setTimeout(() => newTbody.style.opacity = '1', 50);
             }
         })
-        .catch(err => console.error('Error fetched data', err));
+        .catch(err => console.error('Error fetching data', err));
     }
 
     function updateData() {
@@ -157,23 +116,47 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             url.searchParams.delete('search');
         }
-        url.searchParams.delete('page'); // reset pagination on new filter
-        
+        url.searchParams.delete('page');
         fetchTable(url.toString());
     }
 
-    // Tabs
+    // Sincronizar estilos activos en tabs Y stat cards
+    function syncActiveStyles(tab) {
+        // Tabs
+        tabButtons.forEach(b => {
+            b.classList.remove('bg-emerald-500', 'text-white', 'shadow-md');
+            b.classList.add('bg-gray-100', 'dark:bg-white/5', 'text-gray-500', 'dark:text-gray-400');
+        });
+        const activeTab = document.querySelector(`[data-user-tab="${tab}"]`);
+        if(activeTab) {
+            activeTab.classList.remove('bg-gray-100', 'dark:bg-white/5', 'text-gray-500', 'dark:text-gray-400');
+            activeTab.classList.add('bg-emerald-500', 'text-white', 'shadow-md');
+        }
+
+        // Stat cards
+        statCards.forEach(c => {
+            c.classList.remove('ring-2', 'ring-emerald-500/40', 'shadow-lg');
+        });
+        const activeCard = document.querySelector(`.stat-card[data-stat-tab="${tab}"]`);
+        if(activeCard) {
+            activeCard.classList.add('ring-2', 'ring-emerald-500/40', 'shadow-lg');
+        }
+    }
+
+    // Click en tabs
     tabButtons.forEach(btn => {
         btn.addEventListener('click', function() {
-            // Estilos
-            tabButtons.forEach(b => {
-                b.classList.remove('bg-emerald-500', 'text-white', 'shadow-md');
-                b.classList.add('bg-gray-100', 'dark:bg-white/5', 'text-gray-500', 'dark:text-gray-400');
-            });
-            this.classList.remove('bg-gray-100', 'dark:bg-white/5', 'text-gray-500', 'dark:text-gray-400');
-            this.classList.add('bg-emerald-500', 'text-white', 'shadow-md');
-
             currentTab = this.getAttribute('data-user-tab');
+            syncActiveStyles(currentTab);
+            updateData();
+        });
+    });
+
+    // Click en stat cards (vinculan al tab correspondiente)
+    statCards.forEach(card => {
+        card.addEventListener('click', function() {
+            currentTab = this.getAttribute('data-stat-tab');
+            syncActiveStyles(currentTab);
             updateData();
         });
     });
@@ -193,12 +176,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const link = e.target.closest('.ajax-link');
         if (link) {
             e.preventDefault();
-            // Mantener tab y búsqueda en los links de paginación
             const url = new URL(link.href);
             url.searchParams.set('tab', currentTab);
             if (currentSearch) url.searchParams.set('search', currentSearch);
             fetchTable(url.toString());
         }
     });
+
+    // Stagger animation
+    document.querySelectorAll('.user-row').forEach((row, i) => {
+        row.style.opacity = '0';
+        row.style.transform = 'translateY(8px)';
+        setTimeout(() => {
+            row.style.transition = 'all 0.25s ease';
+            row.style.opacity = '1';
+            row.style.transform = 'translateY(0)';
+        }, 50 * i);
+    });
 });
+</script>
 @endpush

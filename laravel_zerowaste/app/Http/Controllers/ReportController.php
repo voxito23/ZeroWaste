@@ -171,4 +171,5 @@ class ReportController extends Controller
                 ->header('Content-Type', 'application/msword')
                 ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
         }
+    }
 }

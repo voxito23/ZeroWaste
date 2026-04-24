@@ -108,50 +108,46 @@
         <div class="flex-1 overflow-y-auto p-3">
             @forelse ($locations as $loc)
             <div class="mb-4 p-3 rounded-2xl border border-gray-100/60 dark:border-emerald-800/20 bg-white/50 dark:bg-white/[0.02] hover:bg-white dark:hover:bg-white/5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 relative group">
-                <div class="flex gap-4">
-                    {{-- Imagen (Airbnb style) --}}
-                    <div class="shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-slate-100 dark:bg-emerald-900/30 border border-slate-200/60 dark:border-emerald-800/50 relative">
+                <div class="flex gap-3">
+                    {{-- Imagen --}}
+                    <div class="shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-emerald-900/30 border border-slate-200/60 dark:border-emerald-800/50">
                         @if($loc->imagen)
                         <img src="https://zerowaste-qro.com/static/img/{{ $loc->imagen }}" alt="{{ $loc->nombre }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                         @else
                         <div class="w-full h-full flex items-center justify-center text-emerald-400/50">
-                            <span class="material-symbols-outlined text-[28px]">image_not_supported</span>
+                            <span class="material-symbols-outlined text-[24px]">image_not_supported</span>
                         </div>
                         @endif
-                        {{-- Badge tipo superpuesto --}}
-                        <div class="absolute top-1.5 left-1.5">
-                            <span class="px-1.5 py-0.5 bg-white/90 backdrop-blur-md dark:bg-black/60 text-[#064E3B] dark:text-emerald-300 rounded-md text-[8px] font-black uppercase tracking-wider shadow-sm">{{ $loc->tipo }}</span>
-                        </div>
                     </div>
 
                     {{-- Contenido --}}
-                    <div class="flex-1 min-w-0 py-0.5">
-                        <div class="flex justify-between items-start gap-2">
-                            <h4 class="font-bold text-[14px] text-[#064E3B] dark:text-white leading-tight line-clamp-2" title="{{ $loc->nombre }}">{{ $loc->nombre }}</h4>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-start gap-1">
+                            <h4 class="font-bold text-[13px] text-[#064E3B] dark:text-white leading-snug" title="{{ $loc->nombre }}">{{ $loc->nombre }}</h4>
                             
-                            {{-- Acciones (ocultas hasta hover en desktop) --}}
-                            <div class="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200 shrink-0 bg-white/80 dark:bg-transparent backdrop-blur-sm rounded-lg p-0.5">
-                                <a href="{{ route('mapa.edit', $loc) }}" class="w-7 h-7 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 flex items-center justify-center transition-colors" title="Editar">
-                                    <span class="material-symbols-outlined text-[14px]">edit</span>
+                            {{-- Acciones --}}
+                            <div class="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200 shrink-0">
+                                <a href="{{ route('mapa.edit', $loc) }}" class="w-6 h-6 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 flex items-center justify-center transition-colors" title="Editar">
+                                    <span class="material-symbols-outlined text-[13px]">edit</span>
                                 </a>
                                 <form id="delete-form-{{ $loc->id }}" action="{{ route('mapa.destroy', $loc) }}" method="POST">
                                     @csrf @method('DELETE')
-                                    <button type="button" onclick="confirmarEliminar('delete-form-{{ $loc->id }}', '{{ $loc->nombre }}')" class="w-7 h-7 rounded-md bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400 flex items-center justify-center transition-colors" title="Eliminar">
-                                        <span class="material-symbols-outlined text-[14px]">delete</span>
+                                    <button type="button" onclick="confirmarEliminar('delete-form-{{ $loc->id }}', '{{ $loc->nombre }}')" class="w-6 h-6 rounded-md bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400 flex items-center justify-center transition-colors" title="Eliminar">
+                                        <span class="material-symbols-outlined text-[13px]">delete</span>
                                     </button>
                                 </form>
                             </div>
                         </div>
 
-                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed line-clamp-2" title="{{ $loc->direccion }}">
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-relaxed" title="{{ $loc->direccion }}">
                             <span class="material-symbols-outlined text-[11px] align-middle mr-0.5">location_on</span>{{ $loc->direccion }}
                         </p>
-                        
-                        <p class="text-[10px] text-emerald-600/70 dark:text-emerald-400/60 mt-1.5 font-medium line-clamp-1 flex items-center gap-1" title="{{ $loc->materiales }}">
-                            <span class="w-1 h-1 rounded-full bg-emerald-400"></span>
-                            {{ $loc->materiales ?? 'Múltiples materiales aceptados' }}
-                        </p>
                     </div>
+                </div>
+                {{-- Badge + materiales (debajo, separados) --}}
+                <div class="flex items-center gap-2 mt-2.5 pt-2 border-t border-gray-100/60 dark:border-emerald-800/15">
+                    <span class="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-lg text-[9px] font-bold uppercase tracking-wide whitespace-nowrap shrink-0">{{ $loc->tipo }}</span>
+                    <span class="text-[9px] text-gray-400 dark:text-gray-500 truncate" title="{{ $loc->materiales }}">{{ $loc->materiales ?? 'Múltiples materiales' }}</span>
                 </div>
             </div>
             @empty

@@ -157,6 +157,32 @@ document.querySelectorAll('.stagger-row').forEach((row,i)=>{row.style.opacity='0
         </div>
         <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight" data-count="{{$c['val']}}">0</p>
         <p class="text-xs text-gray-400 dark:text-gray-500 font-semibold mt-1">{{$c['label']}}</p>
+        {{-- SVG Sparkline --}}
+        <div class="mt-3 h-8">
+            <svg viewBox="0 0 120 28" class="w-full h-full" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="spark-{{$i}}" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="{{$c['color']}}" stop-opacity="0.2"/>
+                        <stop offset="100%" stop-color="{{$c['color']}}" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+                @php
+                    $points = $i === 0 ? '0,22 20,18 40,20 55,12 70,14 85,6 100,10 120,4'
+                            : ($i === 1 ? '0,8 20,12 40,10 55,18 70,14 85,20 100,16 120,22'
+                            : ($i === 2 ? '0,16 20,12 40,18 55,8 70,10 85,14 100,6 120,2'
+                            : '0,14 20,14 40,14 55,14 70,14 85,14 100,14 120,14'));
+                @endphp
+                <polygon fill="url(#spark-{{$i}})" points="0,28 {{$points}} 120,28" />
+                <polyline fill="none" stroke="{{$c['color']}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="{{$points}}" />
+            </svg>
+        </div>
+        @if($c['trend']!==null)
+        <p class="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[12px] {{$c['trend']>=0?'text-emerald-500':'text-red-400'}}">{{$c['trend']>=0?'trending_up':'trending_down'}}</span>
+            <span class="{{$c['trend']>=0?'text-emerald-500':'text-red-400'}} font-bold">{{$c['trend']>=0?'+':''}}{{$c['trend']}}%</span>
+            <span>vs semana anterior</span>
+        </p>
+        @endif
     </div>
     @endforeach
 </div>

@@ -532,46 +532,37 @@ document.addEventListener("DOMContentLoaded", function() {
 
 {{-- ========== LIVE KPIs ========== --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    @php $rkpis = [
+        ['label'=>'Usuarios','icon'=>'group','val'=>$totalUsuarios,'sub'=>'Registrados en plataforma','color'=>'#10B981','bg'=>'from-emerald-400 to-emerald-600','pts'=>'0,22 20,18 40,20 55,12 70,14 85,6 100,10 120,4'],
+        ['label'=>'Campañas','icon'=>'military_tech','val'=>$totalCampanas,'sub'=>'Total organizadas','color'=>'#3B82F6','bg'=>'from-blue-400 to-blue-600','pts'=>'0,16 20,12 40,18 55,8 70,10 85,14 100,6 120,2'],
+        ['label'=>'Puntos','icon'=>'location_on','val'=>$totalPuntos,'sub'=>'Centros de acopio','color'=>'#F59E0B','bg'=>'from-amber-400 to-orange-500','pts'=>'0,14 20,14 40,14 55,14 70,14 85,14 100,14 120,14'],
+        ['label'=>'Eventos','icon'=>'event','val'=>$totalEventos,'sub'=>'Programados','color'=>'#8B5CF6','bg'=>'from-purple-400 to-purple-600','pts'=>'0,20 20,16 40,22 55,14 70,18 85,10 100,12 120,6'],
+    ]; @endphp
+    @foreach($rkpis as $ri => $rk)
     <div class="glass-card p-5 group">
         <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-[0_4px_15px_rgba(52,211,153,0.4)] text-white group-hover:scale-110 transition-transform">
-                <span class="material-symbols-outlined text-[20px]">group</span>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br {{$rk['bg']}} flex items-center justify-center shadow-[0_4px_15px_{{$rk['color']}}66] text-white group-hover:scale-110 transition-transform">
+                <span class="material-symbols-outlined text-[20px]">{{$rk['icon']}}</span>
             </div>
-            <span class="text-[11px] text-gray-500 uppercase font-black tracking-widest">Usuarios</span>
+            <span class="text-[11px] text-gray-500 uppercase font-black tracking-widest">{{$rk['label']}}</span>
         </div>
-        <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight">{{ $totalUsuarios }}</p>
-        <p class="text-[10px] text-gray-400 font-bold mt-1">Registrados en plataforma</p>
-    </div>
-    <div class="glass-card p-5 group">
-        <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-[0_4px_15px_rgba(96,165,250,0.4)] text-white group-hover:scale-110 transition-transform">
-                <span class="material-symbols-outlined text-[20px]">military_tech</span>
-            </div>
-            <span class="text-[11px] text-gray-500 uppercase font-black tracking-widest">Campañas</span>
+        <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight">{{ $rk['val'] }}</p>
+        <p class="text-[10px] text-gray-400 font-bold mt-1">{{$rk['sub']}}</p>
+        {{-- SVG Sparkline --}}
+        <div class="mt-3 h-6 opacity-60">
+            <svg viewBox="0 0 120 28" class="w-full h-full" preserveAspectRatio="none">
+                <defs>
+                    <linearGradient id="rk-{{$ri}}" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="{{$rk['color']}}" stop-opacity="0.25"/>
+                        <stop offset="100%" stop-color="{{$rk['color']}}" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+                <polygon fill="url(#rk-{{$ri}})" points="0,28 {{$rk['pts']}} 120,28" />
+                <polyline fill="none" stroke="{{$rk['color']}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="{{$rk['pts']}}" />
+            </svg>
         </div>
-        <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight">{{ $totalCampanas }}</p>
-        <p class="text-[10px] text-gray-400 font-bold mt-1">Total organizadas</p>
     </div>
-    <div class="glass-card p-5 group">
-        <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-[0_4px_15px_rgba(251,191,36,0.4)] text-white group-hover:scale-110 transition-transform">
-                <span class="material-symbols-outlined text-[20px]">location_on</span>
-            </div>
-            <span class="text-[11px] text-gray-500 uppercase font-black tracking-widest">Puntos</span>
-        </div>
-        <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight">{{ $totalPuntos }}</p>
-        <p class="text-[10px] text-gray-400 font-bold mt-1">Centros de acopio</p>
-    </div>
-    <div class="glass-card p-5 group">
-        <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-[0_4px_15px_rgba(192,132,252,0.4)] text-white group-hover:scale-110 transition-transform">
-                <span class="material-symbols-outlined text-[20px]">event</span>
-            </div>
-            <span class="text-[11px] text-gray-500 uppercase font-black tracking-widest">Eventos</span>
-        </div>
-        <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight">{{ $totalEventos }}</p>
-        <p class="text-[10px] text-gray-400 font-bold mt-1">Programados</p>
-    </div>
+    @endforeach
 </div>
 
 {{-- ========== REPORT MODULES ========== --}}
