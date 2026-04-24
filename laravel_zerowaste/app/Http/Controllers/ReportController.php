@@ -15,31 +15,32 @@ class ReportController extends Controller
     {
         $search = $request->input('search');
         $categoria = $request->input('categoria');
-        $hasFilters = $search || $categoria || $request->has('start_date') || $request->has('fecha_inicio');
+        $hasFilters = $search || $categoria;
 
         if (!$hasFilters) {
-            $totalUsuarios = 0;
-            $totalCampanas = 0;
-            $totalPuntos = 0;
-            $totalEventos = 0;
+            // Sin filtros activos: mostrar totales generales
+            $totalUsuarios = User::count();
+            $totalCampanas = Campaign::count();
+            $totalPuntos = Location::count();
+            $totalEventos = \App\Models\Evento::count();
         } else {
-            $uQ = clone User::query();
+            $uQ = User::query();
             if ($search) $uQ->where(function($q) use ($search) { $q->where('nombre', 'ilike', "%{$search}%")->orWhere('email', 'ilike', "%{$search}%"); });
             if ($categoria === 'admins') $uQ->where('is_admin', true);
             else if ($categoria === 'users') $uQ->where('is_admin', false);
             $totalUsuarios = $uQ->count();
 
-            $cQ = clone Campaign::query();
+            $cQ = Campaign::query();
             if ($search) $cQ->where(function($q) use ($search) { $q->where('nombre', 'ilike', "%{$search}%")->orWhere('descripcion', 'ilike', "%{$search}%"); });
             if ($categoria) $cQ->where('tipo_etiqueta', 'ilike', "%{$categoria}%");
             $totalCampanas = $cQ->count();
 
-            $pQ = clone Location::query();
+            $pQ = Location::query();
             if ($search) $pQ->where(function($q) use ($search) { $q->where('nombre', 'ilike', "%{$search}%")->orWhere('direccion', 'ilike', "%{$search}%"); });
             if ($categoria) $pQ->where('tipo', 'ilike', "%{$categoria}%");
             $totalPuntos = $pQ->count();
 
-            $eQ = clone \App\Models\Evento::query();
+            $eQ = \App\Models\Evento::query();
             if ($search) $eQ->where('titulo', 'ilike', "%{$search}%");
             $totalEventos = $eQ->count();
         }
@@ -54,34 +55,36 @@ class ReportController extends Controller
         $request->validate([
             'tipo' => 'required|in:usuarios,campanas,mapa,eventos',
             'formato' => 'required|in:pdf,xlsx,docx,preview',
-            'fecha_inicio' => 'required|date',
-            'fecha_fin' => 'required|date|after_or_equal:fecha_inicio',
+            'fecha_inicio' => 'nullable|date',
+            'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
         ], [
             'tipo.required' => 'El tipo de reporte es obligatorio.',
             'tipo.in' => 'El tipo de reporte es inválido.',
             'formato.required' => 'El formato es obligatorio.',
-            'formato.in' => 'El formato debe ser pdf, xlsx, docx o preview.',
             'formato.in' => 'El formato debe ser pdf, xlsx, docx o preview.',
             'fecha_fin.after_or_equal' => 'La fecha final debe ser posterior o igual a la de inicio.',
         ]);
 
         $tipo = $request->input('tipo');
         $formato = $request->input('formato');
-        $fechaInicio = $request->input('fecha_inicio') . ' 00:00:00';
-        $fechaFin = $request->input('fecha_fin') . ' 23:59:59';
         $search = $request->input('search');
         $categoria = $request->input('categoria');
+        
+        $fechaInicio = $request->input('fecha_inicio') ? $request->input('fecha_inicio') . ' 00:00:00' : null;
+        $fechaFin = $request->input('fecha_fin') ? $request->input('fecha_fin') . ' 23:59:59' : null;
+        $hasDates = $fechaInicio && $fechaFin;
         
         $data = [
             'tipo' => $tipo,
             'fecha_generada' => Carbon::now('America/Mexico_City')->format('d/m/Y - h:i A'),
-            'rango_inicio' => Carbon::parse($request->input('fecha_inicio'))->format('d M Y'),
-            'rango_fin' => Carbon::parse($request->input('fecha_fin'))->format('d M Y'),
+            'rango_inicio' => $hasDates ? Carbon::parse($request->input('fecha_inicio'))->format('d M Y') : 'Inicio',
+            'rango_fin' => $hasDates ? Carbon::parse($request->input('fecha_fin'))->format('d M Y') : 'Actual',
         ];
 
         // Recolectar datos según el tipo
         if ($tipo === 'usuarios') {
-            $query = User::query()->whereBetween('created_at', [$fechaInicio, $fechaFin]);
+            $query = User::query();
+            if ($hasDates) $query->whereBetween('created_at', [$fechaInicio, $fechaFin]);
             if ($search) {
                 $query->where(function($q) use ($search) {
                     $q->where('nombre', 'ilike', "%{$search}%")->orWhere('email', 'ilike', "%{$search}%");
@@ -95,7 +98,8 @@ class ReportController extends Controller
             $data['titulo'] = "Reporte de Usuarios Registrados";
             $data['total'] = count($data['registros']);
         } elseif ($tipo === 'campanas') {
-            $query = Campaign::query()->whereBetween('created_at', [$fechaInicio, $fechaFin]);
+            $query = Campaign::query();
+            if ($hasDates) $query->whereBetween('created_at', [$fechaInicio, $fechaFin]);
             if ($search) {
                 $query->where(function($q) use ($search) {
                     $q->where('nombre', 'ilike', "%{$search}%")->orWhere('descripcion', 'ilike', "%{$search}%")->orWhere('lugar', 'ilike', "%{$search}%");
@@ -108,7 +112,8 @@ class ReportController extends Controller
             $data['titulo'] = "Reporte de Campañas Realizadas";
             $data['total'] = count($data['registros']);
         } elseif ($tipo === 'mapa') {
-            $query = Location::query()->whereBetween('created_at', [$fechaInicio, $fechaFin]);
+            $query = Location::query();
+            if ($hasDates) $query->whereBetween('created_at', [$fechaInicio, $fechaFin]);
             if ($search) {
                 $query->where(function($q) use ($search) {
                     $q->where('nombre', 'ilike', "%{$search}%")->orWhere('direccion', 'ilike', "%{$search}%")->orWhere('materiales', 'ilike', "%{$search}%");
@@ -121,7 +126,8 @@ class ReportController extends Controller
             $data['titulo'] = "Reporte de Puntos de Reciclaje (Mapa)";
             $data['total'] = count($data['registros']);
         } elseif ($tipo === 'eventos') {
-            $query = \App\Models\Evento::query()->whereBetween('fecha_inicio', [$fechaInicio, $fechaFin]);
+            $query = \App\Models\Evento::query();
+            if ($hasDates) $query->whereBetween('fecha_inicio', [$fechaInicio, $fechaFin]);
             if ($search) {
                 $query->where(function($q) use ($search) {
                     $q->where('titulo', 'ilike', "%{$search}%")->orWhere('descripcion', 'ilike', "%{$search}%")->orWhere('lugar', 'ilike', "%{$search}%");

@@ -6,61 +6,38 @@
 @section('content')
 
 
-<div class="flex justify-end mb-6">
-    <a href="{{ route('campanas.create') }}" class="bg-primary hover:bg-[#00c281] text-secondary font-black py-3 px-8 rounded-full shadow-[0_4px_20px_rgba(0,224,150,0.3)] hover:shadow-[0_6px_25px_rgba(0,224,150,0.5)] flex items-center gap-2 transition-all hover:-translate-y-1">
-        <span class="material-symbols-outlined text-[20px]">add_circle</span>
-        <span>Nueva Campaña</span>
+<div class="page-header">
+    <h2>Campañas</h2>
+    <a href="{{ route('campanas.create') }}" class="btn-primary">
+        <span class="material-symbols-outlined text-lg">add_circle</span> Nueva Campaña
     </a>
 </div>
 
-<div class="bg-white dark:bg-forest-card rounded-3xl shadow-lg border border-emerald-100 dark:border-emerald-800/50 overflow-hidden">
-    <table class="w-full text-left text-sm">
-        <thead class="bg-emerald-50 dark:bg-emerald-900/30 text-secondary dark:text-emerald-300 font-bold text-xs uppercase tracking-wider">
-            <tr>
-                <th class="p-4">Nombre</th>
-                <th class="p-4">Lugar</th>
-                <th class="p-4">Etiqueta</th>
-                <th class="p-4">Estado</th>
-                <th class="p-4">Link</th>
-                <th class="p-4 text-right">Acciones</th>
-            </tr>
+<div class="glass-card overflow-hidden">
+    <table class="premium-table">
+        <thead>
+            <tr><th>Nombre</th><th>Lugar</th><th>Etiqueta</th><th>Estado</th><th>Link</th><th class="text-right">Acciones</th></tr>
         </thead>
         <tbody>
             @forelse ($campaigns as $camp)
-            <tr class="border-b border-emerald-50 dark:border-emerald-900/30 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-colors">
-                <td class="p-4 font-bold dark:text-white">{{ $camp->nombre }}</td>
-                <td class="p-4 text-gray-500 dark:text-gray-400 text-xs">{{ $camp->lugar ?? 'N/A' }}</td>
-                <td class="p-4">
-                    <span class="px-3 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded-full text-xs font-bold">{{ $camp->tipo_etiqueta ?? 'General' }}</span>
-                </td>
-                <td class="p-4">
+            <tr>
+                <td class="font-bold text-sm text-[#064E3B] dark:text-white">{{ $camp->nombre }}</td>
+                <td class="text-gray-400 text-xs">{{ $camp->lugar ?? '—' }}</td>
+                <td><span class="badge-sm bg-amber-500/10 text-amber-600 dark:text-amber-400">{{ $camp->tipo_etiqueta ?? 'General' }}</span></td>
+                <td>
                     @if($camp->activa)
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/20 text-[11px] font-black uppercase tracking-wider">
-                            <div class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div> Activa
-                        </div>
+                        <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span class="text-xs font-bold text-emerald-500">Activa</span></span>
                     @else
-                        <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-500/10 text-red-700 dark:text-red-400 border border-red-500/20 text-[11px] font-black uppercase tracking-wider">
-                            <div class="w-1.5 h-1.5 rounded-full bg-red-500"></div> Inactiva
-                        </div>
+                        <span class="flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span><span class="text-xs font-bold text-red-500">Inactiva</span></span>
                     @endif
                 </td>
-                <td class="p-4">
-                    @if($camp->link_evento)
-                    <a href="{{ $camp->link_evento }}" target="_blank" class="text-primary text-xs font-bold hover:underline">Ver →</a>
-                    @else
-                    <span class="text-gray-300 dark:text-gray-600 text-xs">—</span>
-                    @endif
-                </td>
-                <td class="p-4 text-right">
-                    <div class="flex items-center justify-end gap-1.5">
-                        <a href="{{ route('campanas.edit', $camp) }}" class="w-9 h-9 rounded-xl bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/25" title="Editar campaña">
-                            <span class="material-symbols-outlined text-[18px]">edit</span>
-                        </a>
-                        <form action="{{ route('campanas.destroy', $camp) }}" method="POST" class="inline" onsubmit="return confirm('¿Eliminar esta campaña?')">
+                <td>@if($camp->link_evento)<a href="{{ $camp->link_evento }}" target="_blank" class="text-emerald-500 text-xs font-bold hover:underline">Ver →</a>@else<span class="text-gray-300 text-xs">—</span>@endif</td>
+                <td class="text-right">
+                    <div class="flex items-center justify-end gap-1">
+                        <a href="{{ route('campanas.edit', $camp) }}" class="w-8 h-8 rounded-lg bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white flex items-center justify-center transition-all"><span class="material-symbols-outlined text-[16px]">edit</span></a>
+                        <form action="{{ route('campanas.destroy', $camp) }}" method="POST" class="inline" onsubmit="return confirm('¿Eliminar?')">
                             @csrf @method('DELETE')
-                            <button type="submit" class="w-9 h-9 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-110 hover:shadow-lg hover:shadow-red-500/25" title="Eliminar campaña">
-                                <span class="material-symbols-outlined text-[18px]">delete</span>
-                            </button>
+                            <button type="submit" class="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-all"><span class="material-symbols-outlined text-[16px]">delete</span></button>
                         </form>
                     </div>
                 </td>

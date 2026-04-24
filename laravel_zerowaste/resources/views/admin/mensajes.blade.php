@@ -98,38 +98,34 @@
 </div>
 @endif
 
-<div class="bg-white dark:bg-forest-card rounded-3xl shadow-lg border border-emerald-100 dark:border-emerald-800/50 overflow-hidden">
-    <table class="w-full text-left text-sm">
-        <thead class="bg-emerald-50 dark:bg-emerald-900/30 text-[#064E3B] dark:text-emerald-200 font-bold text-xs uppercase tracking-wider">
-            <tr>
-                <th class="p-4">Nombre</th>
-                <th class="p-4">Email</th>
-                <th class="p-4">Ubicación</th>
-                <th class="p-4">Mensaje</th>
-                <th class="p-4">Fecha</th>
-                <th class="p-4">Estado</th>
-                <th class="p-4">Acción</th>
-            </tr>
+<div class="page-header"><h2>Mensajes de Contacto</h2></div>
+
+<div class="glass-card overflow-hidden">
+    <table class="premium-table">
+        <thead>
+            <tr><th>Nombre</th><th>Email</th><th>Ubicación</th><th>Mensaje</th><th>Fecha</th><th>Estado</th><th>Acción</th></tr>
         </thead>
-        <tbody class="dark:text-emerald-100">
+        <tbody>
             @forelse ($mensajes as $msg)
-            <tr class="border-b border-emerald-50 dark:border-emerald-800/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-900/20 transition-colors">
-                <td class="p-4 font-bold">{{ $msg->nombre }}</td>
-                <td class="p-4 text-gray-600 dark:text-gray-400">{{ $msg->email }}</td>
-                <td class="p-4 text-gray-500 dark:text-gray-400 text-xs">{{ $msg->ubicacion ?? 'N/A' }}</td>
-                <td class="p-4 text-gray-700 dark:text-gray-300 max-w-[300px] truncate" title="{{ $msg->mensaje }}">{{ mb_strimwidth($msg->mensaje, 0, 40, '...') }}</td>
-                <td class="p-4 text-gray-400 dark:text-gray-500 text-xs">{{ $msg->created_at ? $msg->created_at->format('d M Y H:i') : '' }}</td>
-                <td class="p-4">
-                    <span class="px-3 py-1 rounded-full text-xs font-bold 
-                        {{ $msg->estado === 'pendiente' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400' : 
-                          ($msg->estado === 'revisado' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400') }}">
-                        {{ ucfirst($msg->estado) }}
-                    </span>
+            <tr>
+                <td class="font-bold text-sm text-[#064E3B] dark:text-white">{{ $msg->nombre }}</td>
+                <td class="text-gray-400 text-xs">{{ $msg->email }}</td>
+                <td class="text-gray-400 text-xs">{{ $msg->ubicacion ?? '—' }}</td>
+                <td class="text-gray-500 dark:text-gray-400 max-w-[250px] truncate text-xs" title="{{ $msg->mensaje }}">{{ mb_strimwidth($msg->mensaje, 0, 40, '...') }}</td>
+                <td class="text-gray-400 text-xs">{{ $msg->created_at ? $msg->created_at->format('d M Y H:i') : '' }}</td>
+                <td>
+                    @if($msg->estado === 'pendiente')
+                        <span class="badge-sm bg-amber-500/10 text-amber-600 dark:text-amber-400">Pendiente</span>
+                    @elseif($msg->estado === 'revisado')
+                        <span class="badge-sm bg-blue-500/10 text-blue-600 dark:text-blue-400">Revisado</span>
+                    @else
+                        <span class="badge-sm bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">{{ ucfirst($msg->estado) }}</span>
+                    @endif
                 </td>
-                <td class="p-4">
-                    <button onclick="openReplyModal({{ $msg->id }}, '{{ addslashes($msg->nombre) }}')" class="text-xs {{ $msg->estado === 'respondido' ? 'bg-gray-500 hover:bg-gray-600' : 'bg-emerald-500 hover:bg-emerald-600' }} text-white px-4 py-2 rounded-xl font-bold transition-all flex items-center gap-1">
-                        <span class="material-symbols-outlined text-[16px]">{{ $msg->estado === 'respondido' ? 'forum' : 'reply' }}</span> 
-                        {{ $msg->estado === 'respondido' ? 'Ver Conversación' : 'Responder' }}
+                <td>
+                    <button onclick="openReplyModal({{ $msg->id }}, '{{ addslashes($msg->nombre) }}')" class="btn-primary text-xs py-1.5 px-3">
+                        <span class="material-symbols-outlined text-[14px]">{{ $msg->estado === 'respondido' ? 'forum' : 'reply' }}</span>
+                        {{ $msg->estado === 'respondido' ? 'Ver' : 'Responder' }}
                     </button>
                 </td>
             </tr>
@@ -143,8 +139,8 @@
 </div>
 
 {{-- Modal de Conversación --}}
-<div id="replyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden text-left">
-    <div class="bg-white dark:bg-forest-card rounded-[2rem] p-8 max-w-lg w-full shadow-2xl transform transition-all max-h-[90vh] flex flex-col border-2 border-emerald-100 dark:border-emerald-800/50">
+<div id="replyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden text-left">
+    <div class="glass-card p-8 max-w-lg w-full shadow-2xl max-h-[90vh] flex flex-col">
         <div class="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-emerald-800/50 pb-4 shrink-0">
             <h3 class="text-xl font-black text-[#064E3B] dark:text-white flex items-center gap-2" id="replyModalTitle">
                 <span class="material-symbols-outlined text-emerald-500">forum</span> Conversación
@@ -171,9 +167,9 @@
                 @enderror
             </div>
             <div class="flex justify-end gap-3">
-                <button type="button" onclick="closeReplyModal()" class="px-5 py-2.5 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/5 transition-colors">Cancelar</button>
-                <button type="submit" class="bg-[#00E096] hover:bg-emerald-400 text-secondary font-black px-6 py-2.5 rounded-xl shadow-lg flex items-center gap-2 transition-all hover:-translate-y-0.5">
-                    <span class="material-symbols-outlined text-[18px]">send</span> Enviar
+                <button type="button" onclick="closeReplyModal()" class="btn-secondary">Cancelar</button>
+                <button type="submit" class="btn-primary">
+                    <span class="material-symbols-outlined text-[16px]">send</span> Enviar
                 </button>
             </div>
         </form>

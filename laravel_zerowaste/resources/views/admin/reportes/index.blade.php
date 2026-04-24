@@ -50,62 +50,6 @@
         padding: 0 4px;
     }
 
-    /* Menús desplegables de filtro */
-    .filter-btn {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        background: rgba(0, 224, 150, 0.03);
-        border: 1.5px solid rgba(16, 185, 129, 0.15);
-        border-radius: 14px;
-        padding: 0 18px;
-        height: 46px;
-        font-size: 13px;
-        font-weight: 700;
-        color: #064E3B;
-        cursor: pointer;
-        transition: all 0.2s;
-        user-select: none;
-    }
-    .dark .filter-btn { background: rgba(255,255,255,0.03); border-color: rgba(255,255,255,0.08); color: #fff; }
-    .filter-btn:hover { border-color: rgba(16, 185, 129, 0.3); background: rgba(0, 224, 150, 0.06); }
-    .dark .filter-btn:hover { border-color: rgba(255,255,255,0.15); background: rgba(255,255,255,0.05); }
-
-    .filter-dropdown {
-        position: absolute;
-        top: calc(100% + 8px);
-        left: 0;
-        min-width: 200px;
-        background: #fff;
-        border: 1px solid #E5E7EB;
-        border-radius: 16px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
-        z-index: 100;
-        overflow: hidden;
-        animation: dropIn 0.15s ease-out;
-    }
-    .dark .filter-dropdown { background: #0F2A20; border-color: rgba(255,255,255,0.08); box-shadow: 0 20px 60px rgba(0,0,0,0.6); }
-    .filter-dropdown button {
-        width: 100%;
-        padding: 12px 18px;
-        text-align: left;
-        font-size: 13px;
-        font-weight: 600;
-        color: #6B7280;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        transition: all 0.15s;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-    }
-    .dark .filter-dropdown button { color: #aaa; }
-    .filter-dropdown button:hover { background: rgba(0, 224, 150, 0.06); color: #064E3B; }
-    .dark .filter-dropdown button:hover { background: rgba(255,255,255,0.04); color: #fff; }
-    .filter-dropdown button.active-item { color: #059669; background: rgba(0, 224, 150, 0.06); }
-    .dark .filter-dropdown button.active-item { color: #34D399; background: rgba(52, 211, 153, 0.06); }
-
     /* Etiqueta de filtro activo (Verde) */
     .filter-badge {
         display: inline-flex;
@@ -188,12 +132,12 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Menús desplegables
     window.toggleDD = function(id) {
-        ['period-dd', 'cat-dd'].forEach(dd => { if (dd !== id) document.getElementById(dd)?.classList.add('hidden'); });
+        ['period-dd', 'cat-dd', 'gran-dd'].forEach(dd => { if (dd !== id) document.getElementById(dd)?.classList.add('hidden'); });
         document.getElementById(id)?.classList.toggle('hidden');
     };
 
     document.addEventListener('click', (e) => {
-        ['period-wrap', 'cat-wrap'].forEach(wId => {
+        ['period-wrap', 'cat-wrap', 'gran-wrap'].forEach(wId => {
             const w = document.getElementById(wId);
             if (w && !w.contains(e.target)) w.querySelector('.filter-dropdown')?.classList.add('hidden');
         });
@@ -224,19 +168,47 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
+    let currentGranularity = 'dia';
+
+    window.setGranularity = function(mode) {
+        currentGranularity = mode;
+        document.getElementById('gran-dia').classList.toggle('active-item', mode === 'dia');
+        document.getElementById('gran-mes').classList.toggle('active-item', mode === 'mes');
+        document.getElementById('gran-label').textContent = mode === 'dia' ? 'Por Día' : 'Por Mes';
+        document.getElementById('gran-dd').classList.add('hidden');
+        // Update period dropdown options
+        document.getElementById('period-opts-dia').classList.toggle('hidden', mode !== 'dia');
+        document.getElementById('period-opts-mes').classList.toggle('hidden', mode !== 'mes');
+        // Reset period to default
+        if (mode === 'dia') { setPeriodPreset('hoy', 'Hoy'); }
+        else { setPeriodPreset('3m', 'Últimos 3 meses'); }
+    };
+
     window.setPeriodPreset = function(val, label) {
         document.getElementById('period-label').textContent = label;
         document.getElementById('period-dd').classList.add('hidden');
-        document.querySelectorAll('#period-dd button').forEach(b => b.classList.remove('active-item'));
-        event.target.closest('button')?.classList.add('active-item');
+        document.querySelectorAll('#period-dd button.preset-btn').forEach(b => b.classList.remove('active-item'));
+        if (event && event.target) event.target.closest('button')?.classList.add('active-item');
 
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-        if (val === 'hoy') { dateStart = new Date(today); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
-        else if (val === '7d') { dateStart = new Date(today); dateStart.setDate(dateStart.getDate() - 6); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
-        else if (val === '30d') { dateStart = new Date(today); dateStart.setDate(dateStart.getDate() - 29); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
-        else if (val === '90d') { dateStart = new Date(today); dateStart.setDate(dateStart.getDate() - 89); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
+        if (val === 'custom') {
+            dateStart = null; dateEnd = null;
+            if (pickerStart) { pickerStart.clear(); document.getElementById('wrap-start').classList.remove('active'); }
+            if (pickerEnd) { pickerEnd.clear(); document.getElementById('wrap-end').classList.remove('active'); }
+            syncBadge(); return;
+        }
+        else if (val === 'hoy') { dateStart = new Date(today); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
+        else if (val === 'ayer') { dateStart = new Date(today); dateStart.setDate(dateStart.getDate()-1); dateEnd = new Date(dateStart); dateEnd.setHours(23,59,59,999); }
+        else if (val === '7d') { dateStart = new Date(today); dateStart.setDate(dateStart.getDate()-6); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
+        else if (val === '30d') { dateStart = new Date(today); dateStart.setDate(dateStart.getDate()-29); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
+        else if (val === '90d') { dateStart = new Date(today); dateStart.setDate(dateStart.getDate()-89); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
+        else if (val === 'mes_pasado') { dateStart = new Date(now.getFullYear(), now.getMonth()-1, 1); dateEnd = new Date(now.getFullYear(), now.getMonth(), 0); dateEnd.setHours(23,59,59,999); }
+        else if (val === 'mes_actual') { dateStart = new Date(now.getFullYear(), now.getMonth(), 1); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
+        else if (val === '3m') { dateStart = new Date(now.getFullYear(), now.getMonth()-3, now.getDate()); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
+        else if (val === '6m') { dateStart = new Date(now.getFullYear(), now.getMonth()-6, now.getDate()); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
+        else if (val === '12m') { dateStart = new Date(now.getFullYear()-1, now.getMonth(), now.getDate()); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
         else { dateStart = null; dateEnd = null; }
 
         if (dateStart && pickerStart) { pickerStart.setDate(dateStart, false); document.getElementById('wrap-start').classList.add('active'); }
@@ -267,7 +239,11 @@ document.addEventListener("DOMContentLoaded", function() {
         document.querySelector('#cat-dd button:first-child').classList.add('active-item');
         document.getElementById('wrap-start').classList.remove('active');
         document.getElementById('wrap-end').classList.remove('active');
-        document.getElementById('period-label').textContent = 'Últimos 7 días';
+        document.getElementById('period-label').textContent = 'Hoy';
+        currentGranularity = 'dia';
+        document.getElementById('gran-label').textContent = 'Por Día';
+        document.getElementById('period-opts-dia').classList.remove('hidden');
+        document.getElementById('period-opts-mes').classList.add('hidden');
         syncBadge();
         if (typeof Swal !== 'undefined') {
             const isDark = document.documentElement.classList.contains('dark');
@@ -395,7 +371,7 @@ document.addEventListener("DOMContentLoaded", function() {
     };
 
     // Inicializar con preajuste de 7 días
-    setPeriodPreset('7d', 'Últimos 7 días');
+    setPeriodPreset('hoy', 'Hoy');
 });
 </script>
 @endpush
@@ -416,7 +392,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 
 {{-- ========== PREMIUM SEARCH BAR & CATEGORIES ========== --}}
-<form action="{{ route('reportes.index') }}" method="GET" id="filter-form" class="bg-white dark:bg-forest-card rounded-[1.5rem] shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-emerald-50 dark:border-emerald-800/40 p-2 flex flex-col md:flex-row items-center gap-2 mb-6 transition-all focus-within:shadow-[0_8px_30px_rgba(0,224,150,0.15)] focus-within:border-emerald-300 dark:focus-within:border-emerald-500/50">
+<form action="{{ route('reportes.index') }}" method="GET" id="filter-form" class="glass-card p-2 flex flex-col md:flex-row items-center gap-2 mb-6">
     <div class="flex items-center flex-1 w-full pl-4 pr-2">
         <span class="material-symbols-outlined text-emerald-400 dark:text-emerald-500 text-[24px]">search</span>
         <input type="text" name="search" id="search-report" value="{{ request('search') }}" placeholder="Buscar por nombre, descripción, lugar..." class="w-full bg-transparent border-none focus:ring-0 text-gray-700 dark:text-gray-200 placeholder-gray-400 font-semibold text-[15px] outline-none px-4 py-3">
@@ -450,20 +426,49 @@ document.addEventListener("DOMContentLoaded", function() {
 
 {{-- ========== PROFESSIONAL FILTER BAR ========== --}}
 <div class="flex flex-wrap items-center gap-3 mb-8">
+    {{-- Granularity Toggle (Por Día / Por Mes) --}}
+    <div class="relative" id="gran-wrap">
+        <button onclick="toggleDD('gran-dd')" class="filter-btn">
+            <span class="material-symbols-outlined text-gray-400 text-[20px]">bar_chart</span>
+            <span id="gran-label">Por Día</span>
+            <span class="material-symbols-outlined text-gray-500 text-[16px]">expand_more</span>
+        </button>
+        <div id="gran-dd" class="filter-dropdown hidden">
+            <button id="gran-dia" onclick="setGranularity('dia')" class="active-item"><span class="material-symbols-outlined text-[18px] text-blue-400">today</span> Por Día</button>
+            <button id="gran-mes" onclick="setGranularity('mes')"><span class="material-symbols-outlined text-[18px] text-purple-400">calendar_month</span> Por Mes</button>
+        </div>
+    </div>
+
     {{-- Period Dropdown --}}
     <div class="relative" id="period-wrap">
         <button onclick="toggleDD('period-dd')" class="filter-btn">
             <span class="material-symbols-outlined text-gray-400 text-[20px]">calendar_month</span>
-            <span id="period-label">Últimos 7 días</span>
+            <span id="period-label">Hoy</span>
             <span class="material-symbols-outlined text-gray-500 text-[16px]">expand_more</span>
         </button>
-        <div id="period-dd" class="filter-dropdown hidden">
-            <button onclick="setPeriodPreset('hoy','Hoy')"><span class="material-symbols-outlined text-[18px] text-amber-400">light_mode</span> Hoy</button>
-            <button onclick="setPeriodPreset('7d','Últimos 7 días')" class="active-item"><span class="material-symbols-outlined text-[18px] text-blue-400">date_range</span> Últimos 7 días</button>
-            <button onclick="setPeriodPreset('30d','Últimos 30 días')"><span class="material-symbols-outlined text-[18px] text-emerald-400">calendar_month</span> Últimos 30 días</button>
-            <button onclick="setPeriodPreset('90d','Últimos 90 días')"><span class="material-symbols-outlined text-[18px] text-purple-400">event_note</span> Últimos 90 días</button>
-            <div style="border-top: 1px solid rgba(0,0,0,0.05); margin: 2px 0;"></div>
-            <button onclick="setPeriodPreset('todos','Todos')"><span class="material-symbols-outlined text-[18px] text-gray-400">all_inclusive</span> Todos los registros</button>
+        <div id="period-dd" class="filter-dropdown hidden" style="min-width: 220px;">
+            {{-- Daily options --}}
+            <div id="period-opts-dia">
+                <button class="preset-btn active-item" onclick="setPeriodPreset('hoy','Hoy')"><span class="material-symbols-outlined text-[18px] text-amber-400">light_mode</span> Hoy</button>
+                <button class="preset-btn" onclick="setPeriodPreset('ayer','Ayer')"><span class="material-symbols-outlined text-[18px] text-orange-400">history</span> Ayer</button>
+                <div style="border-top: 1px solid rgba(0,0,0,0.05); margin: 2px 0;"></div>
+                <button class="preset-btn" onclick="setPeriodPreset('7d','Últimos 7 días')"><span class="material-symbols-outlined text-[18px] text-blue-400">date_range</span> Últimos 7 días</button>
+                <button class="preset-btn" onclick="setPeriodPreset('30d','Últimos 30 días')"><span class="material-symbols-outlined text-[18px] text-emerald-400">calendar_month</span> Últimos 30 días</button>
+                <button class="preset-btn" onclick="setPeriodPreset('90d','Últimos 90 días')"><span class="material-symbols-outlined text-[18px] text-purple-400">event_note</span> Últimos 90 días</button>
+                <div style="border-top: 1px solid rgba(0,0,0,0.05); margin: 2px 0;"></div>
+                <button class="preset-btn" onclick="setPeriodPreset('mes_pasado','Mes pasado')"><span class="material-symbols-outlined text-[18px] text-gray-400">undo</span> Mes pasado</button>
+                <button class="preset-btn" onclick="setPeriodPreset('mes_actual','Mes actual')"><span class="material-symbols-outlined text-[18px] text-emerald-500">event_available</span> Mes actual</button>
+                <div style="border-top: 1px solid rgba(0,0,0,0.05); margin: 2px 0;"></div>
+                <button class="preset-btn" onclick="setPeriodPreset('custom','Fecha Personalizada')"><span class="material-symbols-outlined text-[18px] text-rose-400">edit_calendar</span> Fecha Personalizada</button>
+            </div>
+            {{-- Monthly options --}}
+            <div id="period-opts-mes" class="hidden">
+                <button class="preset-btn active-item" onclick="setPeriodPreset('3m','Últimos 3 meses')"><span class="material-symbols-outlined text-[18px] text-blue-400">date_range</span> Últimos 3 meses</button>
+                <button class="preset-btn" onclick="setPeriodPreset('6m','Últimos 6 meses')"><span class="material-symbols-outlined text-[18px] text-emerald-400">calendar_month</span> Últimos 6 meses</button>
+                <button class="preset-btn" onclick="setPeriodPreset('12m','Últimos 12 meses')"><span class="material-symbols-outlined text-[18px] text-purple-400">event_note</span> Últimos 12 meses</button>
+                <div style="border-top: 1px solid rgba(0,0,0,0.05); margin: 2px 0;"></div>
+                <button class="preset-btn" onclick="setPeriodPreset('custom','Fecha Personalizada')"><span class="material-symbols-outlined text-[18px] text-rose-400">edit_calendar</span> Fecha Personalizada</button>
+            </div>
         </div>
     </div>
 
@@ -496,7 +501,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 {{-- ========== LIVE KPIs ========== --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-    <div class="bg-white dark:bg-white/[0.02] border-2 border-emerald-100 dark:border-white/5 rounded-2xl p-6 hover:border-emerald-300 dark:hover:border-emerald-500/20 transition group">
+    <div class="glass-card p-5 group">
         <div class="flex items-center gap-3 mb-4">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-[0_4px_15px_rgba(52,211,153,0.4)] text-white group-hover:scale-110 transition-transform">
                 <span class="material-symbols-outlined text-[20px]">group</span>
@@ -506,7 +511,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight">{{ $totalUsuarios }}</p>
         <p class="text-[10px] text-gray-400 font-bold mt-1">Registrados en plataforma</p>
     </div>
-    <div class="bg-white dark:bg-white/[0.02] border-2 border-emerald-100 dark:border-white/5 rounded-2xl p-6 hover:border-blue-300 dark:hover:border-blue-500/20 transition group">
+    <div class="glass-card p-5 group">
         <div class="flex items-center gap-3 mb-4">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-[0_4px_15px_rgba(96,165,250,0.4)] text-white group-hover:scale-110 transition-transform">
                 <span class="material-symbols-outlined text-[20px]">military_tech</span>
@@ -516,7 +521,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight">{{ $totalCampanas }}</p>
         <p class="text-[10px] text-gray-400 font-bold mt-1">Total organizadas</p>
     </div>
-    <div class="bg-white dark:bg-white/[0.02] border-2 border-emerald-100 dark:border-white/5 rounded-2xl p-6 hover:border-amber-300 dark:hover:border-yellow-500/20 transition group">
+    <div class="glass-card p-5 group">
         <div class="flex items-center gap-3 mb-4">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-[0_4px_15px_rgba(251,191,36,0.4)] text-white group-hover:scale-110 transition-transform">
                 <span class="material-symbols-outlined text-[20px]">location_on</span>
@@ -526,7 +531,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight">{{ $totalPuntos }}</p>
         <p class="text-[10px] text-gray-400 font-bold mt-1">Centros de acopio</p>
     </div>
-    <div class="bg-white dark:bg-white/[0.02] border-2 border-emerald-100 dark:border-white/5 rounded-2xl p-6 hover:border-purple-300 dark:hover:border-pink-500/20 transition group">
+    <div class="glass-card p-5 group">
         <div class="flex items-center gap-3 mb-4">
             <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center shadow-[0_4px_15px_rgba(192,132,252,0.4)] text-white group-hover:scale-110 transition-transform">
                 <span class="material-symbols-outlined text-[20px]">event</span>
@@ -542,7 +547,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 
     {{-- 1. Usuarios --}}
-    <div class="report-card bg-gradient-to-br from-white to-emerald-50/50 dark:from-[#0F2A20] dark:to-[#064E3B]/40 rounded-[2rem] p-8 border border-white dark:border-emerald-800/30 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col justify-between group overflow-hidden relative min-h-[280px]">
+    <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px]">
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-emerald-400/20 to-teal-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">
@@ -565,7 +570,7 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     {{-- 2. Campañas --}}
-    <div class="report-card bg-gradient-to-br from-white to-blue-50/50 dark:from-[#0F2A20] dark:to-blue-900/20 rounded-[2rem] p-8 border border-white dark:border-blue-900/30 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col justify-between group overflow-hidden relative min-h-[280px]">
+    <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px]">
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-blue-400/20 to-cyan-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">
@@ -588,7 +593,7 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     {{-- 3. Mapa --}}
-    <div class="report-card bg-gradient-to-br from-white to-amber-50/50 dark:from-[#0F2A20] dark:to-amber-900/20 rounded-[2rem] p-8 border border-white dark:border-amber-900/30 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col justify-between group overflow-hidden relative min-h-[280px]">
+    <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px]">
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-amber-400/20 to-orange-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">
@@ -611,7 +616,7 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     {{-- 4. Eventos --}}
-    <div class="report-card bg-gradient-to-br from-white to-purple-50/50 dark:from-[#0F2A20] dark:to-purple-900/20 rounded-[2rem] p-8 border border-white dark:border-purple-900/30 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col justify-between group overflow-hidden relative min-h-[280px]">
+    <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px]">
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-purple-400/20 to-pink-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">

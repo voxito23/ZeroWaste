@@ -30,8 +30,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 # Funciones auxiliares de autenticación
 
 def hash_password(password: str) -> str:
-    """Genera hash de contraseña con pbkdf2:sha256, compatible con Flask."""
-    return generate_password_hash(password, method='pbkdf2:sha256', salt_length=8)
+    """Genera hash de contraseña con bcrypt, compatible con Flask y Laravel ($2y$)."""
+    hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+    # Usar prefijo $2y$ para compatibilidad con Laravel (bcrypt de PHP usa $2y$)
+    return hashed.decode("utf-8").replace("$2b$", "$2y$", 1)
 
 
 def _verify_bcrypt(plain_password: str, hashed_password: str) -> bool:

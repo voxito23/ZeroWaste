@@ -159,7 +159,30 @@ def login():
             return jsonify({'success': False, 'is_blocked': True, 'error': 'Usuario bloqueado por subir contenido indebido. Contáctanos a administrador@zerowaste-qro.com para dar seguimiento a tu caso.'}), 403
             
         import bcrypt
-        if isinstance(usuario.password, str) and bcrypt.checkpw(password.encode('utf-8'), usuario.password.replace('$2y$', '$2b$', 1).encode('utf-8')):
+        password_valid = False
+        
+        # Verificar según el tipo de hash almacenado
+        if isinstance(usuario.password, str):
+            if usuario.password.startswith(('$2y$', '$2b$', '$2a$')):
+                # Hash bcrypt (Flask/Laravel nativo)
+                try:
+                    normalized = usuario.password.replace('$2y$', '$2b$', 1)
+                    password_valid = bcrypt.checkpw(password.encode('utf-8'), normalized.encode('utf-8'))
+                except Exception:
+                    password_valid = False
+            elif usuario.password.startswith('pbkdf2:'):
+                # Hash werkzeug/pbkdf2 (creado por FastAPI antiguo)
+                try:
+                    password_valid = check_password_hash(usuario.password, password)
+                    if password_valid:
+                        # Auto-migrar a bcrypt para consistencia
+                        new_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8').replace('$2b$', '$2y$')
+                        usuario.password = new_hash
+                        db.session.commit()
+                except Exception:
+                    password_valid = False
+        
+        if password_valid:
             if remember:
                 session.permanent = True
             else:

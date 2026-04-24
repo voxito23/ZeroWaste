@@ -10,8 +10,15 @@ class UserController extends Controller
 {
     public function index()
     {
-        $usuarios = User::all();
-        return view('admin.usuarios', compact('usuarios'));
+        $allUsers = User::all();
+        $totalCount = $allUsers->count();
+        $adminCount = $allUsers->where('is_admin', true)->count();
+        $userCount  = $allUsers->where('is_admin', false)->count();
+        $blockedCount = $allUsers->where('bloqueado', true)->count();
+
+        $usuarios = User::orderByDesc('created_at')->paginate(6);
+
+        return view('admin.usuarios', compact('usuarios', 'totalCount', 'adminCount', 'userCount', 'blockedCount'));
     }
 
     public function checkEmail(Request $request)

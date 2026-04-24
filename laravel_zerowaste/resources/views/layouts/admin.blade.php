@@ -41,76 +41,76 @@
         };
     </script>
     <style>
-        /* Transiciones suaves para dark mode */
-        * { transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
-        .nav-link { 
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-            border-radius: 0.85rem; 
-            padding: 0.7rem 1rem; 
+        * { transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease; }
+        body { background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 40%, #e0f2fe 100%); }
+        .dark body, body.dark { background: #0B1F18; }
+        .nav-link {
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 0.75rem;
+            padding: 0.6rem 0.85rem;
             position: relative;
-            overflow: hidden;
+            font-size: 13px;
         }
-        /* Efecto Ripple en clic */
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            background: rgba(0, 224, 150, 0.3);
-            border-radius: 50%;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            transform: translate(-50%, -50%);
-            transition: width 0.4s ease-out, height 0.4s ease-out, opacity 0.4s ease-out;
-            opacity: 0;
+        .nav-link:hover { background: rgba(16, 185, 129, 0.08); transform: translateX(3px); }
+        .nav-link.active {
+            background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.06));
+            color: #10B981;
+            font-weight: 800;
+            box-shadow: inset 3px 0 0 #10B981;
         }
-        .nav-link:active::after {
-            width: 300px;
-            height: 300px;
-            opacity: 1;
-            transition: 0s;
-        }
-        .nav-link:hover { 
-            background: rgba(0, 224, 150, 0.08); 
-            transform: translateX(6px); 
-        }
-        .nav-link.active { 
-            background: rgba(0, 224, 150, 0.15); 
-            color: #00E096; 
-            transform: scale(1.02);
-            box-shadow: inset 4px 0 0 #00E096;
-        }
-        /* Animación de entrada a la página */
-        .fade-in-up {
-            animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        /* Interruptor de Modo Oscuro */
-        .theme-toggle { position: relative; width: 48px; height: 26px; border-radius: 9999px; cursor: pointer; }
-        .theme-toggle input { display: none; }
-        .theme-toggle .slider { position: absolute; inset: 0; background: #cbd5e1; border-radius: 9999px; transition: 0.3s; }
-        .theme-toggle .slider::before { content: ''; position: absolute; height: 20px; width: 20px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.3s; }
-        .theme-toggle input:checked + .slider { background: #00E096; }
-        .theme-toggle input:checked + .slider::before { transform: translateX(22px); }
+        .dark .nav-link.active { background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05)); color: #34D399; }
+        .fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) forwards; opacity:0; transform:translateY(20px); }
+        @keyframes fadeInUp { to { opacity:1; transform:translateY(0); } }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(16,185,129,0.2); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(16,185,129,0.35); }
+        /* Shared Premium Components */
+        .glass-card { background:rgba(255,255,255,0.85); backdrop-filter:blur(20px); border:1px solid rgba(0,0,0,0.04); border-radius:1.25rem; transition:all .3s ease; }
+        .dark .glass-card { background:rgba(15,42,32,0.7); border-color:rgba(255,255,255,0.05); }
+        .glass-card:hover { box-shadow:0 12px 40px rgba(0,0,0,0.06); }
+        .dark .glass-card:hover { box-shadow:0 12px 40px rgba(0,0,0,0.25); }
+        .premium-table { width:100%; text-align:left; font-size:0.8125rem; border-collapse:separate; border-spacing:0; }
+        .premium-table thead { font-size:0.6875rem; text-transform:uppercase; letter-spacing:0.05em; font-weight:700; }
+        .premium-table thead th { padding:0.75rem 1rem; color:#6b7280; border-bottom:1px solid rgba(0,0,0,0.05); }
+        .dark .premium-table thead th { color:#6b7280; border-color:rgba(255,255,255,0.05); }
+        .premium-table tbody tr { transition: background .2s ease; }
+        .premium-table tbody tr:hover { background:rgba(16,185,129,0.03); }
+        .dark .premium-table tbody tr:hover { background:rgba(255,255,255,0.02); }
+        .premium-table tbody td { padding:0.75rem 1rem; border-bottom:1px solid rgba(0,0,0,0.03); }
+        .dark .premium-table tbody td { border-color:rgba(255,255,255,0.03); }
+        .badge-sm { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:8px; font-size:10px; font-weight:700; }
+        .filter-btn { display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:10px; font-size:13px; font-weight:600; background:rgba(255,255,255,0.85); backdrop-filter:blur(12px); border:1px solid rgba(0,0,0,0.06); cursor:pointer; transition:all .2s; }
+        .dark .filter-btn { background:rgba(15,42,32,0.7); border-color:rgba(255,255,255,0.06); color:#d1fae5; }
+        .filter-btn:hover { border-color:rgba(16,185,129,0.3); box-shadow:0 4px 12px rgba(0,0,0,0.05); }
+        .filter-dropdown { position:absolute; top:calc(100% + 6px); left:0; min-width:200px; background:rgba(255,255,255,0.95); backdrop-filter:blur(20px); border:1px solid rgba(0,0,0,0.06); border-radius:14px; padding:6px; z-index:50; box-shadow:0 20px 50px rgba(0,0,0,0.1); }
+        .dark .filter-dropdown { background:rgba(15,42,32,0.95); border-color:rgba(255,255,255,0.08); }
+        .filter-dropdown button { display:flex; align-items:center; gap:8px; width:100%; padding:8px 12px; border-radius:10px; font-size:13px; font-weight:600; text-align:left; transition:all .15s; border:none; background:none; cursor:pointer; color:inherit; }
+        .filter-dropdown button:hover { background:rgba(16,185,129,0.08); }
+        .filter-dropdown button.active-item { background:rgba(16,185,129,0.12); color:#10B981; font-weight:700; }
+        .input-premium { padding:9px 14px; border-radius:10px; font-size:13px; font-weight:500; background:rgba(255,255,255,0.85); backdrop-filter:blur(12px); border:1px solid rgba(0,0,0,0.08); transition:all .2s; outline:none; width:100%; }
+        .dark .input-premium { background:rgba(15,42,32,0.7); border-color:rgba(255,255,255,0.08); color:#d1fae5; }
+        .input-premium:focus { border-color:#10B981; box-shadow:0 0 0 3px rgba(16,185,129,0.1); }
+        .btn-primary { display:inline-flex; align-items:center; gap:6px; padding:9px 18px; border-radius:10px; font-size:13px; font-weight:700; background:linear-gradient(135deg,#10B981,#059669); color:#fff; border:none; cursor:pointer; transition:all .25s; box-shadow:0 4px 14px rgba(16,185,129,0.3); }
+        .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(16,185,129,0.4); }
+        .btn-secondary { display:inline-flex; align-items:center; gap:6px; padding:9px 18px; border-radius:10px; font-size:13px; font-weight:700; background:rgba(255,255,255,0.85); backdrop-filter:blur(12px); border:1px solid rgba(0,0,0,0.08); cursor:pointer; transition:all .2s; color:#064E3B; }
+        .dark .btn-secondary { background:rgba(15,42,32,0.7); border-color:rgba(255,255,255,0.08); color:#d1fae5; }
+        .btn-secondary:hover { border-color:rgba(16,185,129,0.3); }
+        .page-header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1.5rem; }
+        .page-header h2 { font-size:1.5rem; font-weight:900; letter-spacing:-0.02em; }
+        .dark .page-header h2 { color:#fff; }
     </style>
     @stack('styles')
 </head>
-<body class="bg-[#ECFDF5] dark:bg-forest-dark text-[#064E3B] dark:text-emerald-100 font-sans flex min-h-screen transition-colors duration-300">
+<body class="dark:bg-forest-dark text-[#064E3B] dark:text-emerald-100 font-sans flex min-h-screen transition-colors duration-300">
 
     <!-- Barra lateral de navegación -->
-    <aside id="sidebar" class="w-64 bg-white/95 dark:bg-forest-card border-r border-emerald-100 dark:border-emerald-900/50 shadow-xl flex flex-col hidden lg:flex transition-all duration-300 ease-in-out relative">
-        <div class="h-24 flex items-center justify-center border-b border-emerald-50 dark:border-emerald-900/50 gap-3">
-            <img src="/static/img/logo.png" alt="ZeroWaste" class="h-10 w-auto" onerror="this.style.display='none'">
-            <span class="font-extrabold text-xl text-secondary dark:text-white">ZEROWASTE</span>
+    <aside id="sidebar" class="w-[250px] bg-white/80 dark:bg-forest-card/90 backdrop-blur-xl border-r border-gray-200/50 dark:border-emerald-900/30 flex flex-col hidden lg:flex transition-all duration-300 ease-in-out relative">
+        <div class="h-16 flex items-center px-5 border-b border-gray-100 dark:border-emerald-900/30 gap-2.5">
+            <img src="/static/img/logo.png" alt="ZeroWaste" class="h-8 w-auto" onerror="this.style.display='none'">
+            <span class="font-black text-base text-secondary dark:text-white tracking-tight">ZeroWaste</span>
         </div>
-        <nav class="p-4 flex flex-col gap-1 flex-1">
+        <nav class="p-3 flex flex-col gap-0.5 flex-1 overflow-y-auto">
             <a href="{{ route('dashboard') }}" class="nav-link flex items-center gap-3 font-bold text-secondary dark:text-emerald-200 {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <span class="material-symbols-outlined text-xl">dashboard</span> Dashboard
             </a>
@@ -171,13 +171,13 @@
         </nav>
     </aside>
 
-    <main class="flex-1 p-4 md:p-6 lg:p-10 flex flex-col overflow-auto w-full transition-all duration-300">
-        <header class="flex justify-between items-center mb-8">
-            <div class="flex items-center gap-4">
-                <button id="sidebar-toggle" class="p-2 rounded-xl bg-white dark:bg-forest-card shadow-sm border border-emerald-100 dark:border-emerald-800/50 text-secondary dark:text-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 transition-colors hidden lg:flex">
+    <main class="flex-1 p-4 md:p-6 lg:p-8 flex flex-col overflow-auto w-full transition-all duration-300">
+        <header class="flex justify-between items-center mb-6">
+            <div class="flex items-center gap-3">
+                <button id="sidebar-toggle" class="p-2 rounded-xl bg-white/80 dark:bg-forest-card/80 backdrop-blur-sm border border-gray-200/50 dark:border-emerald-800/30 text-secondary dark:text-emerald-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 transition-colors hidden lg:flex">
                     <span class="material-symbols-outlined transition-transform duration-300" id="sidebar-icon">menu_open</span>
                 </button>
-                <h1 class="text-3xl font-extrabold dark:text-white truncate">@yield('page_title', 'Dashboard')</h1>
+                <h1 class="text-2xl font-black dark:text-white truncate tracking-tight">@yield('page_title', 'Dashboard')</h1>
             </div>
             <div class="flex items-center gap-3">
                 @php
@@ -199,7 +199,7 @@
                     </div>
                     
                     <!-- Menú Desplegable -->
-                    <div class="absolute right-0 mt-2 w-48 bg-white dark:bg-forest-card rounded-2xl shadow-xl border border-emerald-50 dark:border-emerald-800/50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top-right z-50 overflow-hidden">
+                    <div class="absolute right-0 mt-2 w-48 bg-white/95 dark:bg-forest-card/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 dark:border-emerald-800/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top-right z-50 overflow-hidden">
                         <a href="{{ route('admin.perfil.edit') }}" class="flex items-center gap-2 px-4 py-3 text-sm font-bold text-secondary dark:text-emerald-100 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 transition-colors">
                             <span class="material-symbols-outlined text-lg">manage_accounts</span>
                             Configuración
@@ -236,7 +236,7 @@
         if (sidebarToggle && sidebar) {
             // Restaurar estado guardado
             if (localStorage.getItem('zw-sidebar-collapsed') === 'true') {
-                sidebar.classList.add('-ml-64');
+                sidebar.classList.add('-ml-[250px]');
                 sidebarIcon.textContent = 'menu';
                 sidebarIcon.style.transform = 'scaleX(-1)';
             } else {
@@ -244,8 +244,8 @@
             }
 
             sidebarToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('-ml-64');
-                const isCollapsed = sidebar.classList.contains('-ml-64');
+                sidebar.classList.toggle('-ml-[250px]');
+                const isCollapsed = sidebar.classList.contains('-ml-[250px]');
                 localStorage.setItem('zw-sidebar-collapsed', isCollapsed);
                 
                 if (isCollapsed) {
