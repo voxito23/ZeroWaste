@@ -302,14 +302,34 @@ document.addEventListener("DOMContentLoaded", function() {
         let url = `{{ route('reportes.exportar') }}?tipo=${tipo}&formato=${formato}`;
         if (start) url += `&fecha_inicio=${start}`; if (end) url += `&fecha_fin=${end}`;
         if (search) url += `&search=${encodeURIComponent(search)}`; if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
+        
+        if (formato === 'preview') { window.open(url, '_blank'); return; }
+        
         // Show loading overlay
         const loader = document.getElementById('export-loading');
-        if (formato !== 'preview' && loader) {
-            loader.classList.remove('hidden');
-            loader.classList.add('flex');
-            setTimeout(() => { loader.classList.add('hidden'); loader.classList.remove('flex'); }, 4000);
-        }
-        if (formato === 'preview') window.open(url, '_blank'); else window.location.href = url;
+        if (loader) { loader.classList.remove('hidden'); loader.classList.add('flex'); }
+        
+        // Use fetch+blob to know when download finishes
+        fetch(url)
+            .then(resp => {
+                const cd = resp.headers.get('Content-Disposition');
+                let fname = `Reporte_${tipo}.${formato === 'xlsx' ? 'xls' : (formato === 'docx' ? 'doc' : 'pdf')}`;
+                if (cd) { const m = cd.match(/filename="?([^"]+)"?/); if (m) fname = m[1]; }
+                return resp.blob().then(blob => ({ blob, fname }));
+            })
+            .then(({ blob, fname }) => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = fname;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                // Hide loader
+                if (loader) { loader.classList.add('hidden'); loader.classList.remove('flex'); }
+            })
+            .catch(() => {
+                if (loader) { loader.classList.add('hidden'); loader.classList.remove('flex'); }
+                Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo generar el reporte.', confirmButtonColor: '#059669' });
+            });
     }
 
     window.previewReport = function(tipo) {
@@ -491,13 +511,27 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 
 {{-- Loading Overlay --}}
-<div id="export-loading" class="fixed inset-0 z-[9999] hidden items-center justify-center" style="background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);">
-    <div class="bg-white dark:bg-[#0F2A20] rounded-3xl p-8 shadow-2xl flex flex-col items-center gap-4 border border-emerald-100 dark:border-emerald-800/50">
-        <div class="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin"></div>
-        <p class="text-lg font-bold text-[#064E3B] dark:text-white">Generando reporte...</p>
-        <p class="text-xs text-gray-400">Esto puede tomar unos segundos</p>
+<div id="export-loading" class="fixed inset-0 z-[9999] hidden items-center justify-center" style="background: rgba(255,255,255,0.55); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%);">
+    <div class="rounded-[2rem] p-10 flex flex-col items-center gap-5 max-w-sm w-full mx-4" style="background: rgba(255,255,255,0.75); backdrop-filter: blur(20px); border: 1px solid rgba(16,185,129,0.15); box-shadow: 0 25px 60px rgba(0,0,0,0.08), 0 0 40px rgba(16,185,129,0.06);">
+        <div class="relative">
+            <div class="w-16 h-16 border-[3px] border-emerald-100 rounded-full"></div>
+            <div class="w-16 h-16 border-[3px] border-transparent border-t-emerald-500 rounded-full animate-spin absolute inset-0"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="material-symbols-outlined text-emerald-500 text-xl">description</span>
+            </div>
+        </div>
+        <div class="text-center">
+            <p class="text-lg font-black text-[#064E3B] tracking-tight">Generando reporte</p>
+            <p class="text-xs text-gray-400 font-medium mt-1">Preparando tu documento...</p>
+        </div>
+        <div class="w-full bg-emerald-100 rounded-full h-1.5 overflow-hidden">
+            <div class="bg-gradient-to-r from-emerald-400 to-emerald-600 h-full rounded-full animate-pulse" style="width: 60%; animation: loadbar 2s ease-in-out infinite;"></div>
+        </div>
     </div>
 </div>
+<style>
+@keyframes loadbar { 0% { width: 20%; } 50% { width: 80%; } 100% { width: 20%; } }
+</style>
 
 {{-- ========== REPORT MODULES ========== --}}
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8" id="report-modules">

@@ -43,20 +43,19 @@
         }
 
         .logo-box {
-            width: 60px;
-            height: 60px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 50%;
+            width: 56px;
+            height: 56px;
             display: inline-block;
-            margin: 0 auto 15px auto;
+            margin: 0;
             text-align: center;
-            overflow: hidden;
         }
 
         .logo-box img { 
-            width: 44px; 
-            height: 44px; 
-            margin-top: 8px; /* rough center hack for DomPDF */
+            width: 56px; 
+            height: 56px; 
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255,255,255,0.3);
         }
 
         .header h1 { 

@@ -165,6 +165,7 @@ class ReportController extends Controller
         if ($formato === 'pdf' || $formato === 'preview') {
             /** @var \Barryvdh\DomPDF\PDF $pdf */
             $pdf = Pdf::loadView('reporte_pdf', $data);
+            $pdf->getDomPDF()->set_option('isRemoteEnabled', true);
             if ($formato === 'preview') {
                 return $pdf->stream($filename);
             }
