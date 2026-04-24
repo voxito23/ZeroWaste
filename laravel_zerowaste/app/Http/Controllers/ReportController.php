@@ -55,6 +55,15 @@ class ReportController extends Controller
         $totalPuntos = $pQ->count();
         $totalEventos = $eQ->count();
 
+        if ($request->ajax()) {
+            return response()->json([
+                'totalUsuarios' => $totalUsuarios,
+                'totalCampanas' => $totalCampanas,
+                'totalPuntos' => $totalPuntos,
+                'totalEventos' => $totalEventos,
+            ]);
+        }
+
         return view('admin.reportes.index', compact(
             'totalUsuarios', 'totalCampanas', 'totalPuntos', 'totalEventos'
         ));

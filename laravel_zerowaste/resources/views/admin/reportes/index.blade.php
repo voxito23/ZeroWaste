@@ -109,91 +109,95 @@
 <script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    let dateStart = null;
-    let dateEnd = null;
+    let dateStart = null, dateEnd = null;
     let pickerStart, pickerEnd;
-
-    // Inicializar Flatpickr
     const fpConfig = { dateFormat: "d/m/Y", locale: "es", disableMobile: true, animate: true };
 
-    pickerStart = flatpickr("#date-start", {
-        ...fpConfig,
-        onChange: function(sel) {
-            if (sel[0]) { dateStart = sel[0]; document.getElementById('wrap-start').classList.add('active'); if (pickerEnd) pickerEnd.set('minDate', sel[0]); syncBadge(false); }
-        }
+    pickerStart = flatpickr("#date-start", { ...fpConfig,
+        onChange: function(sel) { if (sel[0]) { dateStart = sel[0]; document.getElementById('wrap-start').classList.add('active'); if (pickerEnd) pickerEnd.set('minDate', sel[0]); syncBadge(); } }
+    });
+    pickerEnd = flatpickr("#date-end", { ...fpConfig,
+        onChange: function(sel) { if (sel[0]) { dateEnd = new Date(sel[0]); dateEnd.setHours(23,59,59,999); document.getElementById('wrap-end').classList.add('active'); syncBadge(); updateKPIs(); } }
     });
 
-    pickerEnd = flatpickr("#date-end", {
-        ...fpConfig,
-        onChange: function(sel) {
-            if (sel[0]) { dateEnd = new Date(sel[0]); dateEnd.setHours(23,59,59,999); document.getElementById('wrap-end').classList.add('active'); syncBadge(true); }
-        }
-    });
+    function fmtISO(d) { return [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('-'); }
 
-    // Auto-submit en búsqueda con debounce
+    // ===== AJAX KPI Update =====
+    function updateKPIs() {
+        const search = document.getElementById('search-report')?.value || '';
+        const categoria = document.getElementById('categoria-report')?.value || '';
+        let p = new URLSearchParams();
+        if (search) p.set('search', search);
+        if (categoria) p.set('categoria', categoria);
+        if (dateStart && dateEnd) { p.set('fecha_inicio', fmtISO(dateStart)); p.set('fecha_fin', fmtISO(dateEnd)); }
+
+        const grid = document.getElementById('kpi-grid');
+        if (grid) { grid.style.transition='opacity .2s'; grid.style.opacity='0.4'; }
+
+        fetch(`{{ route('reportes.index') }}?${p.toString()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(r => r.json())
+        .then(data => {
+            ['totalUsuarios','totalCampanas','totalPuntos','totalEventos'].forEach(key => {
+                const el = document.getElementById('kpi-' + key);
+                if (!el) return;
+                const target = data[key] || 0, current = parseInt(el.textContent) || 0;
+                if (target === current) { el.textContent = target; return; }
+                let frame = 0; const frames = 20;
+                const iv = setInterval(() => { frame++; el.textContent = Math.round(current + (target - current) * (frame / frames)); if (frame >= frames) { clearInterval(iv); el.textContent = target; } }, 20);
+            });
+            if (grid) { grid.style.opacity = '1'; }
+        })
+        .catch(() => { if (grid) grid.style.opacity = '1'; });
+    }
+
+    // Search (debounce AJAX)
     let searchTimeout;
     const searchInput = document.getElementById('search-report');
-    if(searchInput) {
+    if (searchInput) {
         searchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                document.getElementById('filter-form').submit();
-            }, 600);
+            searchTimeout = setTimeout(() => updateKPIs(), 400);
         });
     }
 
-    // Menús desplegables
+    // Dropdowns
     window.toggleDD = function(id) {
-        ['period-dd', 'cat-dd', 'gran-dd'].forEach(dd => { if (dd !== id) document.getElementById(dd)?.classList.add('hidden'); });
+        ['period-dd','cat-dd','gran-dd'].forEach(dd => { if (dd !== id) document.getElementById(dd)?.classList.add('hidden'); });
         document.getElementById(id)?.classList.toggle('hidden');
     };
-
-    document.addEventListener('click', (e) => {
-        ['period-wrap', 'cat-wrap', 'gran-wrap'].forEach(wId => {
+    document.addEventListener('click', e => {
+        ['period-wrap','cat-wrap','gran-wrap'].forEach(wId => {
             const w = document.getElementById(wId);
             if (w && !w.contains(e.target)) w.querySelector('.filter-dropdown')?.classList.add('hidden');
         });
     });
 
-    window.setCategoriaPreset = function(val, label, preventSubmit = false) {
+    window.setCategoriaPreset = function(val, label) {
         document.getElementById('categoria-report').value = val;
         document.getElementById('cat-label').textContent = label;
         document.getElementById('cat-dd').classList.add('hidden');
         document.querySelectorAll('#cat-dd button').forEach(b => b.classList.remove('active-item'));
-        if(event && event.target) {
-            event.target.closest('button')?.classList.add('active-item');
-        }
-        if(!preventSubmit) {
-            document.getElementById('filter-form').submit();
-        }
+        if (event && event.target) event.target.closest('button')?.classList.add('active-item');
+        updateKPIs();
     };
 
-    // Preload categoria from URL
     const urlParams = new URLSearchParams(window.location.search);
     const currentCat = urlParams.get('categoria');
     if (currentCat) {
         const btn = document.querySelector(`button[onclick*="'${currentCat}'"]`);
-        if (btn) {
-            document.getElementById('cat-label').textContent = btn.innerText.trim();
-            document.querySelectorAll('#cat-dd button').forEach(b => b.classList.remove('active-item'));
-            btn.classList.add('active-item');
-        }
+        if (btn) { document.getElementById('cat-label').textContent = btn.innerText.trim(); document.querySelectorAll('#cat-dd button').forEach(b => b.classList.remove('active-item')); btn.classList.add('active-item'); }
     }
 
     let currentGranularity = 'dia';
-
     window.setGranularity = function(mode) {
         currentGranularity = mode;
         document.getElementById('gran-dia').classList.toggle('active-item', mode === 'dia');
         document.getElementById('gran-mes').classList.toggle('active-item', mode === 'mes');
         document.getElementById('gran-label').textContent = mode === 'dia' ? 'Por Día' : 'Por Mes';
         document.getElementById('gran-dd').classList.add('hidden');
-        // Update period dropdown options
         document.getElementById('period-opts-dia').classList.toggle('hidden', mode !== 'dia');
         document.getElementById('period-opts-mes').classList.toggle('hidden', mode !== 'mes');
-        // Reset period to default
-        if (mode === 'dia') { setPeriodPreset('hoy', 'Hoy'); }
-        else { setPeriodPreset('3m', 'Últimos 3 meses'); }
+        if (mode === 'dia') setPeriodPreset('hoy', 'Hoy'); else setPeriodPreset('3m', 'Últimos 3 meses');
     };
 
     window.setPeriodPreset = function(val, label) {
@@ -201,16 +205,8 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('period-dd').classList.add('hidden');
         document.querySelectorAll('#period-dd button.preset-btn').forEach(b => b.classList.remove('active-item'));
         if (event && event.target) event.target.closest('button')?.classList.add('active-item');
-
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-        if (val === 'custom') {
-            dateStart = null; dateEnd = null;
-            if (pickerStart) { pickerStart.clear(); document.getElementById('wrap-start').classList.remove('active'); }
-            if (pickerEnd) { pickerEnd.clear(); document.getElementById('wrap-end').classList.remove('active'); }
-            syncBadge(false); return;
-        }
+        const now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        if (val === 'custom') { dateStart = null; dateEnd = null; if (pickerStart) { pickerStart.clear(); document.getElementById('wrap-start').classList.remove('active'); } if (pickerEnd) { pickerEnd.clear(); document.getElementById('wrap-end').classList.remove('active'); } syncBadge(); updateKPIs(); return; }
         else if (val === 'hoy') { dateStart = new Date(today); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
         else if (val === 'ayer') { dateStart = new Date(today); dateStart.setDate(dateStart.getDate()-1); dateEnd = new Date(dateStart); dateEnd.setHours(23,59,59,999); }
         else if (val === '7d') { dateStart = new Date(today); dateStart.setDate(dateStart.getDate()-6); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
@@ -222,38 +218,24 @@ document.addEventListener("DOMContentLoaded", function() {
         else if (val === '6m') { dateStart = new Date(now.getFullYear(), now.getMonth()-6, now.getDate()); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
         else if (val === '12m') { dateStart = new Date(now.getFullYear()-1, now.getMonth(), now.getDate()); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
         else { dateStart = null; dateEnd = null; }
-
-        if (dateStart && pickerStart) { pickerStart.setDate(dateStart, false); document.getElementById('wrap-start').classList.add('active'); }
-        else if (pickerStart) { pickerStart.clear(); document.getElementById('wrap-start').classList.remove('active'); }
-        if (dateEnd && pickerEnd) { pickerEnd.setDate(dateEnd, false); document.getElementById('wrap-end').classList.add('active'); }
-        else if (pickerEnd) { pickerEnd.clear(); document.getElementById('wrap-end').classList.remove('active'); }
-        
-        // Auto-submit after setting preset
-        syncBadge(true);
+        if (dateStart && pickerStart) { pickerStart.setDate(dateStart, false); document.getElementById('wrap-start').classList.add('active'); } else if (pickerStart) { pickerStart.clear(); document.getElementById('wrap-start').classList.remove('active'); }
+        if (dateEnd && pickerEnd) { pickerEnd.setDate(dateEnd, false); document.getElementById('wrap-end').classList.add('active'); } else if (pickerEnd) { pickerEnd.clear(); document.getElementById('wrap-end').classList.remove('active'); }
+        syncBadge();
+        updateKPIs();
     };
 
-    function syncBadge(submit = false) {
-        const badge = document.getElementById('filter-badge');
-        const text = document.getElementById('filter-badge-text');
-        
-        // Formatear fecha para el input
-        const fInput = (date) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
-        
+    function syncBadge() {
+        const badge = document.getElementById('filter-badge'), text = document.getElementById('filter-badge-text');
         if (dateStart && dateEnd) {
             badge.classList.remove('hidden');
-            const f = (d) => d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
+            const f = d => d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
             text.textContent = `${f(dateStart)} → ${f(dateEnd)}`;
-            
-            document.getElementById('form-fecha-inicio').value = fInput(dateStart);
-            document.getElementById('form-fecha-fin').value = fInput(dateEnd);
-        } else { 
+            document.getElementById('form-fecha-inicio').value = fmtISO(dateStart);
+            document.getElementById('form-fecha-fin').value = fmtISO(dateEnd);
+        } else {
             badge.classList.add('hidden');
             document.getElementById('form-fecha-inicio').value = '';
             document.getElementById('form-fecha-fin').value = '';
-        }
-
-        if (submit) {
-            document.getElementById('filter-form').submit();
         }
     }
 
@@ -265,7 +247,7 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('categoria-report').value = '';
         document.getElementById('cat-label').textContent = 'Todas las Categorías';
         document.querySelectorAll('#cat-dd button').forEach(b => b.classList.remove('active-item'));
-        document.querySelector('#cat-dd button:first-child').classList.add('active-item');
+        document.querySelector('#cat-dd button:first-child')?.classList.add('active-item');
         document.getElementById('wrap-start').classList.remove('active');
         document.getElementById('wrap-end').classList.remove('active');
         document.getElementById('period-label').textContent = 'Hoy';
@@ -273,44 +255,21 @@ document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('gran-label').textContent = 'Por Día';
         document.getElementById('period-opts-dia').classList.remove('hidden');
         document.getElementById('period-opts-mes').classList.add('hidden');
-        syncBadge();
+        syncBadge(); updateKPIs();
         if (typeof Swal !== 'undefined') {
             const isDark = document.documentElement.classList.contains('dark');
-            Swal.fire({
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3500,
-                timerProgressBar: true,
-                background: isDark ? '#0F2A20' : '#ffffff',
-                customClass: {
-                    popup: 'rounded-2xl border shadow-xl border-emerald-100 dark:border-emerald-800/50 p-2',
-                },
-                html: `
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center flex-shrink-0 border border-emerald-200 dark:border-emerald-700 text-primary">
-                        <span class="material-symbols-outlined text-[18px]">check_circle</span>
-                    </div>
-                    <div>
-                        <h4 class="text-sm font-bold text-secondary dark:text-emerald-100 m-0 leading-tight">Filtros restablecidos</h4>
-                    </div>
-                </div>`
+            Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2500, timerProgressBar: true, background: isDark ? '#0F2A20' : '#fff',
+                customClass: { popup: 'rounded-2xl border shadow-xl border-emerald-100 dark:border-emerald-800/50 p-2' },
+                html: `<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center flex-shrink-0 border border-emerald-200 dark:border-emerald-700 text-primary"><span class="material-symbols-outlined text-[18px]">check_circle</span></div><div><h4 class="text-sm font-bold text-secondary dark:text-emerald-100 m-0">Filtros restablecidos</h4></div></div>`
             });
         }
     };
 
-    // Generar reporte con filtro de fecha
     window.generateReport = function(tipo, formato) {
         if (!dateStart || !dateEnd) {
             const isDark = document.documentElement.classList.contains('dark');
             Swal.fire({
-                html: `<div class="text-center">
-                    <div class="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6">
-                        <span class="material-symbols-outlined text-4xl text-emerald-500">date_range</span>
-                    </div>
-                    <h3 class="text-xl font-black mb-2">¿Generar sin filtro?</h3>
-                    <p class="text-sm" style="color: ${isDark ? '#9CA3AF' : '#6B7280'}">Se exportarán <span class="font-bold" style="color: ${isDark ? '#fff' : '#064E3B'}">todos los registros</span> disponibles.</p>
-                </div>`,
+                html: `<div class="text-center"><div class="w-20 h-20 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-6"><span class="material-symbols-outlined text-4xl text-emerald-500">date_range</span></div><h3 class="text-xl font-black mb-2">¿Generar sin filtro?</h3><p class="text-sm" style="color:${isDark?'#9CA3AF':'#6B7280'}">Se exportarán <span class="font-bold" style="color:${isDark?'#fff':'#064E3B'}">todos los registros</span> disponibles.</p></div>`,
                 background: isDark ? '#0F2A20' : '#fff', color: isDark ? '#d1fae5' : '#064E3B', width: 400,
                 customClass: { popup: 'rounded-[2rem] border border-emerald-100 dark:border-emerald-800/50 shadow-2xl', confirmButton: 'rounded-xl', cancelButton: 'rounded-xl' },
                 showCancelButton: true, confirmButtonColor: '#059669', cancelButtonColor: isDark ? '#374151' : '#9CA3AF',
@@ -318,110 +277,46 @@ document.addEventListener("DOMContentLoaded", function() {
             }).then(r => { if (r.isConfirmed) doExport(tipo, formato, '', ''); });
             return;
         }
-        const formatDate = (date) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
-        const start = formatDate(dateStart);
-        const end = formatDate(dateEnd);
-        doExport(tipo, formato, start, end);
+        doExport(tipo, formato, fmtISO(dateStart), fmtISO(dateEnd));
     };
 
     function doExport(tipo, formato, start, end) {
-        const search = document.getElementById('search-report')?.value || '';
-        const categoria = document.getElementById('categoria-report')?.value || '';
-
+        const search = document.getElementById('search-report')?.value || '', categoria = document.getElementById('categoria-report')?.value || '';
         let url = `{{ route('reportes.exportar') }}?tipo=${tipo}&formato=${formato}`;
-        if (start) url += `&fecha_inicio=${start}`;
-        if (end) url += `&fecha_fin=${end}`;
-        if (search) url += `&search=${encodeURIComponent(search)}`;
-        if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
-
-        if (formato === 'preview') {
-            window.open(url, '_blank');
-        } else {
-            window.location.href = url;
-        }
+        if (start) url += `&fecha_inicio=${start}`; if (end) url += `&fecha_fin=${end}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`; if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
+        if (formato === 'preview') window.open(url, '_blank'); else window.location.href = url;
         const isDark = document.documentElement.classList.contains('dark');
-        Swal.fire({
-            toast: true,
-            position: 'top-end',
-            showConfirmButton: false,
-            timer: 3500,
-            timerProgressBar: true,
-            background: isDark ? '#0F2A20' : '#ffffff',
-            customClass: {
-                popup: 'rounded-2xl border shadow-xl border-blue-100 dark:border-blue-900/50 p-2',
-            },
-            html: `
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0 border border-blue-200 dark:border-blue-700 text-blue-500">
-                    <span class="material-symbols-outlined text-[18px]">info</span>
-                </div>
-                <div>
-                    <h4 class="text-sm font-bold text-secondary dark:text-emerald-100 m-0 leading-tight">Generando documento...</h4>
-                </div>
-            </div>`
+        Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3500, timerProgressBar: true, background: isDark ? '#0F2A20' : '#fff',
+            customClass: { popup: 'rounded-2xl border shadow-xl border-blue-100 dark:border-blue-900/50 p-2' },
+            html: `<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0 border border-blue-200 dark:border-blue-700 text-blue-500"><span class="material-symbols-outlined text-[18px]">info</span></div><div><h4 class="text-sm font-bold text-secondary dark:text-emerald-100 m-0">Generando documento...</h4></div></div>`
         });
     }
 
-    // Previsualización en modal (estilo Macuin)
     window.previewReport = function(tipo) {
-        if (!dateStart || !dateEnd) {
-            const isDark = document.documentElement.classList.contains('dark');
-            Swal.fire({
-                html: `<div class="text-center py-4"><span class="material-symbols-outlined text-4xl text-emerald-500 mb-4">info</span><p class="font-bold">Selecciona un rango de fechas para la vista previa.</p></div>`,
+        if (!dateStart || !dateEnd) { const isDark = document.documentElement.classList.contains('dark');
+            Swal.fire({ html: `<div class="text-center py-4"><span class="material-symbols-outlined text-4xl text-emerald-500 mb-4">info</span><p class="font-bold">Selecciona un rango de fechas para la vista previa.</p></div>`,
                 background: isDark ? '#0F2A20' : '#fff', color: isDark ? '#d1fae5' : '#064E3B', width: 380,
-                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl' },
-                confirmButtonColor: '#059669', confirmButtonText: 'Entendido'
-            });
-            return;
+                customClass: { popup: 'rounded-[2rem]', confirmButton: 'rounded-xl' }, confirmButtonColor: '#059669', confirmButtonText: 'Entendido' }); return;
         }
-        const formatDate = (date) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
-        const start = formatDate(dateStart);
-        const end = formatDate(dateEnd);
-        const search = document.getElementById('search-report')?.value || '';
-        const categoria = document.getElementById('categoria-report')?.value || '';
-
+        const start = fmtISO(dateStart), end = fmtISO(dateEnd), search = document.getElementById('search-report')?.value || '', categoria = document.getElementById('categoria-report')?.value || '';
         let pdfUrl = `{{ route('reportes.exportar') }}?tipo=${tipo}&formato=preview&fecha_inicio=${start}&fecha_fin=${end}`;
-        if (search) pdfUrl += `&search=${encodeURIComponent(search)}`;
-        if (categoria) pdfUrl += `&categoria=${encodeURIComponent(categoria)}`;
+        if (search) pdfUrl += `&search=${encodeURIComponent(search)}`; if (categoria) pdfUrl += `&categoria=${encodeURIComponent(categoria)}`;
         const isDark = document.documentElement.classList.contains('dark');
-
         Swal.fire({
-            html: `<div class="text-left">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 border border-emerald-500/20"><span class="material-symbols-outlined">description</span></div>
-                    <div><h3 class="font-bold text-lg">Vista Previa</h3><p class="text-xs uppercase tracking-widest font-bold" style="color:#6B7280">${tipo}</p></div>
-                </div>
-                <div class="w-full h-[60vh] rounded-2xl overflow-hidden border" style="border-color: ${isDark ? 'rgba(255,255,255,0.1)' : '#E5E7EB'}; background: ${isDark ? '#0B1F18' : '#f9fafb'}"><iframe src="${pdfUrl}" width="100%" height="100%" frameborder="0"></iframe></div>
-            </div>`,
+            html: `<div class="text-left"><div class="flex items-center gap-3 mb-4"><div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-500 border border-emerald-500/20"><span class="material-symbols-outlined">description</span></div><div><h3 class="font-bold text-lg">Vista Previa</h3><p class="text-xs uppercase tracking-widest font-bold" style="color:#6B7280">${tipo}</p></div></div><div class="w-full h-[60vh] rounded-2xl overflow-hidden border" style="border-color:${isDark?'rgba(255,255,255,0.1)':'#E5E7EB'};background:${isDark?'#0B1F18':'#f9fafb'}"><iframe src="${pdfUrl}" width="100%" height="100%" frameborder="0"></iframe></div></div>`,
             width: '85%', background: isDark ? '#0F2A20' : '#fff', color: isDark ? '#d1fae5' : '#064E3B',
             customClass: { popup: 'rounded-[2rem] border shadow-2xl', confirmButton: 'rounded-xl' },
             confirmButtonColor: '#059669', confirmButtonText: 'Cerrar', showCloseButton: true
         });
     };
 
-    // Inicializar: restaurar fechas desde URL params si existen
-    const urlFechaInicio = urlParams.get('fecha_inicio');
-    const urlFechaFin = urlParams.get('fecha_fin');
-    if (urlFechaInicio && urlFechaFin) {
-        dateStart = new Date(urlFechaInicio + 'T00:00:00');
-        dateEnd = new Date(urlFechaFin + 'T23:59:59');
-        if (pickerStart) { pickerStart.setDate(dateStart, false); document.getElementById('wrap-start').classList.add('active'); }
-        if (pickerEnd) { pickerEnd.setDate(dateEnd, false); document.getElementById('wrap-end').classList.add('active'); }
-        // Mostrar badge sin re-submit
-        const badge = document.getElementById('filter-badge');
-        const text = document.getElementById('filter-badge-text');
-        if (badge && text) {
-            badge.classList.remove('hidden');
-            const f = (d) => d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
-            text.textContent = `${f(dateStart)} → ${f(dateEnd)}`;
-        }
-    } else {
-        // Solo setear preset si no hay fechas en URL
-        setPeriodPreset('hoy', 'Hoy');
-    }
+    // Init: load KPIs without date filter
+    updateKPIs();
 });
 </script>
 @endpush
+
 
 @section('content')
 
@@ -439,7 +334,7 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 
 {{-- ========== PREMIUM SEARCH BAR & CATEGORIES ========== --}}
-<form action="{{ route('reportes.index') }}" method="GET" id="filter-form" class="glass-card p-2 flex flex-col md:flex-row items-center gap-2 mb-6 relative z-[60]">
+<form action="{{ route('reportes.index') }}" method="GET" id="filter-form" onsubmit="return false;" class="glass-card p-2 flex flex-col md:flex-row items-center gap-2 mb-6 relative z-[60]">
     <div class="flex items-center flex-1 w-full pl-4 pr-2">
         <span class="material-symbols-outlined text-emerald-400 dark:text-emerald-500 text-[24px]">search</span>
         <input type="text" name="search" id="search-report" value="{{ request('search') }}" placeholder="Buscar por nombre, descripción, lugar..." class="w-full bg-transparent border-none focus:ring-0 text-gray-700 dark:text-gray-200 placeholder-gray-400 font-semibold text-[15px] outline-none px-4 py-3">
@@ -549,35 +444,28 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 
 {{-- ========== LIVE KPIs ========== --}}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="kpi-grid">
     @php $rkpis = [
-        ['label'=>'Usuarios','icon'=>'group','val'=>$totalUsuarios,'sub'=>'Registrados en plataforma','color'=>'#10B981','bg'=>'from-emerald-400 to-emerald-600','pts'=>'0,22 20,18 40,20 55,12 70,14 85,6 100,10 120,4'],
-        ['label'=>'Campañas','icon'=>'military_tech','val'=>$totalCampanas,'sub'=>'Total organizadas','color'=>'#3B82F6','bg'=>'from-blue-400 to-blue-600','pts'=>'0,16 20,12 40,18 55,8 70,10 85,14 100,6 120,2'],
-        ['label'=>'Puntos','icon'=>'location_on','val'=>$totalPuntos,'sub'=>'Centros de acopio','color'=>'#F59E0B','bg'=>'from-amber-400 to-orange-500','pts'=>'0,14 20,14 40,14 55,14 70,14 85,14 100,14 120,14'],
-        ['label'=>'Eventos','icon'=>'event','val'=>$totalEventos,'sub'=>'Programados','color'=>'#8B5CF6','bg'=>'from-purple-400 to-purple-600','pts'=>'0,20 20,16 40,22 55,14 70,18 85,10 100,12 120,6'],
+        ['label'=>'Usuarios','icon'=>'group','key'=>'totalUsuarios','val'=>$totalUsuarios,'sub'=>'Registrados en plataforma','color'=>'#10B981','bg'=>'from-emerald-400 to-emerald-600'],
+        ['label'=>'Campañas','icon'=>'military_tech','key'=>'totalCampanas','val'=>$totalCampanas,'sub'=>'Total organizadas','color'=>'#3B82F6','bg'=>'from-blue-400 to-blue-600'],
+        ['label'=>'Puntos','icon'=>'location_on','key'=>'totalPuntos','val'=>$totalPuntos,'sub'=>'Centros de acopio','color'=>'#F59E0B','bg'=>'from-amber-400 to-orange-500'],
+        ['label'=>'Eventos','icon'=>'event','key'=>'totalEventos','val'=>$totalEventos,'sub'=>'Programados','color'=>'#8B5CF6','bg'=>'from-purple-400 to-purple-600'],
     ]; @endphp
     @foreach($rkpis as $ri => $rk)
-    <div class="glass-card p-5 group">
-        <div class="flex items-center gap-3 mb-4">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-br {{$rk['bg']}} flex items-center justify-center shadow-[0_4px_15px_{{$rk['color']}}66] text-white group-hover:scale-110 transition-transform">
-                <span class="material-symbols-outlined text-[20px]">{{$rk['icon']}}</span>
-            </div>
-            <span class="text-[11px] text-gray-500 uppercase font-black tracking-widest">{{$rk['label']}}</span>
+    <div class="glass-card p-5 group relative overflow-hidden">
+        {{-- Faded icon watermark --}}
+        <div class="absolute -bottom-3 -right-3 pointer-events-none opacity-[0.06] group-hover:opacity-[0.1] transition-opacity duration-500">
+            <span class="material-symbols-outlined" style="font-size: 90px; color: {{$rk['color']}};">{{$rk['icon']}}</span>
         </div>
-        <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight">{{ $rk['val'] }}</p>
-        <p class="text-[10px] text-gray-400 font-bold mt-1">{{$rk['sub']}}</p>
-        {{-- SVG Sparkline --}}
-        <div class="mt-3 h-6 opacity-60">
-            <svg viewBox="0 0 120 28" class="w-full h-full" preserveAspectRatio="none">
-                <defs>
-                    <linearGradient id="rk-{{$ri}}" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stop-color="{{$rk['color']}}" stop-opacity="0.25"/>
-                        <stop offset="100%" stop-color="{{$rk['color']}}" stop-opacity="0"/>
-                    </linearGradient>
-                </defs>
-                <polygon fill="url(#rk-{{$ri}})" points="0,28 {{$rk['pts']}} 120,28" />
-                <polyline fill="none" stroke="{{$rk['color']}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="{{$rk['pts']}}" />
-            </svg>
+        <div class="relative z-10">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br {{$rk['bg']}} flex items-center justify-center shadow-lg text-white group-hover:scale-110 transition-transform" style="box-shadow: 0 4px 15px {{$rk['color']}}40;">
+                    <span class="material-symbols-outlined text-[20px]">{{$rk['icon']}}</span>
+                </div>
+                <span class="text-[11px] text-gray-500 uppercase font-black tracking-widest">{{$rk['label']}}</span>
+            </div>
+            <p class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight" id="kpi-{{$rk['key']}}">{{ $rk['val'] }}</p>
+            <p class="text-[10px] text-gray-400 font-bold mt-1">{{$rk['sub']}}</p>
         </div>
     </div>
     @endforeach
