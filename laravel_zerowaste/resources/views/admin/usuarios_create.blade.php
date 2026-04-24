@@ -4,71 +4,113 @@
 @section('page_title', 'Crear Usuario')
 
 @section('content')
-<div class="max-w-2xl bg-white dark:bg-forest-card rounded-3xl shadow-lg border border-emerald-100 dark:border-emerald-800/50 p-8">
-    <h2 class="text-xl font-bold mb-6 text-secondary dark:text-white">Ingresa los datos del nuevo usuario</h2>
+<div class="bg-white/80 dark:bg-[#0B1F18]/80 backdrop-blur-xl rounded-[2rem] p-8 lg:p-10 shadow-2xl border border-white/50 dark:border-emerald-800/30 relative overflow-hidden group max-w-4xl mx-auto">
+    <div class="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-emerald-400/20 to-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
     
+    <div class="flex items-center gap-4 mb-10 relative z-10 border-b border-gray-100 dark:border-emerald-800/30 pb-6">
+        <div class="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-[1.25rem] flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
+            <span class="material-symbols-outlined text-[32px]">person_add</span>
+        </div>
+        <div>
+            <h2 class="text-3xl font-black text-[#064E3B] dark:text-white tracking-tight">Crear Nuevo Usuario</h2>
+            <p class="text-gray-500 dark:text-emerald-200/70 text-sm font-medium mt-1">Registra y configura un nuevo miembro del ecosistema.</p>
+        </div>
+    </div>
 
-
-    <form id="userForm" novalidate action="{{ route('usuarios.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-col gap-5">
+    <form id="userForm" novalidate action="{{ route('usuarios.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-col gap-6 relative z-10">
         @csrf
 
-        <!-- Foto de perfil con preview -->
-        <div class="flex flex-col items-center gap-4 pb-6 border-b border-emerald-100 dark:border-emerald-800/50">
-            <div class="relative group">
-                <img id="preview-foto" src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 120%22><rect fill=%22%2334D399%22 width=%22120%22 height=%22120%22 rx=%2260%22/><text x=%2250%%22 y=%2256%%22 text-anchor=%22middle%22 fill=%22%23064E3B%22 font-size=%2248%22 font-weight=%22bold%22 font-family=%22Inter%22>?</text></svg>"
-                     alt="Preview" class="w-24 h-24 rounded-full object-cover border-[3px] border-primary shadow-lg shadow-primary/20">
-                <label for="foto-input" class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                    <span class="material-symbols-outlined text-white text-2xl">photo_camera</span>
-                </label>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left col: Avatar -->
+            <div class="col-span-1 flex flex-col items-center justify-start border-r-0 lg:border-r border-gray-100 dark:border-emerald-800/30 pr-0 lg:pr-8">
+                <div class="relative group mt-4 mb-4">
+                    <img id="preview-foto" src="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 120%22><rect fill=%22%2334D399%22 width=%22120%22 height=%22120%22 rx=%2260%22/><text x=%2250%%22 y=%2256%%22 text-anchor=%22middle%22 fill=%22%23064E3B%22 font-size=%2248%22 font-weight=%22bold%22 font-family=%22Inter%22>?</text></svg>"
+                         alt="Preview" class="w-40 h-40 rounded-full object-cover border-[4px] border-white dark:border-[#0B1F18] shadow-2xl transition-transform duration-500 group-hover:scale-105 group-hover:shadow-emerald-500/20">
+                    <label for="foto-input" class="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer backdrop-blur-sm">
+                        <span class="material-symbols-outlined text-white text-3xl mb-1">photo_camera</span>
+                    </label>
+                </div>
+                <input type="file" name="foto_perfil" id="foto-input" accept="image/*" class="hidden" onchange="previewImage(this)">
+                <label for="foto-input" class="text-xs px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-bold rounded-full cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-800/40 transition-colors border border-emerald-200 dark:border-emerald-700/50">Subir Fotografía</label>
             </div>
-            <input type="file" name="foto_perfil" id="foto-input" accept="image/*" class="hidden" onchange="previewImage(this)">
-            <label for="foto-input" class="text-xs text-primary font-bold cursor-pointer hover:underline">Seleccionar foto de perfil</label>
+
+            <!-- Right col: Form -->
+            <div class="col-span-1 lg:col-span-2 flex flex-col gap-5">
+                <div>
+                    <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Nombre Completo</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">badge</span></div>
+                        <input type="text" name="nombre" required placeholder="Ej. María Martínez" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                    </div>
+                    <span id="err-nombre" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
+                </div>
+                
+                <div>
+                    <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Correo Electrónico</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">mail</span></div>
+                        <input type="email" name="email" required placeholder="correo@ejemplo.com" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                    </div>
+                    <span id="err-email" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
+                </div>
+                
+                <div>
+                    <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Contraseña Temporal</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">lock</span></div>
+                        <input type="password" name="password" id="user-password" required placeholder="••••••••" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 pr-12 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                        <button type="button" onclick="togglePass('user-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-500 transition-colors bg-white dark:bg-[#0F2A20] rounded-lg p-1 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[18px]">visibility_off</span>
+                        </button>
+                    </div>
+                    <span id="err-password" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Ubicación</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">location_on</span></div>
+                            <input type="text" name="ubicacion" required placeholder="Querétaro, Qro." class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                        </div>
+                        <span id="err-ubicacion" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Título del Perfil</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">psychology</span></div>
+                            <input type="text" name="titulo_perfil" required placeholder="Eco-guerrero..." class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                        </div>
+                        <span id="err-titulo" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div>
-            <label class="block font-bold mb-2 text-sm text-gray-600 dark:text-emerald-300">Nombre completo</label>
-            <input type="text" name="nombre" required placeholder="Ej. María Martínez" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 outline-none focus:border-primary transition-colors">
-            <span id="err-nombre" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+        <div class="mt-2 bg-emerald-50 dark:bg-[#064E3B]/20 rounded-xl p-4 border border-emerald-100 dark:border-emerald-800/30 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-white dark:bg-[#0B1F18] flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm">
+                    <span class="material-symbols-outlined">admin_panel_settings</span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-gray-800 dark:text-white text-sm">Privilegios de Administrador</h4>
+                    <p class="text-xs text-gray-500 dark:text-emerald-200/70 mt-0.5">Permite acceso total a los paneles de control y reportes.</p>
+                </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="is_admin" id="is_admin" class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-500"></div>
+            </label>
         </div>
         
-        <div>
-            <label class="block font-bold mb-2 text-sm text-gray-600 dark:text-emerald-300">Email</label>
-            <input type="email" name="email" required placeholder="correo@ejemplo.com" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 outline-none focus:border-primary transition-colors">
-            <span id="err-email" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
-        </div>
-        
-        <div>
-            <label class="block font-bold mb-2 text-sm text-gray-600 dark:text-emerald-300">Contraseña</label>
-            <div class="relative">
-                <input type="password" name="password" id="user-password" required placeholder="••••••••" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 pr-12 outline-none focus:border-primary transition-colors">
-                <button type="button" onclick="togglePass('user-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined">visibility_off</span>
-                </button>
-            </div>
-            <span id="err-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="block font-bold mb-2 text-sm text-gray-600 dark:text-emerald-300">Ubicación</label>
-                <input type="text" name="ubicacion" required placeholder="Querétaro, Qro." class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 outline-none focus:border-primary transition-colors">
-                <span id="err-ubicacion" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
-            </div>
-            <div>
-                <label class="block font-bold mb-2 text-sm text-gray-600 dark:text-emerald-300">Título del Perfil</label>
-                <input type="text" name="titulo_perfil" required placeholder="Eco-guerrero, Reciclador..." class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 outline-none focus:border-primary transition-colors">
-                <span id="err-titulo" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
-            </div>
-        </div>
-
-        <div class="flex items-center gap-3 pt-2">
-            <input type="checkbox" name="is_admin" id="is_admin" class="w-5 h-5 accent-emerald-500 rounded">
-            <label for="is_admin" class="font-bold text-sm text-gray-700 dark:text-emerald-200">Otorgar permisos de Administrador</label>
-        </div>
-        
-        <div class="flex justify-end gap-4 mt-4 pt-4 border-t border-emerald-50 dark:border-emerald-800/50">
-            <a href="{{ route('usuarios.index') }}" class="px-6 py-3 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-emerald-900/30 transition-colors">Cancelar</a>
-            <button type="submit" class="bg-primary hover:bg-emerald-500 text-secondary font-bold py-3 px-8 rounded-xl shadow-lg transition-transform hover:-translate-y-1">Crear Cuenta</button>
+        <div class="flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-emerald-800/30">
+            <a href="{{ route('usuarios.index') }}" class="px-6 py-3 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-emerald-900/30 transition-colors flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg">arrow_back</span> Cancelar
+            </a>
+            <button type="submit" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-500/30 transition-all duration-300 hover:-translate-y-1 flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg">check_circle</span> Crear Cuenta
+            </button>
         </div>
     </form>
 </div>

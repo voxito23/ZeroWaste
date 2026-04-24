@@ -4,75 +4,122 @@
 @section('page_title', 'Editar Campaña')
 
 @section('content')
-<div class="bg-white dark:bg-forest-card rounded-3xl shadow-lg border border-emerald-100 dark:border-emerald-800/50 p-8 max-w-3xl">
-    <form id="customForm" novalidate action="{{ route('campanas.update', $campaign->id) }}" method="POST" enctype="multipart/form-data" class="flex flex-col gap-6">
+<div class="bg-white/80 dark:bg-[#0B1F18]/80 backdrop-blur-xl rounded-[2rem] p-8 lg:p-10 shadow-2xl border border-white/50 dark:border-emerald-800/30 relative overflow-hidden group max-w-4xl mx-auto">
+    <div class="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-emerald-400/20 to-teal-500/10 rounded-full blur-3xl pointer-events-none transition group-hover:bg-emerald-400/20"></div>
+    <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="flex items-center gap-4 mb-10 relative z-10 border-b border-gray-100 dark:border-emerald-800/30 pb-6">
+        <div class="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-[1.25rem] flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
+            <span class="material-symbols-outlined text-[32px]">edit_document</span>
+        </div>
+        <div>
+            <h2 class="text-3xl font-black text-[#064E3B] dark:text-white tracking-tight">Editar Campaña</h2>
+            <p class="text-gray-500 dark:text-emerald-200/70 text-sm font-medium mt-1">Modifica la información y ajustes de esta campaña.</p>
+        </div>
+    </div>
+
+    <form id="customForm" novalidate action="{{ route('campanas.update', $campaign->id) }}" method="POST" enctype="multipart/form-data" class="flex flex-col gap-6 relative z-10">
         @csrf
         @method('PUT')
-
-
-
-        <div>
-            <label class="block font-bold mb-2 dark:text-emerald-200">Nombre de la Campaña</label>
-            <input type="text" name="nombre" value="{{ $campaign->nombre }}" required class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 focus:border-emerald-400 outline-none transition-colors">
-            <span id="err-nombre" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
-        </div>
-
-        <div>
-            <label class="block font-bold mb-2 dark:text-emerald-200">Descripción</label>
-            <textarea name="descripcion" rows="4" required class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 focus:border-emerald-400 outline-none transition-colors">{{ $campaign->descripcion }}</textarea>
-            <span id="err-descripcion" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-6">
             <div>
-                <label class="block font-bold mb-2 dark:text-emerald-200">Lugar</label>
-                <input type="text" name="lugar" value="{{ $campaign->lugar }}" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 focus:border-emerald-400 outline-none">
+                <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Nombre de la Campaña</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">edit_note</span></div>
+                    <input type="text" name="nombre" value="{{ $campaign->nombre }}" required class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                </div>
+                <span id="err-nombre" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
             </div>
+
             <div>
-                <label class="block font-bold mb-2 dark:text-emerald-200">Tipo / Etiqueta</label>
-                <input type="text" name="tipo_etiqueta" value="{{ $campaign->tipo_etiqueta }}" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 focus:border-emerald-400 outline-none">
+                <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Descripción</label>
+                <div class="relative">
+                    <div class="absolute top-3 left-0 pl-4 flex items-start pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">subject</span></div>
+                    <textarea name="descripcion" rows="4" required class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">{{ $campaign->descripcion }}</textarea>
+                </div>
+                <span id="err-descripcion" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
             </div>
-        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Lugar</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">place</span></div>
+                        <input type="text" name="lugar" value="{{ $campaign->lugar }}" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Tipo / Etiqueta</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">sell</span></div>
+                        <input type="text" name="tipo_etiqueta" value="{{ $campaign->tipo_etiqueta }}" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Fecha Inicio</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">event</span></div>
+                        <input type="date" name="fecha_inicio" value="{{ $campaign->fecha_inicio ? date('Y-m-d', strtotime($campaign->fecha_inicio)) : '' }}" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Fecha Fin</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">event_available</span></div>
+                        <input type="date" name="fecha_fin" value="{{ $campaign->fecha_fin ? date('Y-m-d', strtotime($campaign->fecha_fin)) : '' }}" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                    </div>
+                </div>
+            </div>
+
             <div>
-                <label class="block font-bold mb-2 dark:text-emerald-200">Fecha Inicio</label>
-                <input type="date" name="fecha_inicio" value="{{ $campaign->fecha_inicio ? date('Y-m-d', strtotime($campaign->fecha_inicio)) : '' }}" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 focus:border-emerald-400 outline-none">
+                <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Enlace Externo (Opcional)</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">link</span></div>
+                    <input type="url" name="link_evento" value="{{ $campaign->link_evento }}" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                </div>
             </div>
+
             <div>
-                <label class="block font-bold mb-2 dark:text-emerald-200">Fecha Fin</label>
-                <input type="date" name="fecha_fin" value="{{ $campaign->fecha_fin ? date('Y-m-d', strtotime($campaign->fecha_fin)) : '' }}" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 focus:border-emerald-400 outline-none">
+                <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Banner de la Campaña</label>
+                @if($campaign->imagen_url)
+                <div class="mb-3 flex items-center gap-3 bg-gray-50 dark:bg-[#0B1F18] p-3 rounded-xl border border-gray-200 dark:border-emerald-800/30">
+                    <img src="https://zerowaste-qro.com/static/img/eventos/{{ $campaign->imagen_url }}" alt="Imagen actual" class="h-16 w-24 object-cover rounded-lg border border-emerald-200 dark:border-emerald-700/50" onerror="this.style.display='none'">
+                    <span class="text-xs font-bold text-gray-500 dark:text-emerald-500/80">Imagen actual: {{ $campaign->imagen_url }}</span>
+                </div>
+                @endif
+                <div class="relative group mt-1">
+                    <input type="file" name="imagen_archivo" accept="image/*" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-dashed border-emerald-300 dark:border-emerald-700/50 rounded-xl p-4 dark:text-white text-sm file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 dark:file:bg-[#0B1F18] file:text-emerald-600 dark:file:text-emerald-400 hover:file:bg-emerald-100 dark:hover:file:bg-emerald-900/50 file:cursor-pointer cursor-pointer transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                    <p class="text-xs text-gray-400 dark:text-emerald-600/70 mt-2 ml-1">Dejar vacío para mantener la imagen actual.</p>
+                </div>
             </div>
         </div>
 
-        <div>
-            <label class="block font-bold mb-2 dark:text-emerald-200">Link de Campaña</label>
-            <input type="url" name="link_evento" value="{{ $campaign->link_evento }}" class="w-full border-2 border-emerald-100 dark:border-emerald-800 dark:bg-forest-dark dark:text-white rounded-xl p-3 focus:border-emerald-400 outline-none">
-        </div>
-
-        <div>
-            <label class="block font-bold mb-2 dark:text-emerald-200">Imagen de la Campaña</label>
-            @if($campaign->imagen_url)
-            <div class="mb-3 flex items-center gap-3">
-                <img src="https://zerowaste-qro.com/static/img/eventos/{{ $campaign->imagen_url }}" alt="Imagen actual" class="h-16 w-24 object-cover rounded-lg border-2 border-emerald-200 dark:border-emerald-700" onerror="this.style.display='none'">
-                <span class="text-xs text-gray-400 dark:text-emerald-500">Imagen actual: {{ $campaign->imagen_url }}</span>
+        <div class="mt-4 bg-emerald-50 dark:bg-[#064E3B]/20 rounded-xl p-4 border border-emerald-100 dark:border-emerald-800/30 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-white dark:bg-[#0B1F18] flex items-center justify-center text-emerald-600 dark:text-emerald-400 shadow-sm">
+                    <span class="material-symbols-outlined">public</span>
+                </div>
+                <div>
+                    <h4 class="font-bold text-gray-800 dark:text-white text-sm">Estado de Visibilidad</h4>
+                    <p class="text-xs text-gray-500 dark:text-emerald-200/70 mt-0.5">Controla si la campaña está visible en el portal público.</p>
+                </div>
             </div>
-            @endif
-            <div class="relative">
-                <input type="file" name="imagen_archivo" accept="image/*"
-                       class="w-full border-2 border-dashed border-emerald-200 dark:border-emerald-700 rounded-xl p-4 dark:bg-forest-dark dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-primary file:text-secondary hover:file:bg-emerald-400 file:cursor-pointer cursor-pointer">
-                <p class="text-xs text-gray-400 dark:text-emerald-600 mt-1">Dejar vacío para mantener la imagen actual</p>
-            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" name="activa" id="activa" {{ $campaign->activa ? 'checked' : '' }} class="sr-only peer">
+                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-500"></div>
+            </label>
         </div>
 
-        <div class="flex items-center gap-3 mt-2">
-            <input type="checkbox" name="activa" id="activa" {{ $campaign->activa ? 'checked' : '' }} class="w-5 h-5 text-emerald-500 border-emerald-200 rounded focus:ring-emerald-400 accent-emerald-500">
-            <label for="activa" class="font-bold text-gray-700 dark:text-emerald-200">Campaña Activa</label>
-        </div>
-
-        <div class="flex justify-end gap-4 mt-6">
-            <a href="{{ route('campanas.index') }}" class="py-3 px-6 text-gray-500 dark:text-gray-400 font-bold hover:bg-gray-100 dark:hover:bg-emerald-900/30 rounded-xl">Cancelar</a>
-            <button type="submit" class="bg-primary hover:bg-emerald-500 text-secondary font-bold py-3 px-8 rounded-xl shadow-md transition-transform hover:-translate-y-1">Guardar Cambios</button>
+        <div class="flex justify-between items-center mt-6 pt-6 border-t border-gray-100 dark:border-emerald-800/30">
+            <a href="{{ route('campanas.index') }}" class="px-6 py-3 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-emerald-900/30 transition-colors flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg">arrow_back</span> Cancelar
+            </a>
+            <button type="submit" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-500/30 transition-all duration-300 hover:-translate-y-1 flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg">save</span> Guardar Cambios
+            </button>
         </div>
     </form>
 </div>
