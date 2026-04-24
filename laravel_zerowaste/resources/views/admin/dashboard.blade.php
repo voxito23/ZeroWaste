@@ -284,20 +284,13 @@ document.querySelectorAll('.stagger-row').forEach((row,i)=>{row.style.opacity='0
         <div class="globe-container relative" style="background: radial-gradient(ellipse at 40% 40%, {{ 'rgba(16,185,129,0.08)' }} 0%, transparent 60%), radial-gradient(ellipse at 60% 70%, {{ 'rgba(6,78,59,0.05)' }} 0%, transparent 50%); background-color: {{ 'rgba(240,253,244,0.5)' }};">
             <canvas id="globe-canvas" class="w-full h-full absolute inset-0" style="cursor: grab; z-index: 0;"></canvas>
             
-            {{-- Holographic CSS SVG Map of Mexico --}}
+            {{-- Holographic Map of Mexico --}}
             <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10 overflow-hidden">
-                <div class="w-[120%] h-[120%] relative" style="
-                    mask-image: url('https://upload.wikimedia.org/wikipedia/commons/1/17/Mexico_States_blank_map.svg');
-                    mask-size: contain;
-                    mask-repeat: no-repeat;
-                    mask-position: center;
-                    -webkit-mask-image: url('https://upload.wikimedia.org/wikipedia/commons/1/17/Mexico_States_blank_map.svg');
-                    -webkit-mask-size: contain;
-                    -webkit-mask-repeat: no-repeat;
-                    -webkit-mask-position: center;
-                    background: linear-gradient(135deg, rgba(52,211,153,0.85), rgba(6,78,59,0.95));
-                    animation: floatHologram 8s ease-in-out infinite;
-                ">
+                <div class="w-[120%] h-[120%] relative flex items-center justify-center" style="animation: floatHologram 8s ease-in-out infinite;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Mexico_States_blank_map.svg/1024px-Mexico_States_blank_map.svg.png" 
+                         class="w-full h-full object-contain opacity-80" 
+                         style="filter: drop-shadow(0 0 15px rgba(16,185,129,0.8)) brightness(0) invert(0.8) sepia(1) hue-rotate(100deg) saturate(400%);" 
+                         alt="Mapa de México">
                     {{-- Hotspots mapped as percentages --}}
                     <div class="absolute w-3 h-3 rounded-full bg-white shadow-[0_0_15px_#fff]" style="top: 56%; left: 54%; animation: pulse 2s infinite;"></div> {{-- Qro/CDMX --}}
                     <div class="absolute w-3 h-3 rounded-full bg-white shadow-[0_0_15px_#fff]" style="top: 55%; left: 47%; animation: pulse 2s infinite 0.5s;"></div> {{-- GDL --}}

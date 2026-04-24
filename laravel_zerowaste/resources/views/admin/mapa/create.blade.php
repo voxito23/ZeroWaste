@@ -21,66 +21,112 @@
         <div id="admin-map" class="w-full flex-1 min-h-[500px]"></div>
     </div>
 
-    <!-- Formulario -->
-    <div class="bg-white dark:bg-forest-card rounded-[2rem] p-8 shadow-xl border-2 border-emerald-100 dark:border-emerald-800/50 relative overflow-hidden group">
-        <div class="absolute -bottom-20 -left-10 w-60 h-60 bg-blue-400/5 rounded-full blur-3xl pointer-events-none transition group-hover:bg-blue-400/10"></div>
-        <form id="customForm" novalidate action="{{ route('mapa.store') }}" method="POST" enctype="multipart/form-data">
+<div class="bg-white/80 dark:bg-[#0B1F18]/80 backdrop-blur-xl rounded-[2rem] p-8 lg:p-10 shadow-2xl border border-white/50 dark:border-emerald-800/30 relative overflow-hidden group">
+        <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
+        
+        <div class="flex items-center gap-4 mb-8 relative z-10 border-b border-gray-100 dark:border-emerald-800/30 pb-6">
+            <div class="w-14 h-14 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-[1.25rem] flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
+                <span class="material-symbols-outlined text-[28px]">add_location_alt</span>
+            </div>
+            <div>
+                <h2 class="text-2xl font-black text-[#064E3B] dark:text-white tracking-tight">Datos del Punto</h2>
+                <p class="text-gray-500 dark:text-emerald-200/70 text-xs font-medium mt-1">Completa la información del centro de acopio.</p>
+            </div>
+        </div>
+
+        <form id="customForm" novalidate action="{{ route('mapa.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-col gap-5 relative z-10">
             @csrf
 
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-gray-700 dark:text-emerald-200 mb-2">Nombre del Punto</label>
-                <input type="text" name="nombre" class="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-forest-dark dark:text-white border border-gray-200 dark:border-emerald-800 focus:ring-2 focus:ring-[#00E096] focus:border-transparent transition-colors" required placeholder="Ej. Centro de Acopio UAQ">
-                <span id="err-nombre" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+            <input type="hidden" name="direccion" id="hidden-direccion">
+
+            <div>
+                <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Nombre del Punto</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">storefront</span></div>
+                    <input type="text" name="nombre" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20" required placeholder="Ej. Centro de Acopio UAQ">
+                </div>
+                <span id="err-nombre" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
             </div>
 
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-gray-700 dark:text-emerald-200 mb-2">Dirección</label>
-                <input type="text" name="direccion" class="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-forest-dark dark:text-white border border-gray-200 dark:border-emerald-800 focus:ring-2 focus:ring-[#00E096] focus:border-transparent transition-colors" required placeholder="Calle, Número, Colonia">
-                <span id="err-direccion" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
-            </div>
-
-            <div class="grid grid-cols-2 gap-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-emerald-200 mb-2">Latitud</label>
-                    <input type="number" step="any" name="latitud" id="input-lat" class="w-full px-4 py-3 rounded-xl bg-emerald-50 dark:bg-forest-dark dark:text-white border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-[#00E096] focus:border-transparent transition-colors font-mono text-sm" required readonly placeholder="Haz clic en el mapa">
-                    <span id="err-latitud" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+                    <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Calle y Colonia</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">signpost</span></div>
+                        <input type="text" id="input-calle" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20" required placeholder="Ej. Av. Universidad">
+                    </div>
+                    <span id="err-calle" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Número</label>
+                        <input type="text" id="input-numero" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20" required placeholder="Ej. 123">
+                        <span id="err-numero" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">C.P.</label>
+                        <input type="text" id="input-cp" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20" required placeholder="Ej. 76000">
+                        <span id="err-cp" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-5">
+                <div>
+                    <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Latitud</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">explore</span></div>
+                        <input type="number" step="any" name="latitud" id="input-lat" class="w-full bg-emerald-50 dark:bg-[#064E3B]/20 border border-emerald-200 dark:border-emerald-800/50 text-emerald-900 dark:text-emerald-100 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 font-mono" required readonly placeholder="Haz clic en mapa">
+                    </div>
+                    <span id="err-latitud" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 dark:text-emerald-200 mb-2">Longitud</label>
-                    <input type="number" step="any" name="longitud" id="input-lng" class="w-full px-4 py-3 rounded-xl bg-emerald-50 dark:bg-forest-dark dark:text-white border border-emerald-200 dark:border-emerald-800 focus:ring-2 focus:ring-[#00E096] focus:border-transparent transition-colors font-mono text-sm" required readonly placeholder="Haz clic en el mapa">
+                    <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Longitud</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">explore</span></div>
+                        <input type="number" step="any" name="longitud" id="input-lng" class="w-full bg-emerald-50 dark:bg-[#064E3B]/20 border border-emerald-200 dark:border-emerald-800/50 text-emerald-900 dark:text-emerald-100 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 font-mono" required readonly placeholder="Haz clic en mapa">
+                    </div>
                 </div>
             </div>
 
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-gray-700 dark:text-emerald-200 mb-2">Tipo</label>
-                <select name="tipo" class="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-forest-dark dark:text-white border border-gray-200 dark:border-emerald-800 focus:ring-2 focus:ring-[#00E096] focus:border-transparent transition-colors" required>
-                    <option value="">Selecciona un tipo...</option>
-                    <option value="Plástico">♻️ Plástico</option>
-                    <option value="Vidrio">🍷 Vidrio</option>
-                    <option value="Electrónicos">💻 Electrónicos</option>
-                    <option value="Centro Principal">🏢 Centro Principal</option>
-                    <option value="Contenedor Público">📦 Contenedor Público</option>
-                </select>
-                <span id="err-tipo" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
+            <div>
+                <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Tipo de Punto</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">category</span></div>
+                    <select name="tipo" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 appearance-none" required>
+                        <option value="" disabled selected>Selecciona una categoría...</option>
+                        <option value="Plástico">♻️ Reciclaje de Plástico</option>
+                        <option value="Vidrio">🍷 Reciclaje de Vidrio</option>
+                        <option value="Electrónicos">💻 Desechos Electrónicos</option>
+                        <option value="Centro Principal">🏢 Centro Principal</option>
+                        <option value="Contenedor Público">📦 Contenedor Público</option>
+                    </select>
+                </div>
+                <span id="err-tipo" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
             </div>
 
-            <div class="mb-6">
-                <label class="block text-sm font-bold text-gray-700 dark:text-emerald-200 mb-2">Materiales Aceptados (Opcional)</label>
-                <textarea name="materiales" rows="3" class="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-forest-dark dark:text-white border border-gray-200 dark:border-emerald-800 focus:ring-2 focus:ring-[#00E096] focus:border-transparent transition-colors" placeholder="Ej. Cartón, Latas, Baterías. Si lo dejas vacío aplicarán los generales."></textarea>
-            </div>
-            <div class="mb-8">
-                <label class="block text-sm font-bold text-gray-700 dark:text-emerald-200 mb-2">Imagen del punto</label>
-                <input type="file" name="imagen_archivo" accept="image/*"
-                       class="w-full border-2 border-dashed border-emerald-200 dark:border-emerald-700 rounded-xl p-4 dark:bg-forest-dark dark:text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-bold file:bg-primary file:text-secondary hover:file:bg-emerald-400 file:cursor-pointer cursor-pointer">
-                <p class="text-xs text-gray-400 dark:text-emerald-600 mt-1">Formatos: JPG, PNG, WEBP. Opcional.</p>
+            <div>
+                <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Materiales Aceptados (Opcional)</label>
+                <div class="relative">
+                    <div class="absolute top-3 left-0 pl-4 flex items-start pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">inventory_2</span></div>
+                    <textarea name="materiales" rows="2" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20" placeholder="Ej. Cartón, Latas, Baterías."></textarea>
+                </div>
             </div>
 
-            <div class="flex justify-between items-center pt-4 border-t border-gray-100 dark:border-emerald-800/50">
-                <a href="{{ route('mapa.index') }}" class="px-6 py-3 text-gray-500 dark:text-gray-400 font-bold hover:text-gray-700 dark:hover:text-white transition-colors">
-                    ← Cancelar
+            <div>
+                <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Fotografía del Punto</label>
+                <div class="relative group mt-1">
+                    <input type="file" name="imagen_archivo" accept="image/*" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-dashed border-emerald-300 dark:border-emerald-700/50 rounded-xl p-4 dark:text-white text-sm file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-emerald-50 dark:file:bg-[#0B1F18] file:text-emerald-600 dark:file:text-emerald-400 hover:file:bg-emerald-100 dark:hover:file:bg-emerald-900/50 file:cursor-pointer cursor-pointer transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                    <p class="text-xs text-gray-400 dark:text-emerald-600/70 mt-2 ml-1">JPG, PNG, WEBP permitidos.</p>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center mt-4 pt-6 border-t border-gray-100 dark:border-emerald-800/30">
+                <a href="{{ route('mapa.index') }}" class="px-6 py-3 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-emerald-900/30 transition-colors flex items-center gap-2">
+                    <span class="material-symbols-outlined text-lg">arrow_back</span> Cancelar
                 </a>
-                <button type="submit" class="px-8 py-3 bg-[#064E3B] text-white rounded-xl font-bold hover:bg-[#00E096] hover:text-[#064E3B] transition-colors shadow-lg shadow-[#00E096]/20 flex items-center gap-2">
-                    <span class="material-symbols-outlined">save</span> Guardar Punto
+                <button type="submit" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-500/30 transition-all duration-300 hover:-translate-y-1 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-lg">save</span> Guardar Punto
                 </button>
             </div>
         </form>
@@ -134,18 +180,24 @@ document.addEventListener('DOMContentLoaded', function() {
     if (form) {
         form.addEventListener('submit', function(e) {
             const nombre = form.querySelector('input[name="nombre"]');
-            const direccion = form.querySelector('input[name="direccion"]');
+            const inCalle = document.getElementById('input-calle');
+            const inNum = document.getElementById('input-numero');
+            const inCP = document.getElementById('input-cp');
+            const hiddenDir = document.getElementById('hidden-direccion');
+            
             const latitud = document.getElementById('input-lat');
             const tipo = form.querySelector('select[name="tipo"]');
 
             const errNombre = document.getElementById('err-nombre');
-            const errDireccion = document.getElementById('err-direccion');
+            const errCalle = document.getElementById('err-calle');
+            const errNum = document.getElementById('err-numero');
+            const errCP = document.getElementById('err-cp');
             const errLatitud = document.getElementById('err-latitud');
             const errTipo = document.getElementById('err-tipo');
 
             // Reset
-            [errNombre, errDireccion, errLatitud, errTipo].forEach(el => el.classList.add('hidden'));
-            [nombre, direccion, latitud, tipo].forEach(el => el.classList.remove('border-red-500'));
+            [errNombre, errCalle, errNum, errCP, errLatitud, errTipo].forEach(el => el.classList.add('hidden'));
+            [nombre, inCalle, inNum, inCP, latitud, tipo].forEach(el => el.classList.remove('border-red-500'));
 
             let isValid = true;
 
@@ -156,10 +208,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 isValid = false;
             }
 
-            if (!direccion.value.trim()) {
-                errDireccion.textContent = 'La dirección es obligatoria.';
-                errDireccion.classList.remove('hidden');
-                direccion.classList.add('border-red-500');
+            if (!inCalle.value.trim()) {
+                errCalle.textContent = 'La calle/colonia es obligatoria.';
+                errCalle.classList.remove('hidden');
+                inCalle.classList.add('border-red-500');
+                isValid = false;
+            }
+            if (!inNum.value.trim()) {
+                errNum.textContent = 'Requerido.';
+                errNum.classList.remove('hidden');
+                inNum.classList.add('border-red-500');
+                isValid = false;
+            }
+            if (!inCP.value.trim()) {
+                errCP.textContent = 'Requerido.';
+                errCP.classList.remove('hidden');
+                inCP.classList.add('border-red-500');
                 isValid = false;
             }
 
@@ -179,6 +243,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!isValid) {
                 e.preventDefault();
+            } else {
+                // Construct single format direction
+                hiddenDir.value = `${inCalle.value.trim()} #${inNum.value.trim()}, C.P. ${inCP.value.trim()}`;
             }
         });
     }

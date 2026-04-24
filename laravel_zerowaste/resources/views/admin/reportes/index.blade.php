@@ -395,7 +395,11 @@ document.addEventListener("DOMContentLoaded", function() {
             <button onclick="setCategoriaPreset('users', 'Solo Usuarios Base')"><span class="material-symbols-outlined text-[18px] text-blue-400">person</span> Solo Usuarios Base</button>
             <div class="px-4 py-2 text-[10px] font-black tracking-widest text-emerald-600/60 uppercase border-t border-gray-100 dark:border-emerald-800/30 mt-1">Módulo Mapa</div>
             <button onclick="setCategoriaPreset('centro principal', 'Centros Principales')"><span class="material-symbols-outlined text-[18px] text-amber-500">star</span> Centros Principales</button>
-            <button onclick="setCategoriaPreset('organización ambiental', 'Organizaciones Ambientales')"><span class="material-symbols-outlined text-[18px] text-emerald-500">nature_people</span> Organizaciones Ambientales</button>
+            <button onclick="setCategoriaPreset('plástico', 'Reciclaje de Plástico')"><span class="material-symbols-outlined text-[18px] text-emerald-500">recycling</span> Reciclaje de Plástico</button>
+            <button onclick="setCategoriaPreset('vidrio', 'Reciclaje de Vidrio')"><span class="material-symbols-outlined text-[18px] text-rose-500">wine_bar</span> Reciclaje de Vidrio</button>
+            <button onclick="setCategoriaPreset('electrónicos', 'Desechos Electrónicos')"><span class="material-symbols-outlined text-[18px] text-indigo-500">devices</span> Desechos Electrónicos</button>
+            <button onclick="setCategoriaPreset('contenedor público', 'Contenedores Públicos')"><span class="material-symbols-outlined text-[18px] text-gray-500">delete</span> Contenedores Públicos</button>
+            <button onclick="setCategoriaPreset('organización ambiental', 'Organizaciones Ambientales')"><span class="material-symbols-outlined text-[18px] text-teal-500">nature_people</span> Org. Ambientales</button>
             <div class="px-4 py-2 text-[10px] font-black tracking-widest text-emerald-600/60 uppercase border-t border-gray-100 dark:border-emerald-800/30 mt-1">Módulo Campañas</div>
             <button onclick="setCategoriaPreset('Impacto Positivo', 'Campañas Impacto Positivo')"><span class="material-symbols-outlined text-[18px] text-green-500">verified</span> Impacto Positivo</button>
             <button onclick="setCategoriaPreset('Educación', 'Campañas de Educación')"><span class="material-symbols-outlined text-[18px] text-blue-500">school</span> Educación y Concientización</button>
