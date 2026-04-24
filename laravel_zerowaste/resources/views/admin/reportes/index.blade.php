@@ -150,12 +150,28 @@ document.addEventListener("DOMContentLoaded", function() {
         .catch(() => { if (grid) grid.style.opacity = '1'; });
     }
 
-    // Search (debounce AJAX)
+    // Search (debounce AJAX + filter modules)
     let searchTimeout;
     const searchInput = document.getElementById('search-report');
+    function filterModules(query) {
+        const modules = document.querySelectorAll('.report-module');
+        const q = query.toLowerCase().trim();
+        let anyVisible = false;
+        modules.forEach(m => {
+            const terms = (m.dataset.searchTerm || '') + ' ' + m.textContent.toLowerCase();
+            if (!q || terms.includes(q)) {
+                m.style.display = '';
+                m.style.opacity = '1';
+                anyVisible = true;
+            } else {
+                m.style.display = 'none';
+            }
+        });
+    }
     if (searchInput) {
         searchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
+            filterModules(this.value);
             searchTimeout = setTimeout(() => updateKPIs(), 400);
         });
     }
@@ -242,6 +258,7 @@ document.addEventListener("DOMContentLoaded", function() {
     window.limpiarFiltro = function() {
         dateStart = null; dateEnd = null;
         if (pickerStart) { pickerStart.clear(); pickerEnd.set('minDate', null); }
+        filterModules('');
         if (pickerEnd) pickerEnd.clear();
         document.getElementById('search-report').value = '';
         document.getElementById('categoria-report').value = '';
@@ -285,12 +302,14 @@ document.addEventListener("DOMContentLoaded", function() {
         let url = `{{ route('reportes.exportar') }}?tipo=${tipo}&formato=${formato}`;
         if (start) url += `&fecha_inicio=${start}`; if (end) url += `&fecha_fin=${end}`;
         if (search) url += `&search=${encodeURIComponent(search)}`; if (categoria) url += `&categoria=${encodeURIComponent(categoria)}`;
+        // Show loading overlay
+        const loader = document.getElementById('export-loading');
+        if (formato !== 'preview' && loader) {
+            loader.classList.remove('hidden');
+            loader.classList.add('flex');
+            setTimeout(() => { loader.classList.add('hidden'); loader.classList.remove('flex'); }, 4000);
+        }
         if (formato === 'preview') window.open(url, '_blank'); else window.location.href = url;
-        const isDark = document.documentElement.classList.contains('dark');
-        Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 3500, timerProgressBar: true, background: isDark ? '#0F2A20' : '#fff',
-            customClass: { popup: 'rounded-2xl border shadow-xl border-blue-100 dark:border-blue-900/50 p-2' },
-            html: `<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/40 flex items-center justify-center flex-shrink-0 border border-blue-200 dark:border-blue-700 text-blue-500"><span class="material-symbols-outlined text-[18px]">info</span></div><div><h4 class="text-sm font-bold text-secondary dark:text-emerald-100 m-0">Generando documento...</h4></div></div>`
-        });
     }
 
     window.previewReport = function(tipo) {
@@ -471,11 +490,20 @@ document.addEventListener("DOMContentLoaded", function() {
     @endforeach
 </div>
 
+{{-- Loading Overlay --}}
+<div id="export-loading" class="fixed inset-0 z-[9999] hidden items-center justify-center" style="background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);">
+    <div class="bg-white dark:bg-[#0F2A20] rounded-3xl p-8 shadow-2xl flex flex-col items-center gap-4 border border-emerald-100 dark:border-emerald-800/50">
+        <div class="w-12 h-12 border-4 border-emerald-200 border-t-emerald-500 rounded-full animate-spin"></div>
+        <p class="text-lg font-bold text-[#064E3B] dark:text-white">Generando reporte...</p>
+        <p class="text-xs text-gray-400">Esto puede tomar unos segundos</p>
+    </div>
+</div>
+
 {{-- ========== REPORT MODULES ========== --}}
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8" id="report-modules">
 
     {{-- 1. Usuarios --}}
-    <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px]">
+    <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px] report-module" data-search-term="directorio usuarios registros roles fotos perfil">
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-emerald-400/20 to-teal-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">
@@ -498,7 +526,7 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     {{-- 2. Campañas --}}
-    <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px]">
+    <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px] report-module" data-search-term="campañas ecologicas organizadas visibilidad clasificacion">
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-blue-400/20 to-cyan-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">
@@ -521,7 +549,7 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     {{-- 3. Mapa --}}
-    <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px]">
+    <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px] report-module" data-search-term="puntos acopio centros reciclaje mapa coordenadas ubicacion">
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-amber-400/20 to-orange-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">
@@ -544,7 +572,7 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
 
     {{-- 4. Eventos --}}
-    <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px]">
+    <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px] report-module" data-search-term="jornadas eventos talleres limpiezas comunitarias">
         <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-purple-400/20 to-pink-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
         <div>
             <div class="flex items-center justify-between mb-5">

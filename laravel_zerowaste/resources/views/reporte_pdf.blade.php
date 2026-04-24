@@ -46,10 +46,11 @@
             width: 60px;
             height: 60px;
             background: rgba(255,255,255,0.15);
-            border-radius: 16px;
+            border-radius: 50%;
             display: inline-block;
             margin: 0 auto 15px auto;
             text-align: center;
+            overflow: hidden;
         }
 
         .logo-box img { 
