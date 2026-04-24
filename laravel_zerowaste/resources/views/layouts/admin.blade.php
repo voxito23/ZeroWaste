@@ -111,44 +111,44 @@
             <span class="font-black text-base text-secondary dark:text-white tracking-tight">ZeroWaste</span>
         </div>
         <nav class="p-3 flex flex-col gap-0.5 flex-1 overflow-y-auto">
-            <a href="{{ route('dashboard') }}" class="nav-link flex items-center gap-3 font-bold text-lg text-secondary dark:text-emerald-200 {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <span class="material-symbols-outlined text-2xl">dashboard</span> Dashboard
+            <a href="{{ route('dashboard') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                <span class="material-symbols-outlined text-lg">dashboard</span> Dashboard
             </a>
-            <a href="{{ route('usuarios.index') }}" class="nav-link flex items-center gap-3 font-bold text-lg text-secondary dark:text-emerald-200 {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
-                <span class="material-symbols-outlined text-2xl">group</span> Usuarios
+            <a href="{{ route('usuarios.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
+                <span class="material-symbols-outlined text-lg">group</span> Usuarios
             </a>
-            <a href="{{ route('campanas.index') }}" class="nav-link flex items-center gap-3 font-bold text-lg text-secondary dark:text-emerald-200 {{ request()->routeIs('campanas.*') ? 'active' : '' }}">
-                <span class="material-symbols-outlined text-2xl">campaign</span> Campañas
+            <a href="{{ route('campanas.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('campanas.*') ? 'active' : '' }}">
+                <span class="material-symbols-outlined text-lg">campaign</span> Campañas
             </a>
-            <a href="{{ route('mapa.index') }}" class="nav-link flex items-center gap-3 font-bold text-lg text-secondary dark:text-emerald-200 {{ request()->routeIs('mapa.*') ? 'active' : '' }}">
-                <span class="material-symbols-outlined text-2xl">map</span> Mapa
+            <a href="{{ route('mapa.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('mapa.*') ? 'active' : '' }}">
+                <span class="material-symbols-outlined text-lg">map</span> Mapa
             </a>
-            <a href="{{ route('reportes.index') }}" class="nav-link flex items-center gap-3 font-bold text-lg text-secondary dark:text-emerald-200 {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
-                <span class="material-symbols-outlined text-2xl">insert_chart</span> Reportes
+            <a href="{{ route('reportes.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
+                <span class="material-symbols-outlined text-lg">insert_chart</span> Reportes
             </a>
 
             <div class="border-t border-emerald-100 dark:border-emerald-900/50 my-3"></div>
             
             @if(\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->email === 'vichdz@gmail.com')
-                <span class="text-sm text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1 mt-2">Desarrollo</span>
+                <span class="text-[10px] text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1 mt-2">Desarrollo</span>
                 
-                <a href="/docs" target="_blank" class="nav-link flex items-center gap-3 font-bold text-lg text-secondary dark:text-emerald-200">
-                    <span class="material-symbols-outlined text-2xl">api</span> FastAPI Docs
+                <a href="/docs" target="_blank" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200">
+                    <span class="material-symbols-outlined text-lg">api</span> FastAPI Docs
                 </a>
 
-                <a href="/" target="_blank" class="nav-link flex items-center gap-3 font-bold text-lg text-secondary dark:text-emerald-200">
-                    <span class="material-symbols-outlined text-2xl">storefront</span> ZeroWaste Cliente
+                <a href="/" target="_blank" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200">
+                    <span class="material-symbols-outlined text-lg">storefront</span> ZeroWaste Cliente
                 </a>
                 
                 <div class="border-t border-emerald-100 dark:border-emerald-900/50 my-3"></div>
             @endif
 
-            <span class="text-sm text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1 mt-2">Soporte</span>
-            <a href="{{ route('mensajes.index') }}" class="nav-link flex items-center gap-3 font-bold text-lg text-secondary dark:text-emerald-200 {{ request()->routeIs('mensajes.*') ? 'active' : '' }}">
-                <span class="material-symbols-outlined text-2xl">mail</span> Mensajes
+            <span class="text-[10px] text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1 mt-2">Soporte</span>
+            <a href="{{ route('mensajes.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('mensajes.*') ? 'active' : '' }}">
+                <span class="material-symbols-outlined text-lg">mail</span> Mensajes
             </a>
-            <a href="{{ route('recuperacion.index') }}" class="nav-link flex items-center gap-3 font-bold text-lg text-secondary dark:text-emerald-200 {{ request()->routeIs('recuperacion.*') ? 'active' : '' }}">
-                <span class="material-symbols-outlined text-2xl">restore</span> Recuperación
+            <a href="{{ route('recuperacion.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('recuperacion.*') ? 'active' : '' }}">
+                <span class="material-symbols-outlined text-lg">restore</span> Recuperación
             </a>
 
             <div class="mt-auto pt-4 border-t border-emerald-100 dark:border-emerald-900/50">

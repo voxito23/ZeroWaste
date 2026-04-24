@@ -49,18 +49,35 @@
                 <td class="text-gray-400 text-xs">{{ $user->created_at ? $user->created_at->format('d M Y') : '—' }}</td>
                 <td class="text-right">
                     <div class="flex items-center justify-end gap-1">
-                        <a href="{{ route('usuarios.edit', $user) }}" class="w-8 h-8 rounded-lg bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white flex items-center justify-center transition-all" title="Editar">
-                            <span class="material-symbols-outlined text-[16px]">edit</span>
-                        </a>
-                        @if($user->email !== 'vichdz@gmail.com' && (!auth()->check() || auth()->id() !== $user->id))
-                        <form action="{{ route('usuarios.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('¿Eliminar este usuario?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-all" title="Eliminar">
-                                <span class="material-symbols-outlined text-[16px]">delete</span>
-                            </button>
-                        </form>
+                        @php
+                            $isPrincipal = $user->email === 'vichdz@gmail.com';
+                            $isSelf = auth()->check() && auth()->id() === $user->id;
+                            $amPrincipal = auth()->check() && auth()->user()->email === 'vichdz@gmail.com';
+                        @endphp
+
+                        @if($isPrincipal && !$amPrincipal)
+                            {{-- Non-principal admin can't edit/delete principal --}}
+                            <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center cursor-not-allowed" title="Cuenta protegida">
+                                <span class="material-symbols-outlined text-[16px]">shield</span>
+                            </span>
                         @else
-                        <span class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-300 dark:text-gray-600 flex items-center justify-center cursor-not-allowed"><span class="material-symbols-outlined text-[16px]">lock</span></span>
+                            <a href="{{ route('usuarios.edit', $user) }}" class="w-8 h-8 rounded-lg bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white flex items-center justify-center transition-all" title="Editar">
+                                <span class="material-symbols-outlined text-[16px]">edit</span>
+                            </a>
+                            @if(!$isPrincipal && !$isSelf)
+                                @if(!$user->is_admin || $amPrincipal)
+                                <form action="{{ route('usuarios.destroy', $user) }}" method="POST" class="inline" onsubmit="return confirm('¿Eliminar este usuario?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-all" title="Eliminar">
+                                        <span class="material-symbols-outlined text-[16px]">delete</span>
+                                    </button>
+                                </form>
+                                @else
+                                <span class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-300 dark:text-gray-600 flex items-center justify-center cursor-not-allowed"><span class="material-symbols-outlined text-[16px]">lock</span></span>
+                                @endif
+                            @else
+                                <span class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-white/5 text-gray-300 dark:text-gray-600 flex items-center justify-center cursor-not-allowed"><span class="material-symbols-outlined text-[16px]">lock</span></span>
+                            @endif
                         @endif
                     </div>
                 </td>

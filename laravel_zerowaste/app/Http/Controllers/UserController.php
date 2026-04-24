@@ -124,11 +124,20 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
+        // Non-principal admins cannot edit the principal admin
+        if ($user->email === 'vichdz@gmail.com' && auth()->check() && auth()->user()->email !== 'vichdz@gmail.com') {
+            return redirect()->route('usuarios.index')->with('error_admin', 'Solo el administrador principal puede editar su propia cuenta.');
+        }
         return view('admin.usuarios_edit', compact('user'));
     }
 
     public function update(Request $request, User $user)
     {
+        // Non-principal admins cannot update the principal admin
+        if ($user->email === 'vichdz@gmail.com' && auth()->check() && auth()->user()->email !== 'vichdz@gmail.com') {
+            return redirect()->route('usuarios.index')->with('error_admin', 'Solo el administrador principal puede editar su propia cuenta.');
+        }
+
         $rules = [
             'nombre' => 'required|string|min:10|max:20',
             'email' => 'required|email|max:100|unique:usuarios,email,'.$user->id,
