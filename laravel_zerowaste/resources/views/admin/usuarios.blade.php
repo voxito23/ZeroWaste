@@ -8,34 +8,27 @@
 {{-- Estadísticas rápidas (clickables) --}}
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
     @php $stats=[
-        ['Total','group','#10B981',$totalCount,'all'],
-        ['Admins','shield_person','#8B5CF6',$adminCount,'admin'],
-        ['Usuarios','person','#3B82F6',$userCount,'user'],
-        ['Bloqueados','block','#F43F5E',$blockedCount,'blocked'],
+        ['Total','group','#10B981',$totalCount,'all','from-emerald-400 to-emerald-600','ring-emerald-500/40'],
+        ['Admins','shield_person','#8B5CF6',$adminCount,'admin','from-purple-400 to-purple-600','ring-purple-500/40'],
+        ['Usuarios','person','#3B82F6',$userCount,'user','from-blue-400 to-blue-600','ring-blue-500/40'],
+        ['Bloqueados','block','#F43F5E',$blockedCount,'blocked','from-rose-400 to-rose-600','ring-rose-500/40'],
     ]; @endphp
     @foreach($stats as $s)
-    <div class="glass-card p-5 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 stat-card {{ $s[4] === 'all' ? 'ring-2 ring-emerald-500/40' : '' }}" data-stat-tab="{{ $s[4] }}">
-        <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:{{$s[2]}}15">
-                <span class="material-symbols-outlined text-lg" style="color:{{$s[2]}}">{{$s[1]}}</span>
-            </div>
-            <div>
-                <p class="text-[11px] text-gray-400 font-bold uppercase tracking-wider">{{$s[0]}}</p>
-                <p class="text-xl font-black text-[#064E3B] dark:text-white">{{$s[3]}}</p>
-            </div>
+    <div class="glass-card p-5 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 stat-card relative overflow-hidden group ring-2 {{ $s[4] === 'all' ? $s[6] : 'ring-transparent' }}" data-stat-tab="{{ $s[4] }}" data-ring-class="{{ $s[6] }}">
+        {{-- Faded icon watermark --}}
+        <div class="absolute -bottom-3 -right-3 pointer-events-none opacity-[0.06] group-hover:opacity-[0.1] transition-opacity duration-500">
+            <span class="material-symbols-outlined" style="font-size: 80px; color: {{$s[2]}};">{{$s[1]}}</span>
         </div>
-        {{-- Mini trend SVG --}}
-        <div class="mt-3 h-6 opacity-60">
-            <svg viewBox="0 0 100 24" class="w-full h-full" preserveAspectRatio="none">
-                <polyline fill="none" stroke="{{$s[2]}}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    points="0,20 15,16 30,18 45,10 55,12 70,6 85,8 100,4" />
-                <linearGradient id="grad-{{$loop->index}}" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stop-color="{{$s[2]}}" stop-opacity="0.2"/>
-                    <stop offset="100%" stop-color="{{$s[2]}}" stop-opacity="0"/>
-                </linearGradient>
-                <polygon fill="url(#grad-{{$loop->index}})"
-                    points="0,24 0,20 15,16 30,18 45,10 55,12 70,6 85,8 100,4 100,24" />
-            </svg>
+        <div class="relative z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br {{$s[5]}} flex items-center justify-center shadow-lg" style="box-shadow: 0 4px 15px {{$s[2]}}40;">
+                    <span class="material-symbols-outlined text-white text-lg">{{$s[1]}}</span>
+                </div>
+                <div>
+                    <p class="text-[11px] text-gray-400 font-bold uppercase tracking-wider">{{$s[0]}}</p>
+                    <p class="text-xl font-black text-[#064E3B] dark:text-white">{{$s[3]}}</p>
+                </div>
+            </div>
         </div>
     </div>
     @endforeach
@@ -135,11 +128,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Stat cards
         statCards.forEach(c => {
-            c.classList.remove('ring-2', 'ring-emerald-500/40', 'shadow-lg');
+            c.classList.remove('ring-2', 'shadow-lg', 'ring-emerald-500/40', 'ring-purple-500/40', 'ring-blue-500/40', 'ring-rose-500/40');
+            c.classList.add('ring-transparent');
         });
         const activeCard = document.querySelector(`.stat-card[data-stat-tab="${tab}"]`);
         if(activeCard) {
-            activeCard.classList.add('ring-2', 'ring-emerald-500/40', 'shadow-lg');
+            const ringClass = activeCard.dataset.ringClass;
+            activeCard.classList.remove('ring-transparent');
+            activeCard.classList.add('ring-2', ringClass, 'shadow-lg');
         }
     }
 
