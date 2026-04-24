@@ -181,10 +181,8 @@ class ReportController extends Controller
             return $pdf->download($filename);
         } elseif ($formato === 'xlsx') {
             $html = view('reporte_excel', $data)->render();
-            // Use .xls extension with ms-excel MIME for HTML-as-Excel
-            $filename = str_replace('.xlsx', '.xls', $filename);
             return response($html)
-                ->header('Content-Type', 'application/vnd.ms-excel')
+                ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                 ->header('Content-Disposition', 'attachment; filename="'.$filename.'"')
                 ->header('Cache-Control', 'max-age=0');
         } elseif ($formato === 'docx') {
