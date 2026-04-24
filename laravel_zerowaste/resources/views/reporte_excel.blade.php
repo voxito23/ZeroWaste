@@ -46,11 +46,21 @@
     </style>
 </head>
 <body>
+    @php
+        $logoPath = public_path('images/logo_texture.png');
+        $logoData = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : '';
+        $logoSrc = $logoData ? 'data:image/png;base64,' . $logoData : '';
+    @endphp
     {{-- HEADER --}}
     <table class="header-table">
         <tr>
+            <td style="width: 50px; text-align: center;">
+                @if($logoSrc)
+                    <img src="{{ $logoSrc }}" width="40" height="40" style="border-radius: 10px;">
+                @endif
+            </td>
             <td>
-                <span class="brand-name">♻ ZEROWASTE</span>
+                <span class="brand-name">ZEROWASTE</span>
                 <div class="report-title">{{ $titulo }}</div>
             </td>
             <td class="date-tag">
@@ -100,8 +110,23 @@
             @forelse($registros as $idx => $item)
                 <tr>
                     @if($tipo === 'usuarios')
+                        @php
+                            $avatarSrc = null;
+                            if(isset($item->foto_perfil) && $item->foto_perfil) {
+                                $path = public_path($item->foto_perfil);
+                                if(file_exists($path)) {
+                                    $avatarSrc = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($path));
+                                }
+                            }
+                        @endphp
                         <td style="color: #9CA3AF; font-weight: 600;">{{ $idx + 1 }}</td>
-                        <td><strong style="color: #064E3B;">{{ $item->nombre }}</strong><br><span style="font-size:9px; color:#9CA3AF;">{{ $item->titulo_perfil ?? 'Ecologista' }}</span></td>
+                        <td>
+                            @if($avatarSrc)
+                                <img src="{{ $avatarSrc }}" width="24" height="24" style="border-radius: 50%; vertical-align: middle; margin-right: 5px;">
+                            @endif
+                            <strong style="color: #064E3B; vertical-align: middle;">{{ $item->nombre }}</strong><br>
+                            <span style="font-size:9px; color:#9CA3AF;">{{ $item->titulo_perfil ?? 'Ecologista' }}</span>
+                        </td>
                         <td style="font-size: 10px;">{{ $item->email }}</td>
                         <td>{{ $item->ubicacion ?? '—' }}</td>
                         <td><span class="{{ $item->is_admin ? 'role-admin' : 'role-user' }}">{{ $item->is_admin ? 'Admin' : 'Usuario' }}</span></td>
