@@ -14,6 +14,11 @@
 .globe-container{position:relative;width:100%;height:100%;min-height:320px;border-radius:1.5rem;overflow:hidden}
 .stat-ring{position:relative;width:140px;height:140px}
 .stat-ring svg{transform:rotate(-90deg)}
+        @keyframes spinSlow { 100% { transform: rotate(360deg); } }
+        @keyframes floatHologram {
+            0%, 100% { transform: perspective(1000px) rotateX(15deg) rotateY(-5deg) translateY(0); filter: drop-shadow(0 0 15px rgba(16,185,129,0.4)); }
+            50% { transform: perspective(1000px) rotateX(12deg) rotateY(5deg) translateY(-15px); filter: drop-shadow(0 0 25px rgba(16,185,129,0.7)); }
+        }
 .stat-ring .ring-bg{stroke:rgba(0,0,0,0.05);fill:none;stroke-width:8}
 .dark .stat-ring .ring-bg{stroke:rgba(255,255,255,0.05)}
 .stat-ring .ring-fill{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1)}
@@ -76,47 +81,7 @@ if(gc){
     const globeGroup = new THREE.Group();
     scene.add(globeGroup);
 
-    // --- 1. Inner Core (Holographic Map of Mexico) ---
-    // We use a flat plane to display the country like a sci-fi hologram
-    const coreGeo = new THREE.PlaneGeometry(3.8, 2.5);
-    
-    // Lights for the premium material
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-    scene.add(ambientLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(0, 5, 5);
-    scene.add(dirLight);
-
-    const textureLoader = new THREE.TextureLoader();
-    textureLoader.crossOrigin = 'Anonymous';
-    
-    const coreMat = new THREE.MeshPhongMaterial({
-        color: isDark ? 0x34D399 : 0x10B981,
-        emissive: isDark ? 0x064E3B : 0x047857,
-        emissiveIntensity: 0.6,
-        transparent: true,
-        opacity: 0.9,
-        side: THREE.DoubleSide,
-        depthWrite: false
-    });
-    
-    // Using a high-res transparent map of Mexico
-    textureLoader.load('https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Mexico_States_blank_map.svg/1024px-Mexico_States_blank_map.svg.png', (texture) => {
-        coreMat.map = texture;
-        coreMat.alphaMap = texture;
-        coreMat.needsUpdate = true;
-    });
-
-    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-    // Lay it down slightly for 3D perspective
-    coreMesh.rotation.x = -Math.PI / 8;
-    globeGroup.add(coreMesh);
-    
-    // Slight tilt to the whole group
     globeGroup.rotation.x = Math.PI / 12;
-
-    // Removed spherical grid, hex shell, and spherical glow.
-    // Keeping only the Holographic Map, Stars, and Rings.
 
     // --- 5. Floating particles (star field) ---
     const starsGeo = new THREE.BufferGeometry(); const starPos = [];
@@ -143,38 +108,7 @@ if(gc){
     );
     ring2.rotation.x = Math.PI / 3;
     ring2.rotation.z = -0.5;
-    globeGroup.add(ring2);
-
-    // --- 5. Location pin markers (pulsing dots on 2D surface) ---
-    const pinColor = new THREE.Color(0x00E096);
-    // Approximate 2D offset coordinates for cities on the Mexico plane
-    const locations = [
-        {x: 0.1, y: -0.1},   // Querétaro
-        {x: 0.2, y: -0.3},   // CDMX
-        {x: -0.2, y: -0.1},  // Guadalajara
-        {x: 0.1, y: 0.4},    // Monterrey
-    ];
-    locations.forEach(loc => {
-        const x = loc.x;
-        const y = loc.y;
-        const z = 0.02; // slightly above plane
-
-        // Pin dot
-        const dotGeo = new THREE.SphereGeometry(0.03, 8, 8);
-        const dotMat = new THREE.MeshBasicMaterial({ color: pinColor });
-        const dot = new THREE.Mesh(dotGeo, dotMat);
-        dot.position.set(x, y, z);
-        globeGroup.add(dot);
-
-        // Pulse ring
-        const pulseGeo = new THREE.RingGeometry(0.04, 0.06, 16);
-        const pulseMat = new THREE.MeshBasicMaterial({ color: pinColor, transparent: true, opacity: 0.6, side: THREE.DoubleSide });
-        const pulse = new THREE.Mesh(pulseGeo, pulseMat);
-        pulse.position.set(x, y, z);
-        pulse.lookAt(0, 0, 0);
-        pulse.userData = { basScale: 1, phase: Math.random() * Math.PI * 2 };
-        globeGroup.add(pulse);
-    });
+    globeGroup.add(ring2);    // --- Location pins moved to CSS overlay ---
 
     // --- Camera & Mouse interaction ---
     cam.position.z = 4.2;
@@ -347,8 +281,29 @@ document.querySelectorAll('.stagger-row').forEach((row,i)=>{row.style.opacity='0
 
     {{-- 3D Globe Premium --}}
     <div class="dash-card p-0 overflow-hidden fade-up h-full flex flex-col relative group">
-        <div class="globe-container" style="background: radial-gradient(ellipse at 40% 40%, {{ 'rgba(16,185,129,0.08)' }} 0%, transparent 60%), radial-gradient(ellipse at 60% 70%, {{ 'rgba(6,78,59,0.05)' }} 0%, transparent 50%); background-color: {{ 'rgba(240,253,244,0.5)' }};">
-            <canvas id="globe-canvas" class="w-full h-full" style="cursor: grab;"></canvas>
+        <div class="globe-container relative" style="background: radial-gradient(ellipse at 40% 40%, {{ 'rgba(16,185,129,0.08)' }} 0%, transparent 60%), radial-gradient(ellipse at 60% 70%, {{ 'rgba(6,78,59,0.05)' }} 0%, transparent 50%); background-color: {{ 'rgba(240,253,244,0.5)' }};">
+            <canvas id="globe-canvas" class="w-full h-full absolute inset-0" style="cursor: grab; z-index: 0;"></canvas>
+            
+            {{-- Holographic CSS SVG Map of Mexico --}}
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10 overflow-hidden">
+                <div class="w-[120%] h-[120%] relative" style="
+                    mask-image: url('https://upload.wikimedia.org/wikipedia/commons/1/17/Mexico_States_blank_map.svg');
+                    mask-size: contain;
+                    mask-repeat: no-repeat;
+                    mask-position: center;
+                    -webkit-mask-image: url('https://upload.wikimedia.org/wikipedia/commons/1/17/Mexico_States_blank_map.svg');
+                    -webkit-mask-size: contain;
+                    -webkit-mask-repeat: no-repeat;
+                    -webkit-mask-position: center;
+                    background: linear-gradient(135deg, rgba(52,211,153,0.85), rgba(6,78,59,0.95));
+                    animation: floatHologram 8s ease-in-out infinite;
+                ">
+                    {{-- Hotspots mapped as percentages --}}
+                    <div class="absolute w-3 h-3 rounded-full bg-white shadow-[0_0_15px_#fff]" style="top: 56%; left: 54%; animation: pulse 2s infinite;"></div> {{-- Qro/CDMX --}}
+                    <div class="absolute w-3 h-3 rounded-full bg-white shadow-[0_0_15px_#fff]" style="top: 55%; left: 47%; animation: pulse 2s infinite 0.5s;"></div> {{-- GDL --}}
+                    <div class="absolute w-3 h-3 rounded-full bg-white shadow-[0_0_15px_#fff]" style="top: 36%; left: 53%; animation: pulse 2s infinite 1s;"></div> {{-- MTY --}}
+                </div>
+            </div>
             
             {{-- Vignette overlay --}}
             <div class="absolute inset-0 pointer-events-none" style="box-shadow: inset 0 0 80px rgba(0,0,0,0.06); border-radius: 1.5rem;"></div>
