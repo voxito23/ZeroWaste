@@ -2,18 +2,7 @@
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40" lang="es">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <!--[if gte mso 9]>
-    <xml>
-        <x:ExcelWorkbook>
-            <x:ExcelWorksheets>
-                <x:ExcelWorksheet>
-                    <x:Name>{{ ucfirst($tipo) }}</x:Name>
-                    <x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions>
-                </x:ExcelWorksheet>
-            </x:ExcelWorksheets>
-        </x:ExcelWorkbook>
-    </xml>
-    <![endif]-->
+
     <style>
         body { font-family: 'Montserrat', 'Calibri', 'Segoe UI', Arial, sans-serif; color: #1F2937; margin: 0; padding: 0; }
         

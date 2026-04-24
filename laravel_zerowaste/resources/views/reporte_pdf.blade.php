@@ -53,7 +53,7 @@
         .logo-box img { 
             width: 56px; 
             height: 56px; 
-            border-radius: 50%;
+            border-radius: 14px;
             object-fit: cover;
             border: 3px solid rgba(255,255,255,0.3);
         }
