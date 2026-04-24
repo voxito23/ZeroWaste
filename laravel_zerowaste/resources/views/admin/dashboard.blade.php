@@ -63,50 +63,156 @@ const rc=document.getElementById('rolesChart');
 if(rc){new Chart(rc,{type:'bar',data:{labels:['Admins','Usuarios','Bloqueados'],datasets:[{data:[{{$totalAdmins}},{{$totalNormales}},{{$totalBloqueados}}],backgroundColor:['#8B5CF6','#10B981','#F43F5E'],borderRadius:8,borderSkipped:false,barThickness:32}]},
 options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:isDark?'#0F2A20':'#fff',titleColor:isDark?'#fff':'#064E3B',bodyColor:cText,borderColor:isDark?'rgba(255,255,255,0.1)':'#e5e7eb',borderWidth:1,cornerRadius:12,padding:12}},scales:{x:{grid:{display:false},border:{display:false},ticks:{font:{size:11,weight:'600'}}},y:{beginAtZero:true,border:{display:false},grid:{color:cGrid},ticks:{precision:0,font:{size:11}}}}}});}
 
-// Three.js Globe Premium
+// Three.js Globe — Ultra Premium
 const gc=document.getElementById('globe-canvas');
 if(gc){
-    const s=new THREE.Scene(), cam=new THREE.PerspectiveCamera(45,gc.clientWidth/gc.clientHeight,0.1,1000);
-    const r=new THREE.WebGLRenderer({canvas:gc,alpha:true,antialias:true});
-    r.setSize(gc.clientWidth,gc.clientHeight); r.setPixelRatio(Math.min(window.devicePixelRatio,2));
-    
-    // Core sphere (solid)
-    const coreGeo = new THREE.SphereGeometry(1.6, 32, 32);
-    const coreMat = new THREE.MeshBasicMaterial({ color: isDark ? 0x064E3B : 0xA7F3D0, transparent: true, opacity: 0.6 });
+    const scene=new THREE.Scene();
+    const cam=new THREE.PerspectiveCamera(40, gc.clientWidth/gc.clientHeight, 0.1, 1000);
+    const renderer=new THREE.WebGLRenderer({canvas:gc, alpha:true, antialias:true});
+    renderer.setSize(gc.clientWidth, gc.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Globe group (everything rotates together)
+    const globeGroup = new THREE.Group();
+    scene.add(globeGroup);
+
+    // --- 1. Inner Core (subtle gradient sphere) ---
+    const coreGeo = new THREE.SphereGeometry(1.48, 64, 64);
+    const coreMat = new THREE.ShaderMaterial({
+        uniforms: {
+            color1: { value: new THREE.Color(isDark ? 0x064E3B : 0xD1FAE5) },
+            color2: { value: new THREE.Color(isDark ? 0x0D9488 : 0x6EE7B7) }
+        },
+        vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+        fragmentShader: `uniform vec3 color1; uniform vec3 color2; varying vec2 vUv; void main(){ gl_FragColor=vec4(mix(color1,color2,vUv.y),0.85); }`,
+        transparent: true
+    });
     const coreMesh = new THREE.Mesh(coreGeo, coreMat);
-    s.add(coreMesh);
+    globeGroup.add(coreMesh);
 
-    // Wireframe atmosphere
-    const geo = new THREE.SphereGeometry(1.75, 32, 32);
-    const mat = new THREE.MeshBasicMaterial({ color: 0x10B981, wireframe: true, transparent: true, opacity: 0.15 });
-    const mesh = new THREE.Mesh(geo, mat);
-    s.add(mesh);
+    // --- 2. Grid lines (latitude/longitude) ---
+    const gridMat = new THREE.MeshBasicMaterial({ color: isDark ? 0x34D399 : 0x059669, wireframe: true, transparent: true, opacity: 0.08 });
+    const gridMesh = new THREE.Mesh(new THREE.SphereGeometry(1.5, 36, 18), gridMat);
+    globeGroup.add(gridMesh);
 
-    // Points (cities)
-    const dots = new THREE.BufferGeometry(); const pos = [];
-    for(let i=0;i<250;i++){
-        const t=Math.random()*Math.PI*2, p=Math.acos(2*Math.random()-1), ra=1.75;
-        pos.push(ra*Math.sin(p)*Math.cos(t), ra*Math.sin(p)*Math.sin(t), ra*Math.cos(p));
+    // --- 3. Hex wireframe shell ---
+    const hexGeo = new THREE.IcosahedronGeometry(1.52, 2);
+    const hexMat = new THREE.MeshBasicMaterial({ color: isDark ? 0x10B981 : 0x047857, wireframe: true, transparent: true, opacity: 0.12 });
+    const hexMesh = new THREE.Mesh(hexGeo, hexMat);
+    globeGroup.add(hexMesh);
+
+    // --- 4. Atmosphere glow (additive blending sprite) ---
+    const glowGeo = new THREE.SphereGeometry(1.7, 32, 32);
+    const glowMat = new THREE.ShaderMaterial({
+        uniforms: { glowColor: { value: new THREE.Color(0x10B981) } },
+        vertexShader: `varying vec3 vNormal; void main(){ vNormal=normalize(normalMatrix*normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
+        fragmentShader: `uniform vec3 glowColor; varying vec3 vNormal; void main(){ float intensity=pow(0.65-dot(vNormal,vec3(0,0,1.0)),3.0); gl_FragColor=vec4(glowColor,intensity*0.6); }`,
+        side: THREE.BackSide, transparent: true, blending: THREE.AdditiveBlending
+    });
+    scene.add(new THREE.Mesh(glowGeo, glowMat));
+
+    // --- 5. Floating particles (star field) ---
+    const starsGeo = new THREE.BufferGeometry(); const starPos = [];
+    for(let i=0;i<400;i++){
+        starPos.push((Math.random()-0.5)*12, (Math.random()-0.5)*12, (Math.random()-0.5)*12);
     }
-    dots.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-    const pm = new THREE.PointsMaterial({ color: 0x059669, size: 0.04, transparent: true, opacity: 0.8 });
-    const pointsMesh = new THREE.Points(dots, pm);
-    s.add(pointsMesh);
+    starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+    const starsMat = new THREE.PointsMaterial({ color: isDark ? 0x6EE7B7 : 0x059669, size: 0.02, transparent: true, opacity: 0.5 });
+    const starsMesh = new THREE.Points(starsGeo, starsMat);
+    scene.add(starsMesh);
 
-    cam.position.z = 4.5;
+    // --- 6. Orbital ring ---
+    const ringGeo = new THREE.TorusGeometry(2.1, 0.008, 8, 100);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x10B981, transparent: true, opacity: 0.3 });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2.5;
+    ring.rotation.z = 0.3;
+    globeGroup.add(ring);
+
+    // Second orbital ring
+    const ring2 = new THREE.Mesh(
+        new THREE.TorusGeometry(2.3, 0.005, 8, 100),
+        new THREE.MeshBasicMaterial({ color: 0x34D399, transparent: true, opacity: 0.15 })
+    );
+    ring2.rotation.x = Math.PI / 3;
+    ring2.rotation.z = -0.5;
+    globeGroup.add(ring2);
+
+    // --- 7. Location pin markers (pulsing dots on surface) ---
+    const pinColor = new THREE.Color(0x00E096);
+    const locations = [
+        {lat: 20.59, lon: -100.39}, // Querétaro
+        {lat: 19.43, lon: -99.13},  // CDMX
+        {lat: 20.67, lon: -103.35}, // Guadalajara
+        {lat: 25.69, lon: -100.32}, // Monterrey
+    ];
+    locations.forEach(loc => {
+        const phi = (90 - loc.lat) * Math.PI / 180;
+        const theta = (loc.lon + 180) * Math.PI / 180;
+        const r2 = 1.52;
+        const x = -r2 * Math.sin(phi) * Math.cos(theta);
+        const y = r2 * Math.cos(phi);
+        const z = r2 * Math.sin(phi) * Math.sin(theta);
+
+        // Pin dot
+        const dotGeo = new THREE.SphereGeometry(0.03, 8, 8);
+        const dotMat = new THREE.MeshBasicMaterial({ color: pinColor });
+        const dot = new THREE.Mesh(dotGeo, dotMat);
+        dot.position.set(x, y, z);
+        globeGroup.add(dot);
+
+        // Pulse ring
+        const pulseGeo = new THREE.RingGeometry(0.04, 0.06, 16);
+        const pulseMat = new THREE.MeshBasicMaterial({ color: pinColor, transparent: true, opacity: 0.6, side: THREE.DoubleSide });
+        const pulse = new THREE.Mesh(pulseGeo, pulseMat);
+        pulse.position.set(x, y, z);
+        pulse.lookAt(0, 0, 0);
+        pulse.userData = { basScale: 1, phase: Math.random() * Math.PI * 2 };
+        globeGroup.add(pulse);
+    });
+
+    // --- Camera & Mouse interaction ---
+    cam.position.z = 4.2;
+    let mouseX = 0, mouseY = 0;
+    gc.addEventListener('mousemove', (e) => {
+        const rect = gc.getBoundingClientRect();
+        mouseX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+        mouseY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    });
+    gc.addEventListener('mouseleave', () => { mouseX = 0; mouseY = 0; });
+
+    const clock = new THREE.Clock();
     function animate(){
         requestAnimationFrame(animate);
-        mesh.rotation.y += 0.002; mesh.rotation.x += 0.0005;
-        coreMesh.rotation.y += 0.002;
-        pointsMesh.rotation.y += 0.002; pointsMesh.rotation.x += 0.0005;
-        r.render(s,cam);
+        const t = clock.getElapsedTime();
+
+        // Auto-rotation + mouse tilt
+        globeGroup.rotation.y += 0.0015;
+        globeGroup.rotation.y += mouseX * 0.003;
+        globeGroup.rotation.x = mouseY * 0.15 + Math.sin(t * 0.3) * 0.02;
+
+        // Stars drift
+        starsMesh.rotation.y += 0.0002;
+        starsMesh.rotation.x += 0.0001;
+
+        // Pulse pins
+        globeGroup.children.forEach(child => {
+            if(child.userData && child.userData.basScale !== undefined){
+                const s = 1 + 0.5 * Math.sin(t * 2 + child.userData.phase);
+                child.scale.set(s, s, s);
+                child.material.opacity = 0.3 + 0.4 * Math.sin(t * 2 + child.userData.phase);
+            }
+        });
+
+        renderer.render(scene, cam);
     }
     animate();
-    window.addEventListener('resize', ()=>{
+
+    window.addEventListener('resize', () => {
         if(gc.parentElement){
-            cam.aspect = gc.clientWidth/gc.clientHeight;
+            cam.aspect = gc.clientWidth / gc.clientHeight;
             cam.updateProjectionMatrix();
-            r.setSize(gc.clientWidth,gc.clientHeight);
+            renderer.setSize(gc.clientWidth, gc.clientHeight);
         }
     });
 }
@@ -237,19 +343,44 @@ document.querySelectorAll('.stagger-row').forEach((row,i)=>{row.style.opacity='0
 
     {{-- 3D Globe Premium --}}
     <div class="dash-card p-0 overflow-hidden fade-up h-full flex flex-col relative group">
-        <div class="globe-container bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-100 via-emerald-50 to-white dark:from-[#112E23] dark:via-[#0B1F18] dark:to-[#050F0C]">
-            <canvas id="globe-canvas" class="w-full h-full"></canvas>
-            <div class="absolute inset-0 pointer-events-none" style="box-shadow: inset 0 0 60px rgba(0,0,0,0.05);"></div>
+        <div class="globe-container" style="background: radial-gradient(ellipse at 40% 40%, {{ 'rgba(16,185,129,0.08)' }} 0%, transparent 60%), radial-gradient(ellipse at 60% 70%, {{ 'rgba(6,78,59,0.05)' }} 0%, transparent 50%); background-color: {{ 'rgba(240,253,244,0.5)' }};">
+            <canvas id="globe-canvas" class="w-full h-full" style="cursor: grab;"></canvas>
             
+            {{-- Vignette overlay --}}
+            <div class="absolute inset-0 pointer-events-none" style="box-shadow: inset 0 0 80px rgba(0,0,0,0.06); border-radius: 1.5rem;"></div>
+            
+            {{-- Top-right live badge --}}
+            <div class="absolute top-4 right-4 flex items-center gap-1.5 bg-white/60 dark:bg-black/30 backdrop-blur-md border border-emerald-200/30 dark:border-emerald-700/30 px-3 py-1.5 rounded-full shadow-sm">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-[9px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-widest">En vivo</span>
+            </div>
+
             {{-- Floating Glass Info Card --}}
-            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-[85%]">
-                <div class="bg-white/70 dark:bg-black/40 backdrop-blur-md border border-white/50 dark:border-white/10 p-4 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.1)] text-center transition-transform duration-500 group-hover:-translate-y-2">
-                    <div class="flex items-center justify-center gap-2 mb-1">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <h4 class="text-sm font-black text-[#064E3B] dark:text-white uppercase tracking-widest">Ecosistema Global</h4>
+            <div class="absolute bottom-5 left-1/2 -translate-x-1/2 w-[88%]">
+                <div class="bg-white/75 dark:bg-[#0B1F18]/70 backdrop-blur-xl border border-white/40 dark:border-emerald-800/30 p-4 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-all duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_16px_48px_rgba(0,0,0,0.12)]">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="flex items-center gap-1.5 mb-0.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <h4 class="text-[11px] font-black text-[#064E3B] dark:text-white uppercase tracking-[0.15em]">Ecosistema Global</h4>
+                            </div>
+                            <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Puntos de reciclaje activos</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-3xl font-black text-emerald-600 dark:text-emerald-400 leading-none">{{$totalPuntos}}</p>
+                            <p class="text-[9px] text-emerald-500/60 font-bold mt-0.5">QRO, MX</p>
+                        </div>
                     </div>
-                    <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{{$totalPuntos}}</p>
-                    <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Puntos de reciclaje activos</p>
+                    {{-- Mini location dots --}}
+                    <div class="flex items-center gap-3 mt-3 pt-3 border-t border-gray-200/40 dark:border-white/5">
+                        <div class="flex -space-x-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-[#0B1F18]"></span>
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-white dark:ring-[#0B1F18]"></span>
+                            <span class="w-2 h-2 rounded-full bg-teal-400 ring-2 ring-white dark:ring-[#0B1F18]"></span>
+                            <span class="w-2 h-2 rounded-full bg-cyan-400 ring-2 ring-white dark:ring-[#0B1F18]"></span>
+                        </div>
+                        <span class="text-[9px] text-gray-400 dark:text-gray-500 font-medium">4 ciudades monitoreadas</span>
+                    </div>
                 </div>
             </div>
         </div>
