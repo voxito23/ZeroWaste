@@ -8,15 +8,39 @@ use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $allUsers = User::all();
-        $totalCount = $allUsers->count();
-        $adminCount = $allUsers->where('is_admin', true)->count();
-        $userCount  = $allUsers->where('is_admin', false)->count();
-        $blockedCount = $allUsers->where('bloqueado', true)->count();
+        // Global counts for the cards (ignoring search/pagination)
+        $totalCount = User::count();
+        $adminCount = User::where('is_admin', true)->count();
+        $userCount  = User::where('is_admin', false)->count();
+        $blockedCount = User::where('bloqueado', true)->count();
 
-        $usuarios = User::orderByDesc('created_at')->paginate(6);
+        // Query for the table
+        $query = User::query();
+
+        // Apply Tab Filter
+        if ($request->has('tab') && $request->tab !== 'all') {
+            if ($request->tab === 'admin') $query->where('is_admin', true);
+            if ($request->tab === 'user') $query->where('is_admin', false);
+            if ($request->tab === 'blocked') $query->where('bloqueado', true);
+        }
+
+        // Apply Search Filter
+        if ($request->has('search') && !empty($request->search)) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('ubicacion', 'like', "%{$search}%");
+            });
+        }
+
+        $usuarios = $query->orderByDesc('created_at')->paginate(6);
+
+        if ($request->ajax()) {
+            return view('admin.partials.usuarios_table', compact('usuarios'))->render();
+        }
 
         return view('admin.usuarios', compact('usuarios', 'totalCount', 'adminCount', 'userCount', 'blockedCount'));
     }

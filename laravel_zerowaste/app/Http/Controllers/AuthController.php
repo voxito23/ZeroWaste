@@ -30,15 +30,23 @@ class AuthController extends Controller
         $authenticated = false;
 
         // Verificar según el tipo de hash almacenado
-        if (str_starts_with($user->password, '$2y$') || str_starts_with($user->password, '$2b$') || str_starts_with($user->password, '$2a$')) {
+        if (str_starts_with($user->password, '$2y$')) {
             // Hash bcrypt nativo — usar Auth::attempt normal
             try {
                 $authenticated = Auth::attempt($credentials);
             } catch (\Exception $e) {
                 $authenticated = false;
             }
+        } elseif (str_starts_with($user->password, '$2b$') || str_starts_with($user->password, '$2a$')) {
+            // FastAPI bcrypt — verificar manualmente y re-hashear a $2y$
+            if (password_verify($credentials['password'], $user->password)) {
+                $user->password = \Illuminate\Support\Facades\Hash::make($credentials['password']);
+                $user->save();
+                Auth::login($user);
+                $authenticated = true;
+            }
         } elseif (str_starts_with($user->password, 'pbkdf2:')) {
-            // Hash werkzeug/pbkdf2 (creado por FastAPI antiguo) — verificar manualmente
+            // Hash werkzeug/pbkdf2 (creado por FastAPI/Flask antiguo) — verificar manualmente
             $authenticated = $this->verifyPbkdf2($credentials['password'], $user->password);
             if ($authenticated) {
                 // Re-hashear a bcrypt para que futuros logins funcionen nativamente

@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <title>Reporte de {{ ucfirst($tipo) }}</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800;900&display=swap');
         @page { margin: 0cm 0cm; }
         body { 
-            font-family: 'Outfit', 'Helvetica', 'Arial', sans-serif; 
+            font-family: 'Montserrat', 'Helvetica', 'Arial', sans-serif; 
             color: #1F2937; 
             font-size: 11px; 
             line-height: 1.6;
@@ -338,7 +338,10 @@
 </head>
 <body>
     @php
-        $logoPath = app()->basePath('../flask_zerowaste/static/img/logo.png');
+        $logoPath = app()->basePath('../flask_zerowaste/static/img/logo_texture.png');
+        if (!file_exists($logoPath)) {
+            $logoPath = app()->basePath('../flask_zerowaste/static/img/logo.png');
+        }
         $logoSrc = '';
         if (file_exists($logoPath)) {
             $logoData = base64_encode(file_get_contents($logoPath));
@@ -386,8 +389,8 @@
                         </div>
                     </td>
                     <td align="left" style="vertical-align: middle; padding-left: 15px;">
-                        <h1 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 26px; tracking: -0.5px;">ZEROWASTE</h1>
-                        <p class="subtitle" style="margin-top: 2px; font-family: 'Outfit', sans-serif; font-size: 13px;">{{ $titulo }}</p>
+                        <h1 style="margin: 0; font-family: 'Montserrat', sans-serif; font-size: 26px; tracking: -0.5px;">ZEROWASTE</h1>
+                        <p class="subtitle" style="margin-top: 2px; font-family: 'Montserrat', sans-serif; font-size: 13px;">{{ $titulo }}</p>
                     </td>
                     <td align="right" style="vertical-align: top;">
                         <div style="background: rgba(255,255,255,0.1); display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; color: #fff;">

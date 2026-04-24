@@ -15,35 +15,45 @@ class ReportController extends Controller
     {
         $search = $request->input('search');
         $categoria = $request->input('categoria');
-        $hasFilters = $search || $categoria;
+        $fechaInicio = $request->input('fecha_inicio');
+        $fechaFin = $request->input('fecha_fin');
+        if ($fechaInicio) $fechaInicio .= ' 00:00:00';
+        if ($fechaFin) $fechaFin .= ' 23:59:59';
+        $hasDates = $fechaInicio && $fechaFin;
 
-        if (!$hasFilters) {
-            // Sin filtros activos: mostrar totales generales
-            $totalUsuarios = User::count();
-            $totalCampanas = Campaign::count();
-            $totalPuntos = Location::count();
-            $totalEventos = \App\Models\Evento::count();
-        } else {
-            $uQ = User::query();
-            if ($search) $uQ->where(function($q) use ($search) { $q->where('nombre', 'ilike', "%{$search}%")->orWhere('email', 'ilike', "%{$search}%"); });
+        $hasFilters = $search || $categoria || $hasDates;
+
+        $uQ = User::query();
+        $cQ = Campaign::query();
+        $pQ = Location::query();
+        $eQ = \App\Models\Evento::query();
+
+        if ($hasDates) {
+            $uQ->whereBetween('created_at', [$fechaInicio, $fechaFin]);
+            $cQ->whereBetween('created_at', [$fechaInicio, $fechaFin]);
+            $pQ->whereBetween('created_at', [$fechaInicio, $fechaFin]);
+            $eQ->whereBetween('fecha_inicio', [$fechaInicio, $fechaFin]);
+        }
+
+        if ($search) {
+            $uQ->where(function($q) use ($search) { $q->where('nombre', 'ilike', "%{$search}%")->orWhere('email', 'ilike', "%{$search}%"); });
+            $cQ->where(function($q) use ($search) { $q->where('nombre', 'ilike', "%{$search}%")->orWhere('descripcion', 'ilike', "%{$search}%"); });
+            $pQ->where(function($q) use ($search) { $q->where('nombre', 'ilike', "%{$search}%")->orWhere('direccion', 'ilike', "%{$search}%"); });
+            $eQ->where('titulo', 'ilike', "%{$search}%");
+        }
+
+        if ($categoria) {
             if ($categoria === 'admins') $uQ->where('is_admin', true);
             else if ($categoria === 'users') $uQ->where('is_admin', false);
-            $totalUsuarios = $uQ->count();
-
-            $cQ = Campaign::query();
-            if ($search) $cQ->where(function($q) use ($search) { $q->where('nombre', 'ilike', "%{$search}%")->orWhere('descripcion', 'ilike', "%{$search}%"); });
-            if ($categoria) $cQ->where('tipo_etiqueta', 'ilike', "%{$categoria}%");
-            $totalCampanas = $cQ->count();
-
-            $pQ = Location::query();
-            if ($search) $pQ->where(function($q) use ($search) { $q->where('nombre', 'ilike', "%{$search}%")->orWhere('direccion', 'ilike', "%{$search}%"); });
-            if ($categoria) $pQ->where('tipo', 'ilike', "%{$categoria}%");
-            $totalPuntos = $pQ->count();
-
-            $eQ = \App\Models\Evento::query();
-            if ($search) $eQ->where('titulo', 'ilike', "%{$search}%");
-            $totalEventos = $eQ->count();
+            
+            $cQ->where('tipo_etiqueta', 'ilike', "%{$categoria}%");
+            $pQ->where('tipo', 'ilike', "%{$categoria}%");
         }
+
+        $totalUsuarios = $uQ->count();
+        $totalCampanas = $cQ->count();
+        $totalPuntos = $pQ->count();
+        $totalEventos = $eQ->count();
 
         return view('admin.reportes.index', compact(
             'totalUsuarios', 'totalCampanas', 'totalPuntos', 'totalEventos'
@@ -151,17 +161,14 @@ class ReportController extends Controller
             }
             return $pdf->download($filename);
         } elseif ($formato === 'xlsx') {
-            return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\GenericExport($data), $filename);
+            $filename = str_replace('.xlsx', '.xls', $filename);
+            return response(view('reporte_pdf', $data)->render())
+                ->header('Content-Type', 'application/vnd.ms-excel')
+                ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
         } elseif ($formato === 'docx') {
-            $phpWord = new \PhpOffice\PhpWord\PhpWord();
-            $section = $phpWord->addSection();
-            \PhpOffice\PhpWord\Shared\Html::addHtml($section, view('reporte_basico', $data)->render(), false, false);
-            
-            $objWriter = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
-            $filenameTemp = tempnam(sys_get_temp_dir(), 'word');
-            $objWriter->save($filenameTemp);
-            
-            return response()->download($filenameTemp, $filename)->deleteFileAfterSend(true);
+            $filename = str_replace('.docx', '.doc', $filename);
+            return response(view('reporte_pdf', $data)->render())
+                ->header('Content-Type', 'application/msword')
+                ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
         }
-    }
 }

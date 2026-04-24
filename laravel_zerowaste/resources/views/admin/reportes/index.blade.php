@@ -119,16 +119,28 @@ document.addEventListener("DOMContentLoaded", function() {
     pickerStart = flatpickr("#date-start", {
         ...fpConfig,
         onChange: function(sel) {
-            if (sel[0]) { dateStart = sel[0]; document.getElementById('wrap-start').classList.add('active'); if (pickerEnd) pickerEnd.set('minDate', sel[0]); syncBadge(); }
+            if (sel[0]) { dateStart = sel[0]; document.getElementById('wrap-start').classList.add('active'); if (pickerEnd) pickerEnd.set('minDate', sel[0]); syncBadge(false); }
         }
     });
 
     pickerEnd = flatpickr("#date-end", {
         ...fpConfig,
         onChange: function(sel) {
-            if (sel[0]) { dateEnd = new Date(sel[0]); dateEnd.setHours(23,59,59,999); document.getElementById('wrap-end').classList.add('active'); syncBadge(); }
+            if (sel[0]) { dateEnd = new Date(sel[0]); dateEnd.setHours(23,59,59,999); document.getElementById('wrap-end').classList.add('active'); syncBadge(true); }
         }
     });
+
+    // Auto-submit en búsqueda con debounce
+    let searchTimeout;
+    const searchInput = document.getElementById('search-report');
+    if(searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                document.getElementById('filter-form').submit();
+            }, 600);
+        });
+    }
 
     // Menús desplegables
     window.toggleDD = function(id) {
@@ -197,7 +209,7 @@ document.addEventListener("DOMContentLoaded", function() {
             dateStart = null; dateEnd = null;
             if (pickerStart) { pickerStart.clear(); document.getElementById('wrap-start').classList.remove('active'); }
             if (pickerEnd) { pickerEnd.clear(); document.getElementById('wrap-end').classList.remove('active'); }
-            syncBadge(); return;
+            syncBadge(false); return;
         }
         else if (val === 'hoy') { dateStart = new Date(today); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
         else if (val === 'ayer') { dateStart = new Date(today); dateStart.setDate(dateStart.getDate()-1); dateEnd = new Date(dateStart); dateEnd.setHours(23,59,59,999); }
@@ -215,17 +227,34 @@ document.addEventListener("DOMContentLoaded", function() {
         else if (pickerStart) { pickerStart.clear(); document.getElementById('wrap-start').classList.remove('active'); }
         if (dateEnd && pickerEnd) { pickerEnd.setDate(dateEnd, false); document.getElementById('wrap-end').classList.add('active'); }
         else if (pickerEnd) { pickerEnd.clear(); document.getElementById('wrap-end').classList.remove('active'); }
-        syncBadge();
+        
+        // Auto-submit after setting preset
+        syncBadge(true);
     };
 
-    function syncBadge() {
+    function syncBadge(submit = false) {
         const badge = document.getElementById('filter-badge');
         const text = document.getElementById('filter-badge-text');
+        
+        // Formatear fecha para el input
+        const fInput = (date) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+        
         if (dateStart && dateEnd) {
             badge.classList.remove('hidden');
             const f = (d) => d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
             text.textContent = `${f(dateStart)} → ${f(dateEnd)}`;
-        } else { badge.classList.add('hidden'); }
+            
+            document.getElementById('form-fecha-inicio').value = fInput(dateStart);
+            document.getElementById('form-fecha-fin').value = fInput(dateEnd);
+        } else { 
+            badge.classList.add('hidden');
+            document.getElementById('form-fecha-inicio').value = '';
+            document.getElementById('form-fecha-fin').value = '';
+        }
+
+        if (submit) {
+            document.getElementById('filter-form').submit();
+        }
     }
 
     window.limpiarFiltro = function() {
@@ -420,6 +449,8 @@ document.addEventListener("DOMContentLoaded", function() {
             <button onclick="setCategoriaPreset('Educación', 'Campañas de Educación')"><span class="material-symbols-outlined text-[18px] text-blue-500">school</span> Educación y Concientización</button>
         </div>
         <input type="hidden" name="categoria" id="categoria-report" value="{{ request('categoria') }}">
+        <input type="hidden" name="fecha_inicio" id="form-fecha-inicio" value="{{ request('fecha_inicio') }}">
+        <input type="hidden" name="fecha_fin" id="form-fecha-fin" value="{{ request('fecha_fin') }}">
         <button type="submit" class="hidden"></button>
     </div>
 </form>
