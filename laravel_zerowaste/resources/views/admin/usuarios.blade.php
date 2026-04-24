@@ -16,7 +16,7 @@
     @foreach($stats as $s)
     <div class="glass-card p-5 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 stat-card relative overflow-hidden group ring-2 {{ $s[4] === 'all' ? $s[6] : 'ring-transparent' }}" data-stat-tab="{{ $s[4] }}" data-ring-class="{{ $s[6] }}">
         {{-- Faded icon watermark --}}
-        <div class="absolute -bottom-3 -right-3 pointer-events-none opacity-[0.06] group-hover:opacity-[0.1] transition-opacity duration-500">
+        <div class="absolute -bottom-3 -right-3 pointer-events-none opacity-[0.15] group-hover:opacity-[0.25] transition-opacity duration-500">
             <span class="material-symbols-outlined" style="font-size: 80px; color: {{$s[2]}};">{{$s[1]}}</span>
         </div>
         <div class="relative z-10">

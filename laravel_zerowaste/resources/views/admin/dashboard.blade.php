@@ -76,19 +76,42 @@ if(gc){
     const globeGroup = new THREE.Group();
     scene.add(globeGroup);
 
-    // --- 1. Inner Core (subtle gradient sphere) ---
+    // --- 1. Inner Core (Premium Earth Map with Continents) ---
     const coreGeo = new THREE.SphereGeometry(1.48, 64, 64);
-    const coreMat = new THREE.ShaderMaterial({
-        uniforms: {
-            color1: { value: new THREE.Color(isDark ? 0x064E3B : 0xD1FAE5) },
-            color2: { value: new THREE.Color(isDark ? 0x0D9488 : 0x6EE7B7) }
-        },
-        vertexShader: `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`,
-        fragmentShader: `uniform vec3 color1; uniform vec3 color2; varying vec2 vUv; void main(){ gl_FragColor=vec4(mix(color1,color2,vUv.y),0.85); }`,
-        transparent: true
+    
+    // Lights for the premium material
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(5, 3, 5);
+    scene.add(dirLight);
+
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.crossOrigin = 'Anonymous';
+    
+    const coreMat = new THREE.MeshPhongMaterial({
+        color: isDark ? 0x064E3B : 0x10B981,
+        emissive: isDark ? 0x022c22 : 0x047857,
+        emissiveIntensity: 0.5,
+        transparent: true,
+        opacity: 0.95,
+        shininess: 30
     });
+    
+    textureLoader.load('https://unpkg.com/three-globe/example/img/earth-dark.jpg', (texture) => {
+        coreMat.map = texture;
+        coreMat.color.setHex(isDark ? 0x34D399 : 0x059669);
+        coreMat.emissive.setHex(isDark ? 0x064E3B : 0x064E3B);
+        coreMat.emissiveIntensity = 0.2;
+        coreMat.needsUpdate = true;
+    });
+
     const coreMesh = new THREE.Mesh(coreGeo, coreMat);
     globeGroup.add(coreMesh);
+    
+    // Rotate to show Mexico / North America by default
+    globeGroup.rotation.y = -Math.PI / 1.5;
+    globeGroup.rotation.x = Math.PI / 8;
 
     // --- 2. Grid lines (latitude/longitude) ---
     const gridMat = new THREE.MeshBasicMaterial({ color: isDark ? 0x34D399 : 0x059669, wireframe: true, transparent: true, opacity: 0.08 });
@@ -208,13 +231,20 @@ if(gc){
     }
     animate();
 
-    window.addEventListener('resize', () => {
-        if(gc.parentElement){
-            cam.aspect = gc.clientWidth / gc.clientHeight;
-            cam.updateProjectionMatrix();
-            renderer.setSize(gc.clientWidth, gc.clientHeight);
+    const globeContainer = gc.parentElement;
+    const resizeObserver = new ResizeObserver(entries => {
+        for (let entry of entries) {
+            const { width, height } = entry.contentRect;
+            if (width && height) {
+                cam.aspect = width / height;
+                cam.updateProjectionMatrix();
+                renderer.setSize(width, height, false);
+            }
         }
     });
+    if (globeContainer) {
+        resizeObserver.observe(globeContainer);
+    }
 }
 
 // Ring animations
@@ -251,7 +281,7 @@ document.querySelectorAll('.stagger-row').forEach((row,i)=>{row.style.opacity='0
     <div class="dash-card p-5 relative overflow-hidden fade-up group">
         <div class="metric-glow -top-2 -right-2" style="background:{{$c['color']}}"></div>
         {{-- Faded icon watermark --}}
-        <div class="absolute -bottom-3 -right-3 pointer-events-none opacity-[0.06] group-hover:opacity-[0.1] transition-opacity duration-500">
+        <div class="absolute -bottom-3 -right-3 pointer-events-none opacity-[0.15] group-hover:opacity-[0.25] transition-opacity duration-500">
             <span class="material-symbols-outlined" style="font-size: 80px; color: {{$c['color']}};">{{$c['icon']}}</span>
         </div>
         <div class="relative z-10">

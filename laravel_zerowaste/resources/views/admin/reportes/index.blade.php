@@ -493,7 +493,7 @@ document.addEventListener("DOMContentLoaded", function() {
     @foreach($rkpis as $ri => $rk)
     <div class="glass-card p-5 group relative overflow-hidden">
         {{-- Faded icon watermark --}}
-        <div class="absolute -bottom-3 -right-3 pointer-events-none opacity-[0.06] group-hover:opacity-[0.1] transition-opacity duration-500">
+        <div class="absolute -bottom-3 -right-3 pointer-events-none opacity-[0.15] group-hover:opacity-[0.25] transition-opacity duration-500">
             <span class="material-symbols-outlined" style="font-size: 90px; color: {{$rk['color']}};">{{$rk['icon']}}</span>
         </div>
         <div class="relative z-10">
