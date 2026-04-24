@@ -276,9 +276,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const ecoIcon = L.divIcon({
         className: '',
-        html: '<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#10B981,#06D6A0);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 15px rgba(16,185,129,0.5),0 0 0 3px rgba(255,255,255,0.9);"><svg viewBox="0 0 24 24" width="18" height="18" fill="#fff"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/></svg></div>',
-        iconSize: [36, 36],
-        iconAnchor: [18, 36]
+        html: '<div style="background:#064E3B; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:3px solid #00E096;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#00E096"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/></svg></div>',
+        iconSize: [44, 44],
+        iconAnchor: [22, 44]
     });
 
     map.on('click', function(e) {

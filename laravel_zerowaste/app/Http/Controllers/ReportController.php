@@ -8,6 +8,8 @@ use App\Models\User;
 use App\Models\Location;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
+use App\Exports\GenericExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -180,11 +182,7 @@ class ReportController extends Controller
             }
             return $pdf->download($filename);
         } elseif ($formato === 'xlsx') {
-            $html = view('reporte_excel', $data)->render();
-            return response($html)
-                ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                ->header('Content-Disposition', 'attachment; filename="'.$filename.'"')
-                ->header('Cache-Control', 'max-age=0');
+            return Excel::download(new GenericExport($data), $filename);
         } elseif ($formato === 'docx') {
             // Use dedicated Word template with Word-compatible CSS
             $html = view('reporte_word', $data)->render();
