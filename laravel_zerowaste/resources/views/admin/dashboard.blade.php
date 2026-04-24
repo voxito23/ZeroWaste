@@ -11,7 +11,7 @@
 .metric-glow{position:absolute;width:80px;height:80px;border-radius:50%;filter:blur(40px);opacity:0.15;pointer-events:none;transition:opacity .5s}
 .dash-card:hover .metric-glow{opacity:0.3}
 .sparkline-bar{display:inline-block;width:3px;border-radius:2px;margin:0 1px;transition:height .6s cubic-bezier(.4,0,.2,1);vertical-align:bottom}
-.globe-container{position:relative;width:100%;height:260px;border-radius:1.5rem;overflow:hidden}
+.globe-container{position:relative;width:100%;height:100%;min-height:320px;border-radius:1.5rem;overflow:hidden}
 .stat-ring{position:relative;width:140px;height:140px}
 .stat-ring svg{transform:rotate(-90deg)}
 .stat-ring .ring-bg{stroke:rgba(0,0,0,0.05);fill:none;stroke-width:8}
@@ -63,25 +63,52 @@ const rc=document.getElementById('rolesChart');
 if(rc){new Chart(rc,{type:'bar',data:{labels:['Admins','Usuarios','Bloqueados'],datasets:[{data:[{{$totalAdmins}},{{$totalNormales}},{{$totalBloqueados}}],backgroundColor:['#8B5CF6','#10B981','#F43F5E'],borderRadius:8,borderSkipped:false,barThickness:32}]},
 options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:isDark?'#0F2A20':'#fff',titleColor:isDark?'#fff':'#064E3B',bodyColor:cText,borderColor:isDark?'rgba(255,255,255,0.1)':'#e5e7eb',borderWidth:1,cornerRadius:12,padding:12}},scales:{x:{grid:{display:false},border:{display:false},ticks:{font:{size:11,weight:'600'}}},y:{beginAtZero:true,border:{display:false},grid:{color:cGrid},ticks:{precision:0,font:{size:11}}}}}});}
 
-// Three.js Globe
+// Three.js Globe Premium
 const gc=document.getElementById('globe-canvas');
 if(gc){
-const s=new THREE.Scene(),cam=new THREE.PerspectiveCamera(45,gc.clientWidth/gc.clientHeight,0.1,1000);
-const r=new THREE.WebGLRenderer({canvas:gc,alpha:true,antialias:true});
-r.setSize(gc.clientWidth,gc.clientHeight);r.setPixelRatio(Math.min(window.devicePixelRatio,2));
-const geo=new THREE.IcosahedronGeometry(1.8,3);
-const mat=new THREE.MeshBasicMaterial({color:0x10B981,wireframe:true,transparent:true,opacity:0.15});
-const mesh=new THREE.Mesh(geo,mat);s.add(mesh);
-const dots=new THREE.BufferGeometry();const pos=[];
-for(let i=0;i<200;i++){const t=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1),ra=2+Math.random()*0.3;
-pos.push(ra*Math.sin(p)*Math.cos(t),ra*Math.sin(p)*Math.sin(t),ra*Math.cos(p));}
-dots.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
-const pm=new THREE.PointsMaterial({color:0x34D399,size:0.04,transparent:true,opacity:0.6});
-s.add(new THREE.Points(dots,pm));
-cam.position.z=5;
-function animate(){requestAnimationFrame(animate);mesh.rotation.y+=0.003;mesh.rotation.x+=0.001;r.render(s,cam);}
-animate();
-window.addEventListener('resize',()=>{if(gc.parentElement){cam.aspect=gc.clientWidth/gc.clientHeight;cam.updateProjectionMatrix();r.setSize(gc.clientWidth,gc.clientHeight);}});
+    const s=new THREE.Scene(), cam=new THREE.PerspectiveCamera(45,gc.clientWidth/gc.clientHeight,0.1,1000);
+    const r=new THREE.WebGLRenderer({canvas:gc,alpha:true,antialias:true});
+    r.setSize(gc.clientWidth,gc.clientHeight); r.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    
+    // Core sphere (solid)
+    const coreGeo = new THREE.SphereGeometry(1.6, 32, 32);
+    const coreMat = new THREE.MeshBasicMaterial({ color: isDark ? 0x064E3B : 0xA7F3D0, transparent: true, opacity: 0.6 });
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    s.add(coreMesh);
+
+    // Wireframe atmosphere
+    const geo = new THREE.SphereGeometry(1.75, 32, 32);
+    const mat = new THREE.MeshBasicMaterial({ color: 0x10B981, wireframe: true, transparent: true, opacity: 0.15 });
+    const mesh = new THREE.Mesh(geo, mat);
+    s.add(mesh);
+
+    // Points (cities)
+    const dots = new THREE.BufferGeometry(); const pos = [];
+    for(let i=0;i<250;i++){
+        const t=Math.random()*Math.PI*2, p=Math.acos(2*Math.random()-1), ra=1.75;
+        pos.push(ra*Math.sin(p)*Math.cos(t), ra*Math.sin(p)*Math.sin(t), ra*Math.cos(p));
+    }
+    dots.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    const pm = new THREE.PointsMaterial({ color: 0x059669, size: 0.04, transparent: true, opacity: 0.8 });
+    const pointsMesh = new THREE.Points(dots, pm);
+    s.add(pointsMesh);
+
+    cam.position.z = 4.5;
+    function animate(){
+        requestAnimationFrame(animate);
+        mesh.rotation.y += 0.002; mesh.rotation.x += 0.0005;
+        coreMesh.rotation.y += 0.002;
+        pointsMesh.rotation.y += 0.002; pointsMesh.rotation.x += 0.0005;
+        r.render(s,cam);
+    }
+    animate();
+    window.addEventListener('resize', ()=>{
+        if(gc.parentElement){
+            cam.aspect = gc.clientWidth/gc.clientHeight;
+            cam.updateProjectionMatrix();
+            r.setSize(gc.clientWidth,gc.clientHeight);
+        }
+    });
 }
 
 // Ring animations
@@ -182,17 +209,24 @@ document.querySelectorAll('.stagger-row').forEach((row,i)=>{row.style.opacity='0
         <div class="h-[220px]"><canvas id="usersAreaChart"></canvas></div>
     </div>
 
-    {{-- 3D Globe --}}
-    <div class="dash-card p-0 overflow-hidden fade-up">
-        <div class="globe-container bg-gradient-to-br from-emerald-50 to-cyan-50 dark:from-[#0B1F18] dark:to-[#0F2A20]">
+    {{-- 3D Globe Premium --}}
+    <div class="dash-card p-0 overflow-hidden fade-up h-full flex flex-col relative group">
+        <div class="globe-container bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-100 via-emerald-50 to-white dark:from-[#112E23] dark:via-[#0B1F18] dark:to-[#050F0C]">
             <canvas id="globe-canvas" class="w-full h-full"></canvas>
-            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-4">
-                <span class="material-symbols-outlined text-emerald-500/40 text-5xl mb-2">public</span>
-                <h4 class="text-lg font-black text-[#064E3B] dark:text-white">Ecosistema Global</h4>
-                <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">{{$totalPuntos}} puntos de reciclaje activos</p>
+            <div class="absolute inset-0 pointer-events-none" style="box-shadow: inset 0 0 60px rgba(0,0,0,0.05);"></div>
+            
+            {{-- Floating Glass Info Card --}}
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 w-[85%]">
+                <div class="bg-white/70 dark:bg-black/40 backdrop-blur-md border border-white/50 dark:border-white/10 p-4 rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.1)] text-center transition-transform duration-500 group-hover:-translate-y-2">
+                    <div class="flex items-center justify-center gap-2 mb-1">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <h4 class="text-sm font-black text-[#064E3B] dark:text-white uppercase tracking-widest">Ecosistema Global</h4>
+                    </div>
+                    <p class="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{{$totalPuntos}}</p>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Puntos de reciclaje activos</p>
+                </div>
             </div>
         </div>
-        <div class="dark:hidden absolute inset-0 pointer-events-none" style="background:linear-gradient(135deg,rgba(236,253,245,0.3),transparent)"></div>
     </div>
 </div>
 

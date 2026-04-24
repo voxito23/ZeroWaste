@@ -107,35 +107,50 @@
         </div>
         <div class="flex-1 overflow-y-auto p-3">
             @forelse ($locations as $loc)
-            <div class="mb-3 p-3 rounded-xl border border-gray-100/50 dark:border-emerald-800/20 hover:bg-emerald-50/30 dark:hover:bg-white/[0.02] transition-all">
-                <div class="flex items-start gap-4">
-                    <div class="shrink-0 w-12 h-12 rounded-full overflow-hidden bg-slate-50 border border-slate-100 dark:border-emerald-800/50 flex-shrink-0">
+            <div class="mb-4 p-3 rounded-2xl border border-gray-100/60 dark:border-emerald-800/20 bg-white/50 dark:bg-white/[0.02] hover:bg-white dark:hover:bg-white/5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 relative group">
+                <div class="flex gap-4">
+                    {{-- Imagen (Airbnb style) --}}
+                    <div class="shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-slate-100 dark:bg-emerald-900/30 border border-slate-200/60 dark:border-emerald-800/50 relative">
                         @if($loc->imagen)
-                        <img src="https://zerowaste-qro.com/static/img/{{ $loc->imagen }}" alt="{{ $loc->nombre }}" class="w-full h-full object-cover">
+                        <img src="https://zerowaste-qro.com/static/img/{{ $loc->imagen }}" alt="{{ $loc->nombre }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
                         @else
-                        <div class="w-full h-full flex items-center justify-center bg-emerald-50 text-emerald-400">
-                            <span class="material-symbols-outlined text-[20px]">image_not_supported</span>
+                        <div class="w-full h-full flex items-center justify-center text-emerald-400/50">
+                            <span class="material-symbols-outlined text-[28px]">image_not_supported</span>
                         </div>
                         @endif
-                    </div>
-                    <div class="flex-1 min-w-0 pr-2">
-                        <h4 class="font-bold text-[13px] text-[#064E3B] dark:text-white truncate" title="{{ $loc->nombre }}">{{ $loc->nombre }}</h4>
-                        <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 truncate" title="{{ $loc->direccion }}">{{ $loc->direccion }}</p>
-                        <div class="flex items-center flex-wrap gap-1 mt-2">
-                            <span class="px-2 py-0.5 whitespace-nowrap flex-shrink-0 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-[10px] text-[9px] font-bold uppercase tracking-wide">{{ $loc->tipo }}</span>
-                            <span class="text-[9px] text-gray-400 w-full truncate" title="{{ $loc->materiales }}">{{ $loc->materiales ?? 'PET, Cartón...' }}</span>
+                        {{-- Badge tipo superpuesto --}}
+                        <div class="absolute top-1.5 left-1.5">
+                            <span class="px-1.5 py-0.5 bg-white/90 backdrop-blur-md dark:bg-black/60 text-[#064E3B] dark:text-emerald-300 rounded-md text-[8px] font-black uppercase tracking-wider shadow-sm">{{ $loc->tipo }}</span>
                         </div>
                     </div>
-                    <div class="flex gap-1 shrink-0">
-                        <a href="{{ route('mapa.edit', $loc) }}" class="w-8 h-8 rounded-lg bg-blue-500/10 hover:bg-blue-500 text-blue-500 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-110" title="Editar punto">
-                            <span class="material-symbols-outlined text-[14px]">edit</span>
-                        </a>
-                        <form id="delete-form-{{ $loc->id }}" action="{{ route('mapa.destroy', $loc) }}" method="POST">
-                            @csrf @method('DELETE')
-                            <button type="button" onclick="confirmarEliminar('delete-form-{{ $loc->id }}', '{{ $loc->nombre }}')" class="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white flex items-center justify-center transition-all duration-200 hover:scale-110" title="Eliminar punto">
-                                <span class="material-symbols-outlined text-[14px]">delete</span>
-                            </button>
-                        </form>
+
+                    {{-- Contenido --}}
+                    <div class="flex-1 min-w-0 py-0.5">
+                        <div class="flex justify-between items-start gap-2">
+                            <h4 class="font-bold text-[14px] text-[#064E3B] dark:text-white leading-tight line-clamp-2" title="{{ $loc->nombre }}">{{ $loc->nombre }}</h4>
+                            
+                            {{-- Acciones (ocultas hasta hover en desktop) --}}
+                            <div class="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200 shrink-0 bg-white/80 dark:bg-transparent backdrop-blur-sm rounded-lg p-0.5">
+                                <a href="{{ route('mapa.edit', $loc) }}" class="w-7 h-7 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 flex items-center justify-center transition-colors" title="Editar">
+                                    <span class="material-symbols-outlined text-[14px]">edit</span>
+                                </a>
+                                <form id="delete-form-{{ $loc->id }}" action="{{ route('mapa.destroy', $loc) }}" method="POST">
+                                    @csrf @method('DELETE')
+                                    <button type="button" onclick="confirmarEliminar('delete-form-{{ $loc->id }}', '{{ $loc->nombre }}')" class="w-7 h-7 rounded-md bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400 flex items-center justify-center transition-colors" title="Eliminar">
+                                        <span class="material-symbols-outlined text-[14px]">delete</span>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5 leading-relaxed line-clamp-2" title="{{ $loc->direccion }}">
+                            <span class="material-symbols-outlined text-[11px] align-middle mr-0.5">location_on</span>{{ $loc->direccion }}
+                        </p>
+                        
+                        <p class="text-[10px] text-emerald-600/70 dark:text-emerald-400/60 mt-1.5 font-medium line-clamp-1 flex items-center gap-1" title="{{ $loc->materiales }}">
+                            <span class="w-1 h-1 rounded-full bg-emerald-400"></span>
+                            {{ $loc->materiales ?? 'Múltiples materiales aceptados' }}
+                        </p>
                     </div>
                 </div>
             </div>

@@ -427,7 +427,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <input type="text" name="search" id="search-report" value="{{ request('search') }}" placeholder="Buscar por nombre, descripción, lugar..." class="w-full bg-transparent border-none focus:ring-0 text-gray-700 dark:text-gray-200 placeholder-gray-400 font-semibold text-[15px] outline-none px-4 py-3">
     </div>
     <div class="w-full md:w-[1px] h-[1px] md:h-10 bg-gray-100 dark:bg-emerald-800/50 hidden md:block"></div>
-    <div class="relative w-full md:w-auto" id="cat-wrap">
+    <div class="relative w-full md:w-auto z-50" id="cat-wrap">
         <button type="button" onclick="toggleDD('cat-dd')" class="w-full md:w-auto flex items-center justify-between gap-3 px-4 py-3 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-xl transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-900/30">
             <div class="flex items-center gap-2">
                 <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[20px]">category</span>
@@ -435,7 +435,7 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
             <span class="material-symbols-outlined text-gray-400 text-[20px]">expand_more</span>
         </button>
-        <div id="cat-dd" class="filter-dropdown hidden" style="min-width: 280px; right: 0; left: auto;">
+        <div id="cat-dd" class="filter-dropdown hidden z-50" style="min-width: 280px; right: 0; left: auto;">
             <div class="px-4 py-2 text-[10px] font-black tracking-widest text-emerald-600/60 uppercase">General</div>
             <button onclick="setCategoriaPreset('', 'Todas las Categorías')" class="active-item"><span class="material-symbols-outlined text-[18px] text-emerald-400">grid_view</span> Todas las Categorías</button>
             <div class="px-4 py-2 text-[10px] font-black tracking-widest text-emerald-600/60 uppercase border-t border-gray-100 dark:border-emerald-800/30 mt-1">Módulo Usuarios</div>
