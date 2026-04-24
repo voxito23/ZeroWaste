@@ -133,9 +133,36 @@
 
             <div>
                 <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Materiales Aceptados (Opcional)</label>
-                <div class="relative">
-                    <div class="absolute top-3 left-0 pl-4 flex items-start pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">inventory_2</span></div>
-                    <textarea name="materiales" rows="3" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">{{ $location->materiales }}</textarea>
+                <div class="relative custom-dropdown-multi" tabindex="0">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">inventory_2</span></div>
+                    <input type="hidden" name="materiales" id="materiales_hidden" value="{{ $location->materiales }}">
+                    
+                    <div class="dropdown-selected-multi w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-500 dark:text-gray-400 text-sm rounded-xl block pl-11 pr-10 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 cursor-pointer flex justify-between items-center" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                        <span class="selected-text-multi truncate w-full pr-4 text-left">Selecciona materiales...</span>
+                        <span class="material-symbols-outlined text-gray-400 absolute right-3 pointer-events-none">expand_more</span>
+                    </div>
+                    
+                    <div class="dropdown-options-multi hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto">
+                        @php
+                            $selectedMaterials = array_map('trim', explode(',', $location->materiales));
+                            $options = [
+                                'Cartón' => 'inventory_2',
+                                'Plástico' => 'recycling',
+                                'Latas' => 'kitchen',
+                                'Baterías' => 'battery_charging_full',
+                                'Vidrio' => 'wine_bar',
+                                'Electrónicos' => 'devices'
+                            ];
+                        @endphp
+                        @foreach($options as $val => $icon)
+                        <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="{{ $val }}">
+                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box {{ in_array($val, $selectedMaterials) ? 'bg-emerald-500' : '' }}">
+                                <span class="material-symbols-outlined text-sm text-white {{ in_array($val, $selectedMaterials) ? '' : 'hidden' }}">check</span>
+                            </div>
+                            <span class="material-symbols-outlined text-emerald-500 text-lg">{{ $icon }}</span> {{ $val }}
+                        </div>
+                        @endforeach
+                    </div>
                 </div>
             </div>
 
@@ -188,10 +215,10 @@ window.previewFile = function(input) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Custom Dropdown JS
+    // Custom Dropdown JS Single
     document.addEventListener('click', function(e) {
-        if (!e.target.closest('.custom-dropdown')) {
-            document.querySelectorAll('.dropdown-options').forEach(el => el.classList.add('hidden'));
+        if (!e.target.closest('.custom-dropdown') && !e.target.closest('.custom-dropdown-multi')) {
+            document.querySelectorAll('.dropdown-options, .dropdown-options-multi').forEach(el => el.classList.add('hidden'));
         }
     });
 
@@ -208,6 +235,46 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedText.classList.add('text-gray-900', 'dark:text-white');
             
             dropdown.querySelector('.dropdown-options').classList.add('hidden');
+        });
+    });
+
+    // Custom Dropdown JS Multi
+    let selectedMaterials = document.getElementById('materiales_hidden').value.split(',').map(s => s.trim()).filter(s => s);
+    
+    function updateMultiText() {
+        const selectedText = document.querySelector('.selected-text-multi');
+        if (selectedMaterials.length > 0) {
+            selectedText.innerHTML = `<span class="font-bold text-emerald-600 dark:text-emerald-400">${selectedMaterials.length} seleccionados:</span> ${selectedMaterials.join(', ')}`;
+            selectedText.classList.remove('text-gray-500', 'dark:text-gray-400');
+            selectedText.classList.add('text-gray-900', 'dark:text-white');
+        } else {
+            selectedText.innerHTML = 'Selecciona materiales...';
+            selectedText.classList.remove('text-gray-900', 'dark:text-white');
+            selectedText.classList.add('text-gray-500', 'dark:text-gray-400');
+        }
+    }
+    updateMultiText(); // Initialize on load
+
+    document.querySelectorAll('.option-multi-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const value = this.dataset.value;
+            const checkBox = this.querySelector('.check-box');
+            const checkIcon = this.querySelector('.check-box span');
+            const hiddenInput = document.getElementById('materiales_hidden');
+
+            if (selectedMaterials.includes(value)) {
+                selectedMaterials = selectedMaterials.filter(m => m !== value);
+                checkBox.classList.remove('bg-emerald-500');
+                checkIcon.classList.add('hidden');
+            } else {
+                selectedMaterials.push(value);
+                checkBox.classList.add('bg-emerald-500');
+                checkIcon.classList.remove('hidden');
+            }
+
+            hiddenInput.value = selectedMaterials.join(', ');
+            updateMultiText();
         });
     });
 

@@ -123,9 +123,41 @@
 
             <div>
                 <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Materiales Aceptados (Opcional)</label>
-                <div class="relative">
-                    <div class="absolute top-3 left-0 pl-4 flex items-start pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">inventory_2</span></div>
-                    <textarea name="materiales" rows="2" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20" placeholder="Ej. Cartón, Latas, Baterías."></textarea>
+                <div class="relative custom-dropdown-multi" tabindex="0">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">inventory_2</span></div>
+                    <input type="hidden" name="materiales" id="materiales_hidden" value="">
+                    
+                    <div class="dropdown-selected-multi w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-500 dark:text-gray-400 text-sm rounded-xl block pl-11 pr-10 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 cursor-pointer flex justify-between items-center" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                        <span class="selected-text-multi truncate w-full pr-4 text-left">Selecciona materiales...</span>
+                        <span class="material-symbols-outlined text-gray-400 absolute right-3 pointer-events-none">expand_more</span>
+                    </div>
+                    
+                    <div class="dropdown-options-multi hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto">
+                        <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Cartón">
+                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box"><span class="material-symbols-outlined text-sm text-white hidden">check</span></div>
+                            <span class="material-symbols-outlined text-emerald-500 text-lg">inventory_2</span> Cartón
+                        </div>
+                        <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Plástico">
+                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box"><span class="material-symbols-outlined text-sm text-white hidden">check</span></div>
+                            <span class="material-symbols-outlined text-emerald-500 text-lg">recycling</span> Plástico
+                        </div>
+                        <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Latas">
+                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box"><span class="material-symbols-outlined text-sm text-white hidden">check</span></div>
+                            <span class="material-symbols-outlined text-emerald-500 text-lg">kitchen</span> Latas
+                        </div>
+                        <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Baterías">
+                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box"><span class="material-symbols-outlined text-sm text-white hidden">check</span></div>
+                            <span class="material-symbols-outlined text-emerald-500 text-lg">battery_charging_full</span> Baterías
+                        </div>
+                        <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Vidrio">
+                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box"><span class="material-symbols-outlined text-sm text-white hidden">check</span></div>
+                            <span class="material-symbols-outlined text-emerald-500 text-lg">wine_bar</span> Vidrio
+                        </div>
+                        <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Electrónicos">
+                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box"><span class="material-symbols-outlined text-sm text-white hidden">check</span></div>
+                            <span class="material-symbols-outlined text-emerald-500 text-lg">devices</span> Electrónicos
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -175,10 +207,10 @@ window.previewFile = function(input) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Custom Dropdown JS
+    // Custom Dropdown JS Single
     document.addEventListener('click', function(e) {
-        if (!e.target.closest('.custom-dropdown')) {
-            document.querySelectorAll('.dropdown-options').forEach(el => el.classList.add('hidden'));
+        if (!e.target.closest('.custom-dropdown') && !e.target.closest('.custom-dropdown-multi')) {
+            document.querySelectorAll('.dropdown-options, .dropdown-options-multi').forEach(el => el.classList.add('hidden'));
         }
     });
 
@@ -195,9 +227,43 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedText.classList.add('text-gray-900', 'dark:text-white');
             
             dropdown.querySelector('.dropdown-options').classList.add('hidden');
-            dropdown.classList.remove('border-red-500'); // clear error state if any
-            const errSpan = document.getElementById('err-tipo');
-            if(errSpan) errSpan.classList.add('hidden');
+            document.getElementById('err-tipo').classList.add('hidden');
+        });
+    });
+
+    // Custom Dropdown JS Multi
+    let selectedMaterials = [];
+    document.querySelectorAll('.option-multi-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const value = this.dataset.value;
+            const checkBox = this.querySelector('.check-box');
+            const checkIcon = this.querySelector('.check-box span');
+            const dropdown = this.closest('.custom-dropdown-multi');
+            const hiddenInput = dropdown.querySelector('input[type="hidden"]');
+            const selectedText = dropdown.querySelector('.selected-text-multi');
+
+            if (selectedMaterials.includes(value)) {
+                selectedMaterials = selectedMaterials.filter(m => m !== value);
+                checkBox.classList.remove('bg-emerald-500');
+                checkIcon.classList.add('hidden');
+            } else {
+                selectedMaterials.push(value);
+                checkBox.classList.add('bg-emerald-500');
+                checkIcon.classList.remove('hidden');
+            }
+
+            hiddenInput.value = selectedMaterials.join(', ');
+            
+            if (selectedMaterials.length > 0) {
+                selectedText.innerHTML = `<span class="font-bold text-emerald-600 dark:text-emerald-400">${selectedMaterials.length} seleccionados:</span> ${selectedMaterials.join(', ')}`;
+                selectedText.classList.remove('text-gray-500', 'dark:text-gray-400');
+                selectedText.classList.add('text-gray-900', 'dark:text-white');
+            } else {
+                selectedText.innerHTML = 'Selecciona materiales...';
+                selectedText.classList.remove('text-gray-900', 'dark:text-white');
+                selectedText.classList.add('text-gray-500', 'dark:text-gray-400');
+            }
         });
     });
 
@@ -210,9 +276,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const ecoIcon = L.divIcon({
         className: '',
-        html: '<div style="background:#064E3B; width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:3px solid #00E096;"><svg viewBox="0 0 24 24" width="20" height="20" fill="#00E096"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg></div>',
-        iconSize: [40, 40],
-        iconAnchor: [20, 40]
+        html: '<div style="background:#064E3B; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:3px solid #00E096;"><img src="/static/img/logo.png" style="width:24px;height:24px;filter:brightness(0) invert(1);" /></div>',
+        iconSize: [44, 44],
+        iconAnchor: [22, 44]
     });
 
     map.on('click', function(e) {
@@ -228,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
             marker = L.marker(e.latlng, { icon: ecoIcon }).addTo(map);
         }
 
-        marker.bindPopup(`<b style="font-family:Inter,sans-serif;">📍 ${lat}, ${lng}</b>`).openPopup();
+        marker.bindPopup(`<div style="display:flex;align-items:center;gap:6px;font-family:Inter,sans-serif;font-weight:bold;color:#064E3B;"><img src="/static/img/logo.png" style="width:16px;height:16px;filter:brightness(0.5);"/> ${lat}, ${lng}</div>`).openPopup();
 
         // Limpiar error de coordenadas si existía
         const errLat = document.getElementById('err-latitud');
@@ -268,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         } else {
                             marker = L.marker(newLatLng, { icon: ecoIcon }).addTo(map);
                         }
-                        marker.bindPopup(`<b style="font-family:Inter,sans-serif;">📍 Automático: ${lat.toFixed(4)}, ${lng.toFixed(4)}</b>`).openPopup();
+                        marker.bindPopup(`<div style="display:flex;align-items:center;gap:6px;font-family:Inter,sans-serif;font-weight:bold;color:#064E3B;"><img src="/static/img/logo.png" style="width:16px;height:16px;filter:brightness(0.5);"/> ${lat.toFixed(4)}, ${lng.toFixed(4)}</div>`).openPopup();
                     }
                 })
                 .catch(err => console.error('Geocoding error:', err));

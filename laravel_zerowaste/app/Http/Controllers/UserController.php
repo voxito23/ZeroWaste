@@ -206,6 +206,11 @@ class UserController extends Controller
             return redirect()->route('usuarios.index')->with('error_admin', 'No puedes eliminar tu propia cuenta.');
         }
 
+        // Cualquier admin que no sea el principal no puede eliminar a otro admin
+        if ($user->is_admin && auth()->check() && auth()->user()->email !== 'vichdz@gmail.com') {
+            return redirect()->route('usuarios.index')->with('error_admin', 'Solo el administrador principal puede eliminar a otros administradores.');
+        }
+
         // Limpiar posteos y datos relacionados con posteos
         $postIds = \Illuminate\Support\Facades\DB::table('posts')->where('autor_id', $user->id)->pluck('id');
         if ($postIds->isNotEmpty()) {

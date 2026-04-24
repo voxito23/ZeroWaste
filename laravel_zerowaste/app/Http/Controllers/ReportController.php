@@ -160,7 +160,16 @@ class ReportController extends Controller
             $data['total'] = count($data['registros']);
         }
 
-        $filename = 'Reporte_' . ucfirst($tipo) . '_' . Carbon::now()->format('Ymd_His') . '.' . ($formato === 'preview' ? 'pdf' : $formato);
+        $filename = 'Reporte_' . ucfirst($tipo) . '_' . Carbon::now()->format('Ymd_His');
+
+        // Determine real extension
+        if ($formato === 'xlsx') {
+            $filename .= '.xlsx';
+        } elseif ($formato === 'docx') {
+            $filename .= '.docx';
+        } elseif ($formato === 'pdf' || $formato === 'preview') {
+            $filename .= '.pdf';
+        }
 
         if ($formato === 'pdf' || $formato === 'preview') {
             /** @var \Barryvdh\DomPDF\PDF $pdf */
@@ -171,13 +180,23 @@ class ReportController extends Controller
             }
             return $pdf->download($filename);
         } elseif ($formato === 'xlsx') {
-            return response(view('reporte_excel', $data)->render())
+            $html = view('reporte_excel', $data)->render();
+            // Wrap in proper XML spreadsheet declaration for better Office compatibility
+            $xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+            $xmlHeader .= '<?mso-application progid="Excel.Sheet"?>' . "\n";
+            return response($xmlHeader . $html)
                 ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
+                ->header('Content-Disposition', 'attachment; filename="'.$filename.'"')
+                ->header('Cache-Control', 'max-age=0');
         } elseif ($formato === 'docx') {
-            return response(view('reporte_pdf', $data)->render())
+            $html = view('reporte_pdf', $data)->render();
+            // Add Word document XML processing instruction
+            $wordHeader = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+            $wordHeader .= '<?mso-application progid="Word.Document"?>' . "\n";
+            return response($wordHeader . $html)
                 ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-                ->header('Content-Disposition', 'attachment; filename="'.$filename.'"');
+                ->header('Content-Disposition', 'attachment; filename="'.$filename.'"')
+                ->header('Cache-Control', 'max-age=0');
         }
     }
 }

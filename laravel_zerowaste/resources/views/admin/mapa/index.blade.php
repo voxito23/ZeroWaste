@@ -8,7 +8,21 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        var map = L.map('qro-map').setView([20.5881, -100.3899], 13);
+        var map = L.map('qro-map', {
+            center: [20.5881, -100.3899],
+            zoom: 13,
+            minZoom: 9,
+            maxBounds: [
+                [19.9, -100.6], // Suroeste de Querétaro aprox
+                [21.7, -99.0]   // Noreste de Querétaro aprox
+            ],
+            maxBoundsViscosity: 1.0
+        });
+
+        // Fix for resize bugs when toggling full screen / maximizing window
+        window.addEventListener('resize', function() {
+            setTimeout(function() { map.invalidateSize(); }, 200);
+        });
 
         var isDark = document.documentElement.classList.contains('dark');
         var lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {

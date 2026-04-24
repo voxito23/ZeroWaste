@@ -13,7 +13,7 @@
             <span class="material-symbols-outlined text-[32px]">person_add</span>
         </div>
         <div>
-            <h2 class="text-3xl font-black text-[#064E3B] dark:text-white tracking-tight">Crear Nuevo Usuario</h2>
+            <h2 class="text-4xl font-black text-[#064E3B] dark:text-white tracking-tight">Crear Nuevo Usuario</h2>
             <p class="text-gray-500 dark:text-emerald-200/70 text-sm font-medium mt-1">Registra y configura un nuevo miembro del ecosistema.</p>
         </div>
     </div>

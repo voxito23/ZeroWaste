@@ -338,10 +338,7 @@
 </head>
 <body>
     @php
-        $logoPath = app()->basePath('../flask_zerowaste/static/img/logo_texture.png');
-        if (!file_exists($logoPath)) {
-            $logoPath = app()->basePath('../flask_zerowaste/static/img/logo.png');
-        }
+        $logoPath = public_path('static/img/logo.png');
         $logoSrc = '';
         if (file_exists($logoPath)) {
             $logoData = base64_encode(file_get_contents($logoPath));
@@ -485,7 +482,7 @@
                                     if ($fotoName && $fotoName !== 'default.png') {
                                         $fotoPath = public_path('img/perfiles/' . $fotoName);
                                         if (!file_exists($fotoPath)) {
-                                            $fotoPath = app()->basePath('../flask_zerowaste/static/img/perfiles/' . $fotoName);
+                                            $fotoPath = public_path('static/img/perfiles/' . $fotoName);
                                         }
                                         if (file_exists($fotoPath)) {
                                             $ext = pathinfo($fotoPath, PATHINFO_EXTENSION);

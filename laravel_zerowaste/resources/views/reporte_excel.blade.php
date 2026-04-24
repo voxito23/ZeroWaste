@@ -47,9 +47,7 @@
 </head>
 <body>
     @php
-        $logoPath = public_path('images/logo_texture.png');
-        $logoData = file_exists($logoPath) ? base64_encode(file_get_contents($logoPath)) : '';
-        $logoSrc = $logoData ? 'data:image/png;base64,' . $logoData : '';
+        $logoSrc = url('/static/img/logo.png');
     @endphp
     {{-- HEADER --}}
     <table class="header-table">
@@ -112,11 +110,8 @@
                     @if($tipo === 'usuarios')
                         @php
                             $avatarSrc = null;
-                            if(isset($item->foto_perfil) && $item->foto_perfil) {
-                                $path = public_path($item->foto_perfil);
-                                if(file_exists($path)) {
-                                    $avatarSrc = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($path));
-                                }
+                            if(isset($item->foto_perfil) && $item->foto_perfil && $item->foto_perfil !== 'default.png') {
+                                $avatarSrc = url('/img/perfiles/' . $item->foto_perfil);
                             }
                         @endphp
                         <td style="color: #9CA3AF; font-weight: 600;">{{ $idx + 1 }}</td>
