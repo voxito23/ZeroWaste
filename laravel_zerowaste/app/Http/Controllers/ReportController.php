@@ -181,20 +181,18 @@ class ReportController extends Controller
             return $pdf->download($filename);
         } elseif ($formato === 'xlsx') {
             $html = view('reporte_excel', $data)->render();
-            // Wrap in proper XML spreadsheet declaration for better Office compatibility
-            $xmlHeader = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-            $xmlHeader .= '<?mso-application progid="Excel.Sheet"?>' . "\n";
-            return response($xmlHeader . $html)
-                ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            // Use .xls extension with ms-excel MIME for HTML-as-Excel (avoids corruption)
+            $filename = str_replace('.xlsx', '.xls', $filename);
+            return response($html)
+                ->header('Content-Type', 'application/vnd.ms-excel')
                 ->header('Content-Disposition', 'attachment; filename="'.$filename.'"')
                 ->header('Cache-Control', 'max-age=0');
         } elseif ($formato === 'docx') {
             $html = view('reporte_pdf', $data)->render();
-            // Add Word document XML processing instruction
-            $wordHeader = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-            $wordHeader .= '<?mso-application progid="Word.Document"?>' . "\n";
-            return response($wordHeader . $html)
-                ->header('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+            // Use .doc extension with msword MIME for HTML-as-Word (avoids "unreadable content" error)
+            $filename = str_replace('.docx', '.doc', $filename);
+            return response($html)
+                ->header('Content-Type', 'application/msword')
                 ->header('Content-Disposition', 'attachment; filename="'.$filename.'"')
                 ->header('Cache-Control', 'max-age=0');
         }

@@ -338,11 +338,22 @@
 </head>
 <body>
     @php
-        $logoPath = public_path('static/img/logo.png');
+        // Try multiple paths for the logo (logo_texture.png preferred)
         $logoSrc = '';
-        if (file_exists($logoPath)) {
-            $logoData = base64_encode(file_get_contents($logoPath));
-            $logoSrc = 'data:image/png;base64,' . $logoData;
+        $logoPaths = [
+            public_path('img/logo_texture.png'),
+            public_path('static/img/logo_texture.png'),
+            base_path('../flask_zerowaste/static/img/logo_texture.png'),
+            public_path('img/logo.png'),
+            public_path('static/img/logo.png'),
+        ];
+        foreach ($logoPaths as $logoPath) {
+            if (file_exists($logoPath)) {
+                $logoData = base64_encode(file_get_contents($logoPath));
+                $ext = pathinfo($logoPath, PATHINFO_EXTENSION);
+                $logoSrc = 'data:image/' . $ext . ';base64,' . $logoData;
+                break;
+            }
         }
 
         function getBadgeClass($text) {

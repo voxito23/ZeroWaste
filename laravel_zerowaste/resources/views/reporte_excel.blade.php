@@ -47,7 +47,21 @@
 </head>
 <body>
     @php
-        $logoSrc = url('/static/img/logo.png');
+        $logoSrc = '';
+        $logoPaths = [
+            public_path('img/logo_texture.png'),
+            public_path('static/img/logo_texture.png'),
+            base_path('../flask_zerowaste/static/img/logo_texture.png'),
+            public_path('img/logo.png'),
+            public_path('static/img/logo.png'),
+        ];
+        foreach ($logoPaths as $lp) {
+            if (file_exists($lp)) {
+                $ext = pathinfo($lp, PATHINFO_EXTENSION);
+                $logoSrc = 'data:image/' . $ext . ';base64,' . base64_encode(file_get_contents($lp));
+                break;
+            }
+        }
     @endphp
     {{-- HEADER --}}
     <table class="header-table">
