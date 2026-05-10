@@ -145,7 +145,7 @@
                             </span>
                             <span class="material-symbols-outlined text-gray-400 text-base">expand_more</span>
                         </div>
-                        <div class="dropdown-options hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden">
+                        <div class="dropdown-options hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden max-h-64 overflow-y-auto">
                             @foreach($iconMap as $title => $icon)
                             <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="{{ $title }}">
                                 <span class="material-symbols-outlined text-emerald-500 text-base">{{ $icon }}</span> {{ $title }}
@@ -178,6 +178,18 @@
                     <h3 class="font-bold text-sm text-[#064E3B] dark:text-white">Seguridad</h3>
                     <p class="text-[11px] text-gray-400">Dejar en blanco si no deseas cambiar la contraseña</p>
                 </div>
+            </div>
+
+            <div class="field-group mb-5">
+                <label>Contraseña Anterior</label>
+                <div class="relative">
+                    <span class="field-icon material-symbols-outlined">key</span>
+                    <input type="password" name="password_actual" id="old-password" class="field-input" placeholder="Ingresa la contraseña actual para confirmar">
+                    <button type="button" onclick="togglePass('old-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-500 transition-colors">
+                        <span class="material-symbols-outlined text-[16px]">visibility_off</span>
+                    </button>
+                </div>
+                <span id="err-old-password" class="hidden text-red-500 text-[11px] mt-1 font-medium"></span>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-5">

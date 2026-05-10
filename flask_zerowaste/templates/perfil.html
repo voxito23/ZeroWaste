@@ -282,24 +282,36 @@
 
                 <div class="space-y-3">
                     <label class="text-sm font-bold text-secondary dark:text-emerald-100">Título / Profesión <span class="text-red-500">*</span></label>
-                    <select id="edit-titulo" name="titulo_perfil" required class="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 text-secondary dark:text-white outline-none transition-all appearance-none cursor-pointer" style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%239CA3AF%22%3E%3Cpath d=%22M7 10l5 5 5-5z%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 12px center; background-size: 20px;">
-                        {% set current_titulo = session.get('titulo_perfil', 'Usuario Eco-consciente')|string %}
-                        {% set titulo_options = [
-                            'Usuario Eco-consciente',
-                            'Entusiasta del Desarrollo Sostenible',
-                            'Activista Ambiental',
-                            'Ingeniero Ambiental',
-                            'Estudiante Comprometido con el Medio Ambiente',
-                            'Promotor de Reciclaje',
-                            'Educador Ecológico',
-                            'Voluntario Verde',
-                            'Emprendedor Sustentable',
-                            'Líder Comunitario Ecológico'
-                        ] %}
-                        {% for opt in titulo_options %}
-                            <option value="{{ opt }}" {% if current_titulo == opt %}selected{% endif %}>{{ opt }}</option>
-                        {% endfor %}
-                    </select>
+                    <div class="relative" id="titulo-dropdown-wrap">
+                        <input type="hidden" name="titulo_perfil" id="edit-titulo-value" value="{{ session.get('titulo_perfil', 'Usuario Eco-consciente') }}">
+                        <div id="titulo-dropdown-btn" class="w-full px-4 py-3 rounded-xl bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-gray-700 focus:border-primary focus:ring-2 focus:ring-primary/20 text-secondary dark:text-white outline-none transition-all cursor-pointer flex items-center justify-between" onclick="document.getElementById('titulo-dropdown-list').classList.toggle('hidden')">
+                            {% set current_titulo = session.get('titulo_perfil', 'Usuario Eco-consciente')|string %}
+                            {% set icon_map = {
+                                'Usuario Eco-consciente': 'eco',
+                                'Entusiasta del Desarrollo Sostenible': 'public',
+                                'Activista Ambiental': 'landscape',
+                                'Ingeniero Ambiental': 'engineering',
+                                'Estudiante Comprometido con el Medio Ambiente': 'school',
+                                'Promotor de Reciclaje': 'recycling',
+                                'Educador Ecológico': 'menu_book',
+                                'Voluntario Verde': 'volunteer_activism',
+                                'Emprendedor Sustentable': 'rocket_launch',
+                                'Líder Comunitario Ecológico': 'groups'
+                            } %}
+                            <span class="titulo-selected-text flex items-center gap-2 font-semibold text-sm">
+                                <span class="material-symbols-outlined text-primary text-lg">{{ icon_map.get(current_titulo, 'eco') }}</span>
+                                {{ current_titulo if current_titulo and current_titulo != 'None' else 'Selecciona un título...' }}
+                            </span>
+                            <span class="material-symbols-outlined text-gray-400 text-lg">expand_more</span>
+                        </div>
+                        <div id="titulo-dropdown-list" class="hidden absolute z-[99] w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-2xl overflow-hidden max-h-64 overflow-y-auto">
+                            {% for label, icon in icon_map.items() %}
+                            <div class="titulo-option p-3.5 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm font-medium" data-value="{{ label }}" data-icon="{{ icon }}">
+                                <span class="material-symbols-outlined text-primary text-lg">{{ icon }}</span> {{ label }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                     <p id="error-edit-titulo" class="hidden text-xs text-red-500 font-bold mt-1"></p>
                 </div>
 
@@ -424,6 +436,24 @@
 
 {% block scripts %}
 <script>
+    // === Custom Titulo Dropdown ===
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#titulo-dropdown-wrap')) {
+            const list = document.getElementById('titulo-dropdown-list');
+            if (list) list.classList.add('hidden');
+        }
+    });
+    document.querySelectorAll('.titulo-option').forEach(function(item) {
+        item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const value = this.dataset.value;
+            const icon = this.dataset.icon;
+            document.getElementById('edit-titulo-value').value = value;
+            document.querySelector('.titulo-selected-text').innerHTML =
+                '<span class="material-symbols-outlined text-primary text-lg">' + icon + '</span> ' + value;
+            document.getElementById('titulo-dropdown-list').classList.add('hidden');
+        });
+    });
     
 
     // Helper de validación de campos para la edición de perfil
@@ -457,10 +487,11 @@
         
         if (!checkEditField('edit-nombre', 'error-edit-nombre', 10, 50)) isValid = false;
         if (!checkEditField('edit-ubicacion', 'error-edit-ubicacion', 10, 50)) isValid = false;
-        // Titulo is a select, just check it has a value
-        const tituloEl = document.getElementById('edit-titulo');
-        if (!tituloEl.value) {
-            tituloEl.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+        // Titulo is a custom dropdown, check hidden input value
+        const tituloEl = document.getElementById('edit-titulo-value');
+        if (!tituloEl || !tituloEl.value) {
+            const btn = document.getElementById('titulo-dropdown-btn');
+            if (btn) btn.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
             document.getElementById('error-edit-titulo').textContent = 'Selecciona un título.';
             document.getElementById('error-edit-titulo').classList.remove('hidden');
             isValid = false;
