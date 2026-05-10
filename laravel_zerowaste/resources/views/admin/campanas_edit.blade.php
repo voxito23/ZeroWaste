@@ -206,46 +206,10 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 @endpush
 
-@push('styles')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<style>
-    .flatpickr-calendar {
-        border-radius: 16px !important;
-        border: 1px solid rgba(16,185,129,0.15) !important;
-        box-shadow: 0 20px 50px rgba(0,0,0,0.1), 0 0 30px rgba(16,185,129,0.06) !important;
-        font-family: 'Inter', sans-serif !important;
-    }
-    .flatpickr-day.selected, .flatpickr-day.selected:hover {
-        background: #059669 !important;
-        border-color: #059669 !important;
-    }
-    .flatpickr-day:hover {
-        background: rgba(16,185,129,0.1) !important;
-        border-color: rgba(16,185,129,0.2) !important;
-    }
-    .flatpickr-months .flatpickr-month {
-        background: #064E3B !important;
-        color: #fff !important;
-        border-radius: 14px 14px 0 0;
-    }
-    .flatpickr-current-month .flatpickr-monthDropdown-months,
-    .flatpickr-current-month input.cur-year {
-        color: #fff !important;
-        font-weight: 700 !important;
-    }
-    .flatpickr-weekdays { background: #064E3B !important; }
-    span.flatpickr-weekday { color: rgba(255,255,255,0.7) !important; font-weight: 700 !important; }
-    .flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month {
-        fill: #fff !important;
-        color: #fff !important;
-    }
-    .flatpickr-day.today { border-color: #10B981 !important; }
-</style>
-@endpush
+
+
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const fpConfig = {

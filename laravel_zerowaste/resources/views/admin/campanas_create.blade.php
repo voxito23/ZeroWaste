@@ -5,23 +5,8 @@
 
 @section('content')
 
-@push('styles')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-<style>
-    /* Flatpickr Premium Overrides */
-    .flatpickr-calendar { border-radius: 20px !important; border: 1px solid #E5E7EB !important; box-shadow: 0 25px 60px rgba(0,0,0,0.12) !important; }
-    .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange { background: #059669 !important; border-color: #059669 !important; color: #fff !important; font-weight: 800 !important; }
-    .flatpickr-day.inRange { background: rgba(0, 224, 150, 0.15) !important; border-color: transparent !important; box-shadow: none !important; }
-    .flatpickr-day:hover { background: rgba(0, 224, 150, 0.2) !important; color: #064E3B !important; }
-    .dark .flatpickr-calendar { background: #0F2A20 !important; border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: 0 25px 60px rgba(0,0,0,0.7) !important; }
-    .dark .flatpickr-months .flatpickr-month { color: #fff !important; }
-    .dark .flatpickr-current-month .flatpickr-monthDropdown-months { font-weight: 800 !important; color: #fff !important; }
-    .dark .flatpickr-weekday { color: rgba(255,255,255,0.3) !important; font-weight: 700 !important; }
-    .dark .flatpickr-day { color: #ccc !important; }
-    .dark .flatpickr-day.flatpickr-disabled { color: #333 !important; }
-    .dark span.flatpickr-prev-month, .dark span.flatpickr-next-month { color: #fff !important; fill: #fff !important; }
-</style>
-@endpush
+
+
 
 <div class="bg-white/80 dark:bg-[#0B1F18]/80 backdrop-blur-xl rounded-[2rem] p-8 lg:p-10 shadow-2xl border border-white/50 dark:border-emerald-800/30 relative overflow-hidden group max-w-4xl mx-auto">
     <div class="absolute -top-40 -right-40 w-96 h-96 bg-gradient-to-br from-emerald-400/20 to-teal-500/10 rounded-full blur-3xl pointer-events-none transition group-hover:bg-emerald-400/20"></div>
@@ -175,8 +160,6 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 <script>
 window.previewFile = function(input) {
     const previewContainer = document.getElementById('image-preview-container');

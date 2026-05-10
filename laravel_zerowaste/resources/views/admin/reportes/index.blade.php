@@ -4,7 +4,6 @@
 @section('page_title', 'Centro de Reportes')
 
 @push('styles')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <style>
     /* Estilo profesional del calendario */
     .date-input-wrap {
@@ -82,22 +81,6 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Sobrescrituras de Flatpickr - Modo claro */
-    .flatpickr-calendar { border-radius: 20px !important; border: 1px solid #E5E7EB !important; box-shadow: 0 25px 60px rgba(0,0,0,0.12) !important; }
-    .flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange { background: #059669 !important; border-color: #059669 !important; color: #fff !important; font-weight: 800 !important; }
-    .flatpickr-day.inRange { background: rgba(0, 224, 150, 0.15) !important; border-color: transparent !important; box-shadow: none !important; }
-    .flatpickr-day:hover { background: rgba(0, 224, 150, 0.2) !important; color: #064E3B !important; }
-
-    /* Flatpickr en modo oscuro */
-    .dark .flatpickr-calendar { background: #0F2A20 !important; border: 1px solid rgba(255,255,255,0.1) !important; box-shadow: 0 25px 60px rgba(0,0,0,0.7) !important; }
-    .dark .flatpickr-months .flatpickr-month { color: #fff !important; }
-    .dark .flatpickr-current-month .flatpickr-monthDropdown-months { font-weight: 800 !important; color: #fff !important; }
-    .dark .flatpickr-weekday { color: rgba(255,255,255,0.3) !important; font-weight: 700 !important; }
-    .dark .flatpickr-day { color: #ccc !important; }
-    .dark .flatpickr-day.flatpickr-disabled { color: #333 !important; }
-    .dark span.flatpickr-prev-month, .dark span.flatpickr-next-month { color: #fff !important; fill: #fff !important; }
-    .numInputWrapper span { display: none !important; }
-
     .report-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .report-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
     .dark .report-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
@@ -105,8 +88,6 @@
 @endpush
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-<script src="https://npmcdn.com/flatpickr/dist/l10n/es.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     let dateStart = null, dateEnd = null;
