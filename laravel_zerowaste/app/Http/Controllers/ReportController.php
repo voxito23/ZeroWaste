@@ -184,13 +184,113 @@ class ReportController extends Controller
         } elseif ($formato === 'xlsx') {
             return Excel::download(new GenericExport($data), $filename);
         } elseif ($formato === 'docx') {
-            // Use dedicated Word template with Word-compatible CSS
-            $html = view('reporte_word', $data)->render();
-            $filename = str_replace('.docx', '.doc', $filename);
-            return response($html)
-                ->header('Content-Type', 'application/msword')
-                ->header('Content-Disposition', 'attachment; filename="'.$filename.'"')
-                ->header('Cache-Control', 'max-age=0');
+            $phpWord = new \PhpOffice\PhpWord\PhpWord();
+            $phpWord->setDefaultFontName('Calibri');
+            $phpWord->setDefaultFontSize(10);
+
+            $section = $phpWord->addSection(['marginTop' => 800, 'marginBottom' => 600, 'marginLeft' => 900, 'marginRight' => 900]);
+
+            // Header
+            $headerStyle = ['bold' => true, 'size' => 22, 'color' => '064E3B', 'name' => 'Calibri'];
+            $section->addText('ZEROWASTE', $headerStyle);
+            $section->addText($data['titulo'], ['bold' => true, 'size' => 12, 'color' => '059669']);
+            $section->addText('Generado: ' . $data['fecha_generada'], ['size' => 9, 'color' => '6B7280', 'italic' => true]);
+            $section->addTextBreak();
+
+            // Metrics
+            $metricsTable = $section->addTable(['borderSize' => 6, 'borderColor' => '10B981', 'cellMargin' => 80]);
+            $cellStyle = ['bgColor' => 'F0FDF4', 'valign' => 'center'];
+            $metricsTable->addRow();
+            $metricsTable->addCell(2400, $cellStyle)->addText($data['total'] . ' Registros', ['bold' => true, 'size' => 11, 'color' => '064E3B']);
+            $metricsTable->addCell(2400, $cellStyle)->addText('Desde: ' . $data['rango_inicio'], ['bold' => true, 'size' => 9, 'color' => '059669']);
+            $metricsTable->addCell(2400, $cellStyle)->addText('Hasta: ' . $data['rango_fin'], ['bold' => true, 'size' => 9, 'color' => '059669']);
+            $metricsTable->addCell(2400, $cellStyle)->addText('Módulo: ' . ucfirst($data['tipo']), ['bold' => true, 'size' => 9, 'color' => '064E3B']);
+            $section->addTextBreak();
+
+            // Section Title
+            $section->addText('RESULTADOS DETALLADOS', ['bold' => true, 'size' => 11, 'color' => '064E3B', 'allCaps' => true]);
+            $section->addTextBreak(0);
+
+            // Data Table
+            $thStyle = ['bgColor' => '064E3B', 'valign' => 'center'];
+            $thFont = ['bold' => true, 'size' => 8, 'color' => 'FFFFFF'];
+            $tdFont = ['size' => 9, 'color' => '374151'];
+            $tdBold = ['size' => 9, 'color' => '064E3B', 'bold' => true];
+
+            $table = $section->addTable(['borderSize' => 4, 'borderColor' => 'E5E7EB', 'cellMargin' => 60]);
+
+            // Headers
+            $table->addRow();
+            $table->addCell(500, $thStyle)->addText('#', $thFont);
+            if ($data['tipo'] === 'usuarios') {
+                $table->addCell(2200, $thStyle)->addText('USUARIO', $thFont);
+                $table->addCell(2200, $thStyle)->addText('EMAIL', $thFont);
+                $table->addCell(1500, $thStyle)->addText('UBICACIÓN', $thFont);
+                $table->addCell(1000, $thStyle)->addText('ROL', $thFont);
+                $table->addCell(1000, $thStyle)->addText('ESTADO', $thFont);
+                $table->addCell(1200, $thStyle)->addText('REGISTRO', $thFont);
+            } elseif ($data['tipo'] === 'campanas') {
+                $table->addCell(2500, $thStyle)->addText('CAMPAÑA', $thFont);
+                $table->addCell(1500, $thStyle)->addText('TIPO', $thFont);
+                $table->addCell(3000, $thStyle)->addText('DESCRIPCIÓN', $thFont);
+                $table->addCell(1000, $thStyle)->addText('ESTADO', $thFont);
+                $table->addCell(1200, $thStyle)->addText('CREADA', $thFont);
+            } elseif ($data['tipo'] === 'mapa') {
+                $table->addCell(2200, $thStyle)->addText('PUNTO', $thFont);
+                $table->addCell(1500, $thStyle)->addText('TIPO', $thFont);
+                $table->addCell(2500, $thStyle)->addText('DIRECCIÓN', $thFont);
+                $table->addCell(1500, $thStyle)->addText('MATERIALES', $thFont);
+                $table->addCell(1500, $thStyle)->addText('COORDENADAS', $thFont);
+            } elseif ($data['tipo'] === 'eventos') {
+                $table->addCell(2500, $thStyle)->addText('EVENTO', $thFont);
+                $table->addCell(1500, $thStyle)->addText('TIPO', $thFont);
+                $table->addCell(2500, $thStyle)->addText('UBICACIÓN', $thFont);
+                $table->addCell(2200, $thStyle)->addText('FECHA', $thFont);
+            }
+
+            // Data rows
+            foreach ($data['registros'] as $idx => $item) {
+                $rowBg = $idx % 2 === 1 ? ['bgColor' => 'F9FAFB'] : [];
+                $table->addRow();
+                $table->addCell(500, $rowBg)->addText($idx + 1, ['size' => 8, 'color' => '9CA3AF', 'bold' => true]);
+
+                if ($data['tipo'] === 'usuarios') {
+                    $table->addCell(2200, $rowBg)->addText($item->nombre, $tdBold);
+                    $table->addCell(2200, $rowBg)->addText($item->email, $tdFont);
+                    $table->addCell(1500, $rowBg)->addText($item->ubicacion ?? '—', $tdFont);
+                    $table->addCell(1000, $rowBg)->addText($item->is_admin ? 'Admin' : 'Usuario', ['size' => 8, 'bold' => true, 'color' => $item->is_admin ? '6B21A8' : '065F46']);
+                    $table->addCell(1000, $rowBg)->addText(($item->bloqueado ?? false) ? 'Bloqueado' : 'Activo', ['size' => 8, 'bold' => true, 'color' => ($item->bloqueado ?? false) ? '991B1B' : '065F46']);
+                    $table->addCell(1200, $rowBg)->addText($item->created_at ? Carbon::parse($item->created_at)->format('d/m/Y') : '—', $tdFont);
+                } elseif ($data['tipo'] === 'campanas') {
+                    $table->addCell(2500, $rowBg)->addText($item->nombre, $tdBold);
+                    $table->addCell(1500, $rowBg)->addText($item->tipo_etiqueta ?? 'General', ['size' => 8, 'bold' => true, 'color' => '1E40AF']);
+                    $table->addCell(3000, $rowBg)->addText(mb_strimwidth($item->descripcion ?? '', 0, 60, '...'), $tdFont);
+                    $table->addCell(1000, $rowBg)->addText(($item->activa ?? false) ? 'Activa' : 'Inactiva', ['size' => 8, 'bold' => true, 'color' => ($item->activa ?? false) ? '065F46' : '991B1B']);
+                    $table->addCell(1200, $rowBg)->addText($item->created_at ? Carbon::parse($item->created_at)->format('d/m/Y') : '—', $tdFont);
+                } elseif ($data['tipo'] === 'mapa') {
+                    $table->addCell(2200, $rowBg)->addText($item->nombre, $tdBold);
+                    $table->addCell(1500, $rowBg)->addText(mb_strimwidth($item->tipo, 0, 20, ''), ['size' => 8, 'bold' => true, 'color' => '92400E']);
+                    $table->addCell(2500, $rowBg)->addText(mb_strimwidth($item->direccion ?? '', 0, 50, '...'), $tdFont);
+                    $table->addCell(1500, $rowBg)->addText(mb_strimwidth($item->materiales ?? '—', 0, 30, '...'), $tdFont);
+                    $table->addCell(1500, $rowBg)->addText(number_format($item->latitud, 4) . ', ' . number_format($item->longitud, 4), ['size' => 8, 'color' => '6B7280', 'name' => 'Courier New']);
+                } elseif ($data['tipo'] === 'eventos') {
+                    $table->addCell(2500, $rowBg)->addText($item->titulo ?? $item->nombre ?? 'Evento', $tdBold);
+                    $table->addCell(1500, $rowBg)->addText($item->tipo ?? 'General', ['size' => 8, 'bold' => true, 'color' => '6B21A8']);
+                    $table->addCell(2500, $rowBg)->addText($item->ubicacion ?? $item->lugar ?? '—', $tdFont);
+                    $table->addCell(2200, $rowBg)->addText($item->fecha_inicio ? Carbon::parse($item->fecha_inicio)->format('d/m/Y H:i') : '—', $tdFont);
+                }
+            }
+
+            // Footer
+            $section->addTextBreak();
+            $section->addText('Total de registros: ' . $data['total'], ['bold' => true, 'size' => 9, 'color' => '065F46']);
+            $section->addText('© ' . date('Y') . ' ZeroWaste — Plataforma de Sostenibilidad', ['size' => 8, 'color' => '9CA3AF', 'italic' => true]);
+
+            $tempFile = tempnam(sys_get_temp_dir(), 'word_');
+            $writer = \PhpOffice\PhpWord\IOFactory::createWriter($phpWord, 'Word2007');
+            $writer->save($tempFile);
+
+            return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
         }
     }
 }

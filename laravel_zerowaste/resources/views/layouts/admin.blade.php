@@ -59,6 +59,15 @@
             box-shadow: inset 3px 0 0 #10B981;
         }
         .dark .nav-link.active { background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05)); color: #34D399; }
+        /* Sidebar collapsed */
+        #sidebar.collapsed { width: 70px !important; min-width: 70px; }
+        #sidebar.collapsed .nav-text,
+        #sidebar.collapsed .nav-section-label,
+        #sidebar.collapsed .sidebar-brand-text { display: none; }
+        #sidebar.collapsed .nav-link { justify-content: center; padding: 0.65rem; }
+        #sidebar.collapsed .nav-link .material-symbols-outlined { font-size: 22px; }
+        #sidebar.collapsed .sidebar-logo-wrap { justify-content: center; padding: 0 0.5rem; }
+        #sidebar.collapsed .nav-link:hover { transform: none; }
         .fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) forwards; opacity:0; transform:translateY(20px); }
         @keyframes fadeInUp { to { opacity:1; transform:translateY(0); } }
         ::-webkit-scrollbar { width: 6px; }
@@ -106,64 +115,63 @@
 
     <!-- Barra lateral de navegación -->
     <aside id="sidebar" class="w-[250px] bg-white/80 dark:bg-forest-card/90 backdrop-blur-xl border-r border-gray-200/50 dark:border-emerald-900/30 flex flex-col hidden lg:flex transition-all duration-300 ease-in-out relative">
-        <div class="h-16 flex items-center px-5 border-b border-gray-100 dark:border-emerald-900/30 gap-2.5">
+        <div class="h-16 flex items-center px-5 border-b border-gray-100 dark:border-emerald-900/30 gap-2.5 sidebar-logo-wrap">
             <img src="/static/img/logo.png" alt="ZeroWaste" class="h-8 w-auto" onerror="this.style.display='none'">
-            <span class="font-black text-base text-secondary dark:text-white tracking-tight">ZeroWaste</span>
+            <span class="font-black text-base text-secondary dark:text-white tracking-tight sidebar-brand-text">ZeroWaste</span>
         </div>
         <nav class="p-3 flex flex-col gap-0.5 flex-1 overflow-y-auto">
-            <a href="{{ route('dashboard') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                <span class="material-symbols-outlined text-lg">dashboard</span> Dashboard
+            <a href="{{ route('dashboard') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('dashboard') ? 'active' : '' }}" title="Dashboard">
+                <span class="material-symbols-outlined text-lg">dashboard</span> <span class="nav-text">Dashboard</span>
             </a>
-            <a href="{{ route('usuarios.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('usuarios.*') ? 'active' : '' }}">
-                <span class="material-symbols-outlined text-lg">group</span> Usuarios
+            <a href="{{ route('usuarios.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('usuarios.*') ? 'active' : '' }}" title="Usuarios">
+                <span class="material-symbols-outlined text-lg">group</span> <span class="nav-text">Usuarios</span>
             </a>
-            <a href="{{ route('campanas.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('campanas.*') ? 'active' : '' }}">
-                <span class="material-symbols-outlined text-lg">campaign</span> Campañas
+            <a href="{{ route('campanas.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('campanas.*') ? 'active' : '' }}" title="Campañas">
+                <span class="material-symbols-outlined text-lg">campaign</span> <span class="nav-text">Campañas</span>
             </a>
-            <a href="{{ route('mapa.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('mapa.*') ? 'active' : '' }}">
-                <span class="material-symbols-outlined text-lg">map</span> Mapa
+            <a href="{{ route('mapa.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('mapa.*') ? 'active' : '' }}" title="Mapa">
+                <span class="material-symbols-outlined text-lg">map</span> <span class="nav-text">Mapa</span>
             </a>
-            <a href="{{ route('reportes.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('reportes.*') ? 'active' : '' }}">
-                <span class="material-symbols-outlined text-lg">insert_chart</span> Reportes
+            <a href="{{ route('reportes.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('reportes.*') ? 'active' : '' }}" title="Reportes">
+                <span class="material-symbols-outlined text-lg">insert_chart</span> <span class="nav-text">Reportes</span>
             </a>
 
             <div class="border-t border-emerald-100 dark:border-emerald-900/50 my-3"></div>
             
             @if(\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->email === 'vichdz@gmail.com')
-                <span class="text-[10px] text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1 mt-2">Desarrollo</span>
+                <span class="text-[10px] text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1 mt-2 nav-section-label">Desarrollo</span>
                 
-                <a href="/docs" target="_blank" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200">
-                    <span class="material-symbols-outlined text-lg">api</span> FastAPI Docs
+                <a href="/docs" target="_blank" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200" title="FastAPI Docs">
+                    <span class="material-symbols-outlined text-lg">api</span> <span class="nav-text">FastAPI Docs</span>
                 </a>
 
-                <a href="/" target="_blank" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200">
-                    <span class="material-symbols-outlined text-lg">storefront</span> ZeroWaste Cliente
+                <a href="/" target="_blank" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200" title="ZeroWaste Cliente">
+                    <span class="material-symbols-outlined text-lg">storefront</span> <span class="nav-text">ZeroWaste Cliente</span>
                 </a>
                 
                 <div class="border-t border-emerald-100 dark:border-emerald-900/50 my-3"></div>
             @endif
 
-            <span class="text-[10px] text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1 mt-2">Soporte</span>
-            <a href="{{ route('mensajes.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('mensajes.*') ? 'active' : '' }}">
-                <span class="material-symbols-outlined text-lg">mail</span> Mensajes
+            <span class="text-[10px] text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1 mt-2 nav-section-label">Soporte</span>
+            <a href="{{ route('mensajes.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('mensajes.*') ? 'active' : '' }}" title="Mensajes">
+                <span class="material-symbols-outlined text-lg">mail</span> <span class="nav-text">Mensajes</span>
             </a>
-            <a href="{{ route('recuperacion.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('recuperacion.*') ? 'active' : '' }}">
-                <span class="material-symbols-outlined text-lg">restore</span> Recuperación
+            <a href="{{ route('recuperacion.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('recuperacion.*') ? 'active' : '' }}" title="Recuperación">
+                <span class="material-symbols-outlined text-lg">restore</span> <span class="nav-text">Recuperación</span>
             </a>
 
             <div class="mt-auto pt-4 border-t border-emerald-100 dark:border-emerald-900/50">
-                <!-- Interruptor de Modo Oscuro -->
-                <button type="button" class="nav-link flex items-center justify-between w-full text-left mb-2 group" id="theme-switch-btn">
+                <button type="button" class="nav-link flex items-center justify-between w-full text-left mb-2 group" id="theme-switch-btn" title="Cambiar tema">
                     <div class="flex items-center gap-3 font-bold text-secondary dark:text-emerald-200 text-sm">
                         <span class="material-symbols-outlined text-xl dark:hidden text-secondary group-hover:text-primary transition-colors">dark_mode</span>
                         <span class="material-symbols-outlined text-xl hidden dark:block text-primary">light_mode</span>
-                        <span class="dark:hidden">Modo Oscuro</span>
-                        <span class="hidden dark:inline">Modo Claro</span>
+                        <span class="dark:hidden nav-text">Modo Oscuro</span>
+                        <span class="hidden dark:inline nav-text">Modo Claro</span>
                     </div>
                 </button>
 
-                <a href="{{ route('admin.logout') }}" class="nav-link flex items-center gap-3 font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
-                    <span class="material-symbols-outlined text-xl">logout</span> Cerrar Sesión
+                <a href="{{ route('admin.logout') }}" class="nav-link flex items-center gap-3 font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" title="Cerrar Sesión">
+                    <span class="material-symbols-outlined text-xl">logout</span> <span class="nav-text">Cerrar Sesión</span>
                 </a>
             </div>
         </nav>
@@ -232,27 +240,16 @@
         const sidebarIcon = document.getElementById('sidebar-icon');
 
         if (sidebarToggle && sidebar) {
-            // Restaurar estado guardado
             if (localStorage.getItem('zw-sidebar-collapsed') === 'true') {
-                sidebar.classList.add('-ml-[250px]');
+                sidebar.classList.add('collapsed');
                 sidebarIcon.textContent = 'menu';
-                sidebarIcon.style.transform = 'scaleX(-1)';
-            } else {
-                sidebarIcon.style.transform = 'scaleX(1)';
             }
 
             sidebarToggle.addEventListener('click', () => {
-                sidebar.classList.toggle('-ml-[250px]');
-                const isCollapsed = sidebar.classList.contains('-ml-[250px]');
+                sidebar.classList.toggle('collapsed');
+                const isCollapsed = sidebar.classList.contains('collapsed');
                 localStorage.setItem('zw-sidebar-collapsed', isCollapsed);
-                
-                if (isCollapsed) {
-                    sidebarIcon.textContent = 'menu';
-                    sidebarIcon.style.transform = 'scaleX(-1)';
-                } else {
-                    sidebarIcon.textContent = 'menu_open';
-                    sidebarIcon.style.transform = 'scaleX(1)';
-                }
+                sidebarIcon.textContent = isCollapsed ? 'menu' : 'menu_open';
             });
         }
 

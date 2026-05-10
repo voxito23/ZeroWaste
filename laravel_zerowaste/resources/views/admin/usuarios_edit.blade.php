@@ -162,7 +162,8 @@
             </div>
         </div>
 
-        {{-- Security Card --}}
+        {{-- Security Card - Only visible for principal admin or when editing yourself --}}
+        @if(auth()->user()->email === 'vichdz@gmail.com' || auth()->id() === $user->id)
         <div class="edit-card p-6 mb-6">
             <div class="flex items-center gap-3 mb-5">
                 <div class="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/15 flex items-center justify-center">
@@ -215,8 +216,10 @@
                 </div>
             </div>
         </div>
+        @endif
 
-        {{-- Permissions & Actions --}}
+        {{-- Permissions & Actions - Only principal admin --}}
+        @if(auth()->user()->email === 'vichdz@gmail.com')
         <div class="edit-card p-6 mb-6">
             <div class="flex items-center gap-3 mb-5">
                 <div class="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/15 flex items-center justify-center">
@@ -248,6 +251,7 @@
                 </label>
             </div>
         </div>
+        @endif
 
         {{-- Action Buttons --}}
         <div class="flex items-center justify-between">

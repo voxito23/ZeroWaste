@@ -387,30 +387,18 @@ document.addEventListener("DOMContentLoaded", function() {
             </div>
             <span class="material-symbols-outlined text-gray-400 text-[20px]">expand_more</span>
         </button>
-        <div id="cat-dd" class="filter-dropdown hidden z-50" style="min-width: 280px; right: 0; left: auto;">
-            <div class="px-4 py-2 text-[10px] font-black tracking-widest text-emerald-600/60 uppercase">General</div>
+        <div id="cat-dd" class="filter-dropdown hidden z-50" style="min-width: 260px; right: 0; left: auto;">
             <button onclick="setCategoriaPreset('', 'Todas las Categorías')" class="active-item"><span class="material-symbols-outlined text-[18px] text-emerald-400">grid_view</span> Todas las Categorías</button>
-            <div class="px-4 py-2 text-[10px] font-black tracking-widest text-emerald-600/60 uppercase border-t border-gray-100 dark:border-emerald-800/30 mt-1">Módulo Usuarios</div>
-            <button onclick="setCategoriaPreset('admins', 'Solo Administradores')"><span class="material-symbols-outlined text-[18px] text-purple-400">admin_panel_settings</span> Solo Administradores</button>
-            <button onclick="setCategoriaPreset('users', 'Solo Usuarios Base')"><span class="material-symbols-outlined text-[18px] text-blue-400">person</span> Solo Usuarios Base</button>
-            <div class="px-4 py-2 text-[10px] font-black tracking-widest text-emerald-600/60 uppercase border-t border-gray-100 dark:border-emerald-800/30 mt-1">Módulo Mapa</div>
+            <div style="border-top: 1px solid rgba(0,0,0,0.05); margin: 4px 0;"></div>
+            <button onclick="setCategoriaPreset('admins', 'Administradores')"><span class="material-symbols-outlined text-[18px] text-purple-400">admin_panel_settings</span> Administradores</button>
+            <button onclick="setCategoriaPreset('users', 'Usuarios Base')"><span class="material-symbols-outlined text-[18px] text-blue-400">person</span> Usuarios Base</button>
+            <div style="border-top: 1px solid rgba(0,0,0,0.05); margin: 4px 0;"></div>
+            <button onclick="setCategoriaPreset('reciclaje', 'Puntos de Reciclaje')"><span class="material-symbols-outlined text-[18px] text-emerald-500">recycling</span> Puntos de Reciclaje</button>
             <button onclick="setCategoriaPreset('centro principal', 'Centros Principales')"><span class="material-symbols-outlined text-[18px] text-amber-500">star</span> Centros Principales</button>
-            <button onclick="setCategoriaPreset('plástico', 'Reciclaje de Plástico')"><span class="material-symbols-outlined text-[18px] text-emerald-500">recycling</span> Reciclaje de Plástico</button>
-            <button onclick="setCategoriaPreset('vidrio', 'Reciclaje de Vidrio')"><span class="material-symbols-outlined text-[18px] text-rose-500">wine_bar</span> Reciclaje de Vidrio</button>
-            <button onclick="setCategoriaPreset('electrónicos', 'Desechos Electrónicos')"><span class="material-symbols-outlined text-[18px] text-indigo-500">devices</span> Desechos Electrónicos</button>
-            <button onclick="setCategoriaPreset('cartón', 'Reciclaje de Cartón/Papel')"><span class="material-symbols-outlined text-[18px] text-yellow-600">inventory_2</span> Reciclaje de Cartón</button>
-            <button onclick="setCategoriaPreset('baterías', 'Baterías y Pilas')"><span class="material-symbols-outlined text-[18px] text-red-500">battery_charging_full</span> Baterías y Pilas</button>
-            <button onclick="setCategoriaPreset('metal', 'Metal y Latas')"><span class="material-symbols-outlined text-[18px] text-gray-400">kitchen</span> Metal y Latas</button>
             <button onclick="setCategoriaPreset('contenedor público', 'Contenedores Públicos')"><span class="material-symbols-outlined text-[18px] text-gray-500">delete</span> Contenedores Públicos</button>
-            <button onclick="setCategoriaPreset('organización ambiental', 'Organizaciones Ambientales')"><span class="material-symbols-outlined text-[18px] text-teal-500">nature_people</span> Org. Ambientales</button>
-            <div class="px-4 py-2 text-[10px] font-black tracking-widest text-emerald-600/60 uppercase border-t border-gray-100 dark:border-emerald-800/30 mt-1">Módulo Campañas</div>
-            <button onclick="setCategoriaPreset('Impacto Positivo', 'Campañas Impacto Positivo')"><span class="material-symbols-outlined text-[18px] text-green-500">verified</span> Impacto Positivo</button>
-            <button onclick="setCategoriaPreset('Educación', 'Campañas de Educación')"><span class="material-symbols-outlined text-[18px] text-blue-500">school</span> Educación y Concientización</button>
-            <button onclick="setCategoriaPreset('Recaudación', 'Campañas de Recaudación')"><span class="material-symbols-outlined text-[18px] text-amber-500">volunteer_activism</span> Recaudación</button>
-            <div class="px-4 py-2 text-[10px] font-black tracking-widest text-emerald-600/60 uppercase border-t border-gray-100 dark:border-emerald-800/30 mt-1">Módulo Eventos</div>
-            <button onclick="setCategoriaPreset('Limpieza', 'Jornadas de Limpieza')"><span class="material-symbols-outlined text-[18px] text-cyan-500">cleaning_services</span> Jornadas de Limpieza</button>
-            <button onclick="setCategoriaPreset('Taller', 'Talleres Ecológicos')"><span class="material-symbols-outlined text-[18px] text-purple-500">psychology</span> Talleres Ecológicos</button>
-            <button onclick="setCategoriaPreset('Conferencia', 'Conferencias / Charlas')"><span class="material-symbols-outlined text-[18px] text-rose-400">record_voice_over</span> Conferencias</button>
+            <div style="border-top: 1px solid rgba(0,0,0,0.05); margin: 4px 0;"></div>
+            <button onclick="setCategoriaPreset('Impacto Positivo', 'Campañas Activas')"><span class="material-symbols-outlined text-[18px] text-green-500">verified</span> Campañas Activas</button>
+            <button onclick="setCategoriaPreset('Limpieza', 'Eventos / Jornadas')"><span class="material-symbols-outlined text-[18px] text-cyan-500">cleaning_services</span> Eventos y Jornadas</button>
         </div>
         <input type="hidden" name="categoria" id="categoria-report" value="{{ request('categoria') }}">
         <input type="hidden" name="fecha_inicio" id="form-fecha-inicio" value="{{ request('fecha_inicio') }}">
