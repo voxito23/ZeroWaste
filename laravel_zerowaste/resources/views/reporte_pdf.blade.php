@@ -186,10 +186,11 @@
         table.data-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 10.5px;
+            font-size: 10px;
             margin-top: 10px;
             border-radius: 8px;
             overflow: hidden;
+            table-layout: fixed;
         }
 
         table.data-table thead {
@@ -197,21 +198,25 @@
         }
 
         table.data-table th {
-            padding: 12px 14px;
+            padding: 10px 8px;
             text-align: left;
-            font-size: 9px;
+            font-size: 8px;
             text-transform: uppercase;
             font-weight: 700;
             color: #ffffff;
             border: none;
             letter-spacing: 0.5px;
+            word-wrap: break-word;
+            overflow: hidden;
         }
 
         table.data-table td {
-            padding: 12px 14px;
+            padding: 10px 8px;
             border-bottom: 1px solid #F3F4F6;
             color: #374151;
             vertical-align: middle;
+            word-wrap: break-word;
+            overflow: hidden;
         }
 
         table.data-table tr:nth-child(even) {
@@ -450,13 +455,13 @@
             <thead>
                 <tr>
                     @if($tipo === 'usuarios')
-                        <th style="width: 5%">#</th>
-                        <th style="width: 30%">USUARIO</th>
-                        <th style="width: 25%">EMAIL</th>
-                        <th>UBICACIÓN</th>
-                        <th>ROL</th>
-                        <th>ESTADO</th>
-                        <th class="th-right">REGISTRO</th>
+                        <th style="width: 4%">#</th>
+                        <th style="width: 20%">USUARIO</th>
+                        <th style="width: 24%">EMAIL</th>
+                        <th style="width: 16%">UBICACIÓN</th>
+                        <th style="width: 10%">ROL</th>
+                        <th style="width: 10%">ESTADO</th>
+                        <th style="width: 16%" class="th-right">REGISTRO</th>
                     @elseif($tipo === 'campanas')
                         <th style="width: 5%">#</th>
                         <th style="width: 25%">CAMPAÑA</th>
@@ -486,26 +491,6 @@
                         @if($tipo === 'usuarios')
                             <td style="color: #9CA3AF; font-weight: 600;">{{ $idx + 1 }}</td>
                             <td>
-                                @php
-                                    $avatarColor = $item->is_admin ? 'avatar-purple' : $avatarColors[$idx % count($avatarColors)];
-                                    $fotoName = $item->foto_perfil ?? null;
-                                    $fotoBase64 = '';
-                                    if ($fotoName && $fotoName !== 'default.png') {
-                                        $fotoPath = public_path('img/perfiles/' . $fotoName);
-                                        if (!file_exists($fotoPath)) {
-                                            $fotoPath = public_path('static/img/perfiles/' . $fotoName);
-                                        }
-                                        if (file_exists($fotoPath)) {
-                                            $ext = pathinfo($fotoPath, PATHINFO_EXTENSION);
-                                            $fotoBase64 = 'data:image/' . $ext . ';base64,' . base64_encode(file_get_contents($fotoPath));
-                                        }
-                                    }
-                                @endphp
-                                @if($fotoBase64)
-                                    <img src="{{ $fotoBase64 }}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 8px; border: 2px solid {{ $item->is_admin ? '#8B5CF6' : '#10B981' }};">
-                                @else
-                                    <span class="user-avatar {{ $avatarColor }}">{{ strtoupper(substr($item->nombre, 0, 1)) }}</span>
-                                @endif
                                 <span class="item-title">{{ $item->nombre }}</span>
                                 <span class="item-subtitle">{{ $item->titulo_perfil ?? 'Ecologista' }}</span>
                             </td>

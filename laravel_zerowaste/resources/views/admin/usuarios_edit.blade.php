@@ -175,22 +175,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div class="field-group">
-                    <label>Contraseña Actual</label>
-                    <div class="relative">
-                        <span class="field-icon material-symbols-outlined">key</span>
-                        <input type="password" name="password_actual" id="old-password" class="field-input" placeholder="••••••">
-                        <button type="button" onclick="togglePass('old-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-emerald-500 transition-colors">
-                            <span class="material-symbols-outlined text-[16px]">visibility_off</span>
-                        </button>
-                    </div>
-                    @error('password_actual')
-                        <span class="text-red-500 text-[11px] mt-1 font-medium">{{ $message }}</span>
-                    @enderror
-                    <span id="err-old-password" class="hidden text-red-500 text-[11px] mt-1 font-medium"></span>
-                </div>
-
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div class="field-group">
                     <label>Nueva Contraseña</label>
                     <div class="relative">

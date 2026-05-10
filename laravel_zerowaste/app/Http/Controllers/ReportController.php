@@ -45,11 +45,36 @@ class ReportController extends Controller
         }
 
         if ($categoria) {
+            // Module: Users
             if ($categoria === 'admins') $uQ->where('is_admin', true);
             else if ($categoria === 'users') $uQ->where('is_admin', false);
             
-            $cQ->where('tipo_etiqueta', 'ilike', "%{$categoria}%");
-            $pQ->where('tipo', 'ilike', "%{$categoria}%");
+            // Module: Map points
+            if ($categoria === 'reciclaje') {
+                $pQ->where(function($q) {
+                    $q->where('tipo', 'ilike', '%plástico%')
+                      ->orWhere('tipo', 'ilike', '%vidrio%')
+                      ->orWhere('tipo', 'ilike', '%electrónicos%')
+                      ->orWhere('tipo', 'ilike', '%cartón%')
+                      ->orWhere('tipo', 'ilike', '%baterías%')
+                      ->orWhere('tipo', 'ilike', '%metal%')
+                      ->orWhere('tipo', 'ilike', '%reciclaje%');
+                });
+            } elseif (in_array($categoria, ['centro principal', 'contenedor público'])) {
+                $pQ->where('tipo', 'ilike', "%{$categoria}%");
+            }
+            
+            // Module: Campaigns
+            if (in_array($categoria, ['Impacto Positivo', 'Educación', 'Recaudación'])) {
+                $cQ->where('tipo_etiqueta', 'ilike', "%{$categoria}%");
+            } elseif (!in_array($categoria, ['admins', 'users', 'reciclaje', 'centro principal', 'contenedor público', 'Limpieza', 'Taller', 'Conferencia'])) {
+                $cQ->where('tipo_etiqueta', 'ilike', "%{$categoria}%");
+            }
+            
+            // Module: Events
+            if (in_array($categoria, ['Limpieza', 'Taller', 'Conferencia'])) {
+                $eQ->where('tipo', 'ilike', "%{$categoria}%");
+            }
         }
 
         $totalUsuarios = $uQ->count();
