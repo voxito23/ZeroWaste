@@ -46,28 +46,35 @@
         .dark body, body.dark { background: #0B1F18; }
         .nav-link {
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            border-radius: 0.75rem;
-            padding: 0.6rem 0.85rem;
+            border-radius: 0.85rem;
+            padding: 0.7rem 0.9rem;
             position: relative;
-            font-size: 13px;
+            font-size: 16px;
         }
-        .nav-link:hover { background: rgba(16, 185, 129, 0.08); transform: translateX(3px); }
+        .nav-link .material-symbols-outlined { font-size: 21px !important; }
+        .nav-link:hover {
+            background: rgba(16, 185, 129, 0.06);
+            transform: translateX(3px);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.08);
+        }
         .nav-link.active {
-            background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(16,185,129,0.06));
+            background: linear-gradient(135deg, rgba(16,185,129,0.14), rgba(6,211,150,0.06));
             color: #10B981;
             font-weight: 800;
-            box-shadow: inset 3px 0 0 #10B981;
+            box-shadow: inset 3px 0 0 #10B981, 0 4px 20px rgba(16,185,129,0.1);
+            backdrop-filter: blur(8px);
         }
-        .dark .nav-link.active { background: linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05)); color: #34D399; }
+        .dark .nav-link.active { background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(16,185,129,0.05)); color: #34D399; box-shadow: inset 3px 0 0 #34D399, 0 4px 20px rgba(52,211,153,0.08); }
         /* Sidebar collapsed */
         #sidebar.collapsed { width: 70px !important; min-width: 70px; }
         #sidebar.collapsed .nav-text,
         #sidebar.collapsed .nav-section-label,
         #sidebar.collapsed .sidebar-brand-text { display: none; }
         #sidebar.collapsed .nav-link { justify-content: center; padding: 0.65rem; }
-        #sidebar.collapsed .nav-link .material-symbols-outlined { font-size: 22px; }
+        #sidebar.collapsed .nav-link .material-symbols-outlined { font-size: 25px !important; }
         #sidebar.collapsed .sidebar-logo-wrap { justify-content: center; padding: 0 0.5rem; }
         #sidebar.collapsed .nav-link:hover { transform: none; }
+        #sidebar.collapsed .nav-link.active { box-shadow: 0 4px 20px rgba(16,185,129,0.15); border: 1.5px solid rgba(16,185,129,0.2); }
         .fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.4,0,0.2,1) forwards; opacity:0; transform:translateY(20px); }
         @keyframes fadeInUp { to { opacity:1; transform:translateY(0); } }
         ::-webkit-scrollbar { width: 6px; }
