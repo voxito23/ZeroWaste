@@ -361,26 +361,34 @@
                 toast: true,
                 position: 'top',
                 showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: false,
+                timer: 2500,
+                timerProgressBar: true,
                 background: isDarkThemeToast ? '#0F2A20' : '#ffffff',
                 color: isDarkThemeToast ? '#d1fae5' : '#064E3B',
                 customClass: {
-                    popup: 'rounded-full border border-emerald-100 dark:border-emerald-800/50 shadow-2xl mt-4 px-2 py-1',
+                    popup: 'rounded-2xl border border-emerald-200/50 dark:border-emerald-700/40 shadow-[0_20px_50px_rgba(16,185,129,0.15)] mt-4 px-3 py-2',
+                    timerProgressBar: 'bg-gradient-to-r from-emerald-400 to-teal-500',
                 },
-                showClass: { popup: 'animate__animated animate__fadeInDown animate__faster' },
-                hideClass: { popup: 'animate__animated animate__fadeOutUp animate__faster' },
+                showClass: { popup: 'swal2-show zw-toast-in' },
+                hideClass: { popup: 'swal2-hide zw-toast-out' },
                 html: `
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-[#00E096] shadow-[0_0_15px_rgba(0,224,150,0.5)] flex items-center justify-center text-[#064E3B] shrink-0">
-                        <span class="material-symbols-outlined text-[18px] font-black">done</span>
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-[0_4px_15px_rgba(16,185,129,0.4)] flex items-center justify-center text-white shrink-0">
+                        <span class="material-symbols-outlined text-[20px] font-black">check_circle</span>
                     </div>
                     <div class="text-left pr-4">
-                        <h4 class="text-[14px] font-black m-0 leading-none tracking-tight">{!! session('success') !!}</h4>
+                        <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-0.5">Éxito</p>
+                        <h4 class="text-[14px] font-black m-0 leading-tight tracking-tight">{!! session('success') !!}</h4>
                     </div>
                 </div>`
             });
         </script>
+        <style>
+            @keyframes zwToastIn { from { opacity: 0; transform: translateY(-20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+            @keyframes zwToastOut { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-15px) scale(0.96); } }
+            .zw-toast-in { animation: zwToastIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+            .zw-toast-out { animation: zwToastOut 0.25s ease-in forwards; }
+        </style>
     @endif
 
     @if(session('error'))

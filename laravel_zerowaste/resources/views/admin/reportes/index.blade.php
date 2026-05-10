@@ -275,9 +275,10 @@ document.addEventListener("DOMContentLoaded", function() {
         syncBadge(); updateKPIs();
         if (typeof Swal !== 'undefined') {
             const isDark = document.documentElement.classList.contains('dark');
-            Swal.fire({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2500, timerProgressBar: true, background: isDark ? '#0F2A20' : '#fff',
-                customClass: { popup: 'rounded-2xl border shadow-xl border-emerald-100 dark:border-emerald-800/50 p-2' },
-                html: `<div class="flex items-center gap-3"><div class="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center flex-shrink-0 border border-emerald-200 dark:border-emerald-700 text-primary"><span class="material-symbols-outlined text-[18px]">check_circle</span></div><div><h4 class="text-sm font-bold text-secondary dark:text-emerald-100 m-0">Filtros restablecidos</h4></div></div>`
+            Swal.fire({ toast: true, position: 'top', showConfirmButton: false, timer: 2500, timerProgressBar: true, background: isDark ? '#0F2A20' : '#fff',
+                customClass: { popup: 'rounded-2xl border border-emerald-200/50 dark:border-emerald-700/40 shadow-[0_20px_50px_rgba(16,185,129,0.15)] mt-4 px-3 py-2' },
+                showClass: { popup: 'swal2-show zw-toast-in' }, hideClass: { popup: 'swal2-hide zw-toast-out' },
+                html: `<div class="flex items-center gap-3"><div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-[0_4px_15px_rgba(16,185,129,0.4)] flex items-center justify-center text-white shrink-0"><span class="material-symbols-outlined text-[20px] font-black">filter_alt_off</span></div><div class="text-left pr-4"><p class="text-[10px] font-bold uppercase tracking-widest text-emerald-500 mb-0.5">Listo</p><h4 class="text-[14px] font-black m-0 leading-tight tracking-tight" style="color:${isDark?'#d1fae5':'#064E3B'}">Filtros restablecidos</h4></div></div>`
             });
         }
     };
@@ -308,6 +309,8 @@ document.addEventListener("DOMContentLoaded", function() {
         // Show loading overlay
         const loader = document.getElementById('export-loading');
         if (loader) { loader.classList.remove('hidden'); loader.classList.add('flex'); }
+        // Auto-dismiss after 12s max
+        const loaderTimeout = setTimeout(() => { if (loader) { loader.classList.add('hidden'); loader.classList.remove('flex'); } }, 12000);
         
         // Use fetch+blob to know when download finishes
         fetch(url)
@@ -324,9 +327,11 @@ document.addEventListener("DOMContentLoaded", function() {
                 a.click();
                 URL.revokeObjectURL(a.href);
                 // Hide loader
+                clearTimeout(loaderTimeout);
                 if (loader) { loader.classList.add('hidden'); loader.classList.remove('flex'); }
             })
             .catch(() => {
+                clearTimeout(loaderTimeout);
                 if (loader) { loader.classList.add('hidden'); loader.classList.remove('flex'); }
                 Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo generar el reporte.', confirmButtonColor: '#059669' });
             });

@@ -78,6 +78,10 @@
                     <input type="email" id="email" name="email" required autocomplete="email" placeholder="admin@ejemplo.com"
                         class="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-black/20 border border-gray-200 dark:border-emerald-800/60 rounded-xl text-secondary dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
                 </div>
+                <p id="err-email" class="hidden text-red-500 text-xs font-bold mt-1.5 ml-1 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">error</span>
+                    <span id="err-email-text"></span>
+                </p>
             </div>
 
             <div class="space-y-1.5">
@@ -92,6 +96,10 @@
                         <span id="eye-icon" class="material-symbols-outlined">visibility</span>
                     </button>
                 </div>
+                <p id="err-password" class="hidden text-red-500 text-xs font-bold mt-1.5 ml-1 flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[14px]">error</span>
+                    <span id="err-password-text"></span>
+                </p>
             </div>
 
             <button type="submit" id="submit-btn" class="w-full mt-6 py-3 px-4 bg-primary hover:bg-emerald-500 text-white font-bold rounded-xl shadow-lg shadow-primary/30 transition-all hover:-translate-y-1 flex items-center justify-center gap-2 group">
@@ -128,6 +136,43 @@
             const submitBtn = document.getElementById('submit-btn');
 
             errBox.classList.add('hidden');
+
+            // Client-side validation
+            const errEmail = document.getElementById('err-email');
+            const errEmailTxt = document.getElementById('err-email-text');
+            const errPwd = document.getElementById('err-password');
+            const errPwdTxt = document.getElementById('err-password-text');
+            const emailInput = document.getElementById('email');
+            const pwdInput = document.getElementById('password');
+            errEmail.classList.add('hidden'); errPwd.classList.add('hidden');
+            emailInput.classList.remove('border-red-500', 'ring-red-500');
+            pwdInput.classList.remove('border-red-500', 'ring-red-500');
+
+            let isValid = true;
+            if (!email.trim()) {
+                errEmailTxt.textContent = 'El correo electrónico es obligatorio.';
+                errEmail.classList.remove('hidden');
+                emailInput.classList.add('border-red-500');
+                isValid = false;
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                errEmailTxt.textContent = 'Ingresa un correo electrónico válido.';
+                errEmail.classList.remove('hidden');
+                emailInput.classList.add('border-red-500');
+                isValid = false;
+            }
+            if (!password.trim()) {
+                errPwdTxt.textContent = 'La contraseña es obligatoria.';
+                errPwd.classList.remove('hidden');
+                pwdInput.classList.add('border-red-500');
+                isValid = false;
+            } else if (password.length < 6) {
+                errPwdTxt.textContent = 'La contraseña debe tener al menos 6 caracteres.';
+                errPwd.classList.remove('hidden');
+                pwdInput.classList.add('border-red-500');
+                isValid = false;
+            }
+            if (!isValid) return;
+
             submitBtn.disabled = true;
             btnText.textContent = "Autenticando...";
             spinner.classList.remove('hidden');

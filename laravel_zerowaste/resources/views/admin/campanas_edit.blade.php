@@ -62,14 +62,14 @@
                     <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Fecha Inicio</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">event</span></div>
-                        <input type="date" name="fecha_inicio" value="{{ $campaign->fecha_inicio ? date('Y-m-d', strtotime($campaign->fecha_inicio)) : '' }}" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                        <input type="text" name="fecha_inicio" id="fp-fecha-inicio" value="{{ $campaign->fecha_inicio ? date('Y-m-d', strtotime($campaign->fecha_inicio)) : '' }}" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 cursor-pointer" placeholder="Seleccionar fecha" readonly>
                     </div>
                 </div>
                 <div>
                     <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Fecha Fin</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">event_available</span></div>
-                        <input type="date" name="fecha_fin" value="{{ $campaign->fecha_fin ? date('Y-m-d', strtotime($campaign->fecha_fin)) : '' }}" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                        <input type="text" name="fecha_fin" id="fp-fecha-fin" value="{{ $campaign->fecha_fin ? date('Y-m-d', strtotime($campaign->fecha_fin)) : '' }}" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 cursor-pointer" placeholder="Seleccionar fecha" readonly>
                     </div>
                 </div>
             </div>
@@ -166,3 +166,58 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-calendar {
+        border-radius: 16px !important;
+        border: 1px solid rgba(16,185,129,0.15) !important;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.1), 0 0 30px rgba(16,185,129,0.06) !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+    .flatpickr-day.selected, .flatpickr-day.selected:hover {
+        background: #059669 !important;
+        border-color: #059669 !important;
+    }
+    .flatpickr-day:hover {
+        background: rgba(16,185,129,0.1) !important;
+        border-color: rgba(16,185,129,0.2) !important;
+    }
+    .flatpickr-months .flatpickr-month {
+        background: #064E3B !important;
+        color: #fff !important;
+        border-radius: 14px 14px 0 0;
+    }
+    .flatpickr-current-month .flatpickr-monthDropdown-months,
+    .flatpickr-current-month input.cur-year {
+        color: #fff !important;
+        font-weight: 700 !important;
+    }
+    .flatpickr-weekdays { background: #064E3B !important; }
+    span.flatpickr-weekday { color: rgba(255,255,255,0.7) !important; font-weight: 700 !important; }
+    .flatpickr-months .flatpickr-prev-month, .flatpickr-months .flatpickr-next-month {
+        fill: #fff !important;
+        color: #fff !important;
+    }
+    .flatpickr-day.today { border-color: #10B981 !important; }
+</style>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fpConfig = {
+        locale: 'es',
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'd/m/Y',
+        allowInput: false,
+        disableMobile: true,
+    };
+    flatpickr('#fp-fecha-inicio', fpConfig);
+    flatpickr('#fp-fecha-fin', fpConfig);
+});
+</script>

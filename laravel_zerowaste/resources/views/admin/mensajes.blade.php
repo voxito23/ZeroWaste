@@ -139,7 +139,7 @@
 </div>
 
 {{-- Modal de Conversación --}}
-<div id="replyModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm hidden text-left">
+<div id="replyModal" class="fixed inset-0 z-50 flex items-center justify-center hidden text-left" style="background: rgba(240,253,244,0.6); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%);">
     <div class="glass-card p-8 max-w-lg w-full shadow-2xl max-h-[90vh] flex flex-col">
         <div class="flex justify-between items-center mb-4 border-b border-gray-100 dark:border-emerald-800/50 pb-4 shrink-0">
             <h3 class="text-xl font-black text-[#064E3B] dark:text-white flex items-center gap-2" id="replyModalTitle">
