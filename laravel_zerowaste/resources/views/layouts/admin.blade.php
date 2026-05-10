@@ -165,7 +165,7 @@
             left: 12px;
             width: 32px;
             height: 32px;
-            background: url('/img/logo_texture.png') no-repeat center / contain;
+            background: url('/static/img/logo_texture.png') no-repeat center / contain;
             border-radius: 8px;
             opacity: 0.95;
             z-index: 5;
