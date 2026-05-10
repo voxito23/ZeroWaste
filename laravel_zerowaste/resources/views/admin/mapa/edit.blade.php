@@ -146,6 +146,8 @@
                         @php
                             $selectedMaterials = array_map('trim', explode(',', $location->materiales));
                             $options = [
+                                'PET' => 'water_bottle',
+                                'Tapitas' => 'circles',
                                 'Cartón' => 'inventory_2',
                                 'Plástico' => 'recycling',
                                 'Latas' => 'kitchen',

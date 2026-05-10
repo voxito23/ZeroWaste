@@ -372,11 +372,11 @@ def completar_perfil_save():
 
     if nombre:
         if len(nombre) < 10: return redirect(url_for('completar_perfil_view'))
-        usuario.nombre = nombre[:20]
+        usuario.nombre = nombre[:50]
     if ubicacion:
-        usuario.ubicacion = ubicacion[:20]
+        usuario.ubicacion = ubicacion[:50]
     if titulo_perfil:
-        usuario.titulo_perfil = titulo_perfil[:30]
+        usuario.titulo_perfil = titulo_perfil[:50]
     if biografia:
         usuario.biografia = biografia[:100]
     if intereses:
@@ -908,9 +908,9 @@ def editar_perfil():
     usuario = Usuario.query.get(session['usuario_id'])
     if usuario:
         if len(nombre) >= 10:
-            usuario.nombre = nombre[:20]
-        usuario.ubicacion = ubicacion[:20] if ubicacion else ""
-        usuario.titulo_perfil = titulo_perfil[:30] if titulo_perfil else ""
+            usuario.nombre = nombre[:50]
+        usuario.ubicacion = ubicacion[:50] if ubicacion else ""
+        usuario.titulo_perfil = titulo_perfil[:50] if titulo_perfil else ""
         usuario.biografia = biografia[:100] if biografia else ""
         usuario.intereses = intereses
         

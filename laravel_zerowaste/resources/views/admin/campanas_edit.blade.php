@@ -50,9 +50,32 @@
                 </div>
                 <div>
                     <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Tipo / Etiqueta</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">sell</span></div>
-                        <input type="text" name="tipo_etiqueta" value="{{ $campaign->tipo_etiqueta }}" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                    <div class="relative custom-dropdown-etiqueta" tabindex="0">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">sell</span></div>
+                        <input type="hidden" name="tipo_etiqueta" id="tipo_etiqueta" value="{{ $campaign->tipo_etiqueta }}">
+                        <div class="dropdown-selected-etiqueta w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl block pl-11 pr-10 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 cursor-pointer flex justify-between items-center" onclick="this.nextElementSibling.classList.toggle('hidden')">
+                            <span class="selected-text-etiqueta">{{ $campaign->tipo_etiqueta ?: 'Selecciona una etiqueta...' }}</span>
+                            <span class="material-symbols-outlined text-gray-400 absolute right-3 pointer-events-none">expand_more</span>
+                        </div>
+                        <div class="dropdown-options-etiqueta hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden max-h-52 overflow-y-auto">
+                            @php
+                                $etiquetas = [
+                                    'EDUCACIÓN' => 'school',
+                                    'IMPACTO POSITIVO' => 'eco',
+                                    'RECAUDACIÓN' => 'volunteer_activism',
+                                    'LIMPIEZA' => 'cleaning_services',
+                                    'TALLER' => 'construction',
+                                    'CONFERENCIA' => 'groups',
+                                    'RECICLAJE' => 'recycling',
+                                    'CONCIENTIZACIÓN' => 'campaign',
+                                ];
+                            @endphp
+                            @foreach($etiquetas as $etiqueta => $icon)
+                            <div class="option-etiqueta-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="{{ $etiqueta }}">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">{{ $icon }}</span> {{ $etiqueta }}
+                            </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             </div>
@@ -130,6 +153,22 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('customForm');
     if (!form) return;
+
+    // Etiqueta dropdown
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.custom-dropdown-etiqueta')) {
+            document.querySelectorAll('.dropdown-options-etiqueta').forEach(el => el.classList.add('hidden'));
+        }
+    });
+    document.querySelectorAll('.option-etiqueta-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const dropdown = this.closest('.custom-dropdown-etiqueta');
+            dropdown.querySelector('input[type="hidden"]').value = this.dataset.value;
+            dropdown.querySelector('.selected-text-etiqueta').textContent = this.dataset.value;
+            dropdown.querySelector('.dropdown-options-etiqueta').classList.add('hidden');
+        });
+    });
 
     form.addEventListener('submit', function(e) {
         const nombre = form.querySelector('input[name="nombre"]');

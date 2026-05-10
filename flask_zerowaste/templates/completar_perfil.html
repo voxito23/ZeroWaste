@@ -61,8 +61,25 @@
                     <label class="text-[9px] font-black text-secondary dark:text-emerald-100 flex items-center gap-1.5 uppercase tracking-[0.2em] opacity-70">
                         <span class="material-symbols-outlined text-primary text-sm">military_tech</span> Título Público <span class="text-red-500 ml-0.5">*</span>
                     </label>
-                    <input type="text" id="titulo_perfil" name="titulo_perfil" value="{{ usuario.titulo_perfil or 'Usuario Eco-consciente' }}" required minlength="10" maxlength="30"
-                        class="block w-full px-4 py-2.5 rounded-2xl border border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-sm">
+                    <select id="titulo_perfil" name="titulo_perfil" required
+                        class="block w-full px-4 py-2.5 rounded-2xl border border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-sm appearance-none cursor-pointer" style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%239CA3AF%22%3E%3Cpath d=%22M7 10l5 5 5-5z%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 12px center; background-size: 20px;">
+                        {% set ct = (usuario.titulo_perfil or 'Usuario Eco-consciente')|string %}
+                        {% set opts = [
+                            'Usuario Eco-consciente',
+                            'Entusiasta del Desarrollo Sostenible',
+                            'Activista Ambiental',
+                            'Ingeniero Ambiental',
+                            'Estudiante Comprometido con el Medio Ambiente',
+                            'Promotor de Reciclaje',
+                            'Educador Ecológico',
+                            'Voluntario Verde',
+                            'Emprendedor Sustentable',
+                            'Líder Comunitario Ecológico'
+                        ] %}
+                        {% for o in opts %}
+                            <option value="{{ o }}" {% if ct == o %}selected{% endif %}>{{ o }}</option>
+                        {% endfor %}
+                    </select>
                     <p id="error-titulo" class="hidden text-[10px] text-red-500 font-bold leading-tight mt-1"></p>
                 </div>
 

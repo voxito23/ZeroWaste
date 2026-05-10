@@ -79,21 +79,30 @@
                             <span class="material-symbols-outlined text-gray-400 absolute right-3 pointer-events-none">expand_more</span>
                         </div>
                         
-                        <div class="dropdown-options hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden">
-                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Taller">
-                                <span class="material-symbols-outlined text-emerald-500 text-lg">build</span> Taller
+                        <div class="dropdown-options hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden max-h-52 overflow-y-auto">
+                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="EDUCACIÓN">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">school</span> EDUCACIÓN
                             </div>
-                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Acopio">
-                                <span class="material-symbols-outlined text-emerald-500 text-lg">recycling</span> Acopio
+                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="IMPACTO POSITIVO">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">eco</span> IMPACTO POSITIVO
                             </div>
-                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Educación">
-                                <span class="material-symbols-outlined text-emerald-500 text-lg">school</span> Educación
+                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="RECAUDACIÓN">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">volunteer_activism</span> RECAUDACIÓN
                             </div>
-                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Voluntariado">
-                                <span class="material-symbols-outlined text-emerald-500 text-lg">volunteer_activism</span> Voluntariado
+                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="LIMPIEZA">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">cleaning_services</span> LIMPIEZA
                             </div>
-                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Evento Público">
-                                <span class="material-symbols-outlined text-emerald-500 text-lg">festival</span> Evento Público
+                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="TALLER">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">construction</span> TALLER
+                            </div>
+                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="CONFERENCIA">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">groups</span> CONFERENCIA
+                            </div>
+                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="RECICLAJE">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">recycling</span> RECICLAJE
+                            </div>
+                            <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="CONCIENTIZACIÓN">
+                                <span class="material-symbols-outlined text-emerald-500 text-lg">campaign</span> CONCIENTIZACIÓN
                             </div>
                         </div>
                     </div>

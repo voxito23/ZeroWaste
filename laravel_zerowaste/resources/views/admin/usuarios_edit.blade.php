@@ -126,9 +126,14 @@
                             $iconMap = [
                                 'Usuario Eco-consciente' => 'eco',
                                 'Entusiasta del Desarrollo Sostenible' => 'public',
-                                'Guardián de la Tierra' => 'landscape',
-                                'Reciclador Estrella' => 'star',
-                                'Eco-guerrero' => 'shield'
+                                'Activista Ambiental' => 'landscape',
+                                'Ingeniero Ambiental' => 'engineering',
+                                'Estudiante Comprometido con el Medio Ambiente' => 'school',
+                                'Promotor de Reciclaje' => 'recycling',
+                                'Educador Ecológico' => 'menu_book',
+                                'Voluntario Verde' => 'volunteer_activism',
+                                'Emprendedor Sustentable' => 'rocket_launch',
+                                'Líder Comunitario Ecológico' => 'groups',
                             ];
                             $currentTitle = old('titulo_perfil', $user->titulo_perfil);
                             $currentIcon = $iconMap[$currentTitle] ?? 'psychology';
@@ -162,8 +167,8 @@
             </div>
         </div>
 
-        {{-- Security Card - Only visible for principal admin or when editing yourself --}}
-        @if(auth()->user()->email === 'vichdz@gmail.com' || auth()->id() === $user->id)
+        {{-- Security Card - Only visible when editing admins or editing yourself --}}
+        @if($user->is_admin || auth()->id() === $user->id)
         <div class="edit-card p-6 mb-6">
             <div class="flex items-center gap-3 mb-5">
                 <div class="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/15 flex items-center justify-center">
