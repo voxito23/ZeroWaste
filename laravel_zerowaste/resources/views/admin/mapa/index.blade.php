@@ -21,39 +21,16 @@
                 container: 'qro-map',
                 style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12',
                 center: [-100.3899, 20.5881],
-                zoom: 14,
-                pitch: 60,
-                bearing: -17,
+                zoom: 13,
                 minZoom: 9,
                 maxBounds: [
-                    [-100.6, 19.9], // SW
-                    [-99.0, 21.7]   // NE
+                    [-100.6, 19.9],
+                    [-99.0, 21.7]
                 ],
                 attributionControl: true
             });
     
             map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
-    
-            // Edificios 3D
-            map.on('style.load', () => {
-                const layers = map.getStyle().layers;
-                const labelLayerId = layers.find((layer) => layer.type === 'symbol' && layer.layout['text-field'])?.id;
-    
-                map.addLayer({
-                    'id': 'add-3d-buildings',
-                    'source': 'composite',
-                    'source-layer': 'building',
-                    'filter': ['==', 'extrude', 'true'],
-                    'type': 'fill-extrusion',
-                    'minzoom': 15,
-                    'paint': {
-                        'fill-extrusion-color': isDark ? '#113526' : '#d1d5db',
-                        'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'height']],
-                        'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'min_height']],
-                        'fill-extrusion-opacity': 0.8
-                    }
-                }, labelLayerId);
-            });
 
         // Ajustar al redimensionar ventana
         window.addEventListener('resize', function() {
