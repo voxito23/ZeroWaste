@@ -12,7 +12,7 @@
     .avatar-ring{position:relative;width:120px;height:120px}
     .avatar-ring::before{content:'';position:absolute;inset:-4px;border-radius:50%;background:conic-gradient(from 0deg,#10B981,#06D6A0,#34D399,#10B981);padding:3px;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;animation:spinRing 4s linear infinite}
     @keyframes spinRing{to{transform:rotate(360deg)}}
-    .field-group{position:relative}
+    .field-group{}
     .field-group label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#6B7280;margin-bottom:6px;display:block}
     .dark .field-group label{color:#6ee7b7}
     .field-input{width:100%;padding:10px 14px 10px 42px;border-radius:12px;font-size:13px;font-weight:500;background:rgba(255,255,255,0.9);border:1.5px solid rgba(0,0,0,0.06);transition:all .25s;outline:none}
@@ -236,7 +236,7 @@
             <div class="flex flex-wrap items-center gap-4">
                 <label class="toggle-pill">
                     <input type="checkbox" name="is_admin" id="is_admin" {{ $user->is_admin ? 'checked' : '' }} class="sr-only peer">
-                    <div class="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-[10px] after:left-[18px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5 shadow-inner"></div>
+                    <div class="w-10 h-5 bg-gray-200 dark:bg-black/30 border border-gray-300 dark:border-emerald-800/50 rounded-full peer peer-checked:bg-emerald-500 peer-checked:border-emerald-500 after:content-[''] relative after:absolute after:top-[1px] after:left-[1px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5 shadow-inner"></div>
                     <div class="flex items-center gap-1.5">
                         <span class="material-symbols-outlined text-emerald-500 text-base">shield_person</span>
                         <span class="font-bold text-xs text-gray-700 dark:text-emerald-200">Administrador</span>
@@ -245,7 +245,7 @@
                 
                 <label class="toggle-pill danger">
                     <input type="checkbox" name="bloqueado" id="bloqueado" {{ $user->bloqueado ? 'checked' : '' }} class="sr-only peer">
-                    <div class="w-10 h-5 bg-gray-200 rounded-full peer peer-checked:bg-red-500 after:content-[''] after:absolute after:top-[10px] after:left-[18px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5 shadow-inner"></div>
+                    <div class="w-10 h-5 bg-gray-200 dark:bg-black/30 border border-gray-300 dark:border-emerald-800/50 rounded-full peer peer-checked:bg-red-500 peer-checked:border-red-500 after:content-[''] relative after:absolute after:top-[1px] after:left-[1px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5 shadow-inner"></div>
                     <div class="flex items-center gap-1.5">
                         <span class="material-symbols-outlined text-red-500 text-base">block</span>
                         <span class="font-bold text-xs text-red-600 dark:text-red-400">Bloquear</span>

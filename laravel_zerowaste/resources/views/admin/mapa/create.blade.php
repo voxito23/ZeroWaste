@@ -18,10 +18,10 @@
             </h3>
             <p class="text-sm font-bold text-gray-500 dark:text-gray-400 ml-[60px]">Haz clic en el mapa interactivo para fijar el punto exacto.</p>
         </div>
-        <div id="admin-map" class="w-full flex-1 min-h-[500px]"></div>
+        <div id="admin-map" class="w-full flex-1 min-h-[350px] lg:min-h-[450px]"></div>
     </div>
 
-<div class="bg-white/80 dark:bg-[#0B1F18]/80 backdrop-blur-xl rounded-[2rem] p-8 lg:p-10 shadow-2xl border border-white/50 dark:border-emerald-800/30 relative overflow-hidden group">
+<div class="bg-white/80 dark:bg-[#0B1F18]/80 backdrop-blur-xl rounded-[2rem] p-6 lg:p-8 shadow-2xl border border-white/50 dark:border-emerald-800/30 relative overflow-hidden group">
         <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-gradient-to-tr from-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none"></div>
         
         <div class="flex items-center gap-4 mb-8 relative z-10 border-b border-gray-100 dark:border-emerald-800/30 pb-6">
@@ -268,7 +268,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     const map = L.map('admin-map').setView([20.588, -100.389], 13);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    const isDark = document.documentElement.classList.contains('dark');
+    L.tileLayer(`https://{s}.basemaps.cartocdn.com/${isDark ? 'dark_all' : 'light_all'}/{z}/{x}/{y}{r}.png`, {
         attribution: '&copy; CARTO'
     }).addTo(map);
 

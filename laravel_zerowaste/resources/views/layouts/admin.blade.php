@@ -154,8 +154,7 @@
             position: absolute;
             top: 10px; left: 12px;
             width: 28px; height: 28px;
-            background: url('/static/img/logo_texture.png') no-repeat center / contain;
-            border-radius: 6px;
+            background: url('/static/faviconZeroWaste.svg') no-repeat center / contain;
             opacity: 0.95;
             z-index: 5;
         }
@@ -193,10 +192,11 @@
         .flatpickr-months .flatpickr-next-month {
             fill: #fff !important; color: #fff !important;
             padding: 8px !important; border-radius: 12px;
-            transition: all 0.2s !important;
+            transition: background 0.2s !important;
+            z-index: 10;
         }
         .flatpickr-months .flatpickr-prev-month:hover,
-        .flatpickr-months .flatpickr-next-month:hover { background: rgba(255,255,255,0.15) !important; }
+        .flatpickr-months .flatpickr-next-month:hover { background: rgba(255,255,255,0.25) !important; }
         .flatpickr-months .flatpickr-prev-month svg,
         .flatpickr-months .flatpickr-next-month svg { fill: #fff !important; }
         /* ─── Weekdays ─── */
@@ -236,26 +236,30 @@
             background: rgba(16,185,129,0.08) !important;
             font-weight: 800 !important;
         }
-        .flatpickr-day.selected,
-        .flatpickr-day.startRange,
-        .flatpickr-day.endRange,
-        .flatpickr-day.selected:hover {
+        .flatpickr-calendar .flatpickr-day.selected,
+        .flatpickr-calendar .flatpickr-day.startRange,
+        .flatpickr-calendar .flatpickr-day.endRange,
+        .flatpickr-calendar .flatpickr-day.selected:hover {
             background: linear-gradient(135deg, #059669, #10B981) !important;
             border-color: #059669 !important;
             color: #fff !important;
             font-weight: 800 !important;
             box-shadow: 0 4px 12px rgba(5,150,105,0.35) !important;
+            z-index: 2;
         }
-        .flatpickr-day.inRange {
-            background: rgba(16,185,129,0.18) !important;
+        .flatpickr-calendar .flatpickr-day.inRange,
+        .flatpickr-calendar .flatpickr-day.inRange:hover {
+            background: rgba(16,185,129,0.25) !important;
             border-color: transparent !important;
-            box-shadow: inset 0 -3px 0 0 rgba(16,185,129,0.4) !important;
+            box-shadow: inset 0 -3px 0 0 rgba(16,185,129,0.5) !important;
             color: #064E3B !important;
-            font-weight: 700 !important;
+            font-weight: 800 !important;
+            border-radius: 0 !important;
         }
-        .dark .flatpickr-day.inRange {
-            background: rgba(16,185,129,0.22) !important;
-            box-shadow: inset 0 -3px 0 0 rgba(52,211,153,0.4) !important;
+        .dark .flatpickr-calendar .flatpickr-day.inRange,
+        .dark .flatpickr-calendar .flatpickr-day.inRange:hover {
+            background: rgba(16,185,129,0.3) !important;
+            box-shadow: inset 0 -3px 0 0 rgba(52,211,153,0.5) !important;
             color: #d1fae5 !important;
         }
         .flatpickr-day.flatpickr-disabled { color: #ccc !important; }
@@ -271,52 +275,51 @@
         /* ═══ Custom Month Grid Popup ═══ */
         .zw-month-grid {
             position: absolute;
-            top: 54px; left: 50%;
+            top: 50px; left: 50%;
             transform: translateX(-50%);
             width: 270px;
-            background: #fff;
-            border: 1.5px solid rgba(16,185,129,0.15);
-            border-radius: 20px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
-            padding: 14px;
+            background: #ffffff;
+            border: 1px solid rgba(16,185,129,0.2);
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            padding: 12px;
             z-index: 100000;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            animation: zwMonthIn 0.2s ease;
+            gap: 6px;
+            animation: zwMonthIn 0.15s ease-out;
         }
         .dark .zw-month-grid {
             background: #0F2A20;
-            border-color: rgba(52,211,153,0.2);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border-color: rgba(52,211,153,0.25);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
         @keyframes zwMonthIn {
-            from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
         .zw-month-grid .zw-month-btn {
             padding: 10px 4px;
-            border-radius: 12px;
+            border-radius: 10px;
             border: none;
             background: transparent;
             font-family: 'Inter', sans-serif;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 700;
             color: #064E3B;
             cursor: pointer;
-            transition: all 0.15s ease;
+            transition: background 0.1s ease;
             text-align: center;
         }
         .dark .zw-month-grid .zw-month-btn { color: #d1fae5; }
         .zw-month-grid .zw-month-btn:hover {
-            background: rgba(16,185,129,0.1);
-            transform: scale(1.05);
+            background: rgba(16,185,129,0.15);
         }
         .zw-month-grid .zw-month-btn.active {
             background: linear-gradient(135deg, #059669, #10B981);
             color: #fff;
             font-weight: 800;
-            box-shadow: 0 4px 12px rgba(5,150,105,0.3);
+            box-shadow: 0 4px 10px rgba(5,150,105,0.3);
         }
     </style>
     @stack('styles')
