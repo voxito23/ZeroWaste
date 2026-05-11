@@ -264,16 +264,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedText.classList.remove('text-gray-900', 'dark:text-white');
                 selectedText.classList.add('text-gray-500', 'dark:text-gray-400');
             }
-        const isDark = document.documentElement.classList.contains('dark');
+        });
+    });
+
+    const isDark = document.documentElement.classList.contains('dark');
     mapboxgl.accessToken = '{{ env('MAPBOX_TOKEN', 'YOUR_MAPBOX_TOKEN_HERE') }}';
     const map = new mapboxgl.Map({
         container: 'admin-map',
         style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11',
         center: [-100.389, 20.588],
-        zoom: 12
+        zoom: 14,
+        pitch: 60,
+        bearing: -17
     });
 
     map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+    
+    map.on('style.load', () => {
+        const layers = map.getStyle().layers;
+        const labelLayerId = layers.find((layer) => layer.type === 'symbol' && layer.layout['text-field'])?.id;
+
+        map.addLayer({
+            'id': 'add-3d-buildings',
+            'source': 'composite',
+            'source-layer': 'building',
+            'filter': ['==', 'extrude', 'true'],
+            'type': 'fill-extrusion',
+            'minzoom': 15,
+            'paint': {
+                'fill-extrusion-color': isDark ? '#113526' : '#d1d5db',
+                'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'height']],
+                'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'min_height']],
+                'fill-extrusion-opacity': 0.8
+            }
+        }, labelLayerId);
+    });
 
     let marker = null;
     

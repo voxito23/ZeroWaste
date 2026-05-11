@@ -6,28 +6,54 @@
 @push('scripts')
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
-<style>
-.mapboxgl-popup-content { border-radius: 1rem !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important; transition: background-color 0.3s ease, border-color 0.3s ease; }
-html.dark .mapboxgl-popup-content { background: #022018 !important; border: 2px solid #00E096 !important; box-shadow: 0 15px 40px rgba(0,224,150,0.15) !important; color: white !important; }
-html.dark .mapboxgl-popup-tip { border-top-color: #022018 !important; border-bottom-color: #022018 !important; }
-</style>
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var isDark = document.documentElement.classList.contains('dark');
-        mapboxgl.accessToken = '{{ env('MAPBOX_TOKEN', 'YOUR_MAPBOX_TOKEN_HERE') }}';
-        var map = new mapboxgl.Map({
-            container: 'qro-map',
-            style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11',
-            center: [-100.3899, 20.5881],
-            zoom: 12,
-            minZoom: 9,
-            maxBounds: [
-                [-100.6, 19.9], // SW
-                [-99.0, 21.7]   // NE
-            ]
-        });
-
-        map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+    <style>
+    .mapboxgl-popup-content { border-radius: 1rem !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important; transition: background-color 0.3s ease, border-color 0.3s ease; }
+    html.dark .mapboxgl-popup-content { background: #022018 !important; border: 2px solid #00E096 !important; box-shadow: 0 15px 40px rgba(0,224,150,0.15) !important; color: white !important; }
+    html.dark .mapboxgl-popup-tip { border-top-color: #022018 !important; border-bottom-color: #022018 !important; }
+    /* Ocultar el texto de Improve this map pero dejar el logo de Mapbox */
+    .mapboxgl-ctrl-attrib-inner a { display: none !important; }
+    </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var isDark = document.documentElement.classList.contains('dark');
+            mapboxgl.accessToken = '{{ env('MAPBOX_TOKEN', 'YOUR_MAPBOX_TOKEN_HERE') }}';
+            var map = new mapboxgl.Map({
+                container: 'qro-map',
+                style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11',
+                center: [-100.3899, 20.5881],
+                zoom: 14,
+                pitch: 60, // 3D tilt
+                bearing: -17, // 3D rotation
+                minZoom: 9,
+                maxBounds: [
+                    [-100.6, 19.9], // SW
+                    [-99.0, 21.7]   // NE
+                ],
+                attributionControl: true
+            });
+    
+            map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+    
+            // Agregar capa de edificios 3D cuando cargue el mapa
+            map.on('style.load', () => {
+                const layers = map.getStyle().layers;
+                const labelLayerId = layers.find((layer) => layer.type === 'symbol' && layer.layout['text-field'])?.id;
+    
+                map.addLayer({
+                    'id': 'add-3d-buildings',
+                    'source': 'composite',
+                    'source-layer': 'building',
+                    'filter': ['==', 'extrude', 'true'],
+                    'type': 'fill-extrusion',
+                    'minzoom': 15,
+                    'paint': {
+                        'fill-extrusion-color': isDark ? '#113526' : '#d1d5db',
+                        'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'height']],
+                        'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'min_height']],
+                        'fill-extrusion-opacity': 0.8
+                    }
+                }, labelLayerId);
+            });
 
         // Fix for resize bugs when toggling full screen / maximizing window
         window.addEventListener('resize', function() {

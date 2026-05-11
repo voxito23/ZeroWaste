@@ -8,7 +8,8 @@
     .mapboxgl-popup-content { border-radius: 1rem !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important; transition: background-color 0.3s ease, border-color 0.3s ease; padding: 0 !important; }
     html.dark .mapboxgl-popup-content { background: #022018 !important; border: 2px solid #00E096 !important; box-shadow: 0 15px 40px rgba(0,224,150,0.15) !important; color: white !important; }
     html.dark .mapboxgl-popup-tip { border-top-color: #022018 !important; border-bottom-color: #022018 !important; }
-    /* Fix Instant Dark Mode Flash on Leaflet Maps */
+    /* Ocultar el texto de Improve this map pero dejar el logo de Mapbox */
+    .mapboxgl-ctrl-attrib-inner a { display: none !important; }
 </style>
 {% endblock %}
 
@@ -158,10 +159,33 @@ document.addEventListener("DOMContentLoaded", () => {
             container: 'map-container',
             style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11',
             center: [-100.389, 20.588],
-            zoom: 12
+            zoom: 14,
+            pitch: 60,
+            bearing: -17,
+            attributionControl: true
         });
 
         window.map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+        
+        window.map.on('style.load', () => {
+            const layers = window.map.getStyle().layers;
+            const labelLayerId = layers.find((layer) => layer.type === 'symbol' && layer.layout['text-field'])?.id;
+
+            window.map.addLayer({
+                'id': 'add-3d-buildings',
+                'source': 'composite',
+                'source-layer': 'building',
+                'filter': ['==', 'extrude', 'true'],
+                'type': 'fill-extrusion',
+                'minzoom': 15,
+                'paint': {
+                    'fill-extrusion-color': isDark ? '#113526' : '#d1d5db',
+                    'fill-extrusion-height': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'height']],
+                    'fill-extrusion-base': ['interpolate', ['linear'], ['zoom'], 15, 0, 15.05, ['get', 'min_height']],
+                    'fill-extrusion-opacity': 0.8
+                }
+            }, labelLayerId);
+        });
 
         // Observar cambios de tema para cambiar tiles en tiempo real
         new MutationObserver(function() {
