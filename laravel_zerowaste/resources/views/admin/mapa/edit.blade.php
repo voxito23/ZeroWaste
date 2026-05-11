@@ -19,7 +19,7 @@
     </div>
 
     @php
-        // Attempt to parse 'Calle #Num, C.P. CP' format
+        // Separar direccion en partes
         $calleStr = $location->direccion;
         $numStr = '';
         $cpStr = '';
@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedText.classList.add('text-gray-500', 'dark:text-gray-400');
         }
     }
-    updateMultiText(); // Initialize on load
+    updateMultiText(); // Inicializar
 
     document.querySelectorAll('.option-multi-item').forEach(item => {
         item.addEventListener('click', function(e) {
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Geocoding automático
+    // Buscar direccion en el mapa
     const inCalle = document.getElementById('input-calle');
     const inNum = document.getElementById('input-numero');
     const inCP = document.getElementById('input-cp');

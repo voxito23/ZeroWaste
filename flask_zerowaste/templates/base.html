@@ -42,7 +42,7 @@
                 }
             }
             applyTheme();
-            // Fix bfcache flash on back/forward navigation
+            // Arreglar flash al navegar con boton atras
             window.addEventListener('pageshow', function(e) {
                 if (e.persisted) applyTheme();
             });
@@ -334,7 +334,7 @@
     
     // Suavizamos el destello coordinando el fin de la carga con una hermosa transición
     window.addEventListener('load', hideProLoader);
-    setTimeout(hideProLoader, 1300); // Fallback 1.3s
+    setTimeout(hideProLoader, 1300); // Respaldo 1.3s
     </script>
 </body>
 </html>

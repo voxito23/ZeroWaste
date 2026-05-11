@@ -292,7 +292,7 @@
                     const pwdConfirm = document.getElementById('confirm_password');
                     const errorPwd = document.getElementById('password-error');
                     
-                    // Reset styling for password
+                    // Limpiar estilos de contraseña
                     errorPwd.classList.add('hidden');
                     pwd.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
                     pwdConfirm.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
@@ -311,7 +311,7 @@
                     
                     if (!isValid) {
                         e.preventDefault();
-                        // Focus the first error element roughly
+                        // Enfocar el primer error
                         const firstError = document.querySelector('.border-red-500');
                         if (firstError) firstError.focus();
                     }

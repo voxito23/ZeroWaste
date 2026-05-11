@@ -18,7 +18,7 @@
         
         document.querySelector('textarea[name="respuesta_admin"]').value = '';
         
-        // Load thread via AJAX
+        // Cargar hilo de mensajes
         const threadContainer = document.getElementById('replyThread');
         threadContainer.innerHTML = '<div class="text-center py-4 text-gray-400"><span class="material-symbols-outlined animate-spin">progress_activity</span><br>Cargando conversación...</div>';
         
@@ -31,7 +31,7 @@
                     return;
                 }
                 let html = '';
-                // Original user message
+                // Mensaje del usuario
                 html += `
                 <div class="bg-blue-50 p-4 rounded-xl border border-blue-200 mb-3">
                     <div class="flex items-center justify-between mb-2">
@@ -43,7 +43,7 @@
                     <p class="text-sm text-gray-700">${data.original.mensaje}</p>
                 </div>`;
                 
-                // Thread replies
+                // Respuestas del hilo
                 data.replies.forEach(r => {
                     if (r.sender === 'admin') {
                         html += `

@@ -834,7 +834,7 @@
         modal.classList.remove('flex');
     }
 
-    // Auto-open modal if coming from a notification click
+    // Abrir modal si viene de notificacion
     window.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('open_contact') === '1') {

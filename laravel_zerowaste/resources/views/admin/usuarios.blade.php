@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
             activeTab.classList.add('bg-emerald-500', 'text-white', 'shadow-md');
         }
 
-        // Stat cards
+        // Tarjetas de estadisticas
         statCards.forEach(c => {
             c.classList.remove('ring-2', 'shadow-lg', 'ring-emerald-500/40', 'ring-purple-500/40', 'ring-blue-500/40', 'ring-rose-500/40');
             c.classList.add('ring-transparent');
@@ -179,7 +179,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Stagger animation
+    // Animacion escalonada
     document.querySelectorAll('.user-row').forEach((row, i) => {
         row.style.opacity = '0';
         row.style.transform = 'translateY(8px)';

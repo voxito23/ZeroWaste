@@ -204,7 +204,7 @@ document.addEventListener("DOMContentLoaded", function() {
         if (event && event.target) event.target.closest('button')?.classList.add('active-item');
         const now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         
-        // Clear minDate to prevent blocking valid dateEnd
+        // Limpiar fecha minima
         if (pickerEnd) pickerEnd.set('minDate', null);
 
         if (val === 'custom') { dateStart = null; dateEnd = null; if (pickerStart) { pickerStart.clear(); document.getElementById('wrap-start').classList.remove('active'); } if (pickerEnd) { pickerEnd.clear(); document.getElementById('wrap-end').classList.remove('active'); } syncBadge(); updateKPIs(); return; }
@@ -293,13 +293,13 @@ document.addEventListener("DOMContentLoaded", function() {
         
         if (formato === 'preview') { window.open(url, '_blank'); return; }
         
-        // Show loading overlay
+        // Mostrar carga
         const loader = document.getElementById('export-loading');
         if (loader) { loader.classList.remove('hidden'); loader.classList.add('flex'); }
-        // Auto-dismiss after 12s max
+        // Ocultar despues de 12s
         const loaderTimeout = setTimeout(() => { if (loader) { loader.classList.add('hidden'); loader.classList.remove('flex'); } }, 12000);
         
-        // Use fetch+blob to know when download finishes
+        // Descargar archivo
         fetch(url)
             .then(resp => {
                 const cd = resp.headers.get('Content-Disposition');
@@ -313,7 +313,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 a.download = fname;
                 a.click();
                 URL.revokeObjectURL(a.href);
-                // Hide loader
+                // Ocultar carga
                 clearTimeout(loaderTimeout);
                 if (loader) { loader.classList.add('hidden'); loader.classList.remove('flex'); }
             })
