@@ -203,6 +203,10 @@ document.addEventListener("DOMContentLoaded", function() {
         document.querySelectorAll('#period-dd button.preset-btn').forEach(b => b.classList.remove('active-item'));
         if (event && event.target) event.target.closest('button')?.classList.add('active-item');
         const now = new Date(), today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        
+        // Clear minDate to prevent blocking valid dateEnd
+        if (pickerEnd) pickerEnd.set('minDate', null);
+
         if (val === 'custom') { dateStart = null; dateEnd = null; if (pickerStart) { pickerStart.clear(); document.getElementById('wrap-start').classList.remove('active'); } if (pickerEnd) { pickerEnd.clear(); document.getElementById('wrap-end').classList.remove('active'); } syncBadge(); updateKPIs(); return; }
         else if (val === 'hoy') { dateStart = new Date(today); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
         else if (val === 'ayer') { dateStart = new Date(today); dateStart.setDate(dateStart.getDate()-1); dateEnd = new Date(dateStart); dateEnd.setHours(23,59,59,999); }
@@ -215,8 +219,10 @@ document.addEventListener("DOMContentLoaded", function() {
         else if (val === '6m') { dateStart = new Date(now.getFullYear(), now.getMonth()-6, now.getDate()); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
         else if (val === '12m') { dateStart = new Date(now.getFullYear()-1, now.getMonth(), now.getDate()); dateEnd = new Date(today); dateEnd.setHours(23,59,59,999); }
         else { dateStart = null; dateEnd = null; }
-        if (dateStart && pickerStart) { pickerStart.setDate(dateStart, false); document.getElementById('wrap-start').classList.add('active'); } else if (pickerStart) { pickerStart.clear(); document.getElementById('wrap-start').classList.remove('active'); }
+        
+        if (dateStart && pickerStart) { pickerStart.setDate(dateStart, false); document.getElementById('wrap-start').classList.add('active'); if (pickerEnd) pickerEnd.set('minDate', dateStart); } else if (pickerStart) { pickerStart.clear(); document.getElementById('wrap-start').classList.remove('active'); }
         if (dateEnd && pickerEnd) { pickerEnd.setDate(dateEnd, false); document.getElementById('wrap-end').classList.add('active'); } else if (pickerEnd) { pickerEnd.clear(); document.getElementById('wrap-end').classList.remove('active'); }
+        
         syncBadge();
         updateKPIs();
     };
@@ -225,7 +231,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const badge = document.getElementById('filter-badge'), text = document.getElementById('filter-badge-text');
         if (dateStart && dateEnd) {
             badge.classList.remove('hidden');
-            const f = d => d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short' });
+            const f = d => d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
             text.textContent = `${f(dateStart)} → ${f(dateEnd)}`;
             document.getElementById('form-fecha-inicio').value = fmtISO(dateStart);
             document.getElementById('form-fecha-fin').value = fmtISO(dateEnd);
@@ -497,8 +503,8 @@ document.addEventListener("DOMContentLoaded", function() {
 </div>
 
 {{-- Loading Overlay --}}
-<div id="export-loading" class="fixed inset-0 z-[9999] hidden items-center justify-center" style="background: rgba(255,255,255,0.55); backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%);">
-    <div class="rounded-[2rem] p-10 flex flex-col items-center gap-5 max-w-sm w-full mx-4" style="background: rgba(255,255,255,0.75); backdrop-filter: blur(20px); border: 1px solid rgba(16,185,129,0.15); box-shadow: 0 25px 60px rgba(0,0,0,0.08), 0 0 40px rgba(16,185,129,0.06);">
+<div id="export-loading" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-gray-900/60 dark:bg-black/60 backdrop-blur-md">
+    <div class="rounded-[2rem] p-10 flex flex-col items-center gap-5 max-w-sm w-full mx-4 bg-white/90 dark:bg-[#0F2A20]/90 backdrop-blur-xl border border-emerald-100 dark:border-emerald-800/50 shadow-2xl">
         <div class="relative">
             <div class="w-16 h-16 border-[3px] border-emerald-100 rounded-full"></div>
             <div class="w-16 h-16 border-[3px] border-transparent border-t-emerald-500 rounded-full animate-spin absolute inset-0"></div>
