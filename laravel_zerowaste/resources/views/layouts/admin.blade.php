@@ -722,13 +722,10 @@
                         btn.textContent = name;
                         btn.addEventListener('click', function(ev) {
                             ev.stopPropagation();
-                            if (fpInst) {
-                                fpInst.changeMonth(idx - fpInst.currentMonth, false);
-                            } else {
-                                sel.value = idx;
-                                sel.dispatchEvent(new Event('change'));
-                            }
+                            sel.value = idx;
+                            sel.dispatchEvent(new Event('change', { bubbles: true }));
                             grid.remove();
+                            cal.style.overflow = 'hidden';
                         });
                         grid.appendChild(btn);
                     });
