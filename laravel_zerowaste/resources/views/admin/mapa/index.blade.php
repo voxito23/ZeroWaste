@@ -25,11 +25,12 @@
         });
 
         var isDark = document.documentElement.classList.contains('dark');
-        var lightTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; CARTO', maxZoom: 20
+        var MAPBOX_TOKEN = '{{ env('MAPBOX_TOKEN', 'YOUR_MAPBOX_TOKEN_HERE') }}';
+        var lightTiles = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=' + MAPBOX_TOKEN, {
+            attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a>', maxZoom: 20, tileSize: 512, zoomOffset: -1
         });
-        var darkTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; CARTO', maxZoom: 20
+        var darkTiles = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=' + MAPBOX_TOKEN, {
+            attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a>', maxZoom: 20, tileSize: 512, zoomOffset: -1
         });
         (isDark ? darkTiles : lightTiles).addTo(map);
 

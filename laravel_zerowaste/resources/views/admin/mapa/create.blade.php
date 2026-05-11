@@ -269,8 +269,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const map = L.map('admin-map').setView([20.588, -100.389], 13);
     const isDark = document.documentElement.classList.contains('dark');
-    L.tileLayer(`https://{s}.basemaps.cartocdn.com/${isDark ? 'dark_all' : 'light_all'}/{z}/{x}/{y}{r}.png`, {
-        attribution: '&copy; CARTO'
+    const MAPBOX_TOKEN = '{{ env('MAPBOX_TOKEN', 'YOUR_MAPBOX_TOKEN_HERE') }}';
+    const mapboxStyle = isDark ? 'mapbox/dark-v11' : 'mapbox/light-v11';
+    L.tileLayer(`https://api.mapbox.com/styles/v1/${mapboxStyle}/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`, {
+        attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
+        tileSize: 512,
+        zoomOffset: -1
     }).addTo(map);
 
     let marker = null;

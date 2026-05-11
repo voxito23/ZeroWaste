@@ -158,8 +158,9 @@ document.addEventListener("DOMContentLoaded", () => {
         window.map = L.map('map-container', { zoomControl: false }).setView([20.588, -100.389], 12);
         L.control.zoom({ position: 'bottomright' }).addTo(window.map);
 
-        let lightTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; CARTO', className: 'carto-light' });
-        let darkTile  = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',  { attribution: '&copy; CARTO', className: 'carto-dark' });
+        const MAPBOX_TOKEN = 'YOUR_MAPBOX_TOKEN_HERE';
+        let lightTile = L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`, { attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a>', className: 'carto-light', tileSize: 512, zoomOffset: -1 });
+        let darkTile  = L.tileLayer(`https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`,  { attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a>', className: 'carto-dark', tileSize: 512, zoomOffset: -1 });
 
         // Añadimos ambas capas al mismo tiempo. El CSS se encarga de mostrar la correcta instantáneamente según la clase "dark" en el HTML.
         lightTile.addTo(window.map);
