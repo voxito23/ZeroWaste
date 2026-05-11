@@ -4,68 +4,69 @@
 @section('page_title', 'Puntos de Acopio en Santiago de Querétaro')
 
 @push('scripts')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<style>
+.mapboxgl-popup-content { border-radius: 1rem !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important; transition: background-color 0.3s ease, border-color 0.3s ease; }
+html.dark .mapboxgl-popup-content { background: #022018 !important; border: 2px solid #00E096 !important; box-shadow: 0 15px 40px rgba(0,224,150,0.15) !important; color: white !important; }
+html.dark .mapboxgl-popup-tip { border-top-color: #022018 !important; border-bottom-color: #022018 !important; }
+</style>
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        var map = L.map('qro-map', {
-            center: [20.5881, -100.3899],
-            zoom: 13,
+        var isDark = document.documentElement.classList.contains('dark');
+        mapboxgl.accessToken = '{{ env('MAPBOX_TOKEN', 'YOUR_MAPBOX_TOKEN_HERE') }}';
+        var map = new mapboxgl.Map({
+            container: 'qro-map',
+            style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11',
+            center: [-100.3899, 20.5881],
+            zoom: 12,
             minZoom: 9,
             maxBounds: [
-                [19.9, -100.6], // Suroeste de Querétaro aprox
-                [21.7, -99.0]   // Noreste de Querétaro aprox
-            ],
-            maxBoundsViscosity: 1.0
+                [-100.6, 19.9], // SW
+                [-99.0, 21.7]   // NE
+            ]
         });
+
+        map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
         // Fix for resize bugs when toggling full screen / maximizing window
         window.addEventListener('resize', function() {
-            setTimeout(function() { map.invalidateSize(); }, 200);
+            setTimeout(function() { map.resize(); }, 200);
         });
-
-        var isDark = document.documentElement.classList.contains('dark');
-        var MAPBOX_TOKEN = '{{ env('MAPBOX_TOKEN', 'YOUR_MAPBOX_TOKEN_HERE') }}';
-        var lightTiles = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/light-v11/tiles/{z}/{x}/{y}?access_token=' + MAPBOX_TOKEN, {
-            attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a>', maxZoom: 20, tileSize: 512, zoomOffset: -1
-        });
-        var darkTiles = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/dark-v11/tiles/{z}/{x}/{y}?access_token=' + MAPBOX_TOKEN, {
-            attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a>', maxZoom: 20, tileSize: 512, zoomOffset: -1
-        });
-        (isDark ? darkTiles : lightTiles).addTo(map);
 
         // Observar cambios de tema para cambiar tiles en tiempo real
         new MutationObserver(function() {
             var nowDark = document.documentElement.classList.contains('dark');
-            if (nowDark && map.hasLayer(lightTiles)) { map.removeLayer(lightTiles); darkTiles.addTo(map); }
-            else if (!nowDark && map.hasLayer(darkTiles)) { map.removeLayer(darkTiles); lightTiles.addTo(map); }
+            map.setStyle(nowDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11');
         }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-
-        var ecoIcon = L.divIcon({
-            className: '',
-            html: '<div style="background:#064E3B; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:3px solid #00E096;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#00E096"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/></svg></div>',
-            iconSize: [44, 44],
-            iconAnchor: [22, 44],
-            popupAnchor: [0, -44]
-        });
 
         let locations = {!! json_encode($locations ?? []) !!};
 
         locations.forEach(loc => {
             if(loc.latitud && loc.longitud) {
+                // Create custom DOM element for the marker
+                const el = document.createElement('div');
+                el.innerHTML = '<div style="background:#064E3B; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:3px solid #00E096; cursor:pointer;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#00E096"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/></svg></div>';
+
                 let imgHtml = loc.imagen ? `<img src="https://zerowaste-qro.com/static/img/${loc.imagen}" class="w-full h-32 object-cover rounded-xl mb-3 shadow-md">` : '';
-                L.marker([loc.latitud, loc.longitud], {icon: ecoIcon}).addTo(map)
-                    .bindPopup(`
+                
+                const popup = new mapboxgl.Popup({ offset: 25, maxWidth: '220px' })
+                    .setHTML(`
                         <div class="font-sans text-left min-w-[200px] p-1">
                             ${imgHtml}
-                            <b class="text-emerald-800 text-base block mb-2 leading-tight">${loc.nombre}</b>
-                            <span class="text-xs font-bold text-gray-600 bg-emerald-100 px-2 py-1 rounded-full inline-block shadow-sm">${loc.tipo}</span>
-                            <div class="mt-3 bg-gray-50 p-2 rounded-lg border border-gray-100">
-                                <p class="text-[11px] text-gray-700 leading-snug"><b class="block text-emerald-700 mb-0.5">Dirección:</b> ${loc.direccion}</p>
+                            <b class="text-emerald-800 dark:text-emerald-300 text-base block mb-2 leading-tight">${loc.nombre}</b>
+                            <span class="text-xs font-bold text-gray-600 dark:text-emerald-100 bg-emerald-100 dark:bg-emerald-900 px-2 py-1 rounded-full inline-block shadow-sm">${loc.tipo}</span>
+                            <div class="mt-3 bg-gray-50 dark:bg-emerald-900/40 p-2 rounded-lg border border-gray-100 dark:border-emerald-800">
+                                <p class="text-[11px] text-gray-700 dark:text-gray-300 leading-snug"><b class="block text-emerald-700 dark:text-primary mb-0.5">Dirección:</b> ${loc.direccion}</p>
                             </div>
-                            <p class="text-[10px] mt-2 text-gray-500 uppercase tracking-wide font-bold"><b>Materiales:</b> ${loc.materiales || 'N/A'}</p>
+                            <p class="text-[10px] mt-2 text-gray-500 dark:text-gray-400 uppercase tracking-wide font-bold"><b>Materiales:</b> ${loc.materiales || 'N/A'}</p>
                         </div>
-                    `, { closeButton: true, maxWidth: 220 });
+                    `);
+
+                new mapboxgl.Marker({ element: el })
+                    .setLngLat([loc.longitud, loc.latitud])
+                    .setPopup(popup)
+                    .addTo(map);
             }
         });
     });

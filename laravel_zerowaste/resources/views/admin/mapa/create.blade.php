@@ -187,8 +187,8 @@
 @endsection
 
 @push('scripts')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 <script>
 window.previewFile = function(input) {
     const previewContainer = document.getElementById('image-preview-container');
@@ -264,42 +264,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 selectedText.classList.remove('text-gray-900', 'dark:text-white');
                 selectedText.classList.add('text-gray-500', 'dark:text-gray-400');
             }
-        });
+        const isDark = document.documentElement.classList.contains('dark');
+    mapboxgl.accessToken = '{{ env('MAPBOX_TOKEN', 'YOUR_MAPBOX_TOKEN_HERE') }}';
+    const map = new mapboxgl.Map({
+        container: 'admin-map',
+        style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11',
+        center: [-100.389, 20.588],
+        zoom: 12
     });
 
-    const map = L.map('admin-map').setView([20.588, -100.389], 13);
-    const isDark = document.documentElement.classList.contains('dark');
-    const MAPBOX_TOKEN = '{{ env('MAPBOX_TOKEN', 'YOUR_MAPBOX_TOKEN_HERE') }}';
-    const mapboxStyle = isDark ? 'mapbox/dark-v11' : 'mapbox/light-v11';
-    L.tileLayer(`https://api.mapbox.com/styles/v1/${mapboxStyle}/tiles/{z}/{x}/{y}?access_token=${MAPBOX_TOKEN}`, {
-        attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a>',
-        tileSize: 512,
-        zoomOffset: -1
-    }).addTo(map);
+    map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
     let marker = null;
+    
+    // Create custom DOM element for the marker
+    const el = document.createElement('div');
+    el.innerHTML = '<div style="background:#064E3B; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:3px solid #00E096;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#00E096"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/></svg></div>';
 
-    const ecoIcon = L.divIcon({
-        className: '',
-        html: '<div style="background:#064E3B; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:3px solid #00E096;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#00E096"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/></svg></div>',
-        iconSize: [44, 44],
-        iconAnchor: [22, 44]
-    });
+    let activePopup = null;
 
     map.on('click', function(e) {
-        const lat = e.latlng.lat.toFixed(6);
-        const lng = e.latlng.lng.toFixed(6);
+        const lat = e.lngLat.lat.toFixed(6);
+        const lng = e.lngLat.lng.toFixed(6);
 
         document.getElementById('input-lat').value = lat;
         document.getElementById('input-lng').value = lng;
 
         if (marker) {
-            marker.setLatLng(e.latlng);
+            marker.setLngLat([lng, lat]);
         } else {
-            marker = L.marker(e.latlng, { icon: ecoIcon }).addTo(map);
+            marker = new mapboxgl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
         }
 
-        marker.bindPopup(`<div style="display:flex;align-items:center;gap:6px;font-family:Inter,sans-serif;font-weight:bold;color:#064E3B;"><img src="/static/img/logo.png" style="width:16px;height:16px;filter:brightness(0.5);"/> ${lat}, ${lng}</div>`).openPopup();
+        if (activePopup) activePopup.remove();
+        activePopup = new mapboxgl.Popup({ closeButton: false }).setLngLat([lng, lat]).setHTML(`<div style="display:flex;align-items:center;gap:6px;font-family:Inter,sans-serif;font-weight:bold;color:#064E3B;"><img src="/static/img/logo.png" style="width:16px;height:16px;filter:brightness(0.5);"/> ${lat}, ${lng}</div>`).addTo(map);
 
         // Limpiar error de coordenadas si existía
         const errLat = document.getElementById('err-latitud');
@@ -331,15 +329,16 @@ document.addEventListener('DOMContentLoaded', function() {
                         inLat.value = lat.toFixed(6);
                         inLng.value = lng.toFixed(6);
                         
-                        const newLatLng = new L.LatLng(lat, lng);
-                        map.setView(newLatLng, 15);
+                        map.flyTo({ center: [lng, lat], zoom: 15 });
                         
                         if (marker) {
-                            marker.setLatLng(newLatLng);
+                            marker.setLngLat([lng, lat]);
                         } else {
-                            marker = L.marker(newLatLng, { icon: ecoIcon }).addTo(map);
+                            marker = new mapboxgl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
                         }
-                        marker.bindPopup(`<div style="display:flex;align-items:center;gap:6px;font-family:Inter,sans-serif;font-weight:bold;color:#064E3B;"><img src="/static/img/logo.png" style="width:16px;height:16px;filter:brightness(0.5);"/> ${lat.toFixed(4)}, ${lng.toFixed(4)}</div>`).openPopup();
+
+                        if (activePopup) activePopup.remove();
+                        activePopup = new mapboxgl.Popup({ closeButton: false }).setLngLat([lng, lat]).setHTML(`<div style="display:flex;align-items:center;gap:6px;font-family:Inter,sans-serif;font-weight:bold;color:#064E3B;"><img src="/static/img/logo.png" style="width:16px;height:16px;filter:brightness(0.5);"/> ${lat.toFixed(4)}, ${lng.toFixed(4)}</div>`).addTo(map);
                     }
                 })
                 .catch(err => console.error('Geocoding error:', err));
