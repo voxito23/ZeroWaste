@@ -120,62 +120,46 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         /* ═══════════════════════════════════════════════════════════════
-           ZeroWaste Flatpickr — Unified Premium Theme (Light + Dark)
+           ZeroWaste Flatpickr — Unified Premium Theme v3
            ═══════════════════════════════════════════════════════════════ */
         .flatpickr-calendar {
             border-radius: 24px !important;
             border: 1.5px solid rgba(16,185,129,0.15) !important;
             box-shadow: 0 30px 70px rgba(0,0,0,0.12), 0 0 30px rgba(16,185,129,0.04) !important;
             font-family: 'Inter', sans-serif !important;
-            overflow: visible !important;
+            overflow: hidden !important;
             padding: 0 !important;
-            margin: 0 auto !important;
+            width: 310px !important;
         }
-        /* Fix right-side clipping */
-        .flatpickr-wrapper { position: relative !important; }
         .flatpickr-calendar.open { z-index: 99999 !important; }
-        .flatpickr-calendar.arrowBottom, .flatpickr-calendar.arrowTop { overflow: visible !important; }
         .flatpickr-calendar::before, .flatpickr-calendar::after { display: none !important; }
-
         .dark .flatpickr-calendar {
             background: #0F2A20 !important;
             border-color: rgba(52,211,153,0.15) !important;
             box-shadow: 0 30px 70px rgba(0,0,0,0.6), 0 0 30px rgba(16,185,129,0.06) !important;
         }
-
-        /* ─── Month header — gradient emerald bar ─── */
+        /* ─── Month header ─── */
         .flatpickr-months {
             background: linear-gradient(135deg, #064E3B 0%, #059669 100%) !important;
             border-radius: 22px 22px 0 0 !important;
             padding: 10px 8px !important;
             position: relative !important;
-            overflow: visible !important;
         }
         .flatpickr-months .flatpickr-month {
-            color: #fff !important;
-            fill: #fff !important;
+            color: #fff !important; fill: #fff !important;
             height: 44px !important;
-            overflow: visible !important;
         }
-        /* Logo — texture PNG, rounded, bigger */
         .flatpickr-months::before {
             content: '';
             position: absolute;
-            top: 8px;
-            left: 12px;
-            width: 32px;
-            height: 32px;
+            top: 10px; left: 12px;
+            width: 28px; height: 28px;
             background: url('/static/img/logo_texture.png') no-repeat center / contain;
-            border-radius: 8px;
+            border-radius: 6px;
             opacity: 0.95;
             z-index: 5;
         }
-        .flatpickr-current-month {
-            padding-top: 6px !important;
-            overflow: visible !important;
-        }
-
-        /* ─── Month Dropdown — Premium rounded pill ─── */
+        .flatpickr-current-month { padding-top: 6px !important; }
         .flatpickr-current-month .flatpickr-monthDropdown-months {
             background: rgba(255,255,255,0.15) !important;
             color: #fff !important;
@@ -189,54 +173,32 @@
             cursor: pointer;
             outline: none !important;
         }
-        .flatpickr-current-month .flatpickr-monthDropdown-months:focus {
-            box-shadow: 0 0 0 3px rgba(255,255,255,0.15) !important;
-        }
-        /* Options inside the month dropdown */
         .flatpickr-current-month .flatpickr-monthDropdown-months option {
             background: #064E3B !important;
             color: #fff !important;
             font-weight: 600 !important;
-            font-size: 13px !important;
-            padding: 8px 12px !important;
-            border-radius: 0 !important;
+            padding: 6px 10px !important;
         }
         .flatpickr-current-month .flatpickr-monthDropdown-months option:checked {
             background: #059669 !important;
-            color: #fff !important;
             font-weight: 800 !important;
         }
-        .flatpickr-current-month .flatpickr-monthDropdown-months option:hover {
-            background: #10B981 !important;
-        }
-
-        /* Year input */
         .flatpickr-current-month input.cur-year {
             color: #fff !important;
             font-weight: 800 !important;
             font-size: 14px !important;
         }
-        .numInputWrapper { overflow: visible !important; }
         .numInputWrapper span { display: none !important; }
-
-        /* Nav arrows */
         .flatpickr-months .flatpickr-prev-month,
         .flatpickr-months .flatpickr-next-month {
-            fill: #fff !important;
-            color: #fff !important;
-            padding: 8px !important;
-            border-radius: 12px;
+            fill: #fff !important; color: #fff !important;
+            padding: 8px !important; border-radius: 12px;
             transition: all 0.2s !important;
         }
         .flatpickr-months .flatpickr-prev-month:hover,
-        .flatpickr-months .flatpickr-next-month:hover {
-            background: rgba(255,255,255,0.15) !important;
-        }
+        .flatpickr-months .flatpickr-next-month:hover { background: rgba(255,255,255,0.15) !important; }
         .flatpickr-months .flatpickr-prev-month svg,
-        .flatpickr-months .flatpickr-next-month svg {
-            fill: #fff !important;
-        }
-
+        .flatpickr-months .flatpickr-next-month svg { fill: #fff !important; }
         /* ─── Weekdays ─── */
         .flatpickr-weekdays {
             background: linear-gradient(135deg, #064E3B, #059669) !important;
@@ -249,20 +211,20 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
-
         /* ─── Days grid ─── */
-        .flatpickr-innerContainer {
-            padding: 10px !important;
-            border-radius: 0 0 22px 22px !important;
-        }
+        .flatpickr-innerContainer { padding: 8px !important; }
+        .flatpickr-rContainer { width: 100% !important; }
+        .dayContainer { width: 100% !important; min-width: 100% !important; max-width: 100% !important; }
+        .flatpickr-days { width: 100% !important; }
         .flatpickr-day {
             border-radius: 12px !important;
             font-weight: 600 !important;
             font-size: 13px !important;
             transition: all 0.15s ease !important;
-            line-height: 38px !important;
-            height: 38px !important;
-            max-width: 38px !important;
+            line-height: 36px !important;
+            height: 36px !important;
+            max-width: 40px !important;
+            flex-basis: 14.285% !important;
         }
         .flatpickr-day:hover {
             background: rgba(16,185,129,0.12) !important;
@@ -274,7 +236,6 @@
             background: rgba(16,185,129,0.08) !important;
             font-weight: 800 !important;
         }
-        /* Selected & Range endpoints */
         .flatpickr-day.selected,
         .flatpickr-day.startRange,
         .flatpickr-day.endRange,
@@ -285,7 +246,6 @@
             font-weight: 800 !important;
             box-shadow: 0 4px 12px rgba(5,150,105,0.35) !important;
         }
-        /* In-range highlight — visible light green underline/bg */
         .flatpickr-day.inRange {
             background: rgba(16,185,129,0.18) !important;
             border-color: transparent !important;
@@ -298,17 +258,66 @@
             box-shadow: inset 0 -3px 0 0 rgba(52,211,153,0.4) !important;
             color: #d1fae5 !important;
         }
-        /* Disabled & adjacent months */
         .flatpickr-day.flatpickr-disabled { color: #ccc !important; }
         .flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay { color: #c5c5c5 !important; }
-
-        /* ─── Dark mode overrides ─── */
+        /* Dark mode */
         .dark .flatpickr-day { color: #d1fae5 !important; }
         .dark .flatpickr-day:hover { background: rgba(16,185,129,0.18) !important; color: #fff !important; }
         .dark .flatpickr-day.today { background: rgba(16,185,129,0.12) !important; }
         .dark .flatpickr-day.flatpickr-disabled { color: #374151 !important; }
         .dark .flatpickr-day.prevMonthDay, .dark .flatpickr-day.nextMonthDay { color: #374151 !important; }
         .dark .flatpickr-innerContainer { background: #0F2A20 !important; }
+
+        /* ═══ Custom Month Grid Popup ═══ */
+        .zw-month-grid {
+            position: absolute;
+            top: 54px; left: 50%;
+            transform: translateX(-50%);
+            width: 270px;
+            background: #fff;
+            border: 1.5px solid rgba(16,185,129,0.15);
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            padding: 14px;
+            z-index: 100000;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            animation: zwMonthIn 0.2s ease;
+        }
+        .dark .zw-month-grid {
+            background: #0F2A20;
+            border-color: rgba(52,211,153,0.2);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        @keyframes zwMonthIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .zw-month-grid .zw-month-btn {
+            padding: 10px 4px;
+            border-radius: 12px;
+            border: none;
+            background: transparent;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            color: #064E3B;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+        .dark .zw-month-grid .zw-month-btn { color: #d1fae5; }
+        .zw-month-grid .zw-month-btn:hover {
+            background: rgba(16,185,129,0.1);
+            transform: scale(1.05);
+        }
+        .zw-month-grid .zw-month-btn.active {
+            background: linear-gradient(135deg, #059669, #10B981);
+            color: #fff;
+            font-weight: 800;
+            box-shadow: 0 4px 12px rgba(5,150,105,0.3);
+        }
     </style>
     @stack('styles')
 </head>
@@ -662,23 +671,88 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
     <script>
-        // Global flatpickr defaults
         flatpickr.localize(flatpickr.l10ns.es);
-        // Patch all flatpickr year inputs to allow range 2026-2126
-        const _origFp = flatpickr;
-        const _zwPatchYear = function() {
+
+        const ZW_MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+        // Enforce year range 2026-2126
+        function _zwEnforceYear() {
             document.querySelectorAll('.flatpickr-calendar .numInputWrapper input.cur-year').forEach(function(el) {
+                if (el._zwPatched) return;
+                el._zwPatched = true;
                 el.setAttribute('min', '2026');
                 el.setAttribute('max', '2126');
-                el.min = 2026;
-                el.max = 2126;
+                el.addEventListener('blur', function() {
+                    let v = parseInt(this.value);
+                    if (isNaN(v) || v < 2026) this.value = 2026;
+                    if (v > 2126) this.value = 2126;
+                });
+                el.addEventListener('input', function() {
+                    let v = parseInt(this.value);
+                    if (v > 2126) { this.value = 2126; }
+                });
             });
-        };
+        }
+
+        // Custom month grid — replaces native <select> click
+        function _zwMonthGrid() {
+            document.querySelectorAll('.flatpickr-current-month .flatpickr-monthDropdown-months').forEach(function(sel) {
+                if (sel._zwGrid) return;
+                sel._zwGrid = true;
+                sel.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Remove any existing grid
+                    document.querySelectorAll('.zw-month-grid').forEach(g => g.remove());
+                    // Find parent calendar
+                    const cal = this.closest('.flatpickr-calendar');
+                    if (!cal) return;
+                    const fpInst = cal._flatpickr;
+                    const currentMonth = parseInt(this.value);
+                    // Build grid
+                    const grid = document.createElement('div');
+                    grid.className = 'zw-month-grid';
+                    ZW_MONTHS.forEach(function(name, idx) {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'zw-month-btn' + (idx === currentMonth ? ' active' : '');
+                        btn.textContent = name;
+                        btn.addEventListener('click', function(ev) {
+                            ev.stopPropagation();
+                            if (fpInst) {
+                                fpInst.changeMonth(idx - fpInst.currentMonth, false);
+                            } else {
+                                sel.value = idx;
+                                sel.dispatchEvent(new Event('change'));
+                            }
+                            grid.remove();
+                        });
+                        grid.appendChild(btn);
+                    });
+                    cal.style.overflow = 'visible';
+                    cal.querySelector('.flatpickr-months').appendChild(grid);
+                    // Close on outside click
+                    setTimeout(function() {
+                        document.addEventListener('click', function closeGrid(ev) {
+                            if (!ev.target.closest('.zw-month-grid')) {
+                                grid.remove();
+                                cal.style.overflow = 'hidden';
+                                document.removeEventListener('click', closeGrid);
+                            }
+                        });
+                    }, 10);
+                });
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Observe DOM for new flatpickr instances
-            const obs = new MutationObserver(_zwPatchYear);
+            const obs = new MutationObserver(function() {
+                _zwEnforceYear();
+                _zwMonthGrid();
+            });
             obs.observe(document.body, { childList: true, subtree: true });
-            _zwPatchYear();
+            _zwEnforceYear();
+            _zwMonthGrid();
         });
     </script>
 
