@@ -288,7 +288,7 @@ function previewImage(input) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Custom Dropdown JS
+    // Dropdown personalizado
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.custom-dropdown')) {
             document.querySelectorAll('.dropdown-options').forEach(el => el.classList.add('hidden'));
@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const errUbicacion = document.getElementById('err-ubicacion');
         const errTitulo = document.getElementById('err-titulo');
 
-        // Reset
+        // Limpiar
         [errNombre, errEmail, errPassword, errConfirmPass, errUbicacion, errTitulo, errPassActual].forEach(el => { if(el) el.classList.add('hidden'); });
         [nombre, email, password, confirmPassword, ubicacion, passwordActual].forEach(el => { if(el) el.classList.remove('border-red-500'); });
 

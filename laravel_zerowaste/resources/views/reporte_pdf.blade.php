@@ -343,7 +343,7 @@
 </head>
 <body>
     @php
-        // Try multiple paths for the logo (logo_texture.png preferred)
+        // Buscar logo
         $logoSrc = '';
         $logoPaths = [
             public_path('img/logo_texture.png'),

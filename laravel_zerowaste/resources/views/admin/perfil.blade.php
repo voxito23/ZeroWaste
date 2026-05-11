@@ -126,7 +126,7 @@
             const errPass = document.getElementById('err-password');
             const errConfirm = document.getElementById('err-password-confirm');
 
-            // Reset
+            // Limpiar
             errPass.classList.add('hidden');
             errConfirm.classList.add('hidden');
             if (current) current.classList.remove('border-red-500');

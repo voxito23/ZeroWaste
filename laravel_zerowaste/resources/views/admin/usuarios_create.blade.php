@@ -159,7 +159,7 @@ function previewImage(input) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Custom Dropdown JS
+    // Dropdown personalizado
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.custom-dropdown')) {
             document.querySelectorAll('.dropdown-options').forEach(el => el.classList.add('hidden'));
@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const errUbicacion = document.getElementById('err-ubicacion');
         const errTitulo = document.getElementById('err-titulo');
 
-        // Reset
+        // Limpiar
         [errNombre, errEmail, errPass, errUbicacion, errTitulo].forEach(el => el.classList.add('hidden'));
         [nombre, email, password, ubicacion].forEach(el => el.classList.remove('border-red-500'));
         const tituloDropdown = titulo.closest('.custom-dropdown').querySelector('.dropdown-selected');
@@ -264,7 +264,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
             .catch(() => {
-                form.submit(); // Fallback on fetch failure
+                form.submit(); // Respaldo
             });
     });
 });

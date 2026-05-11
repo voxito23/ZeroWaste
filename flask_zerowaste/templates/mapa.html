@@ -8,7 +8,7 @@
     .mapboxgl-popup-content { border-radius: 1rem !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important; transition: background-color 0.3s ease, border-color 0.3s ease; padding: 0 !important; }
     html.dark .mapboxgl-popup-content { background: #022018 !important; border: 2px solid #00E096 !important; box-shadow: 0 15px 40px rgba(0,224,150,0.15) !important; color: white !important; }
     html.dark .mapboxgl-popup-tip { border-top-color: #022018 !important; border-bottom-color: #022018 !important; }
-    /* Ocultar el texto de Improve this map pero dejar el logo de Mapbox */
+    /* Ocultar atribuciones */
     .mapboxgl-ctrl-attrib-inner a { display: none !important; }
 </style>
 {% endblock %}
@@ -20,9 +20,9 @@
 
             <!-- Panel Lateral -->
             <div class="relative w-full lg:w-96 h-[45%] lg:h-auto shrink-0 rounded-2xl p-[3px] overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.12)] z-10 group flex flex-col">
-                <!-- Perpetual Draw Animated Layer -->
+                <!-- Borde animado -->
                 <div class="absolute -inset-[150%] z-0 bg-[conic-gradient(from_0deg,transparent_0_300deg,var(--green-primary)_360deg)] animate-slow-spin opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-                <!-- Inner Solid Card -->
+                <!-- Contenido del panel -->
                 <div class="relative z-10 bg-white dark:bg-forest-dark/95 backdrop-blur-md w-full h-full flex-1 rounded-[0.85rem] flex flex-col overflow-hidden">
                     <div class="p-6 pb-3">
                     <h2 class="font-display font-bold text-2xl text-secondary dark:text-white mb-4">Puntos de Reciclaje</h2>
@@ -41,7 +41,7 @@
                     </button>
                 </div>
                 
-                <!-- Modal overlay (Filters) -->
+                <!-- Filtros -->
                 <div id="modal-filtros" class="absolute inset-0 bg-white/95 dark:bg-forest-dark/95 backdrop-blur-md z-50 flex flex-col transform translate-x-full transition-transform duration-300">
                      <div class="p-6 pb-4 flex justify-between items-center border-b border-emerald-100 dark:border-emerald-800">
                          <h3 class="font-bold text-xl text-secondary dark:text-white flex items-center gap-2">
@@ -129,9 +129,9 @@
 
             <!-- Mapa -->
             <div class="relative flex-1 flex flex-col min-h-[50%] lg:min-h-0 rounded-2xl p-[3px] overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.12)] z-0 group">
-                <!-- Perpetual Draw Animated Layer -->
+                <!-- Borde animado -->
                 <div class="absolute -inset-[150%] z-0 bg-[conic-gradient(from_0deg,transparent_0_300deg,var(--green-primary)_360deg)] animate-slow-spin opacity-80 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-                <!-- Inner Solid Card -->
+                <!-- Contenido del mapa -->
                 <div class="relative z-10 bg-gray-50 dark:bg-forest-dark w-full h-full flex-1 rounded-[0.85rem] overflow-hidden flex flex-col">
                     <div id="map-container" class="w-full h-full flex-1 z-0 relative"></div>
                 </div>
@@ -157,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         window.map = new mapboxgl.Map({
             container: 'map-container',
-            style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11',
+            style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12',
             center: [-100.389, 20.588],
             zoom: 14,
             pitch: 60,
@@ -187,10 +187,10 @@ document.addEventListener("DOMContentLoaded", () => {
             }, labelLayerId);
         });
 
-        // Observar cambios de tema para cambiar tiles en tiempo real
+        // Cambiar tema del mapa
         new MutationObserver(function() {
             var nowDark = document.documentElement.classList.contains('dark');
-            window.map.setStyle(nowDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11');
+            window.map.setStyle(nowDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12');
         }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
         window.mapMarkers = [];
@@ -198,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
         puntosData.forEach(p => {
             const imgHtml = `<img src="/static/img/${p.imagen || 'default_punto.png'}" alt="Punto image" style="width:100%; height:120px; object-fit:cover; border-radius:12px; margin-bottom:8px;">`;
             
-            // Estrellas interactivas
+            // Estrellas
             let starsHtml = `<div class="rating-stars mb-2" data-id="${p.id}" data-promedio="${Math.round(p.promedio)}" style="display:flex; justify-content:center; gap:4px;">`;
             for (let i = 1; i <= 5; i++) {
                 const titles = ["1 - Muy Malo", "2 - Malo", "3 - Regular", "4 - Bueno", "5 - Excelente"];
@@ -259,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
         
         let valSelected = {};
 
-        // Agregar evento a estrellas globalmente
+        // Eventos de estrellas
         document.addEventListener('mouseover', function(e) {
             if (e.target.classList.contains('star-btn')) {
                 const val = e.target.dataset.val;
@@ -304,13 +304,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 const container = e.target.closest('.rating-stars');
                 const id = container.dataset.id;
                 
-                // Set pending value
+                // Guardar valor
                 valSelected[id] = val;
                 
-                // Mostrar review box
+                // Mostrar caja de reseña
                 document.getElementById('review-box-'+id).style.display = 'block';
 
-                // Animar estrellas
+                // Animar
                 const stars = container.querySelectorAll('.star-btn');
                 stars.forEach(s => {
                     if (s.dataset.val <= val) {
@@ -323,10 +323,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 });
                 
-                // Mágicamente actualizar el texto de "⭐ X (X reseñas)" para dar feedback visual al instante
+                // Actualizar texto de calificacion
                 const infoLabel = document.querySelector('.rating-info-' + id);
                 if (infoLabel) {
-                    // Mantener formato original pero cambiar el número y dar pistas "Tu calificación"
+                    // Cambiar numero
                     const currentHtml = infoLabel.innerHTML;
                     const matches = currentHtml.match(/\(([^)]+)\)/); // match anything inside parenthesis e.g. "(0 reseñas)"
                     const reseñasText = matches ? matches[0] : "";
@@ -339,7 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 
                 if(!val) { showToast('Haz clic en una estrella primero', 'warning'); return; }
                 
-                // Enviar fetch
+                // Enviar calificacion
                 fetch('/calificar_punto', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -349,7 +349,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         document.getElementById('review-box-'+id).style.display = 'none';
                         const info = document.querySelector('.rating-info-'+id);
                         if (info) info.innerHTML = `⭐ ${data.promedio} (${data.total} reseñas)`;
-                        // Notificar éxito
+                        // Exito
                         showToast('¡Gracias por tu reseña!', 'success');
                         setTimeout(() => window.location.reload(), 1500);
                     } else {
@@ -364,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Búsqueda en panel lateral
+    // Buscador
     const searchInput = document.getElementById('search-puntos');
     if (searchInput) {
         searchInput.addEventListener('input', function() {
@@ -390,7 +390,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Filtros de Botones
+    // Botones de filtro
     const filterBtns = document.querySelectorAll('.filter-btn');
     if(filterBtns.length > 0) {
         filterBtns.forEach(btn => {
@@ -398,7 +398,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const norm = str => str ? str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() : "";
                 const filterType = norm(this.dataset.filter);
 
-                // Activar el botón presionado
+                // Marcar boton activo
                 filterBtns.forEach(b => {
                     b.classList.remove('bg-secondary', 'text-white', 'border-transparent', 'shadow-[0_4px_15px_rgba(0,0,0,0.1)]');
                     b.classList.add('bg-surface-light', 'dark:bg-emerald-900/40', 'text-secondary', 'dark:text-emerald-100', 'border-emerald-200', 'dark:border-emerald-800');
@@ -407,10 +407,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 this.classList.remove('bg-surface-light', 'dark:bg-emerald-900/40', 'text-secondary', 'dark:text-emerald-100', 'border-emerald-200', 'dark:border-emerald-800');
                 this.classList.add('bg-secondary', 'text-white', 'border-transparent', 'shadow-[0_4px_15px_rgba(0,0,0,0.1)]');
                 
-                // Cerrar modal automáticamente
+                // Cerrar filtros
                 modalFiltros.classList.add('translate-x-full');
 
-                // Actualizar texto del badge
+                // Texto del filtro activo
                 if (filterType === 'todos') {
                     filterBadge.classList.add('hidden');
                 } else {
@@ -419,7 +419,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     filterBadge.classList.remove('hidden');
                 }
 
-                // Filtrar marcadores del Leaflet map
+                // Filtrar marcadores en el mapa
                 if(window.mapMarkers) {
                     window.mapMarkers.forEach(item => {
                         let t = norm(item.materiales);
@@ -446,7 +446,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                 }
 
-                // Filtrar elementos de la lista sidebar
+                // Filtrar lista lateral
                 document.querySelectorAll('.punto-item').forEach(el => {
                     const elType = norm(el.dataset.materiales);
                     let matches = (filterType === 'todos');

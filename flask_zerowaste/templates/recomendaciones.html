@@ -513,7 +513,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     let valSelected = {};
 
-    // Agregar evento a estrellas globalmente
+    // Eventos de estrellas
     document.addEventListener('mouseover', function(e) {
         if (e.target.classList.contains('star-btn')) {
             const val = e.target.dataset.val;
@@ -558,17 +558,17 @@ document.addEventListener("DOMContentLoaded", function() {
             const container = e.target.closest('.rating-stars');
             const id = container.dataset.id;
             
-            // Set pending value
+            // Guardar valor
             valSelected[id] = val;
             
-            // Mostrar review box
+            // Mostrar caja de reseña
             const card = e.target.closest('.puntos-card');
             if (card) {
                 const box = card.querySelector('.review-box');
                 if (box) box.style.display = 'block';
             }
 
-            // Animar estrellas
+            // Animar
             const stars = container.querySelectorAll('.star-btn');
             stars.forEach(s => {
                 if (s.dataset.val <= val) {
@@ -581,7 +581,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             });
             
-            // Actualizar número mágicamente!
+            // Actualizar texto
             const numberLabel = document.querySelector('.rating-info-' + id);
             if (numberLabel) {
                 numberLabel.textContent = val + '.0';
@@ -595,7 +595,7 @@ document.addEventListener("DOMContentLoaded", function() {
             
             if(!val) { showToast('Haz clic en una estrella primero', 'warning'); return; }
             
-            // Enviar fetch
+            // Enviar calificacion
             fetch('/calificar_punto', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
@@ -633,7 +633,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Radio tierra en km
+        const R = 6371; // Radio de la tierra en km
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -647,10 +647,10 @@ document.addEventListener("DOMContentLoaded", function() {
         if (resetVisibility) maxVisible = 4;
         
         let filtered = cards.filter(card => {
-            // Text Search filter
+            // Filtro de texto
             if (searchQuery && card.dataset.nombre && !card.dataset.nombre.includes(searchQuery)) return false;
             
-            // Material Filter
+            // Filtro de material
             if (currentMaterial !== 'todos') {
                 const cardMats = card.dataset.materiales || '';
                 if (!cardMats.includes(currentMaterial)) return false;
@@ -721,7 +721,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     filterBtns.forEach(btn => {
         btn.addEventListener('click', (e) => {
-            // Updated UI state for pills
+            // Actualizar botones
             filterBtns.forEach(b => {
                 b.classList.remove('bg-primary', 'text-white');
                 b.classList.add('bg-emerald-50', 'text-emerald-800', 'dark:bg-forest-dark', 'dark:text-emerald-100', 'hover:bg-emerald-100', 'dark:hover:bg-emerald-900/60');
@@ -792,7 +792,7 @@ document.addEventListener("DOMContentLoaded", function() {
             e.stopPropagation();
             if (filtersDropdown.classList.contains('hidden')) {
                 filtersDropdown.classList.remove('hidden');
-                // Force reflow for animation to trigger
+                // Forzar animacion
                 void filtersDropdown.offsetWidth;
                 filtersDropdown.classList.remove('opacity-0', 'scale-95');
                 filtersDropdown.classList.add('opacity-100', 'scale-100');
@@ -855,7 +855,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 });
 
-// Global functions for Modal
+// Funciones del modal
 function openPuntoModal(nombre, rating, dir, materiales, lat, lng, imgUrl) {
     document.getElementById('modal-punto-nombre').textContent = nombre;
     document.getElementById('modal-punto-rating').textContent = rating;

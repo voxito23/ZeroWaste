@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const errNombre = document.getElementById('err-nombre');
         const errDesc = document.getElementById('err-descripcion');
 
-        // Reset
+        // Limpiar
         errNombre.classList.add('hidden');
         errDesc.classList.add('hidden');
         nombre.classList.remove('border-red-500');

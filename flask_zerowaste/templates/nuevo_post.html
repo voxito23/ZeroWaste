@@ -305,14 +305,14 @@
         if (event) event.preventDefault();
         document.execCommand(cmd, false, null);
         
-        // Toggle btn-active class visually
+        // Cambiar estilo del boton
         if (btn && (cmd === 'bold' || cmd === 'italic' || cmd === 'underline')) {
             btn.classList.toggle('btn-active');
         }
         document.getElementById('editor').focus();
     }
 
-    // CUSTOM DROPDOWN JS
+    // Dropdown personalizado
     function toggleDropdown() {
         const list = document.getElementById('dropdown-list');
         const arrow = document.getElementById('dropdown-arrow');
@@ -332,7 +332,7 @@
         document.getElementById('dropdown-arrow').style.transform = 'rotate(0deg)';
     }
 
-    // Close dropdown on click outside
+    // Cerrar dropdown al hacer clic afuera
     document.addEventListener('click', (e) => {
         const dropdown = document.getElementById('custom-dropdown');
         if (dropdown && !dropdown.contains(e.target)) {
@@ -382,7 +382,7 @@
             event.preventDefault();
             errorDiv.textContent = 'Por favor, selecciona una categoría para publicar.';
             errorDiv.classList.remove('hidden');
-            // Remove the invalid focus call that crashed the JS: document.getElementById('category').focus();
+            // Quitar foco invalido
             return;
         }
 

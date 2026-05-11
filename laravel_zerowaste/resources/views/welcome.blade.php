@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const errEmail = document.getElementById('error-email');
         const errPass = document.getElementById('error-password');
 
-        // Reset
+        // Limpiar
         errEmail.classList.add('hidden');
         errPass.classList.add('hidden');
         emailInput.classList.remove('border-red-500');

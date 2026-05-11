@@ -178,7 +178,7 @@ window.previewFile = function(input) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Custom Dropdown JS
+    // Dropdown personalizado
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.custom-dropdown')) {
             document.querySelectorAll('.dropdown-options').forEach(el => el.classList.add('hidden'));
@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const errNombre = document.getElementById('err-nombre');
         const errDesc = document.getElementById('err-descripcion');
 
-        // Reset
+        // Limpiar
         errNombre.classList.add('hidden');
         errDesc.classList.add('hidden');
         nombre.classList.remove('border-red-500');

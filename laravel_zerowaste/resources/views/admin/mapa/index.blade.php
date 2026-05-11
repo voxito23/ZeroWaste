@@ -10,7 +10,7 @@
     .mapboxgl-popup-content { border-radius: 1rem !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important; transition: background-color 0.3s ease, border-color 0.3s ease; }
     html.dark .mapboxgl-popup-content { background: #022018 !important; border: 2px solid #00E096 !important; box-shadow: 0 15px 40px rgba(0,224,150,0.15) !important; color: white !important; }
     html.dark .mapboxgl-popup-tip { border-top-color: #022018 !important; border-bottom-color: #022018 !important; }
-    /* Ocultar el texto de Improve this map pero dejar el logo de Mapbox */
+    /* Ocultar atribuciones */
     .mapboxgl-ctrl-attrib-inner a { display: none !important; }
     </style>
     <script>
@@ -19,11 +19,11 @@
             mapboxgl.accessToken = '{{ env('MAPBOX_TOKEN', 'YOUR_MAPBOX_TOKEN_HERE') }}';
             var map = new mapboxgl.Map({
                 container: 'qro-map',
-                style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11',
+                style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12',
                 center: [-100.3899, 20.5881],
                 zoom: 14,
-                pitch: 60, // 3D tilt
-                bearing: -17, // 3D rotation
+                pitch: 60,
+                bearing: -17,
                 minZoom: 9,
                 maxBounds: [
                     [-100.6, 19.9], // SW
@@ -34,7 +34,7 @@
     
             map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
     
-            // Agregar capa de edificios 3D cuando cargue el mapa
+            // Edificios 3D
             map.on('style.load', () => {
                 const layers = map.getStyle().layers;
                 const labelLayerId = layers.find((layer) => layer.type === 'symbol' && layer.layout['text-field'])?.id;
@@ -55,22 +55,22 @@
                 }, labelLayerId);
             });
 
-        // Fix for resize bugs when toggling full screen / maximizing window
+        // Ajustar al redimensionar ventana
         window.addEventListener('resize', function() {
             setTimeout(function() { map.resize(); }, 200);
         });
 
-        // Observar cambios de tema para cambiar tiles en tiempo real
+        // Cambiar tema del mapa
         new MutationObserver(function() {
             var nowDark = document.documentElement.classList.contains('dark');
-            map.setStyle(nowDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11');
+            map.setStyle(nowDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12');
         }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
         let locations = {!! json_encode($locations ?? []) !!};
 
         locations.forEach(loc => {
             if(loc.latitud && loc.longitud) {
-                // Create custom DOM element for the marker
+                // Marcador del punto
                 const el = document.createElement('div');
                 el.innerHTML = '<div style="background:#064E3B; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:3px solid #00E096; cursor:pointer;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#00E096"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/></svg></div>';
 
@@ -97,7 +97,7 @@
         });
     });
 
-    // Confirmación SweetAlert para eliminar punto
+    // Alerta para eliminar punto
     function confirmarEliminar(formId, nombre) {
         const isDark = document.documentElement.classList.contains('dark');
         Swal.fire({

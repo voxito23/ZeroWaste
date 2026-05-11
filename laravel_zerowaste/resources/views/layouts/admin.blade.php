@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <script>
-    // Prevenir destello del modo oscuro — aplicar tema antes de renderizar
+    // Aplicar tema oscuro antes de renderizar
     (function() {
         var t = localStorage.getItem('zw-admin-theme');
         if (t === 'dark') {
@@ -441,13 +441,13 @@
         const themeBtn = document.getElementById('theme-switch-btn');
         const html = document.documentElement;
 
-        // Restaurar preferencia guardada
+        // Tema guardado
         if (localStorage.getItem('zw-admin-theme') === 'dark') {
             html.classList.add('dark');
             html.classList.remove('light');
         }
 
-        // Lógica de alternancia de la barra lateral
+        // Menu lateral
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebar-toggle');
         const sidebarIcon = document.getElementById('sidebar-icon');
@@ -479,16 +479,16 @@
             });
         }
 
-        // Reemplazar todos los onsubmit nativos confirmables por SweetAlert al cargar la página
+        // Alertas de confirmacion
         document.querySelectorAll('form[onsubmit*="confirm"]').forEach(form => {
             const onsubmitStr = form.getAttribute('onsubmit');
             const msgMatch = onsubmitStr.match(/confirm\(['"]([^'"]+)['"]\)/);
             const text = msgMatch ? msgMatch[1] : '¿Estás seguro de realizar esta acción?';
             
-            // Eliminar el comportamiento nativo del navegador (la alerta de localhost)
+            // Quitar confirm nativo
             form.removeAttribute('onsubmit');
             
-            // Asignar nuestro listener personalizado
+            // Usar SweetAlert
             form.addEventListener('submit', function(e) {
                 e.preventDefault();
                 const isDark = html.classList.contains('dark');
@@ -522,7 +522,7 @@
             });
         });
 
-        // Intercepción de enlaces de edición
+        // Confirmar antes de editar
         document.addEventListener('click', function(e) {
             const link = e.target.closest('a[href*="/edit"]');
             if (link && !link.hasAttribute('data-confirmed')) {
@@ -678,7 +678,7 @@
 
         const ZW_MONTHS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
-        // Enforce year range 2026-2126
+        // Rango de años
         function _zwEnforceYear() {
             document.querySelectorAll('.flatpickr-calendar .numInputWrapper input.cur-year').forEach(function(el) {
                 if (el._zwPatched) return;
@@ -697,7 +697,7 @@
             });
         }
 
-        // Custom month grid — replaces native <select> click
+        // Selector de meses personalizado
         function _zwMonthGrid() {
             document.querySelectorAll('.flatpickr-current-month .flatpickr-monthDropdown-months').forEach(function(sel) {
                 if (sel._zwGrid) return;
@@ -705,14 +705,14 @@
                 sel.addEventListener('mousedown', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    // Remove any existing grid
+                    // Quitar grilla anterior
                     document.querySelectorAll('.zw-month-grid').forEach(g => g.remove());
-                    // Find parent calendar
+                    // Buscar calendario
                     const cal = this.closest('.flatpickr-calendar');
                     if (!cal) return;
                     const fpInst = cal._flatpickr;
                     const currentMonth = parseInt(this.value);
-                    // Build grid
+                    // Crear grilla
                     const grid = document.createElement('div');
                     grid.className = 'zw-month-grid';
                     ZW_MONTHS.forEach(function(name, idx) {
@@ -731,7 +731,7 @@
                     });
                     cal.style.overflow = 'visible';
                     cal.querySelector('.flatpickr-months').appendChild(grid);
-                    // Close on outside click
+                    // Cerrar al hacer clic fuera
                     setTimeout(function() {
                         document.addEventListener('click', function closeGrid(ev) {
                             if (!ev.target.closest('.zw-month-grid')) {

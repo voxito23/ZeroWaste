@@ -207,7 +207,7 @@ window.previewFile = function(input) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Custom Dropdown JS Single
+    // Dropdown tipo de punto
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.custom-dropdown') && !e.target.closest('.custom-dropdown-multi')) {
             document.querySelectorAll('.dropdown-options, .dropdown-options-multi').forEach(el => el.classList.add('hidden'));
@@ -231,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Custom Dropdown JS Multi
+    // Dropdown materiales
     let selectedMaterials = [];
     document.querySelectorAll('.option-multi-item').forEach(item => {
         item.addEventListener('click', function(e) {
@@ -271,7 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
     mapboxgl.accessToken = '{{ env('MAPBOX_TOKEN', 'YOUR_MAPBOX_TOKEN_HERE') }}';
     const map = new mapboxgl.Map({
         container: 'admin-map',
-        style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11',
+        style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12',
         center: [-100.389, 20.588],
         zoom: 14,
         pitch: 60,
@@ -302,7 +302,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     let marker = null;
     
-    // Create custom DOM element for the marker
+    // Marcador personalizado
     const el = document.createElement('div');
     el.innerHTML = '<div style="background:#064E3B; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:3px solid #00E096;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#00E096"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/></svg></div>';
 
@@ -324,13 +324,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (activePopup) activePopup.remove();
         activePopup = new mapboxgl.Popup({ closeButton: false }).setLngLat([lng, lat]).setHTML(`<div style="display:flex;align-items:center;gap:6px;font-family:Inter,sans-serif;font-weight:bold;color:#064E3B;"><img src="/static/img/logo.png" style="width:16px;height:16px;filter:brightness(0.5);"/> ${lat}, ${lng}</div>`).addTo(map);
 
-        // Limpiar error de coordenadas si existía
+        // Quitar error de coordenadas
         const errLat = document.getElementById('err-latitud');
         if (errLat) { errLat.classList.add('hidden'); }
         document.getElementById('input-lat').classList.remove('border-red-500');
     });
 
-    // Geocoding automático
+    // Buscar direccion en el mapa
     const inCalle = document.getElementById('input-calle');
     const inNum = document.getElementById('input-numero');
     const inCP = document.getElementById('input-cp');
@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
     inNum.addEventListener('blur', geocodeAddress);
     inCP.addEventListener('blur', geocodeAddress);
 
-    // Validación inline
+    // Validar formulario
     const form = document.getElementById('customForm');
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -395,7 +395,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const errLatitud = document.getElementById('err-latitud');
             const errTipo = document.getElementById('err-tipo');
 
-            // Reset
+            // Limpiar errores
             [errNombre, errCalle, errNum, errCP, errLatitud, errTipo].forEach(el => el.classList.add('hidden'));
             [nombre, inCalle, inNum, inCP, latitud].forEach(el => el.classList.remove('border-red-500'));
             tipoDropdown.classList.remove('border-red-500');
@@ -445,7 +445,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!isValid) {
                 e.preventDefault();
             } else {
-                // Construct single format direction
+                // Armar direccion completa
                 hiddenDir.value = `${inCalle.value.trim()} #${inNum.value.trim()}, C.P. ${inCP.value.trim()}`;
             }
         });

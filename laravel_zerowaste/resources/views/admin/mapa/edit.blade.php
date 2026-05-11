@@ -217,7 +217,7 @@ window.previewFile = function(input) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Custom Dropdown JS Single
+    // Dropdown tipo de punto
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.custom-dropdown') && !e.target.closest('.custom-dropdown-multi')) {
             document.querySelectorAll('.dropdown-options, .dropdown-options-multi').forEach(el => el.classList.add('hidden'));
@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Custom Dropdown JS Multi
+    // Dropdown materiales
     let selectedMaterials = document.getElementById('materiales_hidden').value.split(',').map(s => s.trim()).filter(s => s);
     
     function updateMultiText() {
@@ -330,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const errCP = document.getElementById('err-cp');
         const errLatitud = document.getElementById('err-latitud');
 
-        // Reset
+        // Limpiar
         [errNombre, errCalle, errNum, errCP, errLatitud].forEach(el => el.classList.add('hidden'));
         [nombre, inCalle, inNum, inCP, latitud].forEach(el => el.classList.remove('border-red-500'));
 

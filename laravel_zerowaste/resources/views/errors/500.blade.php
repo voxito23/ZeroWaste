@@ -8,7 +8,7 @@
     <link rel="alternate icon" type="image/png" href="/static/faviconZeroWaste.png">
 
     <script>
-        // Sincronizar con el dark mode del panel de Laravel
+        // Tema oscuro
         if (localStorage.getItem('zw-admin-theme') === 'dark') {
             document.documentElement.classList.add('dark');
         } else {
