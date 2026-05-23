@@ -342,6 +342,9 @@
             <a href="{{ route('campanas.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('campanas.*') ? 'active' : '' }}" title="Campañas">
                 <span class="material-symbols-outlined text-lg">campaign</span> <span class="nav-text">Campañas</span>
             </a>
+            <a href="{{ route('eventos.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('eventos.*') ? 'active' : '' }}" title="Eventos y Jornadas">
+                <span class="material-symbols-outlined text-lg">event</span> <span class="nav-text">Eventos y Jornadas</span>
+            </a>
             <a href="{{ route('mapa.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('mapa.*') ? 'active' : '' }}" title="Mapa">
                 <span class="material-symbols-outlined text-lg">map</span> <span class="nav-text">Mapa</span>
             </a>

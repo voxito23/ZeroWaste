@@ -494,6 +494,101 @@ class EventoResponse(BaseModel):
     }
 
 
+# Esquemas de Campañas
+
+class CampaignCreate(BaseModel):
+    nombre: str
+    lugar: Optional[str] = None
+    fecha_inicio: Optional[datetime] = None
+    fecha_fin: Optional[datetime] = None
+    descripcion: str
+    tipo_etiqueta: Optional[str] = None
+    imagen_url: Optional[str] = None
+    link_evento: Optional[str] = None
+    recompensa_puntos: int = 0
+    activa: bool = True
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "nombre": "Campaña de Reciclaje Primavera",
+                    "lugar": "Centro de acopio principal",
+                    "fecha_inicio": "2026-06-01T00:00:00",
+                    "fecha_fin": "2026-06-30T23:59:59",
+                    "descripcion": "Trae tus reciclables durante junio y gana doble puntaje.",
+                    "tipo_etiqueta": "Reciclaje",
+                    "recompensa_puntos": 50,
+                    "activa": True
+                }
+            ]
+        }
+    }
+
+
+class CampaignUpdate(BaseModel):
+    nombre: Optional[str] = None
+    lugar: Optional[str] = None
+    fecha_inicio: Optional[datetime] = None
+    fecha_fin: Optional[datetime] = None
+    descripcion: Optional[str] = None
+    tipo_etiqueta: Optional[str] = None
+    imagen_url: Optional[str] = None
+    link_evento: Optional[str] = None
+    recompensa_puntos: Optional[int] = None
+    activa: Optional[bool] = None
+
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "nombre": "Campaña de Reciclaje Primavera (Extendida)",
+                    "fecha_fin": "2026-07-15T23:59:59",
+                    "descripcion": "Ampliamos la fecha por éxito total. Gana doble puntaje.",
+                    "recompensa_puntos": 100
+                }
+            ]
+        }
+    }
+
+
+class CampaignResponse(BaseModel):
+    id: int
+    nombre: str
+    lugar: Optional[str] = None
+    fecha_inicio: Optional[datetime] = None
+    fecha_fin: Optional[datetime] = None
+    descripcion: str
+    tipo_etiqueta: Optional[str] = None
+    imagen_url: Optional[str] = None
+    link_evento: Optional[str] = None
+    recompensa_puntos: int = 0
+    activa: bool = True
+    created_at: Optional[datetime] = None
+
+    model_config = {
+        "from_attributes": True,
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "id": 1,
+                    "nombre": "Campaña de Reciclaje Primavera",
+                    "lugar": "Centro de acopio principal",
+                    "fecha_inicio": "2026-06-01T00:00:00Z",
+                    "fecha_fin": "2026-06-30T23:59:59Z",
+                    "descripcion": "Trae tus reciclables durante junio y gana doble puntaje.",
+                    "tipo_etiqueta": "Reciclaje",
+                    "imagen_url": "campana_primavera.jpg",
+                    "link_evento": "https://zerowaste.com/campanas/primavera",
+                    "recompensa_puntos": 50,
+                    "activa": True,
+                    "created_at": "2026-05-20T10:00:00Z"
+                }
+            ]
+        }
+    }
+
+
 # Esquemas de respuestas genéricas
 
 class MessageResponse(BaseModel):

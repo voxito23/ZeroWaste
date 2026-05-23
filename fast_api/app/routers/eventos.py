@@ -13,7 +13,7 @@ from app.models.domain_models import Usuario, Evento
 from app.models.schemas import EventoCreate, EventoUpdate, EventoResponse, MessageResponse
 from app.security.jwt_auth import get_current_user, get_current_admin_user
 
-router = APIRouter(prefix="/eventos", tags=["Eventos"])
+router = APIRouter(prefix="/eventos", tags=["Eventos y Jornadas"])
 
 
 @router.get("/", response_model=List[EventoResponse], summary="Listar todos los eventos")

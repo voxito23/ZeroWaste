@@ -348,6 +348,7 @@ input:where([type='button']),
 input:where([type='reset']),
 input:where([type='submit']) {
   -webkit-appearance: button;
+  appearance: button;
   /* 1 */
   background-color: transparent;
   /* 2 */
@@ -395,6 +396,7 @@ Correct the cursor style of increment and decrement buttons in Safari.
 
 [type='search'] {
   -webkit-appearance: textfield;
+  appearance: textfield;
   /* 1 */
   outline-offset: -2px;
   /* 2 */
@@ -406,6 +408,7 @@ Remove the inner padding in Chrome and Safari on macOS.
 
 ::-webkit-search-decoration {
   -webkit-appearance: none;
+  appearance: none;
 }
 
 /*
@@ -415,6 +418,7 @@ Remove the inner padding in Chrome and Safari on macOS.
 
 ::-webkit-file-upload-button {
   -webkit-appearance: button;
+  appearance: button;
   /* 1 */
   font: inherit;
   /* 2 */
@@ -534,8 +538,6 @@ embed,
 object {
   display: block;
   /* 1 */
-  vertical-align: middle;
-  /* 2 */
 }
 
 /*
@@ -1005,6 +1007,10 @@ input:where([type='file']):focus {
   z-index: 999;
 }
 
+.z-\[99\] {
+  z-index: 99;
+}
+
 .order-1 {
   order: 1;
 }
@@ -1216,6 +1222,7 @@ input:where([type='file']):focus {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .line-clamp-3 {
@@ -1223,6 +1230,7 @@ input:where([type='file']):focus {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+  line-clamp: 3;
 }
 
 .block {
@@ -1395,6 +1403,10 @@ input:where([type='file']):focus {
 
 .max-h-60 {
   max-height: 15rem;
+}
+
+.max-h-64 {
+  max-height: 16rem;
 }
 
 .max-h-\[100px\] {
@@ -1894,6 +1906,12 @@ input:where([type='file']):focus {
 
 .list-disc {
   list-style-type: disc;
+}
+
+.appearance-none {
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
 }
 
 .grid-cols-1 {
@@ -3173,6 +3191,10 @@ input:where([type='file']):focus {
 
 .p-3 {
   padding: 0.75rem;
+}
+
+.p-3\.5 {
+  padding: 0.875rem;
 }
 
 .p-4 {
@@ -5619,6 +5641,11 @@ input:where([type='file']):focus {
 .dark\:bg-\[\#06140d\]:is(.dark *) {
   --tw-bg-opacity: 1;
   background-color: rgb(6 20 13 / var(--tw-bg-opacity, 1));
+}
+
+.dark\:bg-\[\#0F2A20\]:is(.dark *) {
+  --tw-bg-opacity: 1;
+  background-color: rgb(15 42 32 / var(--tw-bg-opacity, 1));
 }
 
 .dark\:bg-\[\#0a1911\]:is(.dark *) {
