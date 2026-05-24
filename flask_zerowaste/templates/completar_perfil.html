@@ -57,29 +57,49 @@
                 </div>
 
                 <!-- Título -->
-                <div class="flex flex-col gap-1">
+                <div class="flex flex-col gap-1 relative" id="dropdown-container">
                     <label class="text-[9px] font-black text-secondary dark:text-emerald-100 flex items-center gap-1.5 uppercase tracking-[0.2em] opacity-70">
                         <span class="material-symbols-outlined text-primary text-sm">military_tech</span> Título Público <span class="text-red-500 ml-0.5">*</span>
                     </label>
-                    <select id="titulo_perfil" name="titulo_perfil" required
-                        class="block w-full px-4 py-2.5 rounded-2xl border border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-sm appearance-none cursor-pointer" style="background-image: url('data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%239CA3AF%22%3E%3Cpath d=%22M7 10l5 5 5-5z%22/%3E%3C/svg%3E'); background-repeat: no-repeat; background-position: right 12px center; background-size: 20px;">
-                        {% set ct = (usuario.titulo_perfil or 'Usuario Eco-consciente')|string %}
-                        {% set opts = [
-                            'Usuario Eco-consciente',
-                            'Entusiasta del Desarrollo Sostenible',
-                            'Activista Ambiental',
-                            'Ingeniero Ambiental',
-                            'Estudiante Comprometido con el Medio Ambiente',
-                            'Promotor de Reciclaje',
-                            'Educador Ecológico',
-                            'Voluntario Verde',
-                            'Emprendedor Sustentable',
-                            'Líder Comunitario Ecológico'
-                        ] %}
-                        {% for o in opts %}
-                            <option value="{{ o }}" {% if ct == o %}selected{% endif %}>{{ o }}</option>
+                    
+                    {% set ct = (usuario.titulo_perfil or 'Usuario Eco-consciente')|string %}
+                    {% set opts = [
+                        ('Usuario Eco-consciente', 'eco'),
+                        ('Entusiasta del Desarrollo Sostenible', 'psychiatry'),
+                        ('Activista Ambiental', 'nature_people'),
+                        ('Ingeniero Ambiental', 'engineering'),
+                        ('Estudiante Comprometido con el Medio Ambiente', 'school'),
+                        ('Promotor de Reciclaje', 'recycling'),
+                        ('Educador Ecológico', 'menu_book'),
+                        ('Voluntario Verde', 'volunteer_activism'),
+                        ('Emprendedor Sustentable', 'storefront'),
+                        ('Líder Comunitario Ecológico', 'groups')
+                    ] %}
+                    
+                    <input type="hidden" id="titulo_perfil" name="titulo_perfil" value="{{ ct }}">
+                    
+                    {% set ns = namespace(icon='eco') %}
+                    {% for o, icon in opts %}
+                        {% if o == ct %}{% set ns.icon = icon %}{% endif %}
+                    {% endfor %}
+                    
+                    <button type="button" onclick="toggleDropdown()" id="dropdown-button"
+                        class="flex items-center justify-between w-full px-4 py-2.5 rounded-2xl border border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-sm cursor-pointer">
+                        <div class="flex items-center gap-2">
+                            <span id="dropdown-icon" class="material-symbols-outlined text-primary text-[18px]">{{ ns.icon }}</span>
+                            <span id="dropdown-text" class="text-secondary dark:text-white truncate">{{ ct }}</span>
+                        </div>
+                        <span class="material-symbols-outlined text-gray-400 text-[18px] transition-transform duration-200" id="dropdown-arrow">expand_more</span>
+                    </button>
+                    
+                    <ul id="dropdown-menu" class="absolute z-50 w-full top-full mt-1 bg-white dark:bg-forest-dark border border-emerald-100 dark:border-emerald-800 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden scrollbar-thin scrollbar-thumb-emerald-200 dark:scrollbar-thumb-emerald-800">
+                        {% for o, icon in opts %}
+                        <li onclick="selectOption('{{ o }}', '{{ icon }}')" class="flex items-center gap-3 px-4 py-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer transition-colors border-b border-gray-50 dark:border-emerald-900/20 last:border-0 group">
+                            <span class="material-symbols-outlined text-primary text-[18px] group-hover:scale-110 transition-transform">{{ icon }}</span>
+                            <span class="text-sm font-medium text-secondary dark:text-emerald-50">{{ o }}</span>
+                        </li>
                         {% endfor %}
-                    </select>
+                    </ul>
                     <p id="error-titulo" class="hidden text-[10px] text-red-500 font-bold leading-tight mt-1"></p>
                 </div>
 
@@ -169,6 +189,37 @@
                     icon.textContent = 'visibility_off';
                 }
             }
+
+            // Dropdown Custom Logic
+            function toggleDropdown() {
+                const menu = document.getElementById('dropdown-menu');
+                const arrow = document.getElementById('dropdown-arrow');
+                menu.classList.toggle('hidden');
+                if (menu.classList.contains('hidden')) {
+                    arrow.classList.remove('rotate-180');
+                } else {
+                    arrow.classList.add('rotate-180');
+                }
+            }
+
+            function selectOption(value, icon) {
+                document.getElementById('titulo_perfil').value = value;
+                document.getElementById('dropdown-text').textContent = value;
+                document.getElementById('dropdown-icon').textContent = icon;
+                toggleDropdown();
+                document.getElementById('error-titulo').classList.add('hidden');
+                document.getElementById('dropdown-button').classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+            }
+
+            document.addEventListener('click', function(e) {
+                const container = document.getElementById('dropdown-container');
+                const menu = document.getElementById('dropdown-menu');
+                const arrow = document.getElementById('dropdown-arrow');
+                if (container && menu && !container.contains(e.target) && !menu.classList.contains('hidden')) {
+                    menu.classList.add('hidden');
+                    arrow.classList.remove('rotate-180');
+                }
+            });
 
             document.addEventListener('DOMContentLoaded', function() {
                 const maxIntereses = 5;
@@ -281,8 +332,21 @@
                     
                     if (!checkField('nombre', 'error-nombre', 10, 20, null, null)) isValid = false;
                     if (!checkField('ubicacion', 'error-ubicacion', 10, 20, null, null)) isValid = false;
-                    if (!checkField('titulo_perfil', 'error-titulo', 10, 30, null, null)) isValid = false;
                     if (!checkField('biografia', 'error-biografia', 1, 100, null, null)) isValid = false;
+                    
+                    // Check titulo (Custom UI)
+                    const tituloVal = document.getElementById('titulo_perfil').value;
+                    const tituloBtn = document.getElementById('dropdown-button');
+                    const errorTitulo = document.getElementById('error-titulo');
+                    if (!tituloVal) {
+                        tituloBtn.classList.add('border-red-500', 'ring-2', 'ring-red-500/20');
+                        errorTitulo.textContent = 'Por favor selecciona un título.';
+                        errorTitulo.classList.remove('hidden');
+                        isValid = false;
+                    } else {
+                        tituloBtn.classList.remove('border-red-500', 'ring-2', 'ring-red-500/20');
+                        errorTitulo.classList.add('hidden');
+                    }
                     
                     // Foto validacion (Fuerza siempre a subir una foto)
                     const fotoInputFiles = document.getElementById('foto_perfil').files.length;
