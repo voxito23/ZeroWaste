@@ -37,9 +37,6 @@ services:
     environment:
       - FLASK_DEBUG=false
       - HTTPS_ENABLED=false
-    depends_on:
-      db:
-        condition: service_healthy
 
   # ===========================
   # Laravel — Panel Admin
@@ -60,14 +57,11 @@ services:
       - APP_DEBUG=true
       - APP_KEY=base64:MJkoQFIAfwFltGUEJcaaBR/+Bk87DQYhBnt8sUcF5X8=
       - DB_CONNECTION=pgsql
-      - DB_HOST=db
-      - DB_PORT=5432
-      - DB_DATABASE=zerowaste_db
-      - DB_USERNAME=postgres
-      - DB_PASSWORD=postgrespassword
-    depends_on:
-      db:
-        condition: service_healthy
+      - DB_HOST=aws-1-us-west-2.pooler.supabase.com
+      - DB_PORT=6543
+      - DB_DATABASE=postgres
+      - DB_USERNAME=postgres.emfjmmxzihvmjqukkdtu
+      - DB_PASSWORD='PIW@stE/06^&qkfnhf'
 
   # ===========================
   # FastAPI — API Backend
@@ -85,30 +79,10 @@ services:
       - ./fast_api/.env
     environment:
       - APP_ENV=production
-    depends_on:
-      db:
-        condition: service_healthy
 
   # ===========================
-  # PostgreSQL — Base de Datos
+  # PostgreSQL — Eliminado (Migrado a Supabase)
   # ===========================
-  db:
-    image: postgres:16-alpine
-    container_name: postgres_db
-    restart: always
-    expose:
-      - "5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespassword
-      POSTGRES_DB: zerowaste_db
-    volumes:
-      - postgres_data_zerowaste:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d zerowaste_db" ]
-      interval: 5s
-      retries: 5
-      timeout: 5s
 
   # ===========================
   # Tailwind — CSS Builder
@@ -125,7 +99,6 @@ services:
     restart: always
 
 volumes:
-  postgres_data_zerowaste:
   perfiles_compartidos:
   caddy_data:
   caddy_config:
