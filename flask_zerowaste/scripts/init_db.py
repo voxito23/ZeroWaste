@@ -12,7 +12,7 @@ def init_database():
         categorias_base = ['Reciclaje', 'Compostaje', 'Reducción de residuos', 'Eventos', 'Dudas']
         for nombre in categorias_base:
             if not Categoria.query.filter_by(nombre=nombre).first():
-                db.session.add(Categoria(nombre=nombre))
+                db.session.add(Categoria(nombre=nombre))  # type: ignore
         db.session.commit()
 
         # Puntos de reciclaje reales de Querétaro (idempotente)
@@ -24,7 +24,7 @@ def init_database():
         ]
         for p in puntos_base:
             if not PuntoMapa.query.filter_by(nombre=p['nombre']).first():
-                db.session.add(PuntoMapa(**p))
+                db.session.add(PuntoMapa(**p))  # type: ignore
         db.session.commit()
 
         # 3 Campañas obligatorias (idempotente — reemplazan las anteriores)
@@ -68,7 +68,7 @@ def init_database():
         ]
         for c in campanas_obligatorias:
             if not Campaign.query.filter_by(nombre=c['nombre']).first():
-                db.session.add(Campaign(**c))
+                db.session.add(Campaign(**c))  # type: ignore
         db.session.commit()
 
 if __name__ == '__main__':

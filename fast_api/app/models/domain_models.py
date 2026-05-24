@@ -4,7 +4,7 @@ Los __tablename__ coinciden EXACTAMENTE con las tablas que ya existen en Postgre
 NO se ejecuta create_all() — las tablas ya fueron creadas por Flask / Laravel.
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import (
     Column, Integer, String, Text, DateTime, Boolean, Numeric,
     ForeignKey, UniqueConstraint,
@@ -31,7 +31,7 @@ class Usuario(Base):
     auth_provider = Column(String(50), default='local')
     profile_completed = Column(Boolean, default=True)
     bloqueado = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     posts = relationship("Foro", back_populates="autor_rel")
     respuestas = relationship("RespuestaForo", back_populates="autor_rel")
@@ -60,7 +60,7 @@ class PuntoMapa(Base):
     tipo = Column(String(100), nullable=False)
     materiales = Column(Text, nullable=True)
     imagen = Column(String(255), default="default_punto.png")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     calificaciones = relationship("CalificacionPunto", back_populates="punto")
 
@@ -74,7 +74,7 @@ class CalificacionPunto(Base):
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     estrellas = Column(Integer, nullable=False)
     comentario = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     punto = relationship("PuntoMapa", back_populates="calificaciones")
 
@@ -92,7 +92,7 @@ class Foro(Base):
     categoria_id = Column(Integer, ForeignKey("categorias.id"), nullable=False)
     autor_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     imagen = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     categoria_rel = relationship("Categoria", back_populates="posts")
     autor_rel = relationship("Usuario", back_populates="posts")
@@ -108,7 +108,7 @@ class RespuestaForo(Base):
     post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
     autor_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     contenido = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     post = relationship("Foro", back_populates="respuestas")
     autor_rel = relationship("Usuario", back_populates="respuestas")
@@ -121,7 +121,7 @@ class LikeForo(Base):
     id = Column(Integer, primary_key=True, index=True)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     post_rel = relationship("Foro", back_populates="likes")
 
@@ -145,7 +145,7 @@ class Campaign(Base):
     link_evento = Column(String(500), nullable=True)
     recompensa_puntos = Column(Integer, default=0)
     activa = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 # Modelo de material reciclable
@@ -168,7 +168,7 @@ class Actividad(Base):
     tipo = Column(String(50), nullable=False) # ej: "post", "respuesta", "contacto"
     descripcion = Column(String(255), nullable=False)
     referencia_id = Column(Integer, nullable=True)
-    fecha_creacion = Column(DateTime, default=datetime.utcnow)
+    fecha_creacion = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     usuario = relationship("Usuario", back_populates="actividades")
 
@@ -195,7 +195,7 @@ class Notificacion(Base):
     mensaje = Column(Text, nullable=False)
     url = Column(String(255), nullable=True)
     leida = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
 # TAREA 2: MODELOS DE CONTACTO Y RECUPERACIÓN (Migrados desde Flask)
@@ -210,7 +210,7 @@ class ContactMessage(Base):
     estado = Column(String(30), default='pendiente')
     respuesta_admin = Column(Text, nullable=True)
     usuario_id = Column(Integer, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     replies = relationship("ContactReply", back_populates="contact_message")
 
@@ -222,7 +222,7 @@ class ContactReply(Base):
     contact_message_id = Column(Integer, ForeignKey("contact_messages.id"), nullable=False)
     sender = Column(String(10), nullable=False)  # 'user' or 'admin'
     mensaje = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     contact_message = relationship("ContactMessage", back_populates="replies")
 
@@ -237,6 +237,6 @@ class PasswordResetRequest(Base):
     usado = Column(Boolean, default=False)
     estado = Column(String(30), default='pendiente')
     notas = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 

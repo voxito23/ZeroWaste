@@ -12,6 +12,7 @@ use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\PasswordResetRequestController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\PostController;
 
 Route::get('/admin/login', function () {
     return view('welcome');
@@ -76,6 +77,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::put('/mensajes/{id}/estado', [ContactMessageController::class, 'updateEstado'])->name('mensajes.updateEstado');
     Route::put('/mensajes/{id}/responder', [ContactMessageController::class, 'responder'])->name('mensajes.responder');
     Route::get('/mensajes/{id}/thread', [ContactMessageController::class, 'getThread'])->name('mensajes.thread');
+
+    // Foro / Posts
+    Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
 
     // Solicitudes de recuperación de contraseña
     Route::get('/recuperacion', [PasswordResetRequestController::class, 'index'])->name('recuperacion.index');

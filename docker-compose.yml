@@ -52,10 +52,12 @@ services:
       - /var/www/html/vendor
       - perfiles_compartidos:/var/www/html/public/img/perfiles
       - ./flask_zerowaste/static/img:/var/www/flask_zerowaste/static/img
+    env_file:
+      - ./laravel_zerowaste/.env
     environment:
       - APP_ENV=production
       - APP_DEBUG=true
-      - APP_KEY=base64:MJkoQFIAfwFltGUEJcaaBR/+Bk87DQYhBnt8sUcF5X8=
+      # El APP_KEY ahora se carga desde ./laravel_zerowaste/.env
 
   # ===========================
   # FastAPI — API Backend

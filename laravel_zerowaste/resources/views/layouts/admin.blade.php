@@ -351,10 +351,13 @@
             <a href="{{ route('reportes.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('reportes.*') ? 'active' : '' }}" title="Reportes">
                 <span class="material-symbols-outlined text-lg">insert_chart</span> <span class="nav-text">Reportes</span>
             </a>
+            <a href="{{ route('posts.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('posts.*') ? 'active' : '' }}" title="Foro">
+                <span class="material-symbols-outlined text-lg">forum</span> <span class="nav-text">Foro</span>
+            </a>
 
             <div class="border-t border-emerald-100 dark:border-emerald-900/50 my-3"></div>
             
-            @if(\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->email === 'vichdz@gmail.com')
+            @if(\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->email === 'admin@zerowaste.com')
                 <span class="text-[10px] text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1 mt-2 nav-section-label">Desarrollo</span>
                 
                 <a href="/docs" target="_blank" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200" title="FastAPI Docs">

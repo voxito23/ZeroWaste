@@ -125,7 +125,7 @@ class UserController extends Controller
     public function edit(User $user)
     {
         // Non-principal admins cannot edit the principal admin
-        if ($user->email === 'vichdz@gmail.com' && auth()->check() && auth()->user()->email !== 'vichdz@gmail.com') {
+        if ($user->email === 'admin@zerowaste.com' && auth()->check() && auth()->user()->email !== 'admin@zerowaste.com') {
             return redirect()->route('usuarios.index')->with('error_admin', 'Solo el administrador principal puede editar su propia cuenta.');
         }
         return view('admin.usuarios_edit', compact('user'));
@@ -134,7 +134,7 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         // Non-principal admins cannot update the principal admin
-        if ($user->email === 'vichdz@gmail.com' && auth()->check() && auth()->user()->email !== 'vichdz@gmail.com') {
+        if ($user->email === 'admin@zerowaste.com' && auth()->check() && auth()->user()->email !== 'admin@zerowaste.com') {
             return redirect()->route('usuarios.index')->with('error_admin', 'Solo el administrador principal puede editar su propia cuenta.');
         }
 
@@ -206,7 +206,7 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         // Proteger al admin principal
-        if ($user->email === 'vichdz@gmail.com') {
+        if ($user->email === 'admin@zerowaste.com') {
             return redirect()->route('usuarios.index')->with('error_admin', 'No se puede eliminar la cuenta de administrador principal.');
         }
 
@@ -216,7 +216,7 @@ class UserController extends Controller
         }
 
         // Cualquier admin que no sea el principal no puede eliminar a otro admin
-        if ($user->is_admin && auth()->check() && auth()->user()->email !== 'vichdz@gmail.com') {
+        if ($user->is_admin && auth()->check() && auth()->user()->email !== 'admin@zerowaste.com') {
             return redirect()->route('usuarios.index')->with('error_admin', 'Solo el administrador principal puede eliminar a otros administradores.');
         }
 

@@ -53,7 +53,7 @@
                             <span class="material-symbols-outlined text-[12px]">shield_person</span> Admin
                         </span>
                     @endif
-                    @if($user->email === 'vichdz@gmail.com')
+                    @if($user->email === 'admin@zerowaste.com')
                         <span class="badge-sm bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
                             <span class="material-symbols-outlined text-[12px]">verified</span> Principal
                         </span>
@@ -221,7 +221,7 @@
         @endif
 
         {{-- Permissions & Actions - Only principal admin --}}
-        @if(auth()->user()->email === 'vichdz@gmail.com')
+        @if(auth()->user()->email === 'admin@zerowaste.com')
         <div class="edit-card p-6 mb-6">
             <div class="flex items-center gap-3 mb-5">
                 <div class="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/15 flex items-center justify-center">
