@@ -56,12 +56,6 @@ services:
       - APP_ENV=production
       - APP_DEBUG=true
       - APP_KEY=base64:MJkoQFIAfwFltGUEJcaaBR/+Bk87DQYhBnt8sUcF5X8=
-      - DB_CONNECTION=pgsql
-      - DB_HOST=aws-1-us-west-2.pooler.supabase.com
-      - DB_PORT=6543
-      - DB_DATABASE=postgres
-      - DB_USERNAME=postgres.emfjmmxzihvmjqukkdtu
-      - DB_PASSWORD='PIW@stE/06^&qkfnhf'
 
   # ===========================
   # FastAPI — API Backend
