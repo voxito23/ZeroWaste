@@ -84,12 +84,12 @@
                     {% endfor %}
                     
                     <button type="button" onclick="toggleDropdown()" id="dropdown-button"
-                        class="flex items-center justify-between w-full px-4 py-2.5 rounded-2xl border border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-sm cursor-pointer">
-                        <div class="flex items-center gap-2">
-                            <span id="dropdown-icon" class="material-symbols-outlined text-primary text-[18px]">{{ ns.icon }}</span>
-                            <span id="dropdown-text" class="text-secondary dark:text-white truncate">{{ ct }}</span>
+                        class="flex items-center justify-between w-full px-4 py-2.5 rounded-2xl border border-gray-100 dark:border-emerald-800 bg-gray-50 dark:bg-emerald-950/40 text-secondary dark:text-white focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 font-bold transition-all text-sm cursor-pointer overflow-hidden">
+                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                            <span id="dropdown-icon" class="material-symbols-outlined text-primary text-[18px] flex-shrink-0">{{ ns.icon }}</span>
+                            <span id="dropdown-text" class="text-secondary dark:text-white truncate flex-1 text-left">{{ ct }}</span>
                         </div>
-                        <span class="material-symbols-outlined text-gray-400 text-[18px] transition-transform duration-200" id="dropdown-arrow">expand_more</span>
+                        <span class="material-symbols-outlined text-gray-400 text-[18px] transition-transform duration-200 flex-shrink-0 ml-2" id="dropdown-arrow">expand_more</span>
                     </button>
                     
                     <ul id="dropdown-menu" class="absolute z-50 w-full top-full mt-1 bg-white dark:bg-forest-dark border border-emerald-100 dark:border-emerald-800 rounded-2xl shadow-xl max-h-60 overflow-y-auto hidden scrollbar-thin scrollbar-thumb-emerald-200 dark:scrollbar-thumb-emerald-800">
