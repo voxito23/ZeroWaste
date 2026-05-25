@@ -104,6 +104,7 @@ def registro(
 ):
     """
     Crea un usuario nuevo con contraseña hasheada, exigiendo una carga de archivo físico (multipart/form-data).
+    Crea un usuario nuevo con contraseña hasheada, permitiendo carga opcional de archivo físico.
     """
     # A) Validación de Correo Único (ANTES de guardar archivos)
     existe = db.query(Usuario).filter(Usuario.email == email).first()
@@ -126,40 +127,34 @@ def registro(
             detail="La contraseña debe tener al menos 6 caracteres.",
         )
 
-    # B) Guardado de Imagen en la Nueva Ruta
-    # Validar extensión de archivo
-    extension = foto_perfil.filename.rsplit(".", 1)[-1].lower() if "." in foto_perfil.filename else ""
-    if extension not in ALLOWED_IMAGE_EXTENSIONS:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Formato de imagen no permitido. Usa: {', '.join(ALLOWED_IMAGE_EXTENSIONS)}",
-        )
+    # B) Guardado de Imagen (Opcional)
+    nombre_archivo_unico = "default_avatar.jpg"
+    
+    if foto_perfil is not None and foto_perfil.filename:
+        # Validar extensión de archivo
+        extension = foto_perfil.filename.rsplit(".", 1)[-1].lower() if "." in foto_perfil.filename else ""
+        if extension not in ALLOWED_IMAGE_EXTENSIONS:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Formato de imagen no permitido. Usa: {', '.join(ALLOWED_IMAGE_EXTENSIONS)}",
+            )
 
-    # Validar tamaño de archivo
-    contents = foto_perfil.file.read()
-    if len(contents) > MAX_UPLOAD_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="La imagen no debe superar 250MB.",
-        )
-    foto_perfil.file.seek(0)
+        # Validar tamaño de archivo
+        contents = foto_perfil.file.read()
+        if len(contents) > MAX_UPLOAD_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="La imagen no debe superar 250MB.",
+            )
+        foto_perfil.file.seek(0)
 
-    nombre_archivo_unico = f"{uuid.uuid4().hex}.{extension}"
-    ruta_destino = f"{UPLOAD_DIR}/{nombre_archivo_unico}"
+        nombre_archivo_unico = f"{uuid.uuid4().hex}.{extension}"
+        ruta_destino = f"{UPLOAD_DIR}/{nombre_archivo_unico}"
 
-    # Asegurar que el directorio padre exista antes de escribir el archivo
-    os.makedirs(os.path.dirname(ruta_destino), exist_ok=True)
-
-    try:
         with open(ruta_destino, "wb") as buffer:
-            buffer.write(foto_perfil.file.read())
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Ocurrió un error al guardar la imagen de perfil en el servidor."
-        )
+            shutil.copyfileobj(foto_perfil.file, buffer)
 
-    # Mapeo explícito de la variable "nombre" junto con el resto de los campos
+    # C) Crear usuario en la base de datos
     nuevo_usuario = Usuario(
         nombre=nombre,
         email=email,
