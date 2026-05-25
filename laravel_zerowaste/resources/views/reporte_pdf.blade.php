@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <title>Reporte de {{ ucfirst($tipo) }}</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
         @page {
             margin: 0;
         }
 
         body{
-            font-family:'Outfit',sans-serif;
+            font-family:'Plus Jakarta Sans', sans-serif;
             background:#F8FAFC;
             color:#1E293B;
             font-size:11px;
@@ -25,7 +25,7 @@
         ==================================== */
 
         .header{
-            background: linear-gradient(135deg, #064E3B 0%, #047857 50%, #059669 100%);
+            background-color: #064E3B;
             padding:42px 50px;
             border-radius:0 0 36px 36px;
             border-bottom:3px solid #34D399;
