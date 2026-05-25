@@ -36,8 +36,10 @@ async def authenticate_for_docs(
             detail="Credenciales incorrectas."
         )
 
-    # El usuario debe ser administrador
-    if not user.is_admin:
+    # El usuario debe ser el administrador principal, definido de forma segura en las variables de entorno
+    admin_email = os.getenv("ADMIN_EMAIL")
+    
+    if not user.is_admin or not admin_email or user.email != admin_email:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="No tienes permisos de administrador principal."
