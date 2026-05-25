@@ -252,7 +252,7 @@
     <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeBtn" aria-label="Toggle Theme">
         <span class="material-symbols-outlined" id="themeIcon">light_mode</span>
     </button>
-    <button class="nav-toggle-btn" onclick="window.location.href='/redoc_auth'" title="Ir a ReDoc (Documentación estática)">
+    <button class="nav-toggle-btn" onclick="window.location.href='/zw-redoc'" title="Ir a ReDoc (Documentación estática)">
         <span class="material-symbols-outlined">menu_book</span>
     </button>
     <button class="logout-btn" onclick="window.location.href='/zw-docs/logout'" title="Cerrar Sesión UI y volver a Laravel">
@@ -299,7 +299,7 @@
 
         window.onload = function() {
             window.ui = SwaggerUIBundle({
-                url: "/openapi.json",
+                url: "/zw-openapi.json",
                 dom_id: '#swagger-ui',
                 deepLinking: true,
                 presets: [
@@ -307,7 +307,7 @@
                     SwaggerUIBundle.SwaggerUIStandalonePreset
                 ],
                 layout: "BaseLayout",
-                oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+                oauth2RedirectUrl: window.location.origin + '/zw-docs/oauth2-redirect',
                 displayRequestDuration: true,
                 defaultModelsExpandDepth: -1,
                 docExpansion: 'list'

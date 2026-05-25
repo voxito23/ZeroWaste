@@ -84,7 +84,7 @@ async def custom_swagger_ui_html(request: Request, _=Depends(get_current_user_fr
     return HTMLResponse(content=html_content)
 
 
-@router.get("/redoc_auth", response_class=HTMLResponse, include_in_schema=False)
+@router.get("/zw-redoc", response_class=HTMLResponse, include_in_schema=False)
 async def custom_redoc_html(request: Request, _=Depends(get_current_user_from_cookie)):
     """ReDoc Privado y Premium."""
     with open(os.path.join(templates_dir, "custom_redoc.html"), "r", encoding="utf-8") as f:

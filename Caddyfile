@@ -13,10 +13,10 @@ zerowaste-qro.com, www.zerowaste-qro.com {
     handle /zw-docs* {
         reverse_proxy fast_api:6000
     }
-    handle /openapi.json {
+    handle /zw-openapi.json {
         reverse_proxy fast_api:6000
     }
-    handle /redoc_auth* {
+    handle /zw-redoc* {
         reverse_proxy fast_api:6000
     }
 
