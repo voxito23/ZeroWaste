@@ -499,11 +499,13 @@
                 public_path('storage/' . $cleanUrl),
                 public_path('img/perfiles/' . $filename), // <- Para el volumen de Docker
                 public_path('img/campanas/' . $filename),
+                public_path('img/' . $filename),
                 public_path('static/img/perfiles/' . $filename),
                 app()->basePath('../flask_zerowaste/static/img/perfiles/' . $filename),
                 app()->basePath('../flask_zerowaste/static/img/campanas/' . $filename),
                 app()->basePath('../flask_zerowaste/static/img/posts/' . $filename),
                 app()->basePath('../flask_zerowaste/static/img/puntos/' . $filename),
+                app()->basePath('../flask_zerowaste/static/img/' . $filename), // <- Para las campañas y puntos
                 app()->basePath('../flask_zerowaste/static/' . $cleanUrl),
             ];
 
