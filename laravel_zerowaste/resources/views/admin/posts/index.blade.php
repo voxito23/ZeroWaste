@@ -173,7 +173,7 @@ function viewPostDetail(btn) {
         html: `
             <div class="text-left">
                 <!-- Encabezado Modal -->
-                <div class="flex items-start justify-between mb-4">
+                <div class="flex items-start justify-between mb-4 pr-8">
                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${catClass}">
                         ${category}
                     </span>
