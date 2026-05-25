@@ -483,25 +483,43 @@
         function getPremiumImageBase64($url) {
             if (empty($url)) return null;
             
-            if (filter_var($url, FILTER_VALIDATE_URL)) {
+            $url = trim($url);
+            $cleanForValidation = str_replace(' ', '%20', $url);
+            
+            if (filter_var($cleanForValidation, FILTER_VALIDATE_URL)) {
                 $ctx = stream_context_create([
                     'http' => [
                         'timeout' => 5.0,
-                        'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\r\n"
+                        'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)\r\n"
                     ],
                     'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]
                 ]);
-                $data = @file_get_contents($url, false, $ctx);
+                $data = @file_get_contents($cleanForValidation, false, $ctx);
+                
+                if (!$data && function_exists('curl_init')) {
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_URL, $cleanForValidation);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+                    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0');
+                    $data = curl_exec($ch);
+                    curl_close($ch);
+                }
+
                 if ($data) {
                     $mime = 'image/jpeg';
                     $urlLower = strtolower($url);
                     if (str_contains($urlLower, '.png')) $mime = 'image/png';
                     elseif (str_contains($urlLower, '.gif')) $mime = 'image/gif';
                     elseif (str_contains($urlLower, '.svg')) $mime = 'image/svg+xml';
+                    elseif (str_contains($urlLower, '.webp')) $mime = 'image/webp';
                     
                     return 'data:' . $mime . ';base64,' . base64_encode($data);
                 }
-                return null;
+                // If remote fetch failed, we will fall through and try local paths just in case.
             }
 
             $filename = basename($url);
@@ -838,11 +856,7 @@
                                 </td>
                                 <td class="text-center">
                                     @if($item->created_at)
-                                        @php $fDate = \Illuminate\Support\Carbon::parse($item->created_at); @endphp
-                                        <div class="date-box">
-                                            <div class="month">{{ $fDate->translatedFormat('M') }}</div>
-                                            <div class="day">{{ $fDate->format('d') }}</div>
-                                        </div>
+                                        {{ \Illuminate\Support\Carbon::parse($item->created_at)->format('d/m/Y') }}
                                     @else
                                         —
                                     @endif
