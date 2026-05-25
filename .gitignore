@@ -202,3 +202,4 @@ node_modules/
 scratch/
 CLAUDE.md
 AGENTS.md
+.claude/
