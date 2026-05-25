@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         e.preventDefault();
 
-        fetch(`/admin/usuarios/check-email?email=${encodeURIComponent(email.value.trim())}`)
+        fetch(`/zw-interno/usuarios/check-email?email=${encodeURIComponent(email.value.trim())}`)
             .then(res => res.json())
             .then(data => {
                 if (data.exists) {

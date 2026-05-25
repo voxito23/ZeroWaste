@@ -105,7 +105,7 @@
             Tenemos un error interno del servidor. Estamos trabajando para reforestar esta sección. Vuelve a intentarlo en unos minutos.
         </p>
 
-        <a href="{{ url('/admin/dashboard') }}" class="group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-primary text-secondary font-bold text-lg rounded-full shadow-lg shadow-primary/30 hover:bg-primary-hover hover:shadow-primary/50 transition-all duration-300 transform hover:-translate-y-1">
+        <a href="{{ url('/zw-interno/dashboard') }}" class="group relative inline-flex items-center justify-center gap-3 px-8 py-4 bg-primary text-secondary font-bold text-lg rounded-full shadow-lg shadow-primary/30 hover:bg-primary-hover hover:shadow-primary/50 transition-all duration-300 transform hover:-translate-y-1">
             <span class="material-symbols-outlined group-hover:block transition-transform">home</span>
             Volver al Inicio
         </a>

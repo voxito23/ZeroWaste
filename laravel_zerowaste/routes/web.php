@@ -14,17 +14,17 @@ use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PostController;
 
-Route::get('/admin/login', function () {
+Route::get('/zw-interno/login', function () {
     return view('welcome');
 })->name('login');
 
-Route::redirect('/admin', '/admin/login');
-Route::redirect('/', '/admin/login');
+Route::redirect('/zw-interno', '/zw-interno/login');
+Route::redirect('/', '/zw-interno/login');
 
-Route::post('/admin/login', [AuthController::class, 'login'])->name('admin.login');
-Route::get('/admin/logout', [AuthController::class, 'logout'])->name('admin.logout');
+Route::post('/zw-interno/login', [AuthController::class, 'login'])->name('admin.login');
+Route::get('/zw-interno/logout', [AuthController::class, 'logout'])->name('admin.logout');
 
-Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
+Route::prefix('zw-interno')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Reportes

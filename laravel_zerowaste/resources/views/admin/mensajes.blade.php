@@ -22,7 +22,7 @@
         const threadContainer = document.getElementById('replyThread');
         threadContainer.innerHTML = '<div class="text-center py-4 text-gray-400"><span class="material-symbols-outlined animate-spin">progress_activity</span><br>Cargando conversación...</div>';
         
-        let threadUrl = "/admin/mensajes/" + id + "/thread";
+        let threadUrl = "/zw-interno/mensajes/" + id + "/thread";
         fetch(threadUrl)
             .then(r => r.json())
             .then(data => {
