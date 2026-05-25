@@ -26,11 +26,12 @@ class Evento extends Model
 
     protected $fillable = [
         'titulo', 'lugar', 'fecha_inicio', 'fecha_fin', 
-        'descripcion', 'tipo_etiqueta', 'imagen_url', 'link_evento'
+        'descripcion', 'tipo_etiqueta', 'imagen_url', 'link_evento', 'activa'
     ];
 
     protected $casts = [
         'fecha_inicio' => 'datetime',
         'fecha_fin' => 'datetime',
+        'activa' => 'boolean',
     ];
 }

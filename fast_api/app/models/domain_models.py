@@ -184,6 +184,7 @@ class Evento(Base):
     tipo_etiqueta = Column(String(50), nullable=True)
     imagen_url = Column(String(255), nullable=True)
     link_evento = Column(String(500), nullable=True)
+    activa = Column(Boolean, default=True)
 
 
 # MODELO NOTIFICACION
