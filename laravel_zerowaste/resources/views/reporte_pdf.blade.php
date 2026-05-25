@@ -25,34 +25,31 @@
         ==================================== */
 
         .header{
-            background:
-            linear-gradient(
-                135deg,
-                #ECFDF5 0%,
-                #D1FAE5 45%,
-                #EDE9FE 100%
-            );
-
+            background: linear-gradient(135deg, #064E3B 0%, #047857 50%, #059669 100%);
             padding:42px 50px;
-
             border-radius:0 0 36px 36px;
-
-            border-bottom:1px solid #E2E8F0;
+            border-bottom:3px solid #34D399;
+            position: relative;
+            overflow: hidden;
         }
 
         .header h1{
             margin:0;
             font-size:34px;
             font-weight:900;
-            color:#064E3B;
+            color:#FFFFFF;
             letter-spacing:-1px;
+            position: relative;
+            z-index: 2;
         }
 
         .subtitle{
             margin-top:4px;
             font-size:13px;
-            color:#64748B;
+            color:#D1FAE5;
             font-weight:600;
+            position: relative;
+            z-index: 2;
         }
 
         .logo-box{
@@ -61,9 +58,11 @@
             background:#FFFFFF;
             border-radius:22px;
             padding:6px;
-            border:1px solid #E2E8F0;
+            border:2px solid rgba(255, 255, 255, 0.4);
             display: inline-block;
             vertical-align: middle;
+            position: relative;
+            z-index: 2;
         }
 
         .logo-box img{
@@ -74,14 +73,16 @@
         }
 
         .date-tag{
-            background:#FFFFFF;
+            background:rgba(255, 255, 255, 0.15);
             padding:8px 16px;
             border-radius:999px;
-            border:1px solid #E2E8F0;
-            color:#475569;
-            font-weight:700;
+            border:1px solid rgba(255, 255, 255, 0.3);
+            color:#FFFFFF;
+            font-weight:800;
             font-size:10px;
             display: inline-block;
+            position: relative;
+            z-index: 2;
         }
 
         /* ====================================
@@ -126,7 +127,7 @@
             color:#94A3B8;
             text-transform:uppercase;
             letter-spacing:1px;
-            font-weight:700;
+            font-weight:800;
         }
 
         /* ====================================
@@ -186,7 +187,7 @@
 
         .table-wrapper{
             background:#FFFFFF;
-            border-radius:30px;
+            border-radius:24px;
             border:1px solid #E2E8F0;
             overflow:hidden;
             margin-bottom: 25px;
@@ -203,17 +204,17 @@
         }
 
         .data-table thead{
-            background:#F8FAFC;
+            background: linear-gradient(90deg, #ECFDF5 0%, #D1FAE5 100%);
         }
 
         .data-table th{
-            color:#64748B;
+            color:#064E3B;
             font-size:9px;
             text-transform:uppercase;
             letter-spacing:1px;
-            font-weight:800;
+            font-weight:900;
             padding:16px 12px;
-            border-bottom:1px solid #E2E8F0;
+            border-bottom:2px solid #10B981;
             text-align: left;
         }
 
@@ -225,7 +226,7 @@
         }
 
         .data-table tr:nth-child(even){
-            background:#FCFCFD;
+            background:#F4FBF7;
         }
 
         .data-table tr:last-child td{
@@ -546,7 +547,10 @@
 
     {{-- HEADER --}}
     <div class="header">
-        <table style="width: 100%; border: none;">
+        <div style="position: absolute; top: -50px; right: -30px; width: 220px; height: 220px; background: rgba(52, 211, 153, 0.15); border-radius: 50%; z-index: 1;"></div>
+        <div style="position: absolute; bottom: -80px; left: 160px; width: 280px; height: 280px; background: rgba(16, 185, 129, 0.2); border-radius: 50%; z-index: 1;"></div>
+        
+        <table style="width: 100%; border: none; position: relative; z-index: 2;">
             <tr>
                 <td style="width: 80px; vertical-align: middle;">
                     <div class="logo-box">
