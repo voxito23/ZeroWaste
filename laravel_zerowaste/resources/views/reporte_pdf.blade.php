@@ -559,9 +559,48 @@
                 if ($realPath && is_file($realPath)) {
                     $ext = strtolower(pathinfo($realPath, PATHINFO_EXTENSION));
                     $mime = ($ext == 'jpg') ? 'jpeg' : ($ext == 'svg' ? 'svg+xml' : $ext);
-                    return 'data:image/' . $mime . ';base64,' . base64_encode(file_get_contents($realPath));
+                    $content = @file_get_contents($realPath);
+                    if ($content) {
+                        return 'data:image/' . $mime . ';base64,' . base64_encode($content);
+                    }
                 }
             }
+            
+            // Si todo falla localmente (por permisos de Docker), intentar fetch interno vía HTTP al contenedor de Flask
+            $internalUrls = [
+                "http://cliente:5000/static/img/perfiles/" . rawurlencode($filename),
+                "http://cliente:5000/static/img/campanas/" . rawurlencode($filename),
+                "http://cliente:5000/static/img/posts/" . rawurlencode($filename),
+                "http://cliente:5000/static/img/puntos/" . rawurlencode($filename),
+                "http://cliente:5000/static/img/eventos/" . rawurlencode($filename),
+                "http://cliente:5000/static/img/" . rawurlencode($filename),
+                "http://cliente:5000/static/" . ltrim($url, '/')
+            ];
+            
+            if (function_exists('curl_init')) {
+                foreach ($internalUrls as $internalUrl) {
+                    $ch = curl_init();
+                    curl_setopt($ch, CURLOPT_URL, $internalUrl);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 2); // Fast timeout para red interna
+                    curl_setopt($ch, CURLOPT_USERAGENT, 'Laravel-PDF-Generator');
+                    $data = curl_exec($ch);
+                    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    curl_close($ch);
+                    
+                    if ($httpCode == 200 && $data) {
+                        $mime = 'image/jpeg';
+                        $urlLower = strtolower($internalUrl);
+                        if (str_contains($urlLower, '.png')) $mime = 'image/png';
+                        elseif (str_contains($urlLower, '.gif')) $mime = 'image/gif';
+                        elseif (str_contains($urlLower, '.svg')) $mime = 'image/svg+xml';
+                        elseif (str_contains($urlLower, '.webp')) $mime = 'image/webp';
+                        
+                        return 'data:' . $mime . ';base64,' . base64_encode($data);
+                    }
+                }
+            }
+
             return null;
         }
 
