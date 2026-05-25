@@ -469,12 +469,16 @@
 
         function file_exists_ci($path) {
             if (file_exists($path)) return $path;
-            $dir = dirname($path);
+            
+            $dir = realpath(dirname($path));
+            if (!$dir || !is_dir($dir)) return false;
+            
             $base = strtolower(basename($path));
-            if (!is_dir($dir)) return false;
             $files = scandir($dir);
-            foreach ($files as $f) {
-                if (strtolower($f) === $base) return $dir . '/' . $f;
+            if ($files) {
+                foreach ($files as $f) {
+                    if (strtolower($f) === $base) return $dir . '/' . $f;
+                }
             }
             return false;
         }
@@ -522,8 +526,10 @@
                 // If remote fetch failed, we will fall through and try local paths just in case.
             }
 
-            $filename = basename($url);
-            $cleanUrl = ltrim($url, '/');
+            // Eliminar query strings si existen (ej. imagen.jpg?v=1)
+            $parsedPath = parse_url($url, PHP_URL_PATH);
+            $filename = basename($parsedPath);
+            $cleanUrl = ltrim($parsedPath, '/');
             
             $possiblePaths = [
                 public_path($cleanUrl),
@@ -532,13 +538,20 @@
                 public_path('img/campanas/' . $filename),
                 public_path('img/' . $filename),
                 public_path('static/img/perfiles/' . $filename),
+                // Rutas relativas de app
                 app()->basePath('../flask_zerowaste/static/img/perfiles/' . $filename),
                 app()->basePath('../flask_zerowaste/static/img/campanas/' . $filename),
                 app()->basePath('../flask_zerowaste/static/img/posts/' . $filename),
                 app()->basePath('../flask_zerowaste/static/img/puntos/' . $filename),
                 app()->basePath('../flask_zerowaste/static/img/eventos/' . $filename),
                 app()->basePath('../flask_zerowaste/static/img/' . $filename),
-                app()->basePath('../flask_zerowaste/static/' . $cleanUrl),
+                // Rutas absolutas forzadas para Docker
+                '/var/www/flask_zerowaste/static/img/perfiles/' . $filename,
+                '/var/www/flask_zerowaste/static/img/campanas/' . $filename,
+                '/var/www/flask_zerowaste/static/img/posts/' . $filename,
+                '/var/www/flask_zerowaste/static/img/puntos/' . $filename,
+                '/var/www/flask_zerowaste/static/img/eventos/' . $filename,
+                '/var/www/flask_zerowaste/static/img/' . $filename,
             ];
 
             foreach ($possiblePaths as $path) {
