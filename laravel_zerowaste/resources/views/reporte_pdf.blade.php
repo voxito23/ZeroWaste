@@ -472,11 +472,22 @@
             
             if (filter_var($url, FILTER_VALIDATE_URL)) {
                 $ctx = stream_context_create([
-                    'http' => ['timeout' => 3.0],
+                    'http' => [
+                        'timeout' => 5.0,
+                        'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\r\n"
+                    ],
                     'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]
                 ]);
                 $data = @file_get_contents($url, false, $ctx);
-                if ($data) return 'data:image/jpeg;base64,' . base64_encode($data);
+                if ($data) {
+                    $mime = 'image/jpeg';
+                    $urlLower = strtolower($url);
+                    if (str_contains($urlLower, '.png')) $mime = 'image/png';
+                    elseif (str_contains($urlLower, '.gif')) $mime = 'image/gif';
+                    elseif (str_contains($urlLower, '.svg')) $mime = 'image/svg+xml';
+                    
+                    return 'data:' . $mime . ';base64,' . base64_encode($data);
+                }
                 return null;
             }
 
