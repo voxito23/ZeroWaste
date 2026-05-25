@@ -1,6 +1,6 @@
 zerowaste-qro.com, www.zerowaste-qro.com {
     # Laravel (Panel Admin)
-    handle /admin* {
+    handle /zw-interno* {
         reverse_proxy admin:80
     }
 
