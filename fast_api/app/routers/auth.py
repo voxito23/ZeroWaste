@@ -55,7 +55,34 @@ def login(
     if not usuario.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acceso denegado: Solo los administradores pueden generar tokens e iniciar sesión en esta API."
+            detail="Acceso denegado: Solo los administradores pueden generar tokens e iniciar sesión en esta ruta."
+        )
+
+    access_token = create_access_token(data={"sub": usuario.email})
+    return Token(access_token=access_token)
+
+
+@router.post("/login-mobile", response_model=Token, summary="Iniciar sesión desde la app móvil (Ciudadanos)")
+def login_mobile(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
+    """
+    Login para ciudadanos en la app móvil. No exige ser admin.
+    """
+    usuario = db.query(Usuario).filter(Usuario.email == form_data.username).first()
+
+    if not usuario or not verify_password(form_data.password, usuario.password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Correo o contraseña incorrectos.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if usuario.bloqueado:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Usuario bloqueado por subir contenido indebido."
         )
 
     access_token = create_access_token(data={"sub": usuario.email})
