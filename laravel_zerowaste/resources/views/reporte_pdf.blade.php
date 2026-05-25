@@ -884,7 +884,7 @@
         <table style="width: 100%;">
             <tr>
                 <td>
-                    <strong>ZeroWaste Platform</strong> &bull; Reporte emitido el {{ date('d/m/Y \a \l\a\s H:i') }}
+                    <strong>ZeroWaste Platform</strong> &bull; Reporte emitido el {{ $fecha_generada }}
                 </td>
                 <td style="text-align: right;">
                     Documento Oficial Confidencial &bull; Página 1
