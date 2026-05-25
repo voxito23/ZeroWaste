@@ -13,7 +13,7 @@ router = APIRouter(tags=["Docs Auth"])
 
 templates_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
 
-@router.get("/docs/login", response_class=HTMLResponse, include_in_schema=False)
+@router.get("/zw-docs/login", response_class=HTMLResponse, include_in_schema=False)
 async def login_for_docs(request: Request):
     """Página de inicio de sesión hermosamente diseñada para desarrolladores."""
     with open(os.path.join(templates_dir, "docs_login.html"), "r", encoding="utf-8") as f:
@@ -21,7 +21,7 @@ async def login_for_docs(request: Request):
     return HTMLResponse(content=html_content)
 
 
-@router.post("/docs/auth", include_in_schema=False)
+@router.post("/zw-docs/auth", include_in_schema=False)
 async def authenticate_for_docs(
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -64,19 +64,19 @@ async def authenticate_for_docs(
 async def get_current_user_from_cookie(request: Request):
     token = request.cookies.get("docs_access_token")
     if not token:
-        raise HTTPException(status_code=status.HTTP_303_SEE_OTHER, headers={"Location": "/docs/login"})
+        raise HTTPException(status_code=status.HTTP_303_SEE_OTHER, headers={"Location": "/zw-docs/login"})
     return token
 
 
-@router.get("/docs/logout", include_in_schema=False)
+@router.get("/zw-docs/logout", include_in_schema=False)
 async def logout_for_docs():
     """Cierra sesión eliminando la cookie JWT y redirige a Laravel Admin."""
-    response = RedirectResponse(url="/admin", status_code=status.HTTP_303_SEE_OTHER)
+    response = RedirectResponse(url="/zw-interno/login", status_code=status.HTTP_303_SEE_OTHER)
     response.delete_cookie("docs_access_token")
     return response
 
 
-@router.get("/docs", response_class=HTMLResponse, include_in_schema=False)
+@router.get("/zw-docs", response_class=HTMLResponse, include_in_schema=False)
 async def custom_swagger_ui_html(request: Request, _=Depends(get_current_user_from_cookie)):
     """Swagger UI Privado y Premium."""
     with open(os.path.join(templates_dir, "custom_swagger.html"), "r", encoding="utf-8") as f:

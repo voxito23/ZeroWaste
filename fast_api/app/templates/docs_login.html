@@ -184,13 +184,13 @@
                 formData.append('username', email);
                 formData.append('password', password);
 
-                const response = await fetch('/docs/auth', {
+                const response = await fetch('/zw-docs/auth', {
                     method: 'POST',
                     body: formData
                 });
 
                 if (response.ok) {
-                    window.location.href = '/docs';
+                    window.location.href = '/zw-docs';
                 } else {
                     const data = await response.json();
                     errTxt.textContent = data.detail || 'Credenciales inválidas.';
