@@ -27,18 +27,20 @@ async def authenticate_for_docs(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
-    """Verifica si el usuario es el administrador principal autorizado para ver API."""
-    if form_data.username != os.getenv("ADMIN_EMAIL", "admin@ejemplo.com"):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="No tienes permisos de administrador principal."
-        )
-
+    """Verifica si el usuario es administrador autorizado para ver API."""
     user = db.query(Usuario).filter(Usuario.email == form_data.username).first()
+    
     if not user or not verify_password(form_data.password, str(user.password)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales incorrectas."
+        )
+
+    # El usuario debe ser administrador
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No tienes permisos de administrador principal."
         )
 
     # Crear token válido para acceso a los docs
