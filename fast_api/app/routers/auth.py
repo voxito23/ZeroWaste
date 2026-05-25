@@ -5,6 +5,7 @@ Incluye rate limiting y validación estricta de inputs.
 
 import os
 import uuid
+import shutil
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -38,7 +39,7 @@ def login(
     """
     usuario = db.query(Usuario).filter(Usuario.email == form_data.username).first()
 
-    if not usuario or not verify_password(form_data.password, usuario.password):
+    if not usuario or not verify_password(form_data.password, str(usuario.password)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Correo o contraseña incorrectos.",
@@ -72,7 +73,7 @@ def login_mobile(
     """
     usuario = db.query(Usuario).filter(Usuario.email == form_data.username).first()
 
-    if not usuario or not verify_password(form_data.password, usuario.password):
+    if not usuario or not verify_password(form_data.password, str(usuario.password)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Correo o contraseña incorrectos.",
