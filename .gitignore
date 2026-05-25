@@ -200,3 +200,5 @@ node_modules/
 
 # Scratch / temp files
 scratch/
+CLAUDE.md
+AGENTS.md
