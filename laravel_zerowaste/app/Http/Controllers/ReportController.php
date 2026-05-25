@@ -104,6 +104,9 @@ class ReportController extends Controller
 
     public function exportar(Request $request)
     {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(300);
+
         $request->validate([
             'tipo' => 'required|in:usuarios,campanas,mapa,eventos,foro',
             'formato' => 'required|in:pdf,xlsx,docx,preview',
