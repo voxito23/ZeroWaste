@@ -817,7 +817,7 @@
                                     <table style="width:100%; border:none; padding:0; margin:0;"><tr style="background:transparent;">
                                     <td style="width: 45px; border:none; padding:0;">
                                         @php 
-                                            $fotoBase64 = getPremiumImageBase64($item->imagen_url ?? $item->foto ?? null);
+                                            $fotoBase64 = getPremiumImageBase64($item->imagen ?? $item->imagen_url ?? $item->foto ?? null);
                                             $colorClass = $avatarColors[($idx+1) % count($avatarColors)];
                                         @endphp
                                         <div class="img-point {{ $fotoBase64 ? '' : $colorClass }}">
@@ -851,7 +851,25 @@
                             
                             @elseif($tipo === 'eventos')
                                 <td>
-                                    <span class="item-title">{{ $item->titulo ?? $item->nombre ?? 'Evento' }}</span>
+                                    <table style="width:100%; border:none; padding:0; margin:0;"><tr style="background:transparent;">
+                                    <td style="width: 45px; border:none; padding:0;">
+                                        @php 
+                                            $fotoBase64 = getPremiumImageBase64($item->imagen_url ?? $item->foto ?? $item->imagen ?? null);
+                                            $colorClass = $avatarColors[($idx+3) % count($avatarColors)];
+                                        @endphp
+                                        <div class="img-point {{ $fotoBase64 ? '' : $colorClass }}" style="{{ !$fotoBase64 ? 'display:flex; align-items:center; justify-content:center;' : '' }}">
+                                            @if($fotoBase64)
+                                                <img src="{{ $fotoBase64 }}" style="width:100%; height:100%; border-radius:10px; object-fit:cover;">
+                                            @else
+                                                <div style="width:100%; height:100%; text-align:center; line-height:34px; color:white; font-size:16px; font-weight:bold;">
+                                                    <svg viewBox="0 0 24 24" width="16" height="16" style="fill:white;"><path d="M19 4h-1V3c0-.55-.45-1-1-1s-1 .45-1 1v1H8V3c0-.55-.45-1-1-1s-1 .45-1 1v1H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm-7-5h5v5h-5z"/></svg>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td style="border:none; padding:0; vertical-align:middle; padding-left: 8px;">
+                                        <span class="item-title">{{ $item->titulo ?? $item->nombre ?? 'Evento' }}</span>
+                                    </td></tr></table>
                                 </td>
                                 <td class="text-center">
                                     @php $tipoEvento = $item->tipo ?? 'General'; @endphp
@@ -877,8 +895,26 @@
                                 
                             @elseif($tipo === 'foro')
                                 <td>
-                                    <span class="item-title" style="display:block; margin-bottom:4px;">{{ \Illuminate\Support\Str::limit($item->titulo ?? 'Post', 40) }}</span>
-                                    <span class="item-subtitle">{{ \Illuminate\Support\Str::limit(strip_tags($item->contenido ?? ''), 60) }}</span>
+                                    <table style="width:100%; border:none; padding:0; margin:0;"><tr style="background:transparent;">
+                                    <td style="width: 45px; border:none; padding:0;">
+                                        @php 
+                                            $fotoBase64 = getPremiumImageBase64($item->imagen_url ?? $item->foto ?? $item->imagen ?? null);
+                                            $colorClass = $avatarColors[($idx+4) % count($avatarColors)];
+                                        @endphp
+                                        <div class="img-point {{ $fotoBase64 ? '' : $colorClass }}" style="{{ !$fotoBase64 ? 'display:flex; align-items:center; justify-content:center;' : '' }}">
+                                            @if($fotoBase64)
+                                                <img src="{{ $fotoBase64 }}" style="width:100%; height:100%; border-radius:10px; object-fit:cover;">
+                                            @else
+                                                <div style="width:100%; height:100%; text-align:center; line-height:34px; color:white; font-size:16px; font-weight:bold;">
+                                                    <svg viewBox="0 0 24 24" width="16" height="16" style="fill:white;"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td style="border:none; padding:0; vertical-align:middle; padding-left: 8px;">
+                                        <span class="item-title" style="display:block; margin-bottom:4px;">{{ \Illuminate\Support\Str::limit($item->titulo ?? 'Post', 40) }}</span>
+                                        <span class="item-subtitle">{{ \Illuminate\Support\Str::limit(strip_tags($item->contenido ?? ''), 60) }}</span>
+                                    </td></tr></table>
                                 </td>
                                 <td class="text-center">
                                     <span class="badge badge-green">{{ $item->categoria->nombre ?? 'Sin Categoría' }}</span>
