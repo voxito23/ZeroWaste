@@ -467,6 +467,18 @@
             }
         }
 
+        function file_exists_ci($path) {
+            if (file_exists($path)) return $path;
+            $dir = dirname($path);
+            $base = strtolower(basename($path));
+            if (!is_dir($dir)) return false;
+            $files = scandir($dir);
+            foreach ($files as $f) {
+                if (strtolower($f) === $base) return $dir . '/' . $f;
+            }
+            return false;
+        }
+
         // Resolutor maestro de imágenes para perfiles, campañas y mapas
         function getPremiumImageBase64($url) {
             if (empty($url)) return null;
@@ -498,7 +510,7 @@
             $possiblePaths = [
                 public_path($cleanUrl),
                 public_path('storage/' . $cleanUrl),
-                public_path('img/perfiles/' . $filename), // <- Para el volumen de Docker
+                public_path('img/perfiles/' . $filename),
                 public_path('img/campanas/' . $filename),
                 public_path('img/' . $filename),
                 public_path('static/img/perfiles/' . $filename),
@@ -506,15 +518,17 @@
                 app()->basePath('../flask_zerowaste/static/img/campanas/' . $filename),
                 app()->basePath('../flask_zerowaste/static/img/posts/' . $filename),
                 app()->basePath('../flask_zerowaste/static/img/puntos/' . $filename),
-                app()->basePath('../flask_zerowaste/static/img/' . $filename), // <- Para las campañas y puntos
+                app()->basePath('../flask_zerowaste/static/img/eventos/' . $filename),
+                app()->basePath('../flask_zerowaste/static/img/' . $filename),
                 app()->basePath('../flask_zerowaste/static/' . $cleanUrl),
             ];
 
             foreach ($possiblePaths as $path) {
-                if (file_exists($path) && is_file($path)) {
-                    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                $realPath = file_exists_ci($path);
+                if ($realPath && is_file($realPath)) {
+                    $ext = strtolower(pathinfo($realPath, PATHINFO_EXTENSION));
                     $mime = ($ext == 'jpg') ? 'jpeg' : ($ext == 'svg' ? 'svg+xml' : $ext);
-                    return 'data:image/' . $mime . ';base64,' . base64_encode(file_get_contents($path));
+                    return 'data:image/' . $mime . ';base64,' . base64_encode(file_get_contents($realPath));
                 }
             }
             return null;
