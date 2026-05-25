@@ -360,7 +360,7 @@
             @if(\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->email === config('app.admin_email'))
                 <span class="text-[10px] text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1 mt-2 nav-section-label">Desarrollo</span>
                 
-                <a href="/docs" target="_blank" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200" title="FastAPI Docs">
+                <a href="/zw-docs" target="_blank" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200" title="FastAPI Docs">
                     <span class="material-symbols-outlined text-lg">api</span> <span class="nav-text">FastAPI Docs</span>
                 </a>
 
