@@ -92,17 +92,17 @@
                         <td class="text-right">
                             <div class="flex items-center justify-end gap-1">
                                 <button type="button" 
-                                    onclick="viewPostDetail(
-                                        `{{ htmlspecialchars($post->titulo, ENT_QUOTES) }}`,
-                                        `{{ htmlspecialchars($post->autor->nombre ?? 'Desconocido', ENT_QUOTES) }}`,
-                                        `{{ htmlspecialchars($catName, ENT_QUOTES) }}`,
-                                        `{{ $catClass }}`,
-                                        `{{ $post->created_at ? $post->created_at->format('d/m/Y H:i') : '' }}`,
-                                        `{{ htmlspecialchars(nl2br(e($post->contenido)), ENT_QUOTES) }}`,
-                                        `{{ getImageUrl($post->imagen) }}`
-                                    )"
+                                    data-title="{{ $post->titulo }}"
+                                    data-author="{{ $post->autor->nombre ?? 'Desconocido' }}"
+                                    data-category="{{ $catName }}"
+                                    data-catclass="{{ $catClass }}"
+                                    data-date="{{ $post->created_at ? $post->created_at->format('d/m/Y H:i') : '' }}"
+                                    data-image="{{ getImageUrl($post->imagen) }}"
+                                    data-author-image="{{ $post->autor && $post->autor->foto_perfil ? '/static/img/perfiles/' . $post->autor->foto_perfil : '/static/img/perfiles/default.png' }}"
+                                    onclick="viewPostDetail(this)"
                                     class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors" title="Ver Detalles">
                                     <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                    <span class="hidden data-content">{{ base64_encode($post->contenido) }}</span>
                                 </button>
                                 
                                 <form action="{{ route('posts.destroy', $post->id) }}" method="POST" class="inline-block" onsubmit="return confirm('¿Eliminar permanentemente este post y sus comentarios?');">
@@ -140,18 +140,25 @@
 
 @push('scripts')
 <script>
-function viewPostDetail(title, author, category, catClass, date, content, image) {
+function viewPostDetail(btn) {
+    const title = btn.dataset.title;
+    const author = btn.dataset.author;
+    const category = btn.dataset.category;
+    const catClass = btn.dataset.catclass;
+    const date = btn.dataset.date;
+    const image = btn.dataset.image;
+    const authorImage = btn.dataset.authorImage;
+    const contentBase64 = btn.querySelector('.data-content').textContent;
+    
+    // Decodificar Base64 a UTF-8 string
+    let safeContent = '';
+    try {
+        safeContent = decodeURIComponent(escape(window.atob(contentBase64)));
+    } catch(e) {
+        safeContent = window.atob(contentBase64);
+    }
+    
     const isDark = document.documentElement.classList.contains('dark');
-    
-    // Decodificar el HTML que enviamos codificado para evitar errores JS
-    const decodeHTML = function(html) {
-        var txt = document.createElement("textarea");
-        txt.innerHTML = html;
-        return txt.value;
-    };
-    
-    const safeTitle = decodeHTML(title);
-    const safeContent = decodeHTML(content);
     
     let imageHtml = '';
     if (image && image !== 'null' && image !== '') {
@@ -175,12 +182,12 @@ function viewPostDetail(title, author, category, catClass, date, content, image)
                     </span>
                 </div>
                 
-                <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-4 leading-tight">${safeTitle}</h2>
+                <h2 class="text-2xl font-black text-gray-900 dark:text-white mb-4 leading-tight">${title}</h2>
                 
                 <!-- Autor -->
                 <div class="flex items-center gap-3 mb-6 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
-                    <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
-                        <span class="material-symbols-outlined">person</span>
+                    <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center overflow-hidden border border-emerald-200 dark:border-emerald-800/50 shrink-0">
+                        <img src="${authorImage}" alt="Avatar" class="w-full h-full object-cover" onerror="this.src='/static/img/perfiles/default.png'">
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Publicado por</p>

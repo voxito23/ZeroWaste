@@ -46,6 +46,12 @@
                 <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Descripción</th>
                 <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Fecha Inicio</th>
                 <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Fecha Fin</th>
+            @elseif($tipo === 'foro')
+                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">#</th>
+                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Título Post</th>
+                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Categoría</th>
+                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Autor</th>
+                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Fecha de Creación</th>
             @endif
         </tr>
     </thead>
@@ -84,6 +90,12 @@
                     <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ mb_strimwidth($item->descripcion ?? '', 0, 50, '...') }}</td>
                     <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->fecha_inicio ? \Illuminate\Support\Carbon::parse($item->fecha_inicio)->format('d/m/Y H:i') : '—' }}</td>
                     <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->fecha_fin ? \Illuminate\Support\Carbon::parse($item->fecha_fin)->format('d/m/Y H:i') : '—' }}</td>
+                @elseif($tipo === 'foro')
+                    <td style="text-align:center; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $idx + 1 }}</td>
+                    <td style="font-weight:bold; color:#064E3B; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->titulo ?? 'Post' }}</td>
+                    <td style="font-weight:bold; color:#059669; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->categoria->nombre ?? 'Sin Categoría' }}</td>
+                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->autor->nombre ?? 'Usuario Eliminado' }}</td>
+                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->created_at ? \Illuminate\Support\Carbon::parse($item->created_at)->format('d/m/Y H:i') : '—' }}</td>
                 @endif
             </tr>
         @empty

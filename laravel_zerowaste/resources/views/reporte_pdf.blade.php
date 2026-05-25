@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <title>Reporte de {{ ucfirst($tipo) }}</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;700;800;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap');
         @page { margin: 0cm 0cm; }
         body { 
-            font-family: 'Montserrat', 'Helvetica', 'Arial', sans-serif; 
+            font-family: 'Outfit', 'Helvetica', 'Arial', sans-serif; 
             color: #1F2937; 
             font-size: 11px; 
             line-height: 1.6;
@@ -18,11 +18,12 @@
 
         /* === HEADER === */
         .header { 
-            background-color: #064E3B;
+            background-color: #022C22; /* Premium dark green */
             color: #ffffff; 
             padding: 35px 45px;
             position: relative;
             overflow: hidden;
+            border-bottom: 4px solid #00E096; /* Subtle accent */
         }
         
         .header::after {
@@ -53,24 +54,27 @@
         .logo-box img { 
             width: 56px; 
             height: 56px; 
-            border-radius: 14px;
+            border-radius: 18px; /* Semi-round borders */
             object-fit: cover;
-            border: 3px solid rgba(255,255,255,0.3);
+            border: 2px solid rgba(0, 224, 150, 0.4); /* Premium emerald border */
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
         }
 
         .header h1 { 
-            font-size: 32px; 
-            font-weight: 800; 
+            font-size: 34px; 
+            font-weight: 900; 
             margin: 0; 
-            letter-spacing: -0.5px;
+            letter-spacing: -0.8px;
             text-transform: uppercase;
+            color: #ffffff;
         }
         
         .header .subtitle { 
             font-size: 13px; 
-            color: #E2E8F0; 
+            color: #A7F3D0; /* Light emerald */
             margin: 4px 0 0 0;
-            font-weight: 400;
+            font-weight: 500;
+            letter-spacing: 0.2px;
         }
 
         .header .date-tag {
@@ -78,7 +82,8 @@
             top: 35px;
             right: 45px;
             font-size: 10px;
-            background-color: #047857;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 6px 14px;
             border-radius: 20px;
             color: #ffffff;
@@ -133,7 +138,7 @@
             background-color: #F0FDF4;
             border: 1px solid #BBF7D0;
             padding: 18px 22px;
-            border-radius: 10px;
+            border-radius: 14px; /* More rounded */
             margin-bottom: 30px;
         }
 
@@ -164,17 +169,18 @@
         }
 
         .section-title .icon-circle {
-            width: 28px;
-            height: 28px;
-            min-width: 28px;
-            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            min-width: 32px;
+            border-radius: 10px; /* Semi-round */
             display: inline-block;
             text-align: center;
-            line-height: 28px;
-            font-size: 14px;
-            margin-right: 10px;
+            line-height: 32px;
+            font-size: 16px;
+            margin-right: 12px;
             font-weight: 700;
             color: white;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
         }
 
         .icon-green { background: #10B981; }
@@ -188,9 +194,10 @@
             border-collapse: collapse;
             font-size: 10px;
             margin-top: 10px;
-            border-radius: 8px;
+            border-radius: 14px; /* Semi-round borders */
             overflow: hidden;
             table-layout: fixed;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03); /* Premium shadow */
         }
 
         table.data-table thead {
@@ -372,7 +379,33 @@
             return 'badge-gray';
         }
 
-        $avatarColors = ['avatar-green', 'avatar-purple', 'avatar-blue', 'avatar-amber'];
+        function getInitials($name) {
+            $words = explode(' ', trim($name));
+            $initials = '';
+            foreach ($words as $w) {
+                if(strlen($w) > 0) { $initials .= strtoupper($w[0]); }
+                if(strlen($initials) >= 2) break;
+            }
+            return $initials ?: 'U';
+        }
+
+        function getProfileImageBase64($url) {
+            if (empty($url)) return null;
+            if (filter_var($url, FILTER_VALIDATE_URL)) {
+                $ctx = stream_context_create(['http' => ['timeout' => 1.5]]);
+                $data = @file_get_contents($url, false, $ctx);
+                if ($data) return 'data:image/jpeg;base64,' . base64_encode($data);
+                return null;
+            }
+            $path = public_path('storage/' . $url);
+            if (file_exists($path) && is_file($path)) {
+                $ext = pathinfo($path, PATHINFO_EXTENSION);
+                return 'data:image/' . ($ext == 'jpg' ? 'jpeg' : $ext) . ';base64,' . base64_encode(file_get_contents($path));
+            }
+            return null;
+        }
+
+        $avatarColors = ['#10B981', '#8B5CF6', '#3B82F6', '#F59E0B', '#059669', '#EC4899'];
 
         $svgIcon = function($path) {
             return '<svg viewBox="0 0 24 24" width="18" height="18" style="fill: currentColor; vertical-align: middle;"><path d="'.$path.'"></path></svg>';
@@ -383,6 +416,7 @@
             'campanas' => ['icon' => $svgIcon('M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z'), 'class' => 'icon-blue'],
             'mapa' =>     ['icon' => $svgIcon('M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'), 'class' => 'icon-amber'],
             'eventos' =>  ['icon' => $svgIcon('M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5z'), 'class' => 'icon-purple'],
+            'foro' =>     ['icon' => $svgIcon('M21 6h-2v9H6v2c0 .55.45 1 1 1h11l4 4V7c0-.55-.45-1-1-1zm-4 6V3c0-.55-.45-1-1-1H3c-.55 0-1 .45-1 1v14l4-4h10c.55 0 1-.45 1-1z'), 'class' => 'icon-blue'],
         ];
     @endphp
 
@@ -402,8 +436,8 @@
                         </div>
                     </td>
                     <td align="left" style="vertical-align: middle; padding-left: 15px;">
-                        <h1 style="margin: 0; font-family: 'Montserrat', sans-serif; font-size: 26px; tracking: -0.5px;">ZEROWASTE</h1>
-                        <p class="subtitle" style="margin-top: 2px; font-family: 'Montserrat', sans-serif; font-size: 13px;">{{ $titulo }}</p>
+                        <h1 style="margin: 0; font-family: 'Outfit', sans-serif; font-size: 28px; tracking: -0.5px;">ZEROWASTE</h1>
+                        <p class="subtitle" style="margin-top: 2px; font-family: 'Outfit', sans-serif; font-size: 13px;">{{ $titulo }}</p>
                     </td>
                     <td align="right" style="vertical-align: top;">
                         <div style="background: rgba(255,255,255,0.1); display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 10px; font-weight: 700; color: #fff;">
@@ -482,6 +516,12 @@
                         <th>TIPO</th>
                         <th>UBICACIÓN</th>
                         <th class="th-right">FECHA</th>
+                    @elseif($tipo === 'foro')
+                        <th style="width: 5%">#</th>
+                        <th style="width: 30%">POST</th>
+                        <th>CATEGORÍA</th>
+                        <th>AUTOR</th>
+                        <th class="th-right">FECHA</th>
                     @endif
                 </tr>
             </thead>
@@ -491,10 +531,24 @@
                         @if($tipo === 'usuarios')
                             <td style="color: #9CA3AF; font-weight: 600;">{{ $idx + 1 }}</td>
                             <td>
-                                <span class="item-title">{{ $item->nombre }}</span>
-                                <span class="item-subtitle">{{ $item->titulo_perfil ?? 'Ecologista' }}</span>
+                                @php 
+                                    $color = $avatarColors[$idx % count($avatarColors)]; 
+                                    $fotoBase64 = getProfileImageBase64($item->foto_perfil);
+                                @endphp
+                                <table style="width:100%; border:none; padding:0; margin:0;"><tr style="background:transparent;"><td style="width: 32px; border:none; padding:0;">
+                                    @if($fotoBase64)
+                                        <img src="{{ $fotoBase64 }}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #E5E7EB;">
+                                    @else
+                                        <div style="width: 28px; height: 28px; border-radius: 50%; background: {{ $color }}; color: white; text-align: center; line-height: 28px; font-weight: 800; font-size: 10px;">
+                                            {{ getInitials($item->nombre) }}
+                                        </div>
+                                    @endif
+                                </td><td style="border:none; padding:0; vertical-align:middle;">
+                                    <span class="item-title">{{ mb_strimwidth($item->nombre, 0, 20, '...') }}</span>
+                                    <span class="item-subtitle" style="color:{{$color}}">{{ $item->titulo_perfil ?? 'Ecologista' }}</span>
+                                </td></tr></table>
                             </td>
-                            <td style="font-size: 10px;">{{ $item->email }}</td>
+                            <td style="font-size: 10px; font-weight: 500; color: #4B5563;">{{ mb_strimwidth($item->email, 0, 25, '...') }}</td>
                             <td>{{ $item->ubicacion ?? '—' }}</td>
                             <td>
                                 @php $rolText = $item->is_admin ? 'Admin' : 'Usuario'; @endphp
@@ -514,8 +568,15 @@
                         @elseif($tipo === 'campanas')
                             <td style="color: #9CA3AF; font-weight: 600;">{{ $idx + 1 }}</td>
                             <td>
-                                <span class="item-title">{{ $item->nombre }}</span>
-                                <span class="item-subtitle">{{ mb_strimwidth($item->lugar ?? '', 0, 30, '...') }}</span>
+                                @php $color = $avatarColors[($idx+2) % count($avatarColors)]; @endphp
+                                <table style="width:100%; border:none; padding:0; margin:0;"><tr style="background:transparent;"><td style="width: 32px; border:none; padding:0;">
+                                    <div style="width: 28px; height: 28px; border-radius: 8px; background: rgba(59, 130, 246, 0.1); color: #3B82F6; text-align: center; line-height: 34px;">
+                                        {!! $svgIcon('M19 5h-2V3H7v2H5c-1.1 0-2 .9-2 2v1c0 2.55 1.92 4.63 4.39 4.94A5.01 5.01 0 0 0 11 15.9V19H7v2h10v-2h-4v-3.1a5.01 5.01 0 0 0 3.61-2.96C19.08 12.63 21 10.55 21 8V7c0-1.1-.9-2-2-2zM5 8V7h2v3.82C5.84 10.4 5 9.3 5 8zm14 0c0 1.3-.84 2.4-2 2.82V7h2v1z') !!}
+                                    </div>
+                                </td><td style="border:none; padding:0; vertical-align:middle;">
+                                    <span class="item-title">{{ mb_strimwidth($item->nombre, 0, 20, '...') }}</span>
+                                    <span class="item-subtitle">{{ mb_strimwidth($item->lugar ?? '', 0, 25, '...') }}</span>
+                                </td></tr></table>
                             </td>
                             <td>
                                 @php $tipoCampana = $item->tipo_etiqueta ?? 'General'; @endphp
@@ -564,16 +625,64 @@
                         @elseif($tipo === 'eventos')
                             <td style="color: #9CA3AF; font-weight: 600;">{{ $idx + 1 }}</td>
                             <td>
-                                <span class="item-title">{{ $item->titulo ?? $item->nombre ?? 'Evento' }}</span>
-                                <span class="item-subtitle">{{ mb_strimwidth($item->descripcion ?? '', 0, 40, '...') }}</span>
+                                <span class="item-title">{{ mb_strimwidth($item->titulo ?? $item->nombre ?? 'Evento', 0, 25, '...') }}</span>
+                                <span class="item-subtitle">{{ mb_strimwidth($item->descripcion ?? '', 0, 35, '...') }}</span>
                             </td>
                             <td>
                                 @php $tipoEvento = $item->tipo ?? 'General'; @endphp
                                 <span class="badge {{ getBadgeClass($tipoEvento) }}">{{ $tipoEvento }}</span>
                             </td>
-                            <td>{{ $item->ubicacion ?? $item->lugar ?? '—' }}</td>
+                            <td>
+                                <span style="font-weight:600; color:#4B5563;">{{ mb_strimwidth($item->ubicacion ?? $item->lugar ?? '—', 0, 20, '...') }}</span>
+                            </td>
                             <td class="td-right">
-                                {{ $item->fecha_inicio ? \Illuminate\Support\Carbon::parse($item->fecha_inicio)->format('d/m/Y H:i') : '—' }}
+                                @if($item->fecha_inicio)
+                                    @php $fDate = \Illuminate\Support\Carbon::parse($item->fecha_inicio); @endphp
+                                    <div style="display:inline-block; background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 8px; text-align: center; width: 42px; padding: 2px 0;">
+                                        <div style="font-size: 7px; text-transform: uppercase; color: #6B7280; font-weight: 800; margin-bottom:-2px;">{{ $fDate->translatedFormat('M') }}</div>
+                                        <div style="font-size: 13px; font-weight: 900; color: #064E3B;">{{ $fDate->format('d') }}</div>
+                                    </div>
+                                @else
+                                    —
+                                @endif
+                            </td>
+                        @elseif($tipo === 'foro')
+                            <td style="color: #9CA3AF; font-weight: 600;">{{ $idx + 1 }}</td>
+                            <td>
+                                <span class="item-title">{{ mb_strimwidth($item->titulo ?? 'Post', 0, 30, '...') }}</span>
+                                <span class="item-subtitle">{{ mb_strimwidth(strip_tags($item->contenido ?? ''), 0, 40, '...') }}</span>
+                            </td>
+                            <td>
+                                <span class="badge badge-green">{{ mb_strimwidth($item->categoria->nombre ?? 'Sin Categoría', 0, 15, '') }}</span>
+                            </td>
+                            <td>
+                                @php 
+                                    $nAuthor = $item->autor->nombre ?? 'Usuario'; 
+                                    $color = $avatarColors[$idx % count($avatarColors)]; 
+                                    $fotoBase64 = getProfileImageBase64($item->autor->foto_perfil ?? null);
+                                @endphp
+                                <table style="width:100%; border:none; padding:0; margin:0;"><tr style="background:transparent;"><td style="width: 24px; border:none; padding:0;">
+                                    @if($fotoBase64)
+                                        <img src="{{ $fotoBase64 }}" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover; border: 1px solid #E5E7EB;">
+                                    @else
+                                        <div style="width: 20px; height: 20px; border-radius: 50%; background: {{ $color }}; color: white; text-align: center; line-height: 20px; font-weight: 800; font-size: 8px;">
+                                            {{ getInitials($nAuthor) }}
+                                        </div>
+                                    @endif
+                                </td><td style="border:none; padding:0; vertical-align:middle;">
+                                    <span style="font-size: 10px; font-weight:600; color:#1F2937;">{{ mb_strimwidth($nAuthor, 0, 15, '...') }}</span>
+                                </td></tr></table>
+                            </td>
+                            <td class="td-right">
+                                @if($item->created_at)
+                                    @php $fDate = \Illuminate\Support\Carbon::parse($item->created_at); @endphp
+                                    <div style="display:inline-block; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; text-align: center; width: 42px; padding: 2px 0;">
+                                        <div style="font-size: 7px; text-transform: uppercase; color: #059669; font-weight: 800; margin-bottom:-2px;">{{ $fDate->translatedFormat('M') }}</div>
+                                        <div style="font-size: 13px; font-weight: 900; color: #064E3B;">{{ $fDate->format('d') }}</div>
+                                    </div>
+                                @else
+                                    —
+                                @endif
                             </td>
                         @endif
                     </tr>

@@ -134,6 +134,8 @@
                     <th style="width:4%">#</th><th style="width:22%">Punto de Acopio</th><th>Tipo</th><th>Dirección</th><th>Materiales</th><th style="text-align:right">Coordenadas</th>
                 @elseif($tipo === 'eventos')
                     <th style="width:4%">#</th><th style="width:22%">Evento</th><th>Tipo</th><th>Ubicación</th><th style="text-align:right">Fecha</th>
+                @elseif($tipo === 'foro')
+                    <th style="width:4%">#</th><th style="width:30%">Post</th><th>Categoría</th><th>Autor</th><th style="text-align:right">Fecha</th>
                 @endif
             </tr>
         </thead>
@@ -171,6 +173,12 @@
                         <td><span class="badge">{{ $item->tipo ?? 'General' }}</span></td>
                         <td>{{ $item->ubicacion ?? $item->lugar ?? '—' }}</td>
                         <td style="text-align:right;">{{ $item->fecha_inicio ? \Illuminate\Support\Carbon::parse($item->fecha_inicio)->format('d/m/Y H:i') : '—' }}</td>
+                    @elseif($tipo === 'foro')
+                        <td style="color: #9CA3AF; font-weight: bold;">{{ $idx + 1 }}</td>
+                        <td><strong style="color: #064E3B;">{{ $item->titulo ?? 'Post' }}</strong><br><span style="font-size:8pt; color:#9CA3AF;">{{ mb_strimwidth(strip_tags($item->contenido ?? ''), 0, 50, '...') }}</span></td>
+                        <td><span class="badge badge-green">{{ mb_strimwidth($item->categoria->nombre ?? 'Sin Categoría', 0, 15, '') }}</span></td>
+                        <td style="font-size: 9pt;">{{ $item->autor->nombre ?? 'Usuario Eliminado' }}</td>
+                        <td style="text-align:right;">{{ $item->created_at ? \Illuminate\Support\Carbon::parse($item->created_at)->format('d/m/Y H:i') : '—' }}</td>
                     @endif
                 </tr>
             @empty

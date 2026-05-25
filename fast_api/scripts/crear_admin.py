@@ -1,13 +1,13 @@
 """
 Script para crear/actualizar los administradores del sistema en PostgreSQL.
-Las contraseñas se hashean con werkzeug (pbkdf2:sha256) para compatibilidad con FastAPI.
+Las contraseñas se hashean con bcrypt ($2y$) para compatibilidad con FastAPI y Laravel.
 Ejecutar: docker exec fastapi_app python crear_admin.py
 """
 
 import os
 from app.data.database import SessionLocal
 from app.models.domain_models import Usuario
-from passlib.hash import bcrypt
+from app.security.jwt_auth import hash_password
 
 db = SessionLocal()
 
@@ -17,12 +17,12 @@ admins = [
 
 try:
     for admin in admins:
-        hashed = bcrypt.using(ident="2y").hash(admin["password"])
+        hashed = hash_password(admin["password"])
         existe = db.query(Usuario).filter(Usuario.email == admin["email"]).first()
 
         if existe:
-            existe.is_admin = True
-            existe.password = hashed
+            existe.is_admin = True  # type: ignore
+            existe.password = hashed  # type: ignore
             print(f"  [ACTUALIZADO] {admin['email']}")
         else:
             nuevo = Usuario(

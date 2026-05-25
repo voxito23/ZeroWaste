@@ -348,11 +348,11 @@
             <a href="{{ route('mapa.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('mapa.*') ? 'active' : '' }}" title="Mapa">
                 <span class="material-symbols-outlined text-lg">map</span> <span class="nav-text">Mapa</span>
             </a>
-            <a href="{{ route('reportes.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('reportes.*') ? 'active' : '' }}" title="Reportes">
-                <span class="material-symbols-outlined text-lg">insert_chart</span> <span class="nav-text">Reportes</span>
-            </a>
             <a href="{{ route('posts.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('posts.*') ? 'active' : '' }}" title="Foro">
                 <span class="material-symbols-outlined text-lg">forum</span> <span class="nav-text">Foro</span>
+            </a>
+            <a href="{{ route('reportes.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('reportes.*') ? 'active' : '' }}" title="Reportes">
+                <span class="material-symbols-outlined text-lg">insert_chart</span> <span class="nav-text">Reportes</span>
             </a>
 
             <div class="border-t border-emerald-100 dark:border-emerald-900/50 my-3"></div>

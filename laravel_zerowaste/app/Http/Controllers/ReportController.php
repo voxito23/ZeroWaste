@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Campaign;
 use App\Models\User;
 use App\Models\Location;
+use App\Models\Post;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Carbon;
 use App\Exports\GenericExport;
@@ -29,12 +30,14 @@ class ReportController extends Controller
         $cQ = Campaign::query();
         $pQ = Location::query();
         $eQ = \App\Models\Evento::query();
+        $fQ = Post::query();
 
         if ($hasDates) {
             $uQ->whereBetween('created_at', [$fechaInicio, $fechaFin]);
             $cQ->whereBetween('created_at', [$fechaInicio, $fechaFin]);
             $pQ->whereBetween('created_at', [$fechaInicio, $fechaFin]);
             $eQ->whereBetween('fecha_inicio', [$fechaInicio, $fechaFin]);
+            $fQ->whereBetween('created_at', [$fechaInicio, $fechaFin]);
         }
 
         if ($search) {
@@ -42,6 +45,7 @@ class ReportController extends Controller
             $cQ->where(function($q) use ($search) { $q->where('nombre', 'ilike', "%{$search}%")->orWhere('descripcion', 'ilike', "%{$search}%"); });
             $pQ->where(function($q) use ($search) { $q->where('nombre', 'ilike', "%{$search}%")->orWhere('direccion', 'ilike', "%{$search}%"); });
             $eQ->where('titulo', 'ilike', "%{$search}%");
+            $fQ->where(function($q) use ($search) { $q->where('titulo', 'ilike', "%{$search}%")->orWhere('contenido', 'ilike', "%{$search}%"); });
         }
 
         if ($categoria) {
@@ -81,6 +85,7 @@ class ReportController extends Controller
         $totalCampanas = $cQ->count();
         $totalPuntos = $pQ->count();
         $totalEventos = $eQ->count();
+        $totalForo = $fQ->count();
 
         if ($request->ajax()) {
             return response()->json([
@@ -88,18 +93,19 @@ class ReportController extends Controller
                 'totalCampanas' => $totalCampanas,
                 'totalPuntos' => $totalPuntos,
                 'totalEventos' => $totalEventos,
+                'totalForo' => $totalForo,
             ]);
         }
 
         return view('admin.reportes.index', compact(
-            'totalUsuarios', 'totalCampanas', 'totalPuntos', 'totalEventos'
+            'totalUsuarios', 'totalCampanas', 'totalPuntos', 'totalEventos', 'totalForo'
         ));
     }
 
     public function exportar(Request $request)
     {
         $request->validate([
-            'tipo' => 'required|in:usuarios,campanas,mapa,eventos',
+            'tipo' => 'required|in:usuarios,campanas,mapa,eventos,foro',
             'formato' => 'required|in:pdf,xlsx,docx,preview',
             'fecha_inicio' => 'nullable|date',
             'fecha_fin' => 'nullable|date|after_or_equal:fecha_inicio',
@@ -184,6 +190,22 @@ class ReportController extends Controller
             }
             $data['registros'] = $query->orderByDesc('fecha_inicio')->get();
             $data['titulo'] = "Reporte de Eventos Agendados";
+            $data['total'] = count($data['registros']);
+        } elseif ($tipo === 'foro') {
+            $query = Post::with(['autor', 'categoria']);
+            if ($hasDates) $query->whereBetween('created_at', [$fechaInicio, $fechaFin]);
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('titulo', 'ilike', "%{$search}%")->orWhere('contenido', 'ilike', "%{$search}%");
+                });
+            }
+            if ($categoria) {
+                $query->whereHas('categoria', function($q) use ($categoria) {
+                    $q->where('nombre', 'ilike', "%{$categoria}%");
+                });
+            }
+            $data['registros'] = $query->orderByDesc('created_at')->get();
+            $data['titulo'] = "Reporte de Posts del Foro";
             $data['total'] = count($data['registros']);
         }
 
@@ -271,6 +293,11 @@ class ReportController extends Controller
                 $table->addCell(1500, $thStyle)->addText('TIPO', $thFont);
                 $table->addCell(2500, $thStyle)->addText('UBICACIÓN', $thFont);
                 $table->addCell(2200, $thStyle)->addText('FECHA', $thFont);
+            } elseif ($data['tipo'] === 'foro') {
+                $table->addCell(2500, $thStyle)->addText('TÍTULO', $thFont);
+                $table->addCell(1500, $thStyle)->addText('CATEGORÍA', $thFont);
+                $table->addCell(2500, $thStyle)->addText('AUTOR', $thFont);
+                $table->addCell(2200, $thStyle)->addText('FECHA', $thFont);
             }
 
             // Data rows
@@ -303,6 +330,11 @@ class ReportController extends Controller
                     $table->addCell(1500, $rowBg)->addText($item->tipo ?? 'General', ['size' => 8, 'bold' => true, 'color' => '6B21A8']);
                     $table->addCell(2500, $rowBg)->addText($item->ubicacion ?? $item->lugar ?? '—', $tdFont);
                     $table->addCell(2200, $rowBg)->addText($item->fecha_inicio ? Carbon::parse($item->fecha_inicio)->format('d/m/Y H:i') : '—', $tdFont);
+                } elseif ($data['tipo'] === 'foro') {
+                    $table->addCell(2500, $rowBg)->addText($item->titulo ?? 'Post', $tdBold);
+                    $table->addCell(1500, $rowBg)->addText($item->categoria->nombre ?? 'Sin Categoría', ['size' => 8, 'bold' => true, 'color' => '059669']);
+                    $table->addCell(2500, $rowBg)->addText($item->autor->nombre ?? 'Desconocido', $tdFont);
+                    $table->addCell(2200, $rowBg)->addText($item->created_at ? Carbon::parse($item->created_at)->format('d/m/Y H:i') : '—', $tdFont);
                 }
             }
 

@@ -118,7 +118,7 @@ document.addEventListener("DOMContentLoaded", function() {
         fetch(`{{ route('reportes.index') }}?${p.toString()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then(r => r.json())
         .then(data => {
-            ['totalUsuarios','totalCampanas','totalPuntos','totalEventos'].forEach(key => {
+            ['totalUsuarios','totalCampanas','totalPuntos','totalEventos','totalForo'].forEach(key => {
                 const el = document.getElementById('kpi-' + key);
                 if (!el) return;
                 const target = data[key] || 0, current = parseInt(el.textContent) || 0;
@@ -481,6 +481,7 @@ document.addEventListener("DOMContentLoaded", function() {
         ['label'=>'Campañas','icon'=>'military_tech','key'=>'totalCampanas','val'=>$totalCampanas,'sub'=>'Total organizadas','color'=>'#3B82F6','bg'=>'from-blue-400 to-blue-600'],
         ['label'=>'Puntos','icon'=>'location_on','key'=>'totalPuntos','val'=>$totalPuntos,'sub'=>'Centros de acopio','color'=>'#F59E0B','bg'=>'from-amber-400 to-orange-500'],
         ['label'=>'Eventos','icon'=>'event','key'=>'totalEventos','val'=>$totalEventos,'sub'=>'Programados','color'=>'#8B5CF6','bg'=>'from-purple-400 to-purple-600'],
+        ['label'=>'Foro','icon'=>'forum','key'=>'totalForo','val'=>$totalForo,'sub'=>'Posts publicados','color'=>'#059669','bg'=>'from-teal-400 to-emerald-600'],
     ]; @endphp
     @foreach($rkpis as $ri => $rk)
     <div class="glass-card p-5 group relative overflow-hidden">
@@ -629,6 +630,32 @@ document.addEventListener("DOMContentLoaded", function() {
             <button onclick="generateReport('eventos','pdf')" class="px-5 py-2.5 rounded-full bg-purple-600 text-white font-black text-sm hover:bg-purple-700 shadow-[0_0_15px_rgba(147,51,234,0.25)] transition hover:-translate-y-0.5">PDF</button>
             <button onclick="generateReport('eventos','xlsx')" class="px-5 py-2.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold text-sm hover:bg-emerald-500 hover:text-white transition">Excel</button>
             <button onclick="generateReport('eventos','docx')" class="px-5 py-2.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-bold text-sm hover:bg-blue-500 hover:text-white transition">Word</button>
+        </div>
+    </div>
+
+    {{-- 5. Foro --}}
+    <div class="glass-card p-7 flex flex-col justify-between group overflow-hidden relative min-h-[260px] report-module" data-search-term="foro posts comunidad comentarios preguntas discusiones">
+        <div class="absolute -bottom-10 -right-10 w-40 h-40 bg-gradient-to-tr from-teal-400/20 to-emerald-400/5 rounded-full blur-3xl pointer-events-none transition duration-700 group-hover:scale-150"></div>
+        <div class="absolute -bottom-5 -right-5 pointer-events-none opacity-[0.15] group-hover:opacity-[0.25] transition-opacity duration-500">
+            <span class="material-symbols-outlined" style="font-size: 150px; color: #059669;">forum</span>
+        </div>
+        <div class="relative z-10">
+            <div class="flex items-center justify-between mb-5">
+                <div class="w-14 h-14 rounded-[1.25rem] bg-gradient-to-br from-teal-400 to-emerald-600 flex items-center justify-center text-white shadow-[0_8px_20px_rgba(5,150,105,0.3)] group-hover:scale-110 group-hover:-translate-y-1 transition-all duration-300">
+                    <span class="material-symbols-outlined text-[28px]">forum</span>
+                </div>
+                <span class="px-3 py-1 bg-teal-500/10 text-teal-600 dark:text-teal-400 font-bold text-[10px] uppercase tracking-widest rounded-full border border-teal-500/20">Módulo Foro</span>
+            </div>
+            <h3 class="text-xl font-black text-[#064E3B] dark:text-white mb-2 leading-tight tracking-tight">Comunidad y Foro</h3>
+            <p class="text-gray-500 text-sm font-medium mb-6 leading-relaxed">Reporte de publicaciones, actividad de usuarios y discusiones.</p>
+        </div>
+        <div class="flex flex-wrap gap-2 mt-auto items-center">
+            <button onclick="previewReport('foro')" class="px-4 py-2.5 rounded-full bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition text-sm font-bold text-[#064E3B] dark:text-white flex items-center gap-2 border border-gray-200 dark:border-white/5">
+                <span class="material-symbols-outlined text-[16px]">visibility</span> Ver
+            </button>
+            <button onclick="generateReport('foro','pdf')" class="px-5 py-2.5 rounded-full bg-teal-600 text-white font-black text-sm hover:bg-teal-700 shadow-[0_0_15px_rgba(5,150,105,0.25)] hover:shadow-[0_0_25px_rgba(5,150,105,0.45)] transition hover:-translate-y-0.5">PDF</button>
+            <button onclick="generateReport('foro','xlsx')" class="px-5 py-2.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-bold text-sm hover:bg-emerald-500 hover:text-white transition">Excel</button>
+            <button onclick="generateReport('foro','docx')" class="px-5 py-2.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-bold text-sm hover:bg-blue-500 hover:text-white transition">Word</button>
         </div>
     </div>
 
