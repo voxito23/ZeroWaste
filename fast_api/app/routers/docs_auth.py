@@ -28,7 +28,7 @@ async def authenticate_for_docs(
     db: Session = Depends(get_db)
 ):
     """Verifica si el usuario es el administrador principal autorizado para ver API."""
-    if form_data.username != "admin@zerowaste.com":
+    if form_data.username != "vichdz@gmail.com":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="No tienes permisos de administrador principal."

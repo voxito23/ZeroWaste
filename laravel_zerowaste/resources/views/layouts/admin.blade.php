@@ -357,7 +357,7 @@
 
             <div class="border-t border-emerald-100 dark:border-emerald-900/50 my-3"></div>
             
-            @if(\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->email === 'admin@zerowaste.com')
+            @if(\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->email === 'vichdz@gmail.com')
                 <span class="text-[10px] text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1 mt-2 nav-section-label">Desarrollo</span>
                 
                 <a href="/docs" target="_blank" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200" title="FastAPI Docs">
