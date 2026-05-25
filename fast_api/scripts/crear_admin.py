@@ -4,6 +4,7 @@ Las contraseñas se hashean con werkzeug (pbkdf2:sha256) para compatibilidad con
 Ejecutar: docker exec fastapi_app python crear_admin.py
 """
 
+import os
 from app.data.database import SessionLocal
 from app.models.domain_models import Usuario
 from passlib.hash import bcrypt
@@ -11,7 +12,7 @@ from passlib.hash import bcrypt
 db = SessionLocal()
 
 admins = [
-    {"nombre": "Victor Admin",      "email": "vichdz@gmail.com",           "password": "123456"}
+    {"nombre": "Victor Admin",      "email": os.getenv("ADMIN_EMAIL", "admin@ejemplo.com"),           "password": "123456"}
 ]
 
 try:

@@ -50,9 +50,9 @@
                 <td class="text-right">
                     <div class="flex items-center justify-end gap-1">
                         @php
-                            $isPrincipal = $user->email === 'vichdz@gmail.com';
+                            $isPrincipal = $user->email === config('app.admin_email');
                             $isSelf = auth()->check() && auth()->id() === $user->id;
-                            $amPrincipal = auth()->check() && auth()->user()->email === 'vichdz@gmail.com';
+                            $amPrincipal = auth()->check() && auth()->user()->email === config('app.admin_email');
                         @endphp
 
                         @if($isPrincipal && !$amPrincipal)

@@ -16,7 +16,7 @@ class AdminSeeder extends Seeder
         $admins = [
             [
                 'nombre'   => 'Victor Admin',
-                'email'    => 'vichdz@gmail.com',
+                'email'    => env('ADMIN_EMAIL', 'admin@ejemplo.com'),
                 'password' => '123456',
                 'is_admin' => true,
             ]

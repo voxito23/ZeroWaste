@@ -117,7 +117,7 @@ class LoginRequest(BaseModel):
         "json_schema_extra": {
             "examples": [
                 {
-                    "email": "vichdz@gmail.com",
+                    "email": "admin@ejemplo.com",
                     "password": "Contraseña123",
                 }
             ]
