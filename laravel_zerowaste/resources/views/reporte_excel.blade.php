@@ -1,105 +1,109 @@
 <table>
     <thead>
         <tr>
-            <th style="background-color:#064E3B; color:#fff; font-weight:bold; font-size:14px;" colspan="7">ZEROWASTE — {{ $titulo }}</th>
+            <td colspan="7" style="background-color:#ECFDF5; color:#064E3B; font-weight:bold; font-size:24px; text-align:center; border: 1px solid #10B981; border-bottom: none;">
+                ♻ ZEROWASTE 
+            </td>
         </tr>
         <tr>
-            <th style="background-color:#F0FDF4; font-weight:bold;">Generado</th>
-            <th style="background-color:#F0FDF4;">{{ $fecha_generada }}</th>
-            <th style="background-color:#F0FDF4; font-weight:bold;">Desde</th>
-            <th style="background-color:#F0FDF4;">{{ $rango_inicio }}</th>
-            <th style="background-color:#F0FDF4; font-weight:bold;">Hasta</th>
-            <th style="background-color:#F0FDF4;">{{ $rango_fin }}</th>
-            <th style="background-color:#F0FDF4; font-weight:bold;">Total: {{ $total }}</th>
+            <td colspan="7" style="background-color:#ECFDF5; color:#059669; font-weight:bold; font-size:16px; text-align:center; border: 1px solid #10B981; border-top: none; border-bottom: 3px solid #059669;">
+                Reporte Oficial de {{ ucfirst($tipo) }}
+            </td>
+        </tr>
+        <tr>
+            <td colspan="7" style="background-color:#F8FAFC; color:#475569; font-size:12px; text-align:center; border: 1px solid #E2E8F0;">
+                <strong>Generado:</strong> {{ $fecha_generada }} &nbsp;|&nbsp; <strong>Periodo:</strong> {{ $rango_inicio }} a {{ $rango_fin }} &nbsp;|&nbsp; <strong>Total:</strong> {{ $total }} registros
+            </td>
         </tr>
         <tr><td colspan="7"></td></tr>
         <tr>
             @if($tipo === 'usuarios')
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">#</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Nombre</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Email</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Ubicación</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Rol</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Estado</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Registro</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669; text-align:center;">#</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Usuario</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Email</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Ubicación</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Rol</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Estado</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669; text-align:center;">Registro</th>
             @elseif($tipo === 'campanas')
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">#</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Campaña</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Clasificación</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Descripción</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Lugar</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Estado</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Creada</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669; text-align:center;">#</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Campaña</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Clasificación</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Descripción</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Ubicación</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Estado</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669; text-align:center;">Creada</th>
             @elseif($tipo === 'mapa')
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">#</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Punto</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Tipo</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Dirección</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Materiales</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Latitud</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Longitud</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669; text-align:center;">#</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Punto de Reciclaje</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Tipo</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Dirección</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Materiales</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Latitud</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Longitud</th>
             @elseif($tipo === 'eventos')
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">#</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Evento</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Tipo</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Ubicación</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Descripción</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Fecha Inicio</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Fecha Fin</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669; text-align:center;">#</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Evento</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Categoría</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Ubicación</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Detalles</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669; text-align:center;">Inicio</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669; text-align:center;">Fin</th>
             @elseif($tipo === 'foro')
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">#</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Título Post</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Categoría</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Autor</th>
-                <th style="background-color:#064E3B; color:#fff; font-weight:bold; padding:8px;">Fecha de Creación</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669; text-align:center;">#</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Publicación</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Categoría</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669;">Autor</th>
+                <th style="background-color:#10B981; color:#fff; font-weight:bold; border: 1px solid #059669; text-align:center;">Fecha de Publicación</th>
             @endif
         </tr>
     </thead>
     <tbody>
         @forelse($registros as $idx => $item)
+            @php $bg = $idx % 2 === 0 ? '#FFFFFF' : '#F8FAFC'; @endphp
             <tr>
                 @if($tipo === 'usuarios')
-                    <td style="text-align:center; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $idx + 1 }}</td>
-                    <td style="font-weight:bold; color:#064E3B; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->nombre }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->email }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->ubicacion ?? '—' }}</td>
-                    <td style="font-weight:bold; color:{{ $item->is_admin ? '#6B21A8' : '#065F46' }}; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->is_admin ? 'Admin' : 'Usuario' }}</td>
-                    <td style="font-weight:bold; color:{{ ($item->bloqueado ?? false) ? '#991B1B' : '#065F46' }}; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ ($item->bloqueado ?? false) ? 'Bloqueado' : 'Activo' }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->created_at ? \Illuminate\Support\Carbon::parse($item->created_at)->format('d/m/Y') : '—' }}</td>
+                    <td style="text-align:center; background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $idx + 1 }}</td>
+                    <td style="font-weight:bold; color:#064E3B; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ $item->nombre }}</td>
+                    <td style="background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#334155;">{{ $item->email }}</td>
+                    <td style="background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $item->ubicacion ?? '—' }}</td>
+                    <td style="font-weight:bold; color:{{ $item->is_admin ? '#7C3AED' : '#059669' }}; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ $item->is_admin ? 'Admin' : 'Usuario' }}</td>
+                    <td style="font-weight:bold; color:{{ ($item->bloqueado ?? false) ? '#DC2626' : '#059669' }}; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ ($item->bloqueado ?? false) ? 'Bloqueado' : 'Activo' }}</td>
+                    <td style="text-align:center; background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $item->created_at ? \Illuminate\Support\Carbon::parse($item->created_at)->format('d/m/Y') : '—' }}</td>
                 @elseif($tipo === 'campanas')
-                    <td style="text-align:center; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $idx + 1 }}</td>
-                    <td style="font-weight:bold; color:#064E3B; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->nombre }}</td>
-                    <td style="font-weight:bold; color:#1E40AF; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->tipo_etiqueta ?? 'General' }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ mb_strimwidth($item->descripcion ?? '', 0, 60, '...') }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->lugar ?? '—' }}</td>
-                    <td style="font-weight:bold; color:{{ ($item->activa ?? false) ? '#065F46' : '#991B1B' }}; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ ($item->activa ?? false) ? 'Activa' : 'Inactiva' }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->created_at ? \Illuminate\Support\Carbon::parse($item->created_at)->format('d/m/Y') : '—' }}</td>
+                    <td style="text-align:center; background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $idx + 1 }}</td>
+                    <td style="font-weight:bold; color:#064E3B; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ $item->nombre }}</td>
+                    <td style="font-weight:bold; color:#2563EB; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ $item->tipo_etiqueta ?? 'General' }}</td>
+                    <td style="background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#334155;">{{ mb_strimwidth($item->descripcion ?? '', 0, 80, '...') }}</td>
+                    <td style="background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $item->lugar ?? '—' }}</td>
+                    <td style="font-weight:bold; color:{{ ($item->activa ?? false) ? '#059669' : '#DC2626' }}; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ ($item->activa ?? false) ? 'Activa' : 'Inactiva' }}</td>
+                    <td style="text-align:center; background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $item->created_at ? \Illuminate\Support\Carbon::parse($item->created_at)->format('d/m/Y') : '—' }}</td>
                 @elseif($tipo === 'mapa')
-                    <td style="text-align:center; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $idx + 1 }}</td>
-                    <td style="font-weight:bold; color:#064E3B; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->nombre }}</td>
-                    <td style="font-weight:bold; color:#92400E; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->tipo }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->direccion ?? '—' }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->materiales ?? '—' }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ number_format($item->latitud, 6) }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ number_format($item->longitud, 6) }}</td>
+                    <td style="text-align:center; background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $idx + 1 }}</td>
+                    <td style="font-weight:bold; color:#064E3B; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ $item->nombre }}</td>
+                    <td style="font-weight:bold; color:#D97706; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ $item->tipo }}</td>
+                    <td style="background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#334155;">{{ $item->direccion ?? '—' }}</td>
+                    <td style="background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $item->materiales ?? '—' }}</td>
+                    <td style="background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ number_format($item->latitud, 6) }}</td>
+                    <td style="background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ number_format($item->longitud, 6) }}</td>
                 @elseif($tipo === 'eventos')
-                    <td style="text-align:center; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $idx + 1 }}</td>
-                    <td style="font-weight:bold; color:#064E3B; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->titulo ?? $item->nombre ?? 'Evento' }}</td>
-                    <td style="font-weight:bold; color:#6B21A8; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->tipo ?? 'General' }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->ubicacion ?? $item->lugar ?? '—' }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ mb_strimwidth($item->descripcion ?? '', 0, 50, '...') }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->fecha_inicio ? \Illuminate\Support\Carbon::parse($item->fecha_inicio)->format('d/m/Y H:i') : '—' }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->fecha_fin ? \Illuminate\Support\Carbon::parse($item->fecha_fin)->format('d/m/Y H:i') : '—' }}</td>
+                    <td style="text-align:center; background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $idx + 1 }}</td>
+                    <td style="font-weight:bold; color:#064E3B; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ $item->titulo ?? $item->nombre ?? 'Evento' }}</td>
+                    <td style="font-weight:bold; color:#7C3AED; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ $item->tipo ?? 'General' }}</td>
+                    <td style="background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#334155;">{{ $item->ubicacion ?? $item->lugar ?? '—' }}</td>
+                    <td style="background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ mb_strimwidth($item->descripcion ?? '', 0, 70, '...') }}</td>
+                    <td style="text-align:center; background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $item->fecha_inicio ? \Illuminate\Support\Carbon::parse($item->fecha_inicio)->format('d/m/Y H:i') : '—' }}</td>
+                    <td style="text-align:center; background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $item->fecha_fin ? \Illuminate\Support\Carbon::parse($item->fecha_fin)->format('d/m/Y H:i') : '—' }}</td>
                 @elseif($tipo === 'foro')
-                    <td style="text-align:center; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $idx + 1 }}</td>
-                    <td style="font-weight:bold; color:#064E3B; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->titulo ?? 'Post' }}</td>
-                    <td style="font-weight:bold; color:#059669; {{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->categoria->nombre ?? 'Sin Categoría' }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->autor->nombre ?? 'Usuario Eliminado' }}</td>
-                    <td style="{{ $idx % 2 === 0 ? '' : 'background-color:#F9FAFB;' }}">{{ $item->created_at ? \Illuminate\Support\Carbon::parse($item->created_at)->format('d/m/Y H:i') : '—' }}</td>
+                    <td style="text-align:center; background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $idx + 1 }}</td>
+                    <td style="font-weight:bold; color:#064E3B; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ $item->titulo ?? 'Post' }}</td>
+                    <td style="font-weight:bold; color:#059669; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ $item->categoria->nombre ?? 'Sin Categoría' }}</td>
+                    <td style="background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#334155;">{{ $item->autor->nombre ?? 'Usuario Eliminado' }}</td>
+                    <td style="text-align:center; background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $item->created_at ? \Illuminate\Support\Carbon::parse($item->created_at)->format('d/m/Y H:i') : '—' }}</td>
                 @endif
             </tr>
         @empty
-            <tr><td colspan="7" style="text-align:center; padding:20px; color:#9CA3AF;">Sin datos</td></tr>
+            <tr><td colspan="7" style="text-align:center; padding:20px; color:#9CA3AF; border: 1px solid #E2E8F0;">Sin datos documentados en este periodo.</td></tr>
         @endforelse
     </tbody>
 </table>

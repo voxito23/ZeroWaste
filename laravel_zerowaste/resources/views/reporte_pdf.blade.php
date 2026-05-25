@@ -276,6 +276,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 50%;
         }
 
         /* ====================================
@@ -470,7 +471,10 @@
             if (empty($url)) return null;
             
             if (filter_var($url, FILTER_VALIDATE_URL)) {
-                $ctx = stream_context_create(['http' => ['timeout' => 1.5]]);
+                $ctx = stream_context_create([
+                    'http' => ['timeout' => 3.0],
+                    'ssl' => ['verify_peer' => false, 'verify_peer_name' => false]
+                ]);
                 $data = @file_get_contents($url, false, $ctx);
                 if ($data) return 'data:image/jpeg;base64,' . base64_encode($data);
                 return null;
@@ -666,7 +670,7 @@
                                     <table style="width:100%; border:none; padding:0; margin:0;"><tr style="background:transparent;">
                                     <td style="width: 45px; border:none; padding:0;">
                                         @php 
-                                            $fotoBase64 = getPremiumImageBase64($item->imagen ?? $item->foto ?? null);
+                                            $fotoBase64 = getPremiumImageBase64($item->imagen_url ?? $item->foto ?? null);
                                             $colorClass = $avatarColors[($idx+2) % count($avatarColors)];
                                         @endphp
                                         <div class="img-point {{ $fotoBase64 ? '' : $colorClass }}" style="{{ !$fotoBase64 ? 'display:flex; align-items:center; justify-content:center;' : '' }}">
