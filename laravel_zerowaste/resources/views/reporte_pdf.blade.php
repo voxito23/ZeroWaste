@@ -497,6 +497,8 @@
             $possiblePaths = [
                 public_path($cleanUrl),
                 public_path('storage/' . $cleanUrl),
+                public_path('img/perfiles/' . $filename), // <- Para el volumen de Docker
+                public_path('img/campanas/' . $filename),
                 public_path('static/img/perfiles/' . $filename),
                 app()->basePath('../flask_zerowaste/static/img/perfiles/' . $filename),
                 app()->basePath('../flask_zerowaste/static/img/campanas/' . $filename),
@@ -536,6 +538,8 @@
         }
 
         $avatarColors = ['avatar-green', 'avatar-blue', 'avatar-purple', 'avatar-amber'];
+        $borderColors = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B'];
+        $bgColors = ['#6EE7B7', '#93C5FD', '#C4B5FD', '#FCD34D'];
     @endphp
 
     {{-- HEADER --}}
@@ -639,20 +643,21 @@
                             @if($tipo === 'usuarios')
                                 <td>
                                     <table style="width:100%; border:none; padding:0; margin:0;"><tr style="background:transparent;">
-                                    <td style="width: 40px; border:none; padding:0;">
+                                    <td style="width: 45px; border:none; padding:0;">
                                         @php 
-                                            $colorClass = $avatarColors[$idx % count($avatarColors)]; 
+                                            $borderColor = $borderColors[$idx % count($borderColors)];
+                                            $bgColor = $bgColors[$idx % count($bgColors)];
                                             $fotoBase64 = getPremiumImageBase64($item->foto_perfil ?? null);
                                         @endphp
-                                        <div class="user-avatar {{ $fotoBase64 ? '' : $colorClass }}">
-                                            @if($fotoBase64)
-                                                <img src="{{ $fotoBase64 }}">
-                                            @else
+                                        @if($fotoBase64)
+                                            <img src="{{ $fotoBase64 }}" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border: 2px solid {{ $borderColor }}; padding: 2px; background: #FFF; display:inline-block; vertical-align:middle;">
+                                        @else
+                                            <div style="width:36px; height:36px; border-radius:50%; text-align:center; line-height:36px; font-size:13px; font-weight:800; color:#FFFFFF; background-color:{{ $bgColor }}; border: 2px solid {{ $borderColor }}; display:inline-block; vertical-align:middle;">
                                                 {{ getInitials($item->nombre) }}
-                                            @endif
-                                        </div>
+                                            </div>
+                                        @endif
                                     </td>
-                                    <td style="border:none; padding:0; vertical-align:middle; padding-left: 8px;">
+                                    <td style="border:none; padding:0; vertical-align:middle; padding-left: 10px;">
                                         <span class="item-title">{{ $item->nombre }}</span><br>
                                         <span class="item-subtitle">{{ $item->titulo_perfil ?? 'Ecologista' }}</span>
                                     </td></tr></table>
