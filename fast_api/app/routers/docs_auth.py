@@ -90,3 +90,9 @@ async def custom_redoc_html(request: Request, _=Depends(get_current_user_from_co
     with open(os.path.join(templates_dir, "custom_redoc.html"), "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content)
+
+
+@router.get("/zw-openapi.json", include_in_schema=False)
+async def get_openapi_endpoint(request: Request, _=Depends(get_current_user_from_cookie)):
+    """OpenAPI JSON schema protegido por autenticación JWT."""
+    return request.app.openapi()
