@@ -15,6 +15,7 @@
             @forelse ($usuarios as $user)
             @php
                 $userRole = $user->is_admin ? 'admin' : 'user';
+                if ($user->rol === 'recolector') $userRole = 'recolector';
                 if ($user->bloqueado ?? false) $userRole = 'blocked';
             @endphp
             <tr class="user-row" data-user-role="{{ $userRole }}">
@@ -31,8 +32,10 @@
                     </div>
                 </td>
                 <td>
-                    @if($user->is_admin)
+                    @if($user->is_admin || $user->rol === 'admin')
                         <span class="badge-sm bg-violet-500/10 text-violet-600 dark:text-violet-400">Admin</span>
+                    @elseif($user->rol === 'recolector')
+                        <span class="badge-sm bg-amber-500/10 text-amber-600 dark:text-amber-400">Recolector</span>
                     @else
                         <span class="badge-sm bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">Usuario</span>
                     @endif

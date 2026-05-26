@@ -6,11 +6,12 @@
 @section('content')
 
 {{-- Estadísticas rápidas (clickables) --}}
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+<div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
     @php $stats=[
         ['Total','group','#10B981',$totalCount,'all','from-emerald-400 to-emerald-600','ring-emerald-500/40'],
         ['Admins','shield_person','#8B5CF6',$adminCount,'admin','from-purple-400 to-purple-600','ring-purple-500/40'],
         ['Usuarios','person','#3B82F6',$userCount,'user','from-blue-400 to-blue-600','ring-blue-500/40'],
+        ['Recolectores','local_shipping','#F59E0B',$recolectorCount,'recolector','from-amber-400 to-amber-600','ring-amber-500/40'],
         ['Bloqueados','block','#F43F5E',$blockedCount,'blocked','from-rose-400 to-rose-600','ring-rose-500/40'],
     ]; @endphp
     @foreach($stats as $s)
@@ -46,6 +47,9 @@
             </button>
             <button data-user-tab="user" class="px-4 py-2 rounded-lg text-xs font-bold transition-all bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400">
                 Usuarios <span class="opacity-60">{{ $userCount }}</span>
+            </button>
+            <button data-user-tab="recolector" class="px-4 py-2 rounded-lg text-xs font-bold transition-all bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400">
+                Recolectores <span class="opacity-60">{{ $recolectorCount }}</span>
             </button>
             <button data-user-tab="blocked" class="px-4 py-2 rounded-lg text-xs font-bold transition-all bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-gray-400">
                 Bloqueados <span class="opacity-60">{{ $blockedCount }}</span>
@@ -128,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Tarjetas de estadisticas
         statCards.forEach(c => {
-            c.classList.remove('ring-2', 'shadow-lg', 'ring-emerald-500/40', 'ring-purple-500/40', 'ring-blue-500/40', 'ring-rose-500/40');
+            c.classList.remove('ring-2', 'shadow-lg', 'ring-emerald-500/40', 'ring-purple-500/40', 'ring-blue-500/40', 'ring-amber-500/40', 'ring-rose-500/40');
             c.classList.add('ring-transparent');
         });
         const activeCard = document.querySelector(`.stat-card[data-stat-tab="${tab}"]`);

@@ -31,6 +31,9 @@ class Usuario(Base):
     auth_provider = Column(String(50), default='local')
     profile_completed = Column(Boolean, default=True)
     bloqueado = Column(Boolean, default=False)
+    rol = Column(String(50), default='usuario')
+    edad = Column(Integer, nullable=True)
+    licencia_conducir = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     posts = relationship("Foro", back_populates="autor_rel")
@@ -241,3 +244,23 @@ class PasswordResetRequest(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
+# Modelo de Solicitud de Recolección a Domicilio
+class SolicitudRecoleccion(Base):
+    __tablename__ = "solicitudes_recoleccion"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False)
+    latitud = Column(Numeric(10, 8), nullable=False)
+    longitud = Column(Numeric(11, 8), nullable=False)
+    direccion = Column(Text, nullable=False)
+    materiales = Column(Text, nullable=True)
+    estado = Column(String(50), default='pendiente') # pendiente, completada, cancelada
+    recolector_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
+    calificacion_recolector = Column(Integer, nullable=True)
+    comentario_recolector = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+    # Relaciones
+    usuario_rel = relationship("Usuario", foreign_keys=[usuario_id])
+    recolector_rel = relationship("Usuario", foreign_keys=[recolector_id])

@@ -12,8 +12,9 @@ class UserController extends Controller
     {
         // Global counts for the cards (ignoring search/pagination)
         $totalCount = User::count();
-        $adminCount = User::where('is_admin', true)->count();
-        $userCount  = User::where('is_admin', false)->count();
+        $adminCount = User::where('is_admin', true)->orWhere('rol', 'admin')->count();
+        $userCount  = User::where('is_admin', false)->where('rol', 'usuario')->count();
+        $recolectorCount = User::where('rol', 'recolector')->count();
         $blockedCount = User::where('bloqueado', true)->count();
 
         // Query for the table
@@ -21,8 +22,9 @@ class UserController extends Controller
 
         // Apply Tab Filter
         if ($request->has('tab') && $request->tab !== 'all') {
-            if ($request->tab === 'admin') $query->where('is_admin', true);
-            if ($request->tab === 'user') $query->where('is_admin', false);
+            if ($request->tab === 'admin') $query->where(function($q){ $q->where('is_admin', true)->orWhere('rol', 'admin'); });
+            if ($request->tab === 'user') $query->where('is_admin', false)->where('rol', 'usuario');
+            if ($request->tab === 'recolector') $query->where('rol', 'recolector');
             if ($request->tab === 'blocked') $query->where('bloqueado', true);
         }
 
@@ -42,7 +44,7 @@ class UserController extends Controller
             return view('admin.partials.usuarios_table', compact('usuarios'))->render();
         }
 
-        return view('admin.usuarios', compact('usuarios', 'totalCount', 'adminCount', 'userCount', 'blockedCount'));
+        return view('admin.usuarios', compact('usuarios', 'totalCount', 'adminCount', 'userCount', 'recolectorCount', 'blockedCount'));
     }
 
     public function checkEmail(Request $request)

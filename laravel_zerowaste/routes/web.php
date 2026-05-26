@@ -13,6 +13,8 @@ use App\Http\Controllers\PasswordResetRequestController;
 use App\Http\Controllers\AdminProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\RecoleccionController;
+use App\Http\Controllers\ReportesRecoleccionController;
 
 Route::get('/zw-interno/login', function () {
     return view('welcome');
@@ -82,6 +84,12 @@ Route::prefix('zw-interno')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
     Route::delete('/respuestas/{id}', [PostController::class, 'destroyRespuesta'])->name('respuestas.destroy');
+
+    // Recolecciones a Domicilio
+    Route::get('/recolecciones', [RecoleccionController::class, 'index'])->name('admin.recolecciones.index');
+    Route::post('/recolecciones/recolector', [RecoleccionController::class, 'storeRecolector'])->name('admin.recolecciones.recolector.store');
+    Route::post('/recolecciones/{id}/completar', [RecoleccionController::class, 'completarSolicitud'])->name('admin.recolecciones.completar');
+    Route::get('/recolecciones/reporte', [ReportesRecoleccionController::class, 'generarPDF'])->name('admin.recolecciones.reporte');
 
     // Solicitudes de recuperación de contraseña
     Route::get('/recuperacion', [PasswordResetRequestController::class, 'index'])->name('recuperacion.index');

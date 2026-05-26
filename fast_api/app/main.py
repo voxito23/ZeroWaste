@@ -13,7 +13,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
-from app.routers import auth, usuarios, foro, mapa, eventos, analisis, formularios, docs_auth, campanas
+from app.routers import auth, usuarios, foro, mapa, eventos, analisis, formularios, docs_auth, campanas, recoleccion
 
 # ==========================================================================
 #  Rate Limiter global
@@ -67,6 +67,7 @@ app.include_router(eventos.router)
 app.include_router(campanas.router)
 app.include_router(analisis.router)
 app.include_router(formularios.router)
+app.include_router(recoleccion.router)
 app.include_router(docs_auth.router)
 
 

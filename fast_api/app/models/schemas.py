@@ -87,6 +87,9 @@ class UsuarioResponse(UsuarioBase):
     biografia: Optional[str] = None
     ubicacion: Optional[str] = None
     intereses: Optional[str] = None
+    rol: Optional[str] = "usuario"
+    edad: Optional[int] = None
+    licencia_conducir: Optional[str] = None
     created_at: Optional[datetime] = None
 
     model_config = {
@@ -641,3 +644,34 @@ class PasswordResetRequestCreate(BaseModel):
             ]
         }
     }
+
+# Esquemas de Solicitudes de Recolección a Domicilio
+
+class SolicitudRecoleccionCreate(BaseModel):
+    latitud: float
+    longitud: float
+    direccion: str
+    materiales: Optional[str] = None
+
+class SolicitudRecoleccionResponse(BaseModel):
+    id: int
+    usuario_id: int
+    latitud: float
+    longitud: float
+    direccion: str
+    materiales: Optional[str] = None
+    estado: str
+    recolector_id: Optional[int] = None
+    calificacion_recolector: Optional[int] = None
+    comentario_recolector: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {
+        "from_attributes": True
+    }
+
+class CalificarRecolectorRequest(BaseModel):
+    calificacion: int # 1 a 5
+    comentario: Optional[str] = None
+

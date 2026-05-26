@@ -21,7 +21,7 @@ from app.security.jwt_auth import verify_password, hash_password, create_access_
 ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 MAX_UPLOAD_SIZE = 250 * 1024 * 1024  # 250MB
 
-UPLOAD_DIR = "/app/static/img/perfiles"
+UPLOAD_DIR = "static/img/perfiles"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])

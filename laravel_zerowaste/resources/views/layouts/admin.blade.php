@@ -339,6 +339,9 @@
             <a href="{{ route('usuarios.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('usuarios.*') ? 'active' : '' }}" title="Usuarios">
                 <span class="material-symbols-outlined text-lg">group</span> <span class="nav-text">Usuarios</span>
             </a>
+            <a href="{{ route('admin.recolecciones.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('admin.recolecciones.*') ? 'active' : '' }}" title="Recolecciones">
+                <span class="material-symbols-outlined text-lg">local_shipping</span> <span class="nav-text">Recolecciones</span>
+            </a>
             <a href="{{ route('campanas.index') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('campanas.*') ? 'active' : '' }}" title="Campañas">
                 <span class="material-symbols-outlined text-lg">campaign</span> <span class="nav-text">Campañas</span>
             </a>

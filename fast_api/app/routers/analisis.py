@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 import re
-import pandas as pd
+try:
+    import pandas as pd
+except ImportError:
+    pd = None
 
 from app.data.database import get_db
 from app.models.domain_models import Foro, CalificacionPunto

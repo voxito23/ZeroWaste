@@ -34,7 +34,7 @@ def read_current_user(current_user: Usuario = Depends(get_current_user)):
     return current_user
 
 
-UPLOAD_DIR = "/app/static/img/perfiles"
+UPLOAD_DIR = "static/img/perfiles"
 
 @router.put("/me/foto", response_model=UsuarioResponse, summary="Actualizar foto de perfil rápidamente")
 def update_foto(
