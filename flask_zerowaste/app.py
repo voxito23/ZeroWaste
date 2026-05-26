@@ -1457,7 +1457,7 @@ def api_login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-@app.route('/api/auth/login', methods=['POST'])
+@app.route('/mobile-api/auth/login', methods=['POST'])
 @limiter.limit("10/minute")
 def api_login():
     data = request.get_json() or {}
@@ -1507,7 +1507,7 @@ def api_login():
     else:
         return jsonify({'success': False, 'error': 'Credenciales inválidas.'}), 401
 
-@app.route('/api/foro', methods=['GET'])
+@app.route('/mobile-api/foro', methods=['GET'])
 @api_login_required
 def api_get_foro():
     categoria = request.args.get('categoria', 'Todos')
@@ -1533,7 +1533,7 @@ def api_get_foro():
         })
     return jsonify({'success': True, 'data': resultado})
 
-@app.route('/api/foro/<int:id>', methods=['GET'])
+@app.route('/mobile-api/foro/<int:id>', methods=['GET'])
 @api_login_required
 def api_get_foro_detail(id):
     foro = Foro.query.get_or_404(id)
