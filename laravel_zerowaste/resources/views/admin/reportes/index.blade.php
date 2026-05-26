@@ -503,7 +503,7 @@ document.addEventListener("DOMContentLoaded", function() {
     @endforeach
 </div>
 
-<div id="export-loading" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-gray-900/60 dark:bg-black/60 backdrop-blur-md">
+<div id="export-loading" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-white/40 dark:bg-black/60 backdrop-blur-sm">
     <div class="rounded-[2rem] p-10 flex flex-col items-center gap-5 max-w-sm w-full mx-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border border-gray-100 dark:border-gray-800 shadow-2xl shadow-emerald-500/10 dark:shadow-emerald-900/20">
         <div class="relative">
             <div class="w-16 h-16 border-[3px] border-gray-100 dark:border-gray-800 rounded-full"></div>
