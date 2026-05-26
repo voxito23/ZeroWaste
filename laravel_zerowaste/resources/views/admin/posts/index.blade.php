@@ -99,6 +99,7 @@
                                     data-date="{{ $post->created_at ? $post->created_at->format('d/m/Y H:i') : '' }}"
                                     data-image="{{ getImageUrl($post->imagen) }}"
                                     data-author-image="{{ $post->autor && $post->autor->foto_perfil ? '/static/img/perfiles/' . $post->autor->foto_perfil : '/static/img/perfiles/default.png' }}"
+                                    data-comments="{{ base64_encode(json_encode($post->respuestas)) }}"
                                     onclick="viewPostDetail(this)"
                                     class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors" title="Ver Detalles">
                                     <span class="material-symbols-outlined text-[20px]">visibility</span>
@@ -169,6 +170,50 @@ function viewPostDetail(btn) {
         `;
     }
 
+    const commentsBase64 = btn.dataset.comments;
+    let comments = [];
+    try {
+        if (commentsBase64) {
+            comments = JSON.parse(decodeURIComponent(escape(window.atob(commentsBase64))));
+        }
+    } catch(e) {
+        console.error("Error parsing comments", e);
+    }
+    
+    // Generar HTML para comentarios
+    let commentsHtml = '';
+    if (comments.length > 0) {
+        commentsHtml += '<div class="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4"><h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">forum</span> Comentarios (' + comments.length + ')</h3><div class="space-y-3 max-h-64 overflow-y-auto pr-2" style="scrollbar-width: thin;">';
+        
+        comments.forEach(c => {
+            const cAuthor = c.autor ? c.autor.nombre : 'Usuario';
+            const cAuthorImg = c.autor && c.autor.foto_perfil ? '/static/img/perfiles/' + c.autor.foto_perfil : '/static/img/perfiles/default.png';
+            const cDate = new Date(c.created_at).toLocaleString('es-MX', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'});
+            
+            commentsHtml += `
+                <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 border border-gray-100 dark:border-gray-700 relative group">
+                    <div class="flex items-start gap-3">
+                        <img src="${cAuthorImg}" alt="Avatar" class="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0" onerror="this.src='/static/img/perfiles/default.png'">
+                        <div class="flex-1 min-w-0 pr-8">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-bold text-gray-900 dark:text-white truncate">${cAuthor}</p>
+                                <span class="text-[10px] text-gray-400">${cDate}</span>
+                            </div>
+                            <p class="text-xs text-gray-700 dark:text-gray-300 mt-1 whitespace-pre-wrap">${c.contenido}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteRespuesta(${c.id})" class="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-900 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg border border-gray-200 dark:border-gray-700" title="Eliminar Comentario">
+                        <span class="material-symbols-outlined text-[14px]">delete</span>
+                    </button>
+                </div>
+            `;
+        });
+        
+        commentsHtml += '</div></div>';
+    } else {
+        commentsHtml += '<div class="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4"><h3 class="text-lg font-bold text-gray-900 dark:text-white mb-2 flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">forum</span> Comentarios (0)</h3><p class="text-sm text-gray-500 dark:text-gray-400 italic">No hay comentarios en este post.</p></div>';
+    }
+
     Swal.fire({
         html: `
             <div class="text-left">
@@ -201,6 +246,8 @@ function viewPostDetail(btn) {
                 <div class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed whitespace-pre-wrap bg-white dark:bg-[#0B1F18] p-4 rounded-xl border border-gray-100 dark:border-gray-800 max-h-64 overflow-y-auto" style="scrollbar-width: thin;">
                     ${safeContent}
                 </div>
+                
+                ${commentsHtml}
             </div>
         `,
         showConfirmButton: false,
@@ -212,6 +259,32 @@ function viewPostDetail(btn) {
             closeButton: 'text-gray-500 hover:text-red-500 focus:outline-none'
         }
     });
+}
+
+window.deleteRespuesta = function(id) {
+    if(confirm('¿Seguro que deseas eliminar este comentario permanentemente?')) {
+        fetch('/zw-interno/respuestas/' + id, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.success) {
+                // Idealmente, solo cerraríamos el Swal y quitaríamos el nodo, pero recargar es más seguro
+                Swal.close();
+                location.reload();
+            } else {
+                alert('Ocurrió un error al eliminar el comentario.');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Error de red al eliminar el comentario.');
+        });
+    }
 }
 </script>
 @endpush

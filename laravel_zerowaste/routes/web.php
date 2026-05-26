@@ -81,6 +81,7 @@ Route::prefix('zw-interno')->middleware(['auth', 'admin'])->group(function () {
     // Foro / Posts
     Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+    Route::delete('/respuestas/{id}', [PostController::class, 'destroyRespuesta'])->name('respuestas.destroy');
 
     // Solicitudes de recuperación de contraseña
     Route::get('/recuperacion', [PasswordResetRequestController::class, 'index'])->name('recuperacion.index');
