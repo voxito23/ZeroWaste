@@ -5,7 +5,6 @@ Incluye rate limiting y validación estricta de inputs.
 
 import os
 import uuid
-import shutil
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -39,7 +38,7 @@ def login(
     """
     usuario = db.query(Usuario).filter(Usuario.email == form_data.username).first()
 
-    if not usuario or not verify_password(form_data.password, str(usuario.password)):
+    if not usuario or not verify_password(form_data.password, usuario.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Correo o contraseña incorrectos.",
@@ -56,34 +55,7 @@ def login(
     if not usuario.is_admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acceso denegado: Solo los administradores pueden generar tokens e iniciar sesión en esta ruta."
-        )
-
-    access_token = create_access_token(data={"sub": usuario.email})
-    return Token(access_token=access_token)
-
-
-@router.post("/login-mobile", response_model=Token, summary="Iniciar sesión desde la app móvil (Ciudadanos)")
-def login_mobile(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db),
-):
-    """
-    Login para ciudadanos en la app móvil. No exige ser admin.
-    """
-    usuario = db.query(Usuario).filter(Usuario.email == form_data.username).first()
-
-    if not usuario or not verify_password(form_data.password, str(usuario.password)):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Correo o contraseña incorrectos.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    if usuario.bloqueado:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Usuario bloqueado por subir contenido indebido."
+            detail="Acceso denegado: Solo los administradores pueden generar tokens e iniciar sesión en esta API."
         )
 
     access_token = create_access_token(data={"sub": usuario.email})
@@ -105,7 +77,6 @@ def registro(
 ):
     """
     Crea un usuario nuevo con contraseña hasheada, exigiendo una carga de archivo físico (multipart/form-data).
-    Crea un usuario nuevo con contraseña hasheada, permitiendo carga opcional de archivo físico.
     """
     # A) Validación de Correo Único (ANTES de guardar archivos)
     existe = db.query(Usuario).filter(Usuario.email == email).first()
@@ -128,34 +99,40 @@ def registro(
             detail="La contraseña debe tener al menos 6 caracteres.",
         )
 
-    # B) Guardado de Imagen (Opcional)
-    nombre_archivo_unico = "default_avatar.jpg"
-    
-    if foto_perfil is not None and foto_perfil.filename:
-        # Validar extensión de archivo
-        extension = foto_perfil.filename.rsplit(".", 1)[-1].lower() if "." in foto_perfil.filename else ""
-        if extension not in ALLOWED_IMAGE_EXTENSIONS:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Formato de imagen no permitido. Usa: {', '.join(ALLOWED_IMAGE_EXTENSIONS)}",
-            )
+    # B) Guardado de Imagen en la Nueva Ruta
+    # Validar extensión de archivo
+    extension = foto_perfil.filename.rsplit(".", 1)[-1].lower() if "." in foto_perfil.filename else ""
+    if extension not in ALLOWED_IMAGE_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Formato de imagen no permitido. Usa: {', '.join(ALLOWED_IMAGE_EXTENSIONS)}",
+        )
 
-        # Validar tamaño de archivo
-        contents = foto_perfil.file.read()
-        if len(contents) > MAX_UPLOAD_SIZE:
-            raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                detail="La imagen no debe superar 250MB.",
-            )
-        foto_perfil.file.seek(0)
+    # Validar tamaño de archivo
+    contents = foto_perfil.file.read()
+    if len(contents) > MAX_UPLOAD_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="La imagen no debe superar 250MB.",
+        )
+    foto_perfil.file.seek(0)
 
-        nombre_archivo_unico = f"{uuid.uuid4().hex}.{extension}"
-        ruta_destino = f"{UPLOAD_DIR}/{nombre_archivo_unico}"
+    nombre_archivo_unico = f"{uuid.uuid4().hex}.{extension}"
+    ruta_destino = f"{UPLOAD_DIR}/{nombre_archivo_unico}"
 
+    # Asegurar que el directorio padre exista antes de escribir el archivo
+    os.makedirs(os.path.dirname(ruta_destino), exist_ok=True)
+
+    try:
         with open(ruta_destino, "wb") as buffer:
-            shutil.copyfileobj(foto_perfil.file, buffer)
+            buffer.write(foto_perfil.file.read())
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Ocurrió un error al guardar la imagen de perfil en el servidor."
+        )
 
-    # C) Crear usuario en la base de datos
+    # Mapeo explícito de la variable "nombre" junto con el resto de los campos
     nuevo_usuario = Usuario(
         nombre=nombre,
         email=email,

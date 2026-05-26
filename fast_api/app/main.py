@@ -46,7 +46,6 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # ty
 ALLOWED_ORIGINS = [
     "http://localhost:5001",
     "http://localhost:8001",
-    "http://localhost:8081", # Para Expo Web
     "http://167.99.239.121:5001",
     "http://167.99.239.121:8001",
 ]
