@@ -13,4 +13,3 @@ pysentimiento>=0.7.3
 bcrypt>=4.0.0
 # Email se envía via Resend HTTP API (requests), no necesita Flask-Mail
 markupsafe>=3.0.0
-PyJWT>=2.8.0
