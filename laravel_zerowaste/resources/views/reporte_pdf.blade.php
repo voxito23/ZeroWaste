@@ -299,6 +299,12 @@
             border:1px solid #A7F3D0;
         }
 
+        .badge-teal{
+            background:#E0F2FE;
+            color:#0891B2;
+            border:1px solid #BAE6FD;
+        }
+
         .badge-blue{
             background:#EFF6FF;
             color:#2563EB;
@@ -919,11 +925,11 @@
                                 <td class="text-center">
                                     @php
                                         $catNombre = $item->categoria->nombre ?? 'Sin Categoría';
-                                        $catLower = strtolower($catNombre);
+                                        $catLower = mb_strtolower($catNombre);
                                         $catBadge = 'badge-gray';
                                         if (str_contains($catLower, 'reciclaje')) $catBadge = 'badge-yellow';
                                         elseif (str_contains($catLower, 'compostaje')) $catBadge = 'badge-green';
-                                        elseif (str_contains($catLower, 'reducción') || str_contains($catLower, 'residuos')) $catBadge = 'badge-teal';
+                                        elseif (str_contains($catLower, 'reducci') || str_contains($catLower, 'residuos')) $catBadge = 'badge-teal';
                                         elseif (str_contains($catLower, 'eventos')) $catBadge = 'badge-purple';
                                         elseif (str_contains($catLower, 'dudas') || str_contains($catLower, 'preguntas')) $catBadge = 'badge-red';
                                     @endphp

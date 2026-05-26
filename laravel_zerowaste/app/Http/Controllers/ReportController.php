@@ -362,7 +362,15 @@ class ReportController extends Controller
                     $table->addCell(2200, $rowBg)->addText($item->fecha_inicio ? Carbon::parse($item->fecha_inicio)->format('d/m/Y H:i') : '—', $tdFont);
                 } elseif ($data['tipo'] === 'foro') {
                     $table->addCell(2500, $rowBg)->addText($item->titulo ?? 'Post', $tdBold);
-                    $table->addCell(1500, $rowBg)->addText($item->categoria->nombre ?? 'Sin Categoría', ['size' => 8, 'bold' => true, 'color' => '059669']);
+                    $catNombre = $item->categoria->nombre ?? 'Sin Categoría';
+                    $catLower = mb_strtolower($catNombre);
+                    $catColor = '059669'; // verde default
+                    if (str_contains($catLower, 'reciclaje')) $catColor = 'D97706'; // Ambar
+                    elseif (str_contains($catLower, 'reducci') || str_contains($catLower, 'residuos')) $catColor = '0891B2'; // Cyan
+                    elseif (str_contains($catLower, 'eventos')) $catColor = '7C3AED'; // Violeta
+                    elseif (str_contains($catLower, 'dudas') || str_contains($catLower, 'preguntas')) $catColor = 'E11D48'; // Rosa
+                    
+                    $table->addCell(1500, $rowBg)->addText($catNombre, ['size' => 8, 'bold' => true, 'color' => $catColor]);
                     $table->addCell(2500, $rowBg)->addText($item->autor->nombre ?? 'Desconocido', $tdFont);
                     $table->addCell(2200, $rowBg)->addText($item->created_at ? Carbon::parse($item->created_at)->format('d/m/Y H:i') : '—', $tdFont);
                 }

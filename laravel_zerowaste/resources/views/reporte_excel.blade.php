@@ -2,7 +2,7 @@
     <thead>
         <tr>
             <td colspan="7" style="background-color:#ECFDF5; color:#064E3B; font-weight:bold; font-size:24px; text-align:center; border: 1px solid #10B981; border-bottom: none;">
-                ♻ ZEROWASTE 
+                ZEROWASTE 
             </td>
         </tr>
         <tr>
@@ -99,10 +99,10 @@
                     <td style="font-weight:bold; color:#064E3B; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ $item->titulo ?? 'Post' }}</td>
                     @php
                         $catNombreE = $item->categoria->nombre ?? 'Sin Categoría';
-                        $catLowerE = strtolower($catNombreE);
+                        $catLowerE = mb_strtolower($catNombreE);
                         $catColorE = '#059669'; // Default verde (Compostaje)
                         if (str_contains($catLowerE, 'reciclaje')) $catColorE = '#D97706'; // Ambar
-                        elseif (str_contains($catLowerE, 'reducción') || str_contains($catLowerE, 'residuos')) { $catColorE = '#0891B2'; } // Cyan
+                        elseif (str_contains($catLowerE, 'reducci') || str_contains($catLowerE, 'residuos')) { $catColorE = '#0891B2'; } // Cyan
                         elseif (str_contains($catLowerE, 'eventos')) $catColorE = '#7C3AED'; // Violeta
                         elseif (str_contains($catLowerE, 'dudas') || str_contains($catLowerE, 'preguntas')) $catColorE = '#E11D48'; // Rosa/Rojo
                     @endphp

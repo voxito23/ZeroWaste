@@ -67,9 +67,9 @@ class GenericExport implements FromView, ShouldAutoSize, WithTitle, WithStyles, 
         if ($logoPath) {
             $drawing->setPath($logoPath);
             $drawing->setHeight(50); // Ajustar altura del logo
-            $drawing->setCoordinates('A1');
-            $drawing->setOffsetX(10);
-            $drawing->setOffsetY(10);
+            $drawing->setCoordinates('D1'); // Colocar en la columna central
+            $drawing->setOffsetX(40); // Offset para centrar un poco más en la celda
+            $drawing->setOffsetY(5);
             return [$drawing];
         }
         
