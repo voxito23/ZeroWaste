@@ -503,21 +503,20 @@ document.addEventListener("DOMContentLoaded", function() {
     @endforeach
 </div>
 
-{{-- Loading Overlay --}}
 <div id="export-loading" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-gray-900/60 dark:bg-black/60 backdrop-blur-md">
-    <div class="rounded-[2rem] p-10 flex flex-col items-center gap-5 max-w-sm w-full mx-4 bg-white/90 dark:bg-[#0F2A20]/90 backdrop-blur-xl border border-emerald-100 dark:border-emerald-800/50 shadow-2xl">
+    <div class="rounded-[2rem] p-10 flex flex-col items-center gap-5 max-w-sm w-full mx-4 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border border-gray-100 dark:border-gray-800 shadow-2xl shadow-emerald-500/10 dark:shadow-emerald-900/20">
         <div class="relative">
-            <div class="w-16 h-16 border-[3px] border-emerald-100 rounded-full"></div>
+            <div class="w-16 h-16 border-[3px] border-gray-100 dark:border-gray-800 rounded-full"></div>
             <div class="w-16 h-16 border-[3px] border-transparent border-t-emerald-500 rounded-full animate-spin absolute inset-0"></div>
             <div class="absolute inset-0 flex items-center justify-center">
                 <span class="material-symbols-outlined text-emerald-500 text-xl">description</span>
             </div>
         </div>
         <div class="text-center">
-            <p class="text-lg font-black text-[#064E3B] tracking-tight">Generando reporte</p>
-            <p class="text-xs text-gray-400 font-medium mt-1">Preparando tu documento...</p>
+            <p class="text-lg font-black text-gray-900 dark:text-white tracking-tight">Generando reporte</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 font-medium mt-1">Preparando tu documento...</p>
         </div>
-        <div class="w-full bg-emerald-100 rounded-full h-1.5 overflow-hidden">
+        <div class="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-1.5 overflow-hidden">
             <div class="bg-gradient-to-r from-emerald-400 to-emerald-600 h-full rounded-full animate-pulse" style="width: 60%; animation: loadbar 2s ease-in-out infinite;"></div>
         </div>
     </div>

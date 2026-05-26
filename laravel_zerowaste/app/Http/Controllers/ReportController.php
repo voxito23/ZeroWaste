@@ -195,7 +195,7 @@ class ReportController extends Controller
             $data['titulo'] = "Reporte de Eventos Agendados";
             $data['total'] = count($data['registros']);
         } elseif ($tipo === 'foro') {
-            $query = Post::with(['autor', 'categoria']);
+            $query = Post::with(['autor', 'categoria'])->withCount('respuestas');
             if ($hasDates) $query->whereBetween('created_at', [$fechaInicio, $fechaFin]);
             if ($search) {
                 $query->where(function($q) use ($search) {
