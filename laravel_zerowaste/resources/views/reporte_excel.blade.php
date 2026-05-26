@@ -97,7 +97,16 @@
                 @elseif($tipo === 'foro')
                     <td style="text-align:center; background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $idx + 1 }}</td>
                     <td style="font-weight:bold; color:#064E3B; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ $item->titulo ?? 'Post' }}</td>
-                    <td style="font-weight:bold; color:#059669; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ $item->categoria->nombre ?? 'Sin Categoría' }}</td>
+                    @php
+                        $catNombreE = $item->categoria->nombre ?? 'Sin Categoría';
+                        $catLowerE = strtolower($catNombreE);
+                        $catColorE = '#059669'; // Default verde (Compostaje)
+                        if (str_contains($catLowerE, 'reciclaje')) $catColorE = '#D97706'; // Ambar
+                        elseif (str_contains($catLowerE, 'reducción') || str_contains($catLowerE, 'residuos')) { $catColorE = '#0891B2'; } // Cyan
+                        elseif (str_contains($catLowerE, 'eventos')) $catColorE = '#7C3AED'; // Violeta
+                        elseif (str_contains($catLowerE, 'dudas') || str_contains($catLowerE, 'preguntas')) $catColorE = '#E11D48'; // Rosa/Rojo
+                    @endphp
+                    <td style="font-weight:bold; color:{{ $catColorE }}; background-color:{{ $bg }}; border: 1px solid #E2E8F0;">{{ $catNombreE }}</td>
                     <td style="background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#334155;">{{ $item->autor->nombre ?? 'Usuario Eliminado' }}</td>
                     <td style="text-align:center; background-color:{{ $bg }}; border: 1px solid #E2E8F0; color:#64748B;">{{ $item->created_at ? \Illuminate\Support\Carbon::parse($item->created_at)->format('d/m/Y H:i') : '—' }}</td>
                 @endif

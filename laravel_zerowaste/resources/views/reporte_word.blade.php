@@ -174,7 +174,18 @@
                             <strong style="color: #0F172A; font-size:10pt;">{{ $item->titulo ?? 'Post' }}</strong><br>
                             <span style="font-size:8pt; color:#94A3B8;">{{ mb_strimwidth(strip_tags($item->contenido ?? ''), 0, 50, '...') }}</span>
                         </td>
-                        <td><span class="badge badge-green">{{ mb_strimwidth($item->categoria->nombre ?? 'Sin Categoría', 0, 15, '') }}</span></td>
+                        <td>
+                            @php
+                                $catNombreW = $item->categoria->nombre ?? 'Sin Categoría';
+                                $catLowerW = strtolower($catNombreW);
+                                $catBadgeW = 'badge-green';
+                                if (str_contains($catLowerW, 'reciclaje')) $catBadgeW = 'badge-yellow';
+                                elseif (str_contains($catLowerW, 'reducción') || str_contains($catLowerW, 'residuos')) { $catBadgeW = 'badge-blue'; }
+                                elseif (str_contains($catLowerW, 'eventos')) $catBadgeW = 'badge-purple';
+                                elseif (str_contains($catLowerW, 'dudas') || str_contains($catLowerW, 'preguntas')) $catBadgeW = 'badge-red';
+                            @endphp
+                            <span class="badge {{ $catBadgeW }}">{{ mb_strimwidth($catNombreW, 0, 15, '') }}</span>
+                        </td>
                         <td style="color:#475569;">{{ $item->autor->nombre ?? 'Usuario Eliminado' }}</td>
                         <td style="text-align:right; color:#64748B;">{{ $item->created_at ? \Illuminate\Support\Carbon::parse($item->created_at)->format('d/m/Y H:i') : '—' }}</td>
                     @endif

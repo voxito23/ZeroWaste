@@ -917,7 +917,17 @@
                                     </td></tr></table>
                                 </td>
                                 <td class="text-center">
-                                    <span class="badge badge-green">{{ $item->categoria->nombre ?? 'Sin Categoría' }}</span>
+                                    @php
+                                        $catNombre = $item->categoria->nombre ?? 'Sin Categoría';
+                                        $catLower = strtolower($catNombre);
+                                        $catBadge = 'badge-gray';
+                                        if (str_contains($catLower, 'reciclaje')) $catBadge = 'badge-yellow';
+                                        elseif (str_contains($catLower, 'compostaje')) $catBadge = 'badge-green';
+                                        elseif (str_contains($catLower, 'reducción') || str_contains($catLower, 'residuos')) $catBadge = 'badge-teal';
+                                        elseif (str_contains($catLower, 'eventos')) $catBadge = 'badge-purple';
+                                        elseif (str_contains($catLower, 'dudas') || str_contains($catLower, 'preguntas')) $catBadge = 'badge-red';
+                                    @endphp
+                                    <span class="badge {{ $catBadge }}">{{ $catNombre }}</span>
                                 </td>
                                 <td>
                                     <table style="width:100%; border:none; padding:0; margin:0;"><tr style="background:transparent;">

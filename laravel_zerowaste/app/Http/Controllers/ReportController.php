@@ -240,11 +240,38 @@ class ReportController extends Controller
 
             $section = $phpWord->addSection(['marginTop' => 800, 'marginBottom' => 600, 'marginLeft' => 900, 'marginRight' => 900]);
 
+            // Find Logo
+            $logoPath = null;
+            $possiblePaths = [
+                public_path('img/logo_texture.png'),
+                base_path('../flask_zerowaste/static/img/logo_texture.png'),
+                '/var/www/flask_zerowaste/static/img/logo_texture.png',
+                '/opt/ZeroWaste/flask_zerowaste/static/img/logo_texture.png'
+            ];
+            foreach($possiblePaths as $p) {
+                if(file_exists($p)) {
+                    $logoPath = $p;
+                    break;
+                }
+            }
+
             // Header
+            $headerTable = $section->addTable(['borderSize' => 0, 'cellMargin' => 0]);
+            $headerTable->addRow();
+            
+            $cellLogo = $headerTable->addCell(1000, ['valign' => 'center']);
+            if ($logoPath) {
+                $cellLogo->addImage($logoPath, ['width' => 45, 'height' => 45]);
+            } else {
+                $cellLogo->addText('♻', ['bold' => true, 'size' => 30, 'color' => '10B981']);
+            }
+            
+            $cellText = $headerTable->addCell(9000, ['valign' => 'center']);
             $headerStyle = ['bold' => true, 'size' => 22, 'color' => '064E3B', 'name' => 'Calibri'];
-            $section->addText('ZEROWASTE', $headerStyle);
-            $section->addText($data['titulo'], ['bold' => true, 'size' => 12, 'color' => '059669']);
-            $section->addText('Generado: ' . $data['fecha_generada'], ['size' => 9, 'color' => '6B7280', 'italic' => true]);
+            $cellText->addText('ZEROWASTE', $headerStyle);
+            $cellText->addText($data['titulo'], ['bold' => true, 'size' => 12, 'color' => '059669']);
+            $cellText->addText('Generado: ' . $data['fecha_generada'], ['size' => 9, 'color' => '6B7280', 'italic' => true]);
+            
             $section->addTextBreak();
 
             // Metrics

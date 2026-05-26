@@ -7,9 +7,11 @@ use Maatwebsite\Excel\Concerns\FromView;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\WithDrawings;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
-class GenericExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
+class GenericExport implements FromView, ShouldAutoSize, WithTitle, WithStyles, WithDrawings
 {
     protected $data;
     
@@ -30,11 +32,47 @@ class GenericExport implements FromView, ShouldAutoSize, WithTitle, WithStyles
 
     public function styles(Worksheet $sheet)
     {
-        // Style the header row
+        // Hacer la primera fila más alta para que quepa el logo
+        $sheet->getRowDimension(1)->setRowHeight(60);
+        
         $sheet->getStyle('A1:G1')->applyFromArray([
             'font' => ['bold' => true, 'size' => 11],
         ]);
 
+        return [];
+    }
+
+    public function drawings()
+    {
+        $drawing = new Drawing();
+        $drawing->setName('ZeroWaste Logo');
+        $drawing->setDescription('ZeroWaste Logo');
+        
+        // Buscar el logo en diferentes rutas posibles
+        $logoPath = null;
+        $possiblePaths = [
+            public_path('img/logo_texture.png'),
+            base_path('../flask_zerowaste/static/img/logo_texture.png'),
+            '/var/www/flask_zerowaste/static/img/logo_texture.png',
+            '/opt/ZeroWaste/flask_zerowaste/static/img/logo_texture.png'
+        ];
+        
+        foreach($possiblePaths as $p) {
+            if(file_exists($p)) {
+                $logoPath = $p;
+                break;
+            }
+        }
+        
+        if ($logoPath) {
+            $drawing->setPath($logoPath);
+            $drawing->setHeight(50); // Ajustar altura del logo
+            $drawing->setCoordinates('A1');
+            $drawing->setOffsetX(10);
+            $drawing->setOffsetY(10);
+            return [$drawing];
+        }
+        
         return [];
     }
 }
