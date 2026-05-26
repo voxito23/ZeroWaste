@@ -5,6 +5,8 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from werkzeug.security import check_password_hash, generate_password_hash
 from markupsafe import escape
+from itsdangerous import URLSafeTimedSerializer
+from functools import wraps
 import os
 import re
 import uuid
@@ -1431,6 +1433,135 @@ def cambiar_contrasena_save():
 # ==========================================================================
 #  Manejadores de errores HTTP
 # ==========================================================================
+
+# ==========================================================================
+#  MOBILE API ROUTES
+# ==========================================================================
+
+def get_api_serializer():
+    return URLSafeTimedSerializer(app.secret_key)
+
+def api_login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = request.headers.get('Authorization')
+        if not token or not token.startswith('Bearer '):
+            return jsonify({'success': False, 'error': 'Token missing o inválido.'}), 401
+        token = token.split(' ')[1]
+        try:
+            s = get_api_serializer()
+            data = s.loads(token, max_age=30 * 24 * 3600) # 30 days
+            request.usuario_id = data['usuario_id']
+        except Exception as e:
+            return jsonify({'success': False, 'error': 'Token expirado o inválido.'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+@app.route('/api/auth/login', methods=['POST'])
+@limiter.limit("10/minute")
+def api_login():
+    data = request.get_json() or {}
+    email = data.get('email', '').strip()
+    password = data.get('password', '')
+    
+    usuario = Usuario.query.filter_by(email=email).first()
+    if not usuario:
+        return jsonify({'success': False, 'error': 'Credenciales inválidas.'}), 401
+        
+    if usuario.bloqueado:
+        return jsonify({'success': False, 'is_blocked': True, 'error': 'Usuario bloqueado.'}), 403
+        
+    import bcrypt
+    password_valid = False
+    
+    if isinstance(usuario.password, str):
+        if usuario.password.startswith(('$2y$', '$2b$', '$2a$')):
+            try:
+                normalized = usuario.password.replace('$2y$', '$2b$', 1)
+                password_valid = bcrypt.checkpw(password.encode('utf-8'), normalized.encode('utf-8'))
+            except Exception:
+                password_valid = False
+        elif usuario.password.startswith('pbkdf2:'):
+            try:
+                password_valid = check_password_hash(usuario.password, password)
+                if password_valid:
+                    new_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8').replace('$2b$', '$2y$')
+                    usuario.password = new_hash
+                    db.session.commit()
+            except Exception:
+                password_valid = False
+    
+    if password_valid:
+        s = get_api_serializer()
+        token = s.dumps({'usuario_id': usuario.id})
+        return jsonify({
+            'success': True, 
+            'token': token,
+            'user': {
+                'id': usuario.id,
+                'nombre': usuario.nombre,
+                'email': usuario.email,
+                'foto_perfil': usuario.foto_perfil
+            }
+        })
+    else:
+        return jsonify({'success': False, 'error': 'Credenciales inválidas.'}), 401
+
+@app.route('/api/foro', methods=['GET'])
+@api_login_required
+def api_get_foro():
+    categoria = request.args.get('categoria', 'Todos')
+    query = Foro.query
+    if categoria != 'Todos':
+        query = query.filter_by(categoria=categoria)
+        
+    foros = query.order_by(Foro.created_at.desc()).all()
+    resultado = []
+    for f in foros:
+        resultado.append({
+            'id': f.id,
+            'titulo': f.titulo,
+            'contenido': f.contenido,
+            'categoria': f.categoria,
+            'autor': {
+                'nombre': f.autor.nombre,
+                'foto_perfil': f.autor.foto_perfil
+            },
+            'likes': f.likes_count,
+            'respuestas_count': len(f.respuestas),
+            'fecha': f.created_at.strftime('%d %b, %Y')
+        })
+    return jsonify({'success': True, 'data': resultado})
+
+@app.route('/api/foro/<int:id>', methods=['GET'])
+@api_login_required
+def api_get_foro_detail(id):
+    foro = Foro.query.get_or_404(id)
+    respuestas = []
+    for r in foro.respuestas:
+        respuestas.append({
+            'id': r.id,
+            'contenido': r.contenido,
+            'fecha': r.created_at.strftime('%d %b, %Y %H:%M'),
+            'autor': {
+                'nombre': r.autor.nombre,
+                'foto_perfil': r.autor.foto_perfil
+            }
+        })
+    data = {
+        'id': foro.id,
+        'titulo': foro.titulo,
+        'contenido': foro.contenido,
+        'categoria': foro.categoria,
+        'fecha': foro.created_at.strftime('%d %b, %Y'),
+        'likes': foro.likes_count,
+        'autor': {
+            'nombre': foro.autor.nombre,
+            'foto_perfil': foro.autor.foto_perfil
+        },
+        'respuestas': respuestas
+    }
+    return jsonify({'success': True, 'data': data})
 
 @app.errorhandler(404)
 def page_not_found(e):
