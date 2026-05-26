@@ -93,7 +93,7 @@
             confirmButtonColor: '#EF4444',
             cancelButtonColor: isDark ? '#1a3a2d' : '#E5E7EB',
             confirmButtonText: '<span class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-base">delete</span>Eliminar</span>',
-            cancelButtonText: '<span class="font-bold">Cancelar</span>',
+            cancelButtonText: '<span class="font-bold" style="color: ' + (isDark ? '#D1FAE5' : '#1F2937') + ';">Cancelar</span>',
             background: isDark ? '#0F2A20' : '#fff',
             color: isDark ? '#D1FAE5' : '#064E3B',
             width: 380,
