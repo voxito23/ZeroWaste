@@ -16,6 +16,16 @@ from app.data.database import get_db
 from app.models.domain_models import Usuario
 from app.models.schemas import Token, UsuarioResponse, MessageResponse
 from app.security.jwt_auth import verify_password, hash_password, create_access_token
+from pydantic import BaseModel
+
+class MobileLogin(BaseModel):
+    email: str
+    password: str
+
+class MobileRegister(BaseModel):
+    nombre: str
+    email: str
+    password: str
 
 # Constantes de seguridad
 ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
@@ -60,6 +70,37 @@ def login(
 
     access_token = create_access_token(data={"sub": usuario.email})
     return Token(access_token=access_token)
+
+@router.post("/mobile/login", summary="Login exclusivo para App Móvil (React Native)")
+def mobile_login(
+    credentials: MobileLogin,
+    db: Session = Depends(get_db),
+):
+    """
+    Recibe JSON con email y password, permite acceso a TODOS los usuarios (no solo admins),
+    y devuelve el access_token y los datos del usuario.
+    """
+    usuario = db.query(Usuario).filter(Usuario.email == credentials.email).first()
+
+    if not usuario or not verify_password(credentials.password, usuario.password):
+        raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos.")
+
+    if usuario.bloqueado:
+        raise HTTPException(status_code=403, detail="Usuario bloqueado.")
+
+    access_token = create_access_token(data={"sub": usuario.email})
+    
+    return {
+        "success": True,
+        "access_token": access_token,
+        "user": {
+            "id": usuario.id,
+            "nombre": usuario.nombre,
+            "email": usuario.email,
+            "foto_perfil": usuario.foto_perfil,
+            "profile_completed": usuario.profile_completed
+        }
+    }
 
 
 @router.post(
@@ -143,7 +184,38 @@ def registro(
     db.add(nuevo_usuario)
     db.commit()
     
-    # db.refresh devuelve la instancia sincronizada y mapeada desde la DB nativa
     db.refresh(nuevo_usuario)
 
     return nuevo_usuario
+
+
+@router.post("/mobile/registro", summary="Registro exclusivo para App Móvil (React Native)")
+def mobile_registro(
+    data: MobileRegister,
+    db: Session = Depends(get_db)
+):
+    """
+    Registro por JSON que no requiere subir foto obligatoria (usa default).
+    """
+    existe = db.query(Usuario).filter(Usuario.email == data.email).first()
+    if existe:
+        raise HTTPException(status_code=400, detail="El correo ya está registrado.")
+
+    if len(data.nombre.strip()) <= 10:
+        raise HTTPException(status_code=422, detail="El nombre completo debe tener más de 10 caracteres.")
+
+    if len(data.password) < 6:
+        raise HTTPException(status_code=422, detail="La contraseña debe tener al menos 6 caracteres.")
+
+    nuevo_usuario = Usuario(
+        nombre=data.nombre,
+        email=data.email,
+        password=hash_password(data.password),
+        foto_perfil="perfil_default.png",
+    )
+    
+    db.add(nuevo_usuario)
+    db.commit()
+    db.refresh(nuevo_usuario)
+
+    return {"success": True, "message": "Cuenta creada con éxito."}
