@@ -38,6 +38,10 @@ app = FastAPI(
     redoc_url=None,
     docs_url=None,
     openapi_url=None,
+    servers=[
+        {"url": "/api", "description": "Servidor de Producción ZeroWaste (/api)"},
+        {"url": "/", "description": "Servidor Local Directo (/)"}
+    ],
     root_path="/api",
 )
 
