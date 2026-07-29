@@ -167,8 +167,8 @@ class UserController extends Controller
         $request->validate($rules, $messages);
 
         $data = $request->only(['nombre', 'email', 'ubicacion', 'titulo_perfil', 'biografia']);
-        $data['is_admin'] = $request->has('is_admin') ? true : false;
-        $data['bloqueado'] = $request->has('bloqueado') ? true : false;
+        $data['is_admin'] = $request->has('is_admin') ? 'true' : 'false';
+        $data['bloqueado'] = $request->has('bloqueado') ? 'true' : 'false';
         $data['rol'] = $request->has('is_recolector') ? 'recolector' : ($request->has('is_admin') ? 'admin' : 'usuario');
 
         if ($request->filled('password')) {

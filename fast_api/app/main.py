@@ -100,6 +100,43 @@ except ImportError:
     pass  # Si prometheus no está instalado, continúa sin métricas
 
 # ==========================================================================
+#  Personalización de OpenAPI para inyectar X-API-Key en Swagger UI
+# ==========================================================================
+from fastapi.openapi.utils import get_openapi
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    # Inyectar el esquema de seguridad de X-API-Key
+    if "components" not in openapi_schema:
+        openapi_schema["components"] = {}
+    if "securitySchemes" not in openapi_schema["components"]:
+        openapi_schema["components"]["securitySchemes"] = {}
+        
+    openapi_schema["components"]["securitySchemes"]["ApiKeyAuth"] = {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API-Key de sistema obligatoria para todas las peticiones protegidas (ej. zw_mobile_secret_key_2026)"
+    }
+    
+    # Añadir a los requerimientos globales de seguridad
+    if "security" not in openapi_schema:
+        openapi_schema["security"] = []
+    openapi_schema["security"].append({"ApiKeyAuth": []})
+    
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+
+# ==========================================================================
 #  Registro de todos los routers de la aplicación
 # ==========================================================================
 app.include_router(auth.router)
