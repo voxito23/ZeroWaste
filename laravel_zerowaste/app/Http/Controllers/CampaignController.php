@@ -38,6 +38,7 @@ class CampaignController extends Controller
             'fecha_inicio.date' => 'Debe ingresar una fecha de inicio válida.',
             'fecha_fin.date' => 'Debe ingresar una fecha de fin válida.',
             'imagen_archivo.image' => 'El archivo debe ser una imagen válida.',
+            'imagen_archivo.uploaded' => 'Error al subir la imagen. Verifica que el archivo no exceda el tamaño permitido.',
             'imagen_archivo.max' => 'La imagen no debe superar los 250MB.',
         ];
         $data = $request->validate($rules, $messages);
@@ -90,6 +91,7 @@ class CampaignController extends Controller
             'fecha_inicio.date' => 'Debe ingresar una fecha de inicio válida.',
             'fecha_fin.date' => 'Debe ingresar una fecha de fin válida.',
             'imagen_archivo.image' => 'El archivo debe ser una imagen válida.',
+            'imagen_archivo.uploaded' => 'Error al subir la imagen. Verifica que el archivo no exceda el tamaño permitido.',
             'imagen_archivo.max' => 'La imagen no debe superar los 250MB.',
         ];
         $data = $request->validate($rules, $messages);

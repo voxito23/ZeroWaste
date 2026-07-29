@@ -25,11 +25,12 @@ return [
     'different' => 'Los campos :attribute y :other deben ser diferentes.',
     'digits' => 'El campo :attribute debe tener :digits dígitos.',
     'digits_between' => 'El campo :attribute debe tener entre :min y :max dígitos.',
+    'dimensions' => 'El campo :attribute tiene dimensiones de imagen no válidas.',
     'email' => 'El campo :attribute debe ser una dirección de correo válida.',
     'exists' => 'El campo :attribute seleccionado no es válido.',
     'file' => 'El campo :attribute debe ser un archivo.',
     'filled' => 'El campo :attribute debe tener un valor.',
-    'image' => 'El campo :attribute debe ser una imagen.',
+    'image' => 'El campo :attribute debe ser una imagen válida (jpg, jpeg, png, bmp, gif, svg o webp).',
     'in' => 'El campo :attribute seleccionado no es válido.',
     'integer' => 'El campo :attribute debe ser un número entero.',
     'max' => [
@@ -38,6 +39,8 @@ return [
         'string' => 'El campo :attribute no debe tener más de :max caracteres.',
         'array' => 'El campo :attribute no debe tener más de :max elementos.',
     ],
+    'mimes' => 'El campo :attribute debe ser un archivo de tipo: :values.',
+    'mimetypes' => 'El campo :attribute debe ser un archivo de tipo: :values.',
     'min' => [
         'numeric' => 'El campo :attribute debe ser al menos :min.',
         'file' => 'El archivo :attribute debe pesar al menos :min kilobytes.',
@@ -48,7 +51,14 @@ return [
     'required' => 'El campo :attribute es obligatorio.',
     'string' => 'El campo :attribute debe ser una cadena de texto.',
     'unique' => 'El campo :attribute ya está en uso.',
+    'uploaded' => 'Error al subir :attribute. Es probable que la imagen excede el peso máximo permitido en el servidor.',
     'url' => 'El formato del campo :attribute es inválido.',
+    'size' => [
+        'numeric' => 'El tamaño de :attribute debe ser :size.',
+        'file' => 'El archivo :attribute debe pesar :size kilobytes.',
+        'string' => 'El campo :attribute debe contener :size caracteres.',
+        'array' => 'El campo :attribute debe contener :size elementos.',
+    ],
 
     'attributes' => [
         'nombre' => 'nombre',
@@ -60,6 +70,9 @@ return [
         'fecha_fin' => 'fecha de fin',
         'ubicacion' => 'ubicación',
         'lugar' => 'lugar',
-        'imagen_archivo' => 'imagen',
+        'imagen_archivo' => 'la imagen seleccionada',
+        'foto_perfil' => 'la foto de perfil',
+        'imagen' => 'la imagen',
+        'archivo' => 'el archivo',
     ],
 ];

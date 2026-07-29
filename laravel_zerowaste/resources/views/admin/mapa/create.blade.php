@@ -138,6 +138,7 @@
                         <span class="material-symbols-outlined text-gray-400 absolute right-3 pointer-events-none">expand_more</span>
                     </div>
                     
+                    <div class="dropdown-options-multi hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto">
                         @php
                             $options = [
                                 'PET' => 'water_bottle',

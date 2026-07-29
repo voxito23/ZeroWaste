@@ -15,6 +15,9 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo pdo_pgsql zip gd
 
+# Configurar límites de subida de PHP para permitir imágenes grandes
+RUN echo "upload_max_filesize = 64M\npost_max_size = 64M\nmemory_limit = 256M" > /usr/local/etc/php/conf.d/uploads.ini
+
 # 2. Habilitar mod_rewrite de Apache
 RUN a2enmod rewrite
 
