@@ -39,8 +39,7 @@ app = FastAPI(
     docs_url=None,
     openapi_url=None,
     servers=[
-        {"url": "/api", "description": "Servidor de Producción ZeroWaste (/api)"},
-        {"url": "/", "description": "Servidor Local Directo (/)"}
+        {"url": "/api", "description": "Servidor de Producción ZeroWaste (/api)"}
     ],
     root_path="/api",
 )
@@ -112,6 +111,9 @@ def custom_openapi():
         version=app.version,
         description=app.description,
         routes=app.routes,
+        servers=[
+            {"url": "/api", "description": "Servidor de Producción ZeroWaste (/api)"}
+        ],
     )
     # Inyectar el esquema de seguridad de X-API-Key
     if "components" not in openapi_schema:
@@ -130,6 +132,11 @@ def custom_openapi():
     if "security" not in openapi_schema:
         openapi_schema["security"] = []
     openapi_schema["security"].append({"ApiKeyAuth": []})
+    
+    # Asegurar que el servidor principal en Swagger UI siempre sea /api
+    openapi_schema["servers"] = [
+        {"url": "/api", "description": "Servidor de Producción ZeroWaste (/api)"}
+    ]
     
     app.openapi_schema = openapi_schema
     return app.openapi_schema
