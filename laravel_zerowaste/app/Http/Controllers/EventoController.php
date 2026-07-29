@@ -57,7 +57,7 @@ class EventoController extends Controller
             }
         }
         unset($data['imagen_archivo']);
-        $data['activa'] = $request->has('activa');
+        $data['activa'] = $request->has('activa') ? 'true' : 'false';
 
         Evento::create($data);
         
@@ -108,7 +108,7 @@ class EventoController extends Controller
             }
         }
         unset($data['imagen_archivo']);
-        $data['activa'] = $request->has('activa');
+        $data['activa'] = $request->has('activa') ? 'true' : 'false';
 
         $evento->update($data);
         return redirect()->route('eventos.index')->with('success', 'Evento o Jornada actualizada exitosamente.');

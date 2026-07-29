@@ -138,31 +138,24 @@
                         <span class="material-symbols-outlined text-gray-400 absolute right-3 pointer-events-none">expand_more</span>
                     </div>
                     
-                    <div class="dropdown-options-multi hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden max-h-48 overflow-y-auto">
-                        <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Cartón">
+                        @php
+                            $options = [
+                                'PET' => 'water_bottle',
+                                'Tapitas' => 'circles',
+                                'Cartón' => 'inventory_2',
+                                'Plástico' => 'recycling',
+                                'Latas' => 'kitchen',
+                                'Baterías' => 'battery_charging_full',
+                                'Vidrio' => 'wine_bar',
+                                'Electrónicos' => 'devices'
+                            ];
+                        @endphp
+                        @foreach($options as $val => $icon)
+                        <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="{{ $val }}">
                             <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box"><span class="material-symbols-outlined text-sm text-white hidden">check</span></div>
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">inventory_2</span> Cartón
+                            <span class="material-symbols-outlined text-emerald-500 text-lg">{{ $icon }}</span> {{ $val }}
                         </div>
-                        <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Plástico">
-                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box"><span class="material-symbols-outlined text-sm text-white hidden">check</span></div>
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">recycling</span> Plástico
-                        </div>
-                        <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Latas">
-                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box"><span class="material-symbols-outlined text-sm text-white hidden">check</span></div>
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">kitchen</span> Latas
-                        </div>
-                        <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Baterías">
-                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box"><span class="material-symbols-outlined text-sm text-white hidden">check</span></div>
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">battery_charging_full</span> Baterías
-                        </div>
-                        <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Vidrio">
-                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box"><span class="material-symbols-outlined text-sm text-white hidden">check</span></div>
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">wine_bar</span> Vidrio
-                        </div>
-                        <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Electrónicos">
-                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box"><span class="material-symbols-outlined text-sm text-white hidden">check</span></div>
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">devices</span> Electrónicos
-                        </div>
+                        @endforeach
                     </div>
                 </div>
             </div>

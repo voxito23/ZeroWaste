@@ -32,6 +32,5 @@ class Evento extends Model
     protected $casts = [
         'fecha_inicio' => 'datetime',
         'fecha_fin' => 'datetime',
-        'activa' => 'boolean',
     ];
 }

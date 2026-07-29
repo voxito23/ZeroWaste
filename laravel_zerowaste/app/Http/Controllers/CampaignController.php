@@ -57,7 +57,7 @@ class CampaignController extends Controller
         }
         unset($data['imagen_archivo']);
 
-        $data['activa'] = $request->has('activa') ? true : false;
+        $data['activa'] = $request->has('activa') ? 'true' : 'false';
         
         // Así se actualiza la BD con la nueva campaña
         Campaign::create($data);
@@ -109,7 +109,7 @@ class CampaignController extends Controller
         }
         unset($data['imagen_archivo']);
 
-        $data['activa'] = $request->has('activa') ? true : false;
+        $data['activa'] = $request->has('activa') ? 'true' : 'false';
         $campaign->update($data);
         return redirect()->route('campanas.index')->with('success', 'Campaña actualizada.');
     }

@@ -94,10 +94,10 @@ class UserController extends Controller
         $request->validate($rules, $messages);
 
         $data = $request->only(['nombre', 'email', 'password', 'ubicacion', 'titulo_perfil', 'biografia']);
-        $data['is_admin'] = $request->has('is_admin') ? true : false;
+        $data['is_admin'] = $request->has('is_admin') ? 'true' : 'false';
         $data['rol'] = $request->has('is_recolector') ? 'recolector' : ($request->has('is_admin') ? 'admin' : 'usuario');
         $data['auth_provider'] = 'local';
-        $data['profile_completed'] = true;
+        $data['profile_completed'] = 'true';
 
         // Manejar subida de foto de perfil
         if ($request->hasFile('foto_perfil')) {
