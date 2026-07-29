@@ -32,13 +32,17 @@
                     </div>
                 </td>
                 <td>
-                    @if($user->is_admin || $user->rol === 'admin')
-                        <span class="badge-sm bg-violet-500/10 text-violet-600 dark:text-violet-400">Admin</span>
-                    @elseif($user->rol === 'recolector')
-                        <span class="badge-sm bg-amber-500/10 text-amber-600 dark:text-amber-400">Recolector</span>
-                    @else
-                        <span class="badge-sm bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">Usuario</span>
-                    @endif
+                    <div class="flex flex-wrap gap-1.5 items-center">
+                        @if($user->is_admin || $user->rol === 'admin')
+                            <span class="badge-sm bg-violet-500/10 text-violet-600 dark:text-violet-400 font-bold border border-violet-500/20">Admin</span>
+                        @endif
+                        @if($user->rol === 'recolector')
+                            <span class="badge-sm bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold border border-amber-500/20">Recolector</span>
+                        @endif
+                        @if(!$user->is_admin && $user->rol !== 'admin' && $user->rol !== 'recolector')
+                            <span class="badge-sm bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold border border-emerald-500/20">Usuario</span>
+                        @endif
+                    </div>
                 </td>
                 <td>
                     @if($user->bloqueado ?? false)

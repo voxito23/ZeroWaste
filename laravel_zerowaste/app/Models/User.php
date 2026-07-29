@@ -43,7 +43,8 @@ class User extends Authenticatable
     protected $fillable = [
         'nombre', 'email', 'password', 'is_admin', 'foto_perfil',
         'ubicacion', 'titulo_perfil', 'biografia', 'intereses',
-        'firebase_uid', 'auth_provider', 'profile_completed', 'bloqueado'
+        'firebase_uid', 'auth_provider', 'profile_completed', 'bloqueado',
+        'rol', 'edad', 'licencia_conducir'
     ];
 
     protected $hidden = [

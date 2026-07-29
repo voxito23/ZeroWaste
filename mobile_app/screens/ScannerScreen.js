@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Modal, TextInput, Alert, StyleSheet, Plat
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomButton from '../components/ui/CustomButton';
 import { Star, X, CheckCircle2, Truck } from 'lucide-react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation } from 'expo-router';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { api } from '../api/axios';
 import { StatusBar } from 'expo-status-bar';

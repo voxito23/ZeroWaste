@@ -20,7 +20,7 @@ import {
   Folder
 } from 'lucide-react-native';
 import { api } from '../api/axios';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation } from 'expo-router';
 import { useAuth } from '../store/useAuth';
 import { supabase } from '../lib/supabase';
 import { ArrowRight } from 'lucide-react-native';

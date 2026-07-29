@@ -27,9 +27,6 @@
         <a href="{{ route('admin.recolecciones.reporte') }}" class="btn-primary bg-blue-500 hover:bg-blue-600">
             <span class="material-symbols-outlined">picture_as_pdf</span> Generar Reporte
         </a>
-        <button onclick="document.getElementById('modalRecolector').classList.remove('hidden')" class="btn-primary">
-            <span class="material-symbols-outlined">person_add</span> Nuevo Recolector
-        </button>
     </div>
 </div>
 
@@ -87,48 +84,6 @@
     
     <div class="mt-4 p-4">
         {{ $solicitudes->links() }}
-    </div>
-</div>
-
-{{-- Modal Registrar Recolector --}}
-<div id="modalRecolector" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center z-50">
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-lg">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-bold">Registrar Nuevo Recolector</h3>
-            <button onclick="document.getElementById('modalRecolector').classList.add('hidden')" class="text-gray-500 hover:text-red-500">
-                <span class="material-symbols-outlined">close</span>
-            </button>
-        </div>
-        
-        <form action="{{ route('admin.recolecciones.recolector.store') }}" method="POST">
-            @csrf
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-sm font-bold mb-1">Nombre Completo</label>
-                    <input type="text" name="nombre" class="input-premium w-full" required minlength="5">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold mb-1">Correo Electrónico</label>
-                    <input type="email" name="email" class="input-premium w-full" required>
-                </div>
-                <div>
-                    <label class="block text-sm font-bold mb-1">Contraseña</label>
-                    <input type="password" name="password" class="input-premium w-full" required minlength="6">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold mb-1">Edad</label>
-                    <input type="number" name="edad" class="input-premium w-full" required min="18" max="80">
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-bold mb-1">Licencia de Conducir (Folio)</label>
-                    <input type="text" name="licencia_conducir" class="input-premium w-full" required>
-                </div>
-            </div>
-            <div class="flex justify-end gap-2 mt-6">
-                <button type="button" onclick="document.getElementById('modalRecolector').classList.add('hidden')" class="btn-primary bg-gray-500 hover:bg-gray-600">Cancelar</button>
-                <button type="submit" class="btn-primary">Registrar Recolector</button>
-            </div>
-        </form>
     </div>
 </div>
 

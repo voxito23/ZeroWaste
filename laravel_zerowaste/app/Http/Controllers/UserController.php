@@ -99,6 +99,7 @@ class UserController extends Controller
 
         $data = $request->only(['nombre', 'email', 'password', 'ubicacion', 'titulo_perfil', 'biografia']);
         $data['is_admin'] = $request->has('is_admin') ? true : false;
+        $data['rol'] = $request->has('is_recolector') ? 'recolector' : ($request->has('is_admin') ? 'admin' : 'usuario');
         $data['auth_provider'] = 'local';
         $data['profile_completed'] = true;
 
@@ -176,6 +177,7 @@ class UserController extends Controller
         $data = $request->only(['nombre', 'email', 'ubicacion', 'titulo_perfil', 'biografia']);
         $data['is_admin'] = $request->has('is_admin') ? true : false;
         $data['bloqueado'] = $request->has('bloqueado') ? true : false;
+        $data['rol'] = $request->has('is_recolector') ? 'recolector' : ($request->has('is_admin') ? 'admin' : 'usuario');
 
         if ($request->filled('password')) {
             if (!\Illuminate\Support\Facades\Hash::check($request->input('password_actual'), $user->password)) {

@@ -248,6 +248,15 @@
                         <span class="font-bold text-xs text-gray-700 dark:text-emerald-200">Administrador</span>
                     </div>
                 </label>
+
+                <label class="toggle-pill">
+                    <input type="checkbox" name="is_recolector" id="is_recolector" {{ $user->rol === 'recolector' ? 'checked' : '' }} class="sr-only peer">
+                    <div class="w-10 h-5 bg-gray-200 dark:bg-black/30 border border-gray-300 dark:border-emerald-800/50 rounded-full peer peer-checked:bg-amber-500 peer-checked:border-amber-500 after:content-[''] relative after:absolute after:top-[1px] after:left-[1px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-5 shadow-inner"></div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-amber-500 text-base">local_shipping</span>
+                        <span class="font-bold text-xs text-gray-700 dark:text-amber-200">Recolector</span>
+                    </div>
+                </label>
                 
                 <label class="toggle-pill danger">
                     <input type="checkbox" name="bloqueado" id="bloqueado" {{ $user->bloqueado ? 'checked' : '' }} class="sr-only peer">

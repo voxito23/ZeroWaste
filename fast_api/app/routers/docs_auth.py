@@ -36,13 +36,10 @@ async def authenticate_for_docs(
             detail="Credenciales incorrectas."
         )
 
-    # El usuario debe ser el administrador principal, definido de forma segura en las variables de entorno
-    admin_email = os.getenv("ADMIN_EMAIL")
-    
-    if not user.is_admin or not admin_email or user.email != admin_email:
+    if not user.is_admin:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="No tienes permisos de administrador principal."
+            detail="No tienes permisos de administrador para acceder a la documentación."
         )
 
     # Crear token válido para acceso a los docs
@@ -72,29 +69,29 @@ async def get_current_user_from_cookie(request: Request):
 
 @router.get("/zw-docs/logout", include_in_schema=False)
 async def logout_for_docs():
-    """Cierra sesión eliminando la cookie JWT y redirige a Laravel Admin."""
-    response = RedirectResponse(url="/zw-interno/login", status_code=status.HTTP_303_SEE_OTHER)
+    """Redirige al panel Laravel Admin."""
+    response = RedirectResponse(url="/zw-interno/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     response.delete_cookie("docs_access_token")
     return response
 
 
 @router.get("/zw-docs", response_class=HTMLResponse, include_in_schema=False)
-async def custom_swagger_ui_html(request: Request, _=Depends(get_current_user_from_cookie)):
-    """Swagger UI Privado y Premium."""
+async def custom_swagger_ui_html(request: Request):
+    """Swagger UI Premium y rápido de acceder."""
     with open(os.path.join(templates_dir, "custom_swagger.html"), "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content)
 
 
 @router.get("/zw-redoc", response_class=HTMLResponse, include_in_schema=False)
-async def custom_redoc_html(request: Request, _=Depends(get_current_user_from_cookie)):
-    """ReDoc Privado y Premium."""
+async def custom_redoc_html(request: Request):
+    """ReDoc Premium y rápido de acceder."""
     with open(os.path.join(templates_dir, "custom_redoc.html"), "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content)
 
 
 @router.get("/zw-openapi.json", include_in_schema=False)
-async def get_openapi_endpoint(request: Request, _=Depends(get_current_user_from_cookie)):
-    """OpenAPI JSON schema protegido por autenticación JWT."""
+async def get_openapi_endpoint(request: Request):
+    """OpenAPI JSON schema."""
     return request.app.openapi()

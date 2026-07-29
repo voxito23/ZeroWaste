@@ -49,6 +49,7 @@ async def require_api_key(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Acceso denegado: API-Key de sistema inválida o ausente. Debe incluir el header 'X-API-Key'.",
         )
+    assert api_key is not None
     return api_key
 
 
@@ -65,6 +66,9 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
         "/docs",
         "/redoc",
         "/openapi.json",
+        "/zw-docs",
+        "/zw-redoc",
+        "/zw-openapi.json",
     }
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
@@ -74,7 +78,15 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
 
         # 2. Verificar rutas exentas
         path = request.url.path.rstrip("/")
-        if path in self.EXEMPT_PATHS or request.url.path in self.EXEMPT_PATHS:
+        if (
+            path in self.EXEMPT_PATHS
+            or request.url.path in self.EXEMPT_PATHS
+            or path.startswith("/zw-docs")
+            or path.startswith("/docs")
+            or path.startswith("/zw-redoc")
+            or path.startswith("/redoc")
+            or path.endswith("openapi.json")
+        ):
             return await call_next(request)
 
         # 3. Leer header X-API-Key

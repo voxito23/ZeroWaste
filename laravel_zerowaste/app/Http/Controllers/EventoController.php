@@ -20,7 +20,7 @@ class EventoController extends Controller
 
     public function store(Request $request)
     {
-        $data = $request->validate([
+        $rules = [
             'titulo' => 'required|string|max:150',
             'descripcion' => 'required|string',
             'lugar' => 'nullable|string|max:200',
@@ -29,7 +29,19 @@ class EventoController extends Controller
             'tipo_etiqueta' => 'nullable|string|max:50',
             'link_evento' => 'nullable|string|max:500',
             'imagen_archivo' => 'nullable|image|max:256000',
-        ]);
+        ];
+        $messages = [
+            'titulo.required' => 'El título del evento es obligatorio.',
+            'titulo.max' => 'El título no puede exceder los 150 caracteres.',
+            'descripcion.required' => 'La descripción es obligatoria.',
+            'fecha_inicio.required' => 'La fecha de inicio es obligatoria.',
+            'fecha_inicio.date' => 'Debe ingresar una fecha de inicio válida.',
+            'fecha_fin.required' => 'La fecha de fin es obligatoria.',
+            'fecha_fin.date' => 'Debe ingresar una fecha de fin válida.',
+            'imagen_archivo.image' => 'El archivo debe ser una imagen válida.',
+            'imagen_archivo.max' => 'La imagen no debe superar los 250MB.',
+        ];
+        $data = $request->validate($rules, $messages);
 
         if ($request->hasFile('imagen_archivo')) {
             try {
@@ -58,7 +70,7 @@ class EventoController extends Controller
 
     public function update(Request $request, Evento $evento)
     {
-        $data = $request->validate([
+        $rules = [
             'titulo' => 'required|string|max:150',
             'descripcion' => 'required|string',
             'lugar' => 'nullable|string|max:200',
@@ -67,7 +79,19 @@ class EventoController extends Controller
             'tipo_etiqueta' => 'nullable|string|max:50',
             'link_evento' => 'nullable|string|max:500',
             'imagen_archivo' => 'nullable|image|max:256000',
-        ]);
+        ];
+        $messages = [
+            'titulo.required' => 'El título del evento es obligatorio.',
+            'titulo.max' => 'El título no puede exceder los 150 caracteres.',
+            'descripcion.required' => 'La descripción es obligatoria.',
+            'fecha_inicio.required' => 'La fecha de inicio es obligatoria.',
+            'fecha_inicio.date' => 'Debe ingresar una fecha de inicio válida.',
+            'fecha_fin.required' => 'La fecha de fin es obligatoria.',
+            'fecha_fin.date' => 'Debe ingresar una fecha de fin válida.',
+            'imagen_archivo.image' => 'El archivo debe ser una imagen válida.',
+            'imagen_archivo.max' => 'La imagen no debe superar los 250MB.',
+        ];
+        $data = $request->validate($rules, $messages);
 
         if ($request->hasFile('imagen_archivo')) {
             try {
