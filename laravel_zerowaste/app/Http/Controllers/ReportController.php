@@ -50,8 +50,8 @@ class ReportController extends Controller
 
         if ($categoria) {
             // Module: Users
-            if ($categoria === 'admins') $uQ->where('is_admin', true);
-            else if ($categoria === 'users') $uQ->where('is_admin', false);
+            if ($categoria === 'admins') $uQ->where('is_admin', 'true');
+            else if ($categoria === 'users') $uQ->where('is_admin', 'false');
             
             // Module: Map points
             if ($categoria === 'reciclaje') {
@@ -146,8 +146,8 @@ class ReportController extends Controller
                 });
             }
             if ($categoria) {
-                if ($categoria === 'admins') $query->where('is_admin', true);
-                else if ($categoria === 'users') $query->where('is_admin', false);
+                if ($categoria === 'admins') $query->where('is_admin', 'true');
+                else if ($categoria === 'users') $query->where('is_admin', 'false');
             }
             $data['registros'] = $query->orderByDesc('created_at')->get();
             $data['titulo'] = "Reporte de Usuarios Registrados";

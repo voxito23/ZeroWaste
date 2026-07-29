@@ -12,20 +12,20 @@ class UserController extends Controller
     {
         // Global counts for the cards (ignoring search/pagination)
         $totalCount = User::count();
-        $adminCount = User::where('is_admin', true)->orWhere('rol', 'admin')->count();
-        $userCount  = User::where('is_admin', false)->where('rol', 'usuario')->count();
+        $adminCount = User::where('is_admin', 'true')->orWhere('rol', 'admin')->count();
+        $userCount  = User::where('is_admin', 'false')->where('rol', 'usuario')->count();
         $recolectorCount = User::where('rol', 'recolector')->count();
-        $blockedCount = User::where('bloqueado', true)->count();
+        $blockedCount = User::where('bloqueado', 'true')->count();
 
         // Query for the table
         $query = User::query();
 
         // Apply Tab Filter
         if ($request->has('tab') && $request->tab !== 'all') {
-            if ($request->tab === 'admin') $query->where(function($q){ $q->where('is_admin', true)->orWhere('rol', 'admin'); });
-            if ($request->tab === 'user') $query->where('is_admin', false)->where('rol', 'usuario');
+            if ($request->tab === 'admin') $query->where(function($q){ $q->where('is_admin', 'true')->orWhere('rol', 'admin'); });
+            if ($request->tab === 'user') $query->where('is_admin', 'false')->where('rol', 'usuario');
             if ($request->tab === 'recolector') $query->where('rol', 'recolector');
-            if ($request->tab === 'blocked') $query->where('bloqueado', true);
+            if ($request->tab === 'blocked') $query->where('bloqueado', 'true');
         }
 
         // Apply Search Filter

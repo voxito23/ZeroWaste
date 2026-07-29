@@ -33,9 +33,9 @@ class DashboardController extends Controller
         $totalSolicitudes = PasswordResetRequest::query()->count();
 
         // Desglose por roles y estado
-        $totalAdmins = User::query()->where('is_admin', true)->count();
-        $totalNormales = User::query()->where('is_admin', false)->count();
-        $totalBloqueados = User::query()->where('bloqueado', true)->count();
+        $totalAdmins = User::query()->where('is_admin', 'true')->count();
+        $totalNormales = User::query()->where('is_admin', 'false')->count();
+        $totalBloqueados = User::query()->where('bloqueado', 'true')->count();
 
         // Tendencias (últimos 7 días vs 7 días anteriores)
         $now = Carbon::now();
@@ -120,7 +120,7 @@ class DashboardController extends Controller
             'totalCampanas' => Campaign::query()->whereBetween('created_at', [$fechaInicio, $fechaFin])->count(),
             'totalMensajes' => ContactMessage::query()->whereBetween('created_at', [$fechaInicio, $fechaFin])->count(),
             'totalSolicitudes' => PasswordResetRequest::query()->whereBetween('created_at', [$fechaInicio, $fechaFin])->count(),
-            'campanas' => Campaign::query()->where('activa', true)->whereBetween('created_at', [$fechaInicio, $fechaFin])->get(),
+            'campanas' => Campaign::query()->where('activa', 'true')->whereBetween('created_at', [$fechaInicio, $fechaFin])->get(),
             'usuariosRecientes' => User::query()->whereBetween('created_at', [$fechaInicio, $fechaFin])->orderByDesc('created_at')->limit(10)->get(),
             'sentimiento' => ['POS' => 65, 'NEU' => 20, 'NEG' => 15]
         ];
