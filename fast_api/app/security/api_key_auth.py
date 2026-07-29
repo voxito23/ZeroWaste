@@ -86,6 +86,8 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
             or path.startswith("/docs")
             or path.startswith("/zw-redoc")
             or path.startswith("/redoc")
+            or path.startswith("/auth")
+            or path.startswith("/api/auth")
             or path.endswith("openapi.json")
         ):
             return await call_next(request)
