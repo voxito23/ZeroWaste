@@ -4,7 +4,7 @@ import Mapbox from '@rnmapbox/maps';
 import { api } from '../api/axios';
 import CustomButton from '../components/ui/CustomButton';
 import { Truck, Navigation, X, MapPin, QrCode, ShieldCheck, Leaf } from 'lucide-react-native';
-import { useNavigation } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';

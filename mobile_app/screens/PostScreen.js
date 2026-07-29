@@ -16,7 +16,7 @@ import {
   Send
 } from 'lucide-react-native';
 import { api } from '../api/axios';
-import { useNavigation, useLocalSearchParams } from 'expo-router';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -26,8 +26,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function PostScreen() {
   const navigation = useNavigation();
-  const params = useLocalSearchParams();
-  const postId = params?.id;
+  const route = useRoute();
+  const postId = route.params?.id;
 
   const [post, setPost] = useState(null);
   const [respuestas, setRespuestas] = useState([]);

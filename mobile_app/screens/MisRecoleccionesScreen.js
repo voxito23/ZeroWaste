@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { useAuth } from '../store/useAuth';
 import { api } from '../api/axios';
-import { useNavigation } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomButton from '../components/ui/CustomButton';
 import { ArrowLeft, Star, QrCode } from 'lucide-react-native';
