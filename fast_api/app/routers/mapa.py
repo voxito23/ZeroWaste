@@ -42,15 +42,15 @@ def _get_puntos_con_promedio(db: Session) -> List[PuntoMapaResponse]:
     puntos = []
     for punto, promedio, total in resultados:
         puntos.append(PuntoMapaResponse(
-            id=punto.id,
-            nombre=punto.nombre,
-            direccion=punto.direccion,
-            latitud=float(punto.latitud),
-            longitud=float(punto.longitud),
-            tipo=punto.tipo,
-            materiales=punto.materiales,
+            id=int(getattr(punto, "id", 0)),
+            nombre=str(getattr(punto, "nombre", "")),
+            direccion=str(getattr(punto, "direccion", "")),
+            latitud=float(str(getattr(punto, "latitud", 0.0))),
+            longitud=float(str(getattr(punto, "longitud", 0.0))),
+            tipo=str(getattr(punto, "tipo", "")),
+            materiales=str(getattr(punto, "materiales", "")) if getattr(punto, "materiales", None) else None,
             promedio=round(float(promedio or 0), 1),
-            total_reviews=total,
+            total_reviews=int(total or 0),
         ))
     return puntos
 
@@ -120,13 +120,13 @@ def create_punto(
     db.refresh(nuevo_punto)
 
     return PuntoMapaResponse(
-        id=nuevo_punto.id,
-        nombre=nuevo_punto.nombre,
-        direccion=nuevo_punto.direccion,
-        latitud=float(nuevo_punto.latitud),
-        longitud=float(nuevo_punto.longitud),
-        tipo=nuevo_punto.tipo,
-        materiales=nuevo_punto.materiales,
+        id=int(getattr(nuevo_punto, "id", 0)),
+        nombre=str(getattr(nuevo_punto, "nombre", "")),
+        direccion=str(getattr(nuevo_punto, "direccion", "")),
+        latitud=float(str(getattr(nuevo_punto, "latitud", 0.0))),
+        longitud=float(str(getattr(nuevo_punto, "longitud", 0.0))),
+        tipo=str(getattr(nuevo_punto, "tipo", "")),
+        materiales=str(getattr(nuevo_punto, "materiales", "")) if getattr(nuevo_punto, "materiales", None) else None,
         promedio=0.0,
         total_reviews=0,
     )
@@ -156,15 +156,15 @@ def update_punto(
     total = db.query(func.count(CalificacionPunto.id)).filter_by(location_id=punto_id).scalar()
 
     return PuntoMapaResponse(
-        id=punto.id,
-        nombre=punto.nombre,
-        direccion=punto.direccion,
-        latitud=float(punto.latitud),
-        longitud=float(punto.longitud),
-        tipo=punto.tipo,
-        materiales=punto.materiales,
+        id=int(getattr(punto, "id", 0)),
+        nombre=str(getattr(punto, "nombre", "")),
+        direccion=str(getattr(punto, "direccion", "")),
+        latitud=float(str(getattr(punto, "latitud", 0.0))),
+        longitud=float(str(getattr(punto, "longitud", 0.0))),
+        tipo=str(getattr(punto, "tipo", "")),
+        materiales=str(getattr(punto, "materiales", "")) if getattr(punto, "materiales", None) else None,
         promedio=round(float(promedio or 0), 1),
-        total_reviews=total or 0,
+        total_reviews=int(total or 0),
     )
 
 
@@ -217,7 +217,7 @@ def calificar_punto(
     ).first()
 
     if calificacion:
-        calificacion.estrellas = calificacion_in.estrellas
+        setattr(calificacion, "estrellas", calificacion_in.estrellas)
     else:
         nueva = CalificacionPunto(
             location_id=punto_id,
