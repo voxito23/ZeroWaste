@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y curl \
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir -r requirements.txt
 
 COPY frontend_build/package*.json ./frontend_build/
 RUN cd frontend_build && npm install && chmod -R +x node_modules/.bin/
