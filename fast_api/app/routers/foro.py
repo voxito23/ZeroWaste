@@ -57,7 +57,6 @@ def list_categorias(db: Session = Depends(get_db)):
 @router.get("/posts", response_model=List[PostDetailResponse], summary="Listar todos los posts")
 def list_posts(
     db: Session = Depends(get_db),
-    _current_user: Usuario = Depends(get_current_user),
 ):
     """Devuelve todos los posts del foro con información de autor, categoría, respuestas y likes."""
     posts = db.query(Foro).order_by(Foro.created_at.desc()).all()
@@ -85,7 +84,6 @@ def list_posts(
 def get_post(
     post_id: int,
     db: Session = Depends(get_db),
-    _current_user: Usuario = Depends(get_current_user),
 ):
     """Devuelve un post específico con detalles completos."""
     post = db.query(Foro).filter(Foro.id == post_id).first()
@@ -203,7 +201,6 @@ def delete_post(
 def list_respuestas(
     post_id: int,
     db: Session = Depends(get_db),
-    _current_user: Usuario = Depends(get_current_user),
 ):
     """Devuelve todas las respuestas de un post, ordenadas cronológicamente."""
     respuestas = (

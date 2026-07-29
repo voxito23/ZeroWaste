@@ -194,9 +194,11 @@ export default function ForumScreen() {
               <Text className="text-gray-400 text-sm text-center mt-2">Sé el primero en compartir algo con la comunidad.</Text>
             </View>
           ) : (
-            posts.map((post, index) => {
-              const catStyle = getCatStyle(post.categoria_nombre);
-              const isTrend = index === 0 && activeTab === 'Todos';
+            posts
+              .filter(post => activeTab === 'Todo' || activeTab === 'Todos' || post.categoria_nombre === activeTab)
+              .map((post, index) => {
+                const catStyle = getCatStyle(post.categoria_nombre);
+                const isTrend = index === 0 && (activeTab === 'Todo' || activeTab === 'Todos');
 
               if (isTrend) {
                 // Función para replicar el texto verde del diseño en Flask

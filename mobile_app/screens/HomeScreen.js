@@ -17,6 +17,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useScrollContext } from '../context/ScrollContext';
 import { useAuth } from '../store/useAuth';
+import api from '../api/axios';
 import {
   Search,
   Users,
@@ -104,7 +105,7 @@ const sabiasQueData = [
   { id: '4', icon: Award, val: '30%', label: 'Tasa de reciclaje estatal alcanzada', bg: '#FFF7ED', iconBg: '#FFEDD5', c: '#EA580C' },
 ];
 
-const campaigns = [
+const defaultCampaigns = [
   { id: 1, title: 'Recolección de Electrónicos', date: '12 May', location: 'Plaza Central', tag: 'CAMPAÑA', img: require('../assets/images/event1.png'), likes: 234 },
   { id: 2, title: 'Limpieza de Playa', date: '20 May', location: 'Playa Norte', tag: 'EVENTO', img: require('../assets/images/event2.jpg'), likes: 512 },
 ];
@@ -160,6 +161,42 @@ export default function HomeScreen() {
   const { handleScroll } = useScrollContext();
   const [tendIndex, setTendIndex] = useState(0);
   const [sabiasIndex, setSabiasIndex] = useState(0);
+  const [campaignsList, setCampaignsList] = useState(defaultCampaigns);
+
+  useEffect(() => {
+    const fetchActiveCampaignsAndEvents = async () => {
+      try {
+        const [campRes, evRes] = await Promise.all([
+          api.get('/campanas').catch(() => ({ data: null })),
+          api.get('/eventos').catch(() => ({ data: null }))
+        ]);
+        if (campRes.data !== null || evRes.data !== null) {
+          const dbCampaigns = (campRes.data || []).map(c => ({
+            id: `camp-${c.id}`,
+            title: c.nombre || 'Campaña Eco',
+            date: c.fecha_inicio ? new Date(c.fecha_inicio).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : 'Próximamente',
+            location: c.lugar || 'Querétaro',
+            tag: (c.tipo_etiqueta || 'CAMPAÑA').toUpperCase(),
+            img: c.imagen_url ? { uri: c.imagen_url.startsWith('http') ? c.imagen_url : `https://zerowaste-qro.com/static/img/campanas/${c.imagen_url}` } : require('../assets/images/event1.png'),
+            likes: c.recompensa_puntos || 100
+          }));
+          const dbEvents = (evRes.data || []).map(e => ({
+            id: `ev-${e.id}`,
+            title: e.titulo || 'Evento Eco',
+            date: e.fecha_inicio ? new Date(e.fecha_inicio).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : 'Próximamente',
+            location: e.lugar || 'Querétaro',
+            tag: (e.tipo_etiqueta || 'EVENTO').toUpperCase(),
+            img: e.imagen_url ? { uri: e.imagen_url.startsWith('http') ? e.imagen_url : `https://zerowaste-qro.com/static/img/eventos/${e.imagen_url}` } : require('../assets/images/event2.jpg'),
+            likes: 250
+          }));
+          setCampaignsList([...dbCampaigns, ...dbEvents]);
+        }
+      } catch (e) {
+        console.log('Error al cargar campañas y eventos desde BD:', e);
+      }
+    };
+    fetchActiveCampaignsAndEvents();
+  }, []);
 
   useEffect(() => {
     Animated.stagger(100,
@@ -498,61 +535,69 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}>
-            {campaigns.map((camp) => (
-              <TouchableScale key={camp.id}>
-                <View
-                  className="w-[300px] rounded-[28px] overflow-hidden bg-white border border-gray-100"
-                  style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.08, shadowRadius: 24, elevation: 10 }}
-                >
-                  <View className="relative h-[190px]">
-                    <Image source={camp.img} className="w-full h-full" resizeMode="cover" />
-                    
-                    <View className="absolute top-4 left-4 bg-black/60 px-3 py-1.5 rounded-full border border-white/10">
-                      <Text className="text-white text-[10px] font-black uppercase tracking-[0.1em]">{camp.tag}</Text>
+          {campaignsList.length === 0 ? (
+            <View className="px-5 py-8 items-center justify-center bg-gray-50 rounded-[28px] mx-5 border border-gray-100">
+              <Calendar color="#9CA3AF" size={32} />
+              <Text className="text-gray-500 font-bold text-center mt-2 text-base">No hay campañas o eventos activos</Text>
+              <Text className="text-gray-400 text-xs text-center mt-1">Próximamente publicaremos nuevas iniciativas eco-amigables.</Text>
+            </View>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}>
+              {campaignsList.map((camp) => (
+                <TouchableScale key={camp.id}>
+                  <View
+                    className="w-[300px] rounded-[28px] overflow-hidden bg-white border border-gray-100"
+                    style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.08, shadowRadius: 24, elevation: 10 }}
+                  >
+                    <View className="relative h-[190px]">
+                      <Image source={camp.img} className="w-full h-full" resizeMode="cover" />
+                      
+                      <View className="absolute top-4 left-4 bg-black/60 px-3 py-1.5 rounded-full border border-white/10">
+                        <Text className="text-white text-[10px] font-black uppercase tracking-[0.1em]">{camp.tag}</Text>
+                      </View>
+                      <View className="absolute top-4 right-4">
+                        <TouchableScale scaleVal={0.85}>
+                          <View className="w-9 h-9 rounded-full bg-white items-center justify-center shadow-sm">
+                            <Bookmark color="#374151" size={15} />
+                          </View>
+                        </TouchableScale>
+                      </View>
+
+                      <View className="absolute bottom-0 w-full bg-black/50 px-4 py-2.5 flex-row justify-between items-center">
+                        <View className="flex-row items-center gap-1.5">
+                          <Calendar color="#fff" size={13} />
+                          <Text className="text-white text-[12px] font-bold">{camp.date}</Text>
+                        </View>
+                        <View className="flex-row items-center gap-1.5">
+                          <MapPin color="#fff" size={13} />
+                          <Text className="text-white text-[12px] font-bold">{camp.location}</Text>
+                        </View>
+                      </View>
                     </View>
-                    <View className="absolute top-4 right-4">
-                      <TouchableScale scaleVal={0.85}>
-                        <View className="w-9 h-9 rounded-full bg-white items-center justify-center shadow-sm">
-                          <Bookmark color="#374151" size={15} />
+
+                    <View className="p-5 pt-4">
+                      <Text className="text-gray-900 font-extrabold text-[18px] leading-tight mb-2" numberOfLines={2}>{camp.title}</Text>
+                      
+                      <View className="flex-row items-center gap-4 mb-5">
+                        <View className="flex-row items-center gap-1.5">
+                          <Heart color="#EF4444" size={16} fill="#EF4444" />
+                          <Text className="text-gray-500 text-[13px] font-bold">{camp.likes}</Text>
+                        </View>
+                        <Share2 color="#9CA3AF" size={15} />
+                      </View>
+
+                      <TouchableScale>
+                        <View className="bg-[#064E3B] rounded-2xl py-3.5 items-center flex-row justify-center gap-2">
+                          <Text className="text-white text-[15px] font-black">Unirse</Text>
+                          <ArrowRight color="#fff" size={16} strokeWidth={3} />
                         </View>
                       </TouchableScale>
                     </View>
-
-                    <View className="absolute bottom-0 w-full bg-black/50 px-4 py-2.5 flex-row justify-between items-center">
-                      <View className="flex-row items-center gap-1.5">
-                        <Calendar color="#fff" size={13} />
-                        <Text className="text-white text-[12px] font-bold">{camp.date}</Text>
-                      </View>
-                      <View className="flex-row items-center gap-1.5">
-                        <MapPin color="#fff" size={13} />
-                        <Text className="text-white text-[12px] font-bold">{camp.location}</Text>
-                      </View>
-                    </View>
                   </View>
-
-                  <View className="p-5 pt-4">
-                    <Text className="text-gray-900 font-extrabold text-[18px] leading-tight mb-2">{camp.title}</Text>
-                    
-                    <View className="flex-row items-center gap-4 mb-5">
-                      <View className="flex-row items-center gap-1.5">
-                        <Heart color="#EF4444" size={16} fill="#EF4444" />
-                        <Text className="text-gray-500 text-[13px] font-bold">{camp.likes}</Text>
-                      </View>
-                      <Share2 color="#9CA3AF" size={15} />
-                    </View>
-
-                    <TouchableScale>
-                      <View className="bg-[#064E3B] rounded-2xl py-3.5 items-center flex-row justify-center gap-2">
-                        <Text className="text-white text-[15px] font-black">Unirse</Text>
-                        <ArrowRight color="#fff" size={16} strokeWidth={3} />
-                      </View>
-                    </TouchableScale>
-                  </View>
-                </View>
-              </TouchableScale>
-            ))}
-          </ScrollView>
+                </TouchableScale>
+              ))}
+            </ScrollView>
+          )}
         </Animated.View>
 
         {/* ═══ 6. NOTICIA LOCAL (Premium with emerald gradient overlay) ═══ */}

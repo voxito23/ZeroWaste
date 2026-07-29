@@ -470,14 +470,15 @@ class EventoUpdate(BaseModel):
 
 class EventoResponse(BaseModel):
     id: int
-    titulo: str
-    fecha_inicio: datetime
-    lugar: str
+    titulo: Optional[str] = ""
+    fecha_inicio: Optional[datetime] = None
+    lugar: Optional[str] = ""
     fecha_fin: Optional[datetime] = None
-    descripcion: str
+    descripcion: Optional[str] = ""
     tipo_etiqueta: Optional[str] = None
     imagen_url: Optional[str] = None
     link_evento: Optional[str] = None
+    activa: Optional[bool] = True
 
     model_config = {
         "from_attributes": True,
@@ -559,16 +560,16 @@ class CampaignUpdate(BaseModel):
 
 class CampaignResponse(BaseModel):
     id: int
-    nombre: str
+    nombre: Optional[str] = ""
     lugar: Optional[str] = None
     fecha_inicio: Optional[datetime] = None
     fecha_fin: Optional[datetime] = None
-    descripcion: str
+    descripcion: Optional[str] = ""
     tipo_etiqueta: Optional[str] = None
     imagen_url: Optional[str] = None
     link_evento: Optional[str] = None
-    recompensa_puntos: int = 0
-    activa: bool = True
+    recompensa_puntos: Optional[int] = 0
+    activa: Optional[bool] = True
     created_at: Optional[datetime] = None
 
     model_config = {

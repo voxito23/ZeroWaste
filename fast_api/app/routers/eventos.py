@@ -18,8 +18,8 @@ router = APIRouter(prefix="/eventos", tags=["Eventos y Jornadas"])
 
 @router.get("/", response_model=List[EventoResponse], summary="Listar todos los eventos")
 def list_eventos(db: Session = Depends(get_db)):
-    """Devuelve todos los eventos ordenados por fecha más reciente."""
-    return db.query(Evento).order_by(Evento.fecha_inicio.desc()).all()
+    """Devuelve todos los eventos activos ordenados por fecha más reciente."""
+    return db.query(Evento).filter(Evento.activa == True).order_by(Evento.fecha_inicio.desc()).all()
 
 
 @router.get("/{evento_id}", response_model=EventoResponse, summary="Obtener evento por ID")

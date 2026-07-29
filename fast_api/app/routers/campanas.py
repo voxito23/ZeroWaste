@@ -18,8 +18,8 @@ router = APIRouter(prefix="/campanas", tags=["Campañas"])
 
 @router.get("/", response_model=List[CampaignResponse], summary="Listar todas las campañas")
 def list_campanas(db: Session = Depends(get_db)):
-    """Devuelve todas las campañas ordenadas por fecha de creación."""
-    return db.query(Campaign).order_by(Campaign.created_at.desc()).all()
+    """Devuelve todas las campañas activas ordenadas por fecha de creación."""
+    return db.query(Campaign).filter(Campaign.activa == True).order_by(Campaign.created_at.desc()).all()
 
 
 @router.get("/{campana_id}", response_model=CampaignResponse, summary="Obtener campaña por ID")
