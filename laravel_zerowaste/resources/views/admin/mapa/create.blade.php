@@ -108,19 +108,19 @@
                     
                     <div class="dropdown-options hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden">
                         <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Plástico">
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">recycling</span> Reciclaje de Plástico
+                            <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">recycling</span> <span class="pointer-events-none">Reciclaje de Plástico</span>
                         </div>
                         <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Vidrio">
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">wine_bar</span> Reciclaje de Vidrio
+                            <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">wine_bar</span> <span class="pointer-events-none">Reciclaje de Vidrio</span>
                         </div>
                         <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Electrónicos">
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">devices</span> Desechos Electrónicos
+                            <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">devices</span> <span class="pointer-events-none">Desechos Electrónicos</span>
                         </div>
                         <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Centro Principal">
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">domain</span> Centro Principal
+                            <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">domain</span> <span class="pointer-events-none">Centro Principal</span>
                         </div>
                         <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Contenedor Público">
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">delete</span> Contenedor Público
+                            <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">delete</span> <span class="pointer-events-none">Contenedor Público</span>
                         </div>
                     </div>
                 </div>
@@ -153,8 +153,8 @@
                         @endphp
                         @foreach($options as $val => $icon)
                         <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="{{ $val }}">
-                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box"><span class="material-symbols-outlined text-sm text-white hidden">check</span></div>
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">{{ $icon }}</span> {{ $val }}
+                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box pointer-events-none"><span class="material-symbols-outlined text-sm text-white hidden pointer-events-none">check</span></div>
+                            <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">{{ $icon }}</span> <span class="pointer-events-none">{{ $val }}</span>
                         </div>
                         @endforeach
                     </div>
@@ -206,7 +206,45 @@ window.previewFile = function(input) {
     }
 }
 
+function updateCounter(input, counterId, max, min, errId) {
+    const counter = document.getElementById(counterId);
+    const errSpan = document.getElementById(errId);
+    if (!counter) return;
+    const len = input.value.length;
+    counter.textContent = len + '/' + max;
+    if (len >= max) {
+        counter.classList.remove('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.add('text-red-500', 'dark:text-red-400');
+        input.classList.add('border-red-500');
+        if (errSpan) { errSpan.textContent = 'Máximo ' + max + ' caracteres alcanzado.'; errSpan.classList.remove('hidden'); }
+    } else if (len > 0 && len < min) {
+        counter.classList.remove('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.add('text-red-500', 'dark:text-red-400');
+        input.classList.add('border-red-500');
+        if (errSpan) { errSpan.textContent = 'Mínimo ' + min + ' caracteres requeridos.'; errSpan.classList.remove('hidden'); }
+    } else {
+        counter.classList.add('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.remove('text-red-500', 'dark:text-red-400');
+        input.classList.remove('border-red-500');
+        if (errSpan) { errSpan.classList.add('hidden'); }
+    }
+}
+
+function filterAlphaNum(input) {
+    input.value = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s]/g, '');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    const inputNombre = document.getElementById('input-nombre');
+    if (inputNombre) {
+        inputNombre.addEventListener('input', function() { filterAlphaNum(this); updateCounter(this, 'counter-nombre', 30, 5, 'err-nombre'); });
+        inputNombre.addEventListener('paste', function() { setTimeout(() => { filterAlphaNum(this); updateCounter(this, 'counter-nombre', 30, 5, 'err-nombre'); }, 0); });
+    }
+    const inputCalle = document.getElementById('input-calle');
+    if (inputCalle) {
+        inputCalle.addEventListener('input', function() { updateCounter(this, 'counter-calle', 30, 5, 'err-calle'); });
+    }
+
     // Dropdown tipo de punto
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.custom-dropdown') && !e.target.closest('.custom-dropdown-multi')) {
@@ -217,31 +255,48 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.option-item').forEach(item => {
         item.addEventListener('click', function(e) {
             e.stopPropagation();
-            const dropdown = this.closest('.custom-dropdown');
+            const el = e.currentTarget;
+            const dropdown = el.closest('.custom-dropdown');
             const hiddenInput = dropdown.querySelector('input[type="hidden"]');
             const selectedText = dropdown.querySelector('.selected-text');
             
-            hiddenInput.value = this.dataset.value;
-            selectedText.innerHTML = this.innerHTML;
+            hiddenInput.value = el.dataset.value;
+            selectedText.innerHTML = el.innerHTML;
             selectedText.classList.remove('text-gray-500', 'dark:text-gray-400');
             selectedText.classList.add('text-gray-900', 'dark:text-white');
             
             dropdown.querySelector('.dropdown-options').classList.add('hidden');
-            document.getElementById('err-tipo').classList.add('hidden');
+            const errTipo = document.getElementById('err-tipo');
+            if (errTipo) errTipo.classList.add('hidden');
         });
     });
 
     // Dropdown materiales
     let selectedMaterials = [];
+    function updateMultiText() {
+        const selectedText = document.querySelector('.selected-text-multi');
+        if (!selectedText) return;
+        if (selectedMaterials.length > 0) {
+            selectedText.innerHTML = `<span class="font-bold text-emerald-600 dark:text-emerald-400">${selectedMaterials.length} seleccionados:</span> ${selectedMaterials.join(', ')}`;
+            selectedText.classList.remove('text-gray-500', 'dark:text-gray-400');
+            selectedText.classList.add('text-gray-900', 'dark:text-white');
+        } else {
+            selectedText.innerHTML = 'Selecciona materiales...';
+            selectedText.classList.remove('text-gray-900', 'dark:text-white');
+            selectedText.classList.add('text-gray-500', 'dark:text-gray-400');
+        }
+    }
+    updateMultiText();
+
     document.querySelectorAll('.option-multi-item').forEach(item => {
         item.addEventListener('click', function(e) {
             e.stopPropagation();
-            const value = this.dataset.value;
-            const checkBox = this.querySelector('.check-box');
-            const checkIcon = this.querySelector('.check-box span');
-            const dropdown = this.closest('.custom-dropdown-multi');
+            const el = e.currentTarget;
+            const value = el.dataset.value;
+            const checkBox = el.querySelector('.check-box');
+            const checkIcon = el.querySelector('.check-box span');
+            const dropdown = el.closest('.custom-dropdown-multi');
             const hiddenInput = dropdown.querySelector('input[type="hidden"]');
-            const selectedText = dropdown.querySelector('.selected-text-multi');
 
             if (selectedMaterials.includes(value)) {
                 selectedMaterials = selectedMaterials.filter(m => m !== value);
@@ -254,16 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             hiddenInput.value = selectedMaterials.join(', ');
-            
-            if (selectedMaterials.length > 0) {
-                selectedText.innerHTML = `<span class="font-bold text-emerald-600 dark:text-emerald-400">${selectedMaterials.length} seleccionados:</span> ${selectedMaterials.join(', ')}`;
-                selectedText.classList.remove('text-gray-500', 'dark:text-gray-400');
-                selectedText.classList.add('text-gray-900', 'dark:text-white');
-            } else {
-                selectedText.innerHTML = 'Selecciona materiales...';
-                selectedText.classList.remove('text-gray-900', 'dark:text-white');
-                selectedText.classList.add('text-gray-500', 'dark:text-gray-400');
-            }
+            updateMultiText();
         });
     });
 
@@ -279,10 +325,8 @@ document.addEventListener('DOMContentLoaded', function() {
     map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
     let marker = null;
-    
-    // Marcador personalizado
-    const el = document.createElement('div');
-    el.innerHTML = '<div style="background:#064E3B; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:3px solid #00E096;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#00E096"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/></svg></div>';
+    const elMarker = document.createElement('div');
+    elMarker.innerHTML = '<div style="background:#064E3B; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:3px solid #00E096;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#00E096"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/></svg></div>';
 
     let activePopup = null;
 
@@ -296,19 +340,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (marker) {
             marker.setLngLat([lng, lat]);
         } else {
-            marker = new mapboxgl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
+            marker = new mapboxgl.Marker({ element: elMarker }).setLngLat([lng, lat]).addTo(map);
         }
 
         if (activePopup) activePopup.remove();
         activePopup = new mapboxgl.Popup({ closeButton: false }).setLngLat([lng, lat]).setHTML(`<div style="display:flex;align-items:center;gap:6px;font-family:Inter,sans-serif;font-weight:bold;color:#064E3B;"><img src="/static/img/logo.png" style="width:16px;height:16px;filter:brightness(0.5);"/> ${lat}, ${lng}</div>`).addTo(map);
 
-        // Quitar error de coordenadas
         const errLat = document.getElementById('err-latitud');
         if (errLat) { errLat.classList.add('hidden'); }
         document.getElementById('input-lat').classList.remove('border-red-500');
     });
 
-    // Buscar direccion en el mapa
     const inCalle = document.getElementById('input-calle');
     const inNum = document.getElementById('input-numero');
     const inCP = document.getElementById('input-cp');
@@ -337,7 +379,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (marker) {
                             marker.setLngLat([lng, lat]);
                         } else {
-                            marker = new mapboxgl.Marker({ element: el }).setLngLat([lng, lat]).addTo(map);
+                            marker = new mapboxgl.Marker({ element: elMarker }).setLngLat([lng, lat]).addTo(map);
                         }
 
                         if (activePopup) activePopup.remove();
@@ -348,62 +390,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    inCalle.addEventListener('blur', geocodeAddress);
-    inNum.addEventListener('blur', geocodeAddress);
-    inCP.addEventListener('blur', geocodeAddress);
-
-    // Validar formulario
-    const form = document.getElementById('customForm');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            const nombre = form.querySelector('input[name="nombre"]');
-function updateCounter(input, counterId, max, min, errId) {
-    const counter = document.getElementById(counterId);
-    const errSpan = document.getElementById(errId);
-    if (!counter) return;
-    const len = input.value.length;
-    counter.textContent = len + '/' + max;
-    if (len >= max) {
-        counter.classList.remove('text-gray-400', 'dark:text-emerald-500/50');
-        counter.classList.add('text-red-500', 'dark:text-red-400');
-        input.classList.add('border-red-500');
-        if (errSpan) { errSpan.textContent = 'Máximo ' + max + ' caracteres alcanzado.'; errSpan.classList.remove('hidden'); }
-    } else if (len > 0 && len < min) {
-        counter.classList.remove('text-gray-400', 'dark:text-emerald-500/50');
-        counter.classList.add('text-red-500', 'dark:text-red-400');
-        input.classList.add('border-red-500');
-        if (errSpan) { errSpan.textContent = 'Mínimo ' + min + ' caracteres requeridos.'; errSpan.classList.remove('hidden'); }
-    } else {
-        counter.classList.add('text-gray-400', 'dark:text-emerald-500/50');
-        counter.classList.remove('text-red-500', 'dark:text-red-400');
-        input.classList.remove('border-red-500');
-        if (errSpan) { errSpan.classList.add('hidden'); }
-    }
-}
-function filterAlphaNum(input) {
-    input.value = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s]/g, '');
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const inputNombre = document.getElementById('input-nombre');
-    if (inputNombre) {
-        inputNombre.addEventListener('input', function() { filterAlphaNum(this); updateCounter(this, 'counter-nombre', 30, 5, 'err-nombre'); });
-        inputNombre.addEventListener('paste', function() { setTimeout(() => { filterAlphaNum(this); updateCounter(this, 'counter-nombre', 30, 5, 'err-nombre'); }, 0); });
-    }
-    const inputCalle = document.getElementById('input-calle');
-    if (inputCalle) {
-        inputCalle.addEventListener('input', function() { updateCounter(this, 'counter-calle', 30, 5, 'err-calle'); });
-    }
+    if (inCalle) inCalle.addEventListener('blur', geocodeAddress);
+    if (inNum) inNum.addEventListener('blur', geocodeAddress);
+    if (inCP) inCP.addEventListener('blur', geocodeAddress);
 
     const form = document.getElementById('customForm');
     if (form) {
         form.addEventListener('submit', function(e) {
             const nombre = form.querySelector('input[name="nombre"]');
-            const inCalle = document.getElementById('input-calle');
-            const inNum = document.getElementById('input-numero');
-            const inCP = document.getElementById('input-cp');
             const hiddenDir = document.getElementById('hidden-direccion');
-            
             const latitud = document.getElementById('input-lat');
             const tipo = document.getElementById('tipo');
             const tipoDropdown = tipo.closest('.custom-dropdown').querySelector('.dropdown-selected');
@@ -415,69 +410,59 @@ document.addEventListener('DOMContentLoaded', function() {
             const errLatitud = document.getElementById('err-latitud');
             const errTipo = document.getElementById('err-tipo');
 
-            // Limpiar errores
-            [errNombre, errCalle, errNum, errCP, errLatitud, errTipo].forEach(el => el.classList.add('hidden'));
-            [nombre, inCalle, inNum, inCP, latitud].forEach(el => el.classList.remove('border-red-500'));
-            tipoDropdown.classList.remove('border-red-500');
+            [errNombre, errCalle, errNum, errCP, errLatitud, errTipo].forEach(el => { if (el) el.classList.add('hidden'); });
+            [nombre, inCalle, inNum, inCP, latitud].forEach(el => { if (el) el.classList.remove('border-red-500'); });
+            if (tipoDropdown) tipoDropdown.classList.remove('border-red-500');
 
             let isValid = true;
 
             const nombreVal = nombre.value.trim();
             if (!nombreVal) {
-                errNombre.textContent = 'El nombre del punto es obligatorio.';
-                errNombre.classList.remove('hidden');
+                if (errNombre) { errNombre.textContent = 'El nombre del punto es obligatorio.'; errNombre.classList.remove('hidden'); }
                 nombre.classList.add('border-red-500');
                 isValid = false;
             } else if (nombreVal.length < 5) {
-                errNombre.textContent = 'El nombre debe tener al menos 5 caracteres.';
-                errNombre.classList.remove('hidden');
+                if (errNombre) { errNombre.textContent = 'El nombre debe tener al menos 5 caracteres.'; errNombre.classList.remove('hidden'); }
                 nombre.classList.add('border-red-500');
                 isValid = false;
             }
 
             const calleVal = inCalle.value.trim();
             if (!calleVal) {
-                errCalle.textContent = 'La calle/colonia es obligatoria.';
-                errCalle.classList.remove('hidden');
+                if (errCalle) { errCalle.textContent = 'La calle/colonia es obligatoria.'; errCalle.classList.remove('hidden'); }
                 inCalle.classList.add('border-red-500');
                 isValid = false;
             } else if (calleVal.length < 5) {
-                errCalle.textContent = 'La calle/colonia debe tener al menos 5 caracteres.';
-                errCalle.classList.remove('hidden');
+                if (errCalle) { errCalle.textContent = 'La calle/colonia debe tener al menos 5 caracteres.'; errCalle.classList.remove('hidden'); }
                 inCalle.classList.add('border-red-500');
                 isValid = false;
             }
             if (!inNum.value.trim()) {
-                errNum.textContent = 'Requerido.';
-                errNum.classList.remove('hidden');
+                if (errNum) { errNum.textContent = 'Requerido.'; errNum.classList.remove('hidden'); }
                 inNum.classList.add('border-red-500');
                 isValid = false;
             }
             if (!inCP.value.trim()) {
-                errCP.textContent = 'Requerido.';
-                errCP.classList.remove('hidden');
+                if (errCP) { errCP.textContent = 'Requerido.'; errCP.classList.remove('hidden'); }
                 inCP.classList.add('border-red-500');
                 isValid = false;
             }
 
             if (!latitud.value) {
-                errLatitud.textContent = 'Haz clic en el mapa para seleccionar una ubicación.';
-                errLatitud.classList.remove('hidden');
+                if (errLatitud) { errLatitud.textContent = 'Haz clic en el mapa para seleccionar una ubicación.'; errLatitud.classList.remove('hidden'); }
                 latitud.classList.add('border-red-500');
                 isValid = false;
             }
 
             if (!tipo.value) {
-                errTipo.textContent = 'Selecciona un tipo de punto.';
-                errTipo.classList.remove('hidden');
-                tipoDropdown.classList.add('border-red-500');
+                if (errTipo) { errTipo.textContent = 'Selecciona un tipo de punto.'; errTipo.classList.remove('hidden'); }
+                if (tipoDropdown) tipoDropdown.classList.add('border-red-500');
                 isValid = false;
             }
 
             if (!isValid) {
                 e.preventDefault();
             } else {
-                // Armar direccion completa
                 hiddenDir.value = `${inCalle.value.trim()} #${inNum.value.trim()}, C.P. ${inCP.value.trim()}`;
             }
         });

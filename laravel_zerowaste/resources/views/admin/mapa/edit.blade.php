@@ -119,19 +119,19 @@
                     
                     <div class="dropdown-options hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden">
                         <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Plástico">
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">recycling</span> Reciclaje de Plástico
+                            <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">recycling</span> <span class="pointer-events-none">Reciclaje de Plástico</span>
                         </div>
                         <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Vidrio">
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">wine_bar</span> Reciclaje de Vidrio
+                            <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">wine_bar</span> <span class="pointer-events-none">Reciclaje de Vidrio</span>
                         </div>
                         <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Electrónicos">
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">devices</span> Desechos Electrónicos
+                            <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">devices</span> <span class="pointer-events-none">Desechos Electrónicos</span>
                         </div>
                         <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Centro Principal">
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">domain</span> Centro Principal
+                            <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">domain</span> <span class="pointer-events-none">Centro Principal</span>
                         </div>
                         <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Contenedor Público">
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">delete</span> Contenedor Público
+                            <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">delete</span> <span class="pointer-events-none">Contenedor Público</span>
                         </div>
                     </div>
                 </div>
@@ -164,10 +164,10 @@
                         @endphp
                         @foreach($options as $val => $icon)
                         <div class="option-multi-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-3 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="{{ $val }}">
-                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box {{ in_array($val, $selectedMaterials) ? 'bg-emerald-500' : '' }}">
-                                <span class="material-symbols-outlined text-sm text-white {{ in_array($val, $selectedMaterials) ? '' : 'hidden' }}">check</span>
+                            <div class="w-5 h-5 border-2 border-emerald-500 rounded flex items-center justify-center check-box pointer-events-none {{ in_array($val, $selectedMaterials) ? 'bg-emerald-500' : '' }}">
+                                <span class="material-symbols-outlined text-sm text-white pointer-events-none {{ in_array($val, $selectedMaterials) ? '' : 'hidden' }}">check</span>
                             </div>
-                            <span class="material-symbols-outlined text-emerald-500 text-lg">{{ $icon }}</span> {{ $val }}
+                            <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">{{ $icon }}</span> <span class="pointer-events-none">{{ $val }}</span>
                         </div>
                         @endforeach
                     </div>
@@ -233,12 +233,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.option-item').forEach(item => {
         item.addEventListener('click', function(e) {
             e.stopPropagation();
-            const dropdown = this.closest('.custom-dropdown');
+            const el = e.currentTarget;
+            const dropdown = el.closest('.custom-dropdown');
             const hiddenInput = dropdown.querySelector('input[type="hidden"]');
             const selectedText = dropdown.querySelector('.selected-text');
             
-            hiddenInput.value = this.dataset.value;
-            selectedText.innerHTML = this.innerHTML;
+            hiddenInput.value = el.dataset.value;
+            selectedText.innerHTML = el.innerHTML;
             selectedText.classList.remove('text-gray-500', 'dark:text-gray-400');
             selectedText.classList.add('text-gray-900', 'dark:text-white');
             
@@ -251,6 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function updateMultiText() {
         const selectedText = document.querySelector('.selected-text-multi');
+        if (!selectedText) return;
         if (selectedMaterials.length > 0) {
             selectedText.innerHTML = `<span class="font-bold text-emerald-600 dark:text-emerald-400">${selectedMaterials.length} seleccionados:</span> ${selectedMaterials.join(', ')}`;
             selectedText.classList.remove('text-gray-500', 'dark:text-gray-400');
@@ -266,9 +268,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.option-multi-item').forEach(item => {
         item.addEventListener('click', function(e) {
             e.stopPropagation();
-            const value = this.dataset.value;
-            const checkBox = this.querySelector('.check-box');
-            const checkIcon = this.querySelector('.check-box span');
+            const el = e.currentTarget;
+            const value = el.dataset.value;
+            const checkBox = el.querySelector('.check-box');
+            const checkIcon = el.querySelector('.check-box span');
             const hiddenInput = document.getElementById('materiales_hidden');
 
             if (selectedMaterials.includes(value)) {

@@ -154,7 +154,7 @@
                         <div class="dropdown-options hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden max-h-64 overflow-y-auto">
                             @foreach($iconMap as $title => $icon)
                             <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="{{ $title }}">
-                                <span class="material-symbols-outlined text-emerald-500 text-base">{{ $icon }}</span> {{ $title }}
+                                <span class="material-symbols-outlined text-emerald-500 text-base pointer-events-none">{{ $icon }}</span> <span class="pointer-events-none">{{ $title }}</span>
                             </div>
                             @endforeach
                         </div>
@@ -351,12 +351,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.option-item').forEach(item => {
         item.addEventListener('click', function(e) {
             e.stopPropagation();
-            const dropdown = this.closest('.custom-dropdown');
+            const el = e.currentTarget;
+            const dropdown = el.closest('.custom-dropdown');
             const hiddenInput = dropdown.querySelector('input[type="hidden"]');
             const selectedText = dropdown.querySelector('.selected-text');
             
-            hiddenInput.value = this.dataset.value;
-            selectedText.innerHTML = this.innerHTML;
+            hiddenInput.value = el.dataset.value;
+            selectedText.innerHTML = el.innerHTML;
             
             dropdown.querySelector('.dropdown-options').classList.add('hidden');
             const errSpan = document.getElementById('err-titulo');

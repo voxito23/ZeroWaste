@@ -82,7 +82,7 @@
                             @endphp
                             @foreach($etiquetas as $etiqueta => $icon)
                             <div class="option-etiqueta-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="{{ $etiqueta }}">
-                                <span class="material-symbols-outlined text-emerald-500 text-lg">{{ $icon }}</span> {{ $etiqueta }}
+                                <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">{{ $icon }}</span> <span class="pointer-events-none">{{ $etiqueta }}</span>
                             </div>
                             @endforeach
                         </div>
@@ -217,9 +217,15 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.option-etiqueta-item').forEach(item => {
         item.addEventListener('click', function(e) {
             e.stopPropagation();
-            const dropdown = this.closest('.custom-dropdown-etiqueta');
-            dropdown.querySelector('input[type="hidden"]').value = this.dataset.value;
-            dropdown.querySelector('.selected-text-etiqueta').textContent = this.dataset.value;
+            const el = e.currentTarget;
+            const dropdown = el.closest('.custom-dropdown-etiqueta');
+            dropdown.querySelector('input[type="hidden"]').value = el.dataset.value;
+            const selText = dropdown.querySelector('.selected-text-etiqueta');
+            if (selText) {
+                selText.innerHTML = el.innerHTML;
+                selText.classList.remove('text-gray-500', 'dark:text-gray-400');
+                selText.classList.add('text-gray-900', 'dark:text-white');
+            }
             dropdown.querySelector('.dropdown-options-etiqueta').classList.add('hidden');
         });
     });

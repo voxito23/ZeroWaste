@@ -71,28 +71,28 @@
                         
                         <div class="dropdown-options hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden max-h-52 overflow-y-auto">
                             <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="EDUCACIÓN">
-                                <span class="material-symbols-outlined text-emerald-500 text-lg">school</span> EDUCACIÓN
+                                <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">school</span> <span class="pointer-events-none">EDUCACIÓN</span>
                             </div>
                             <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="IMPACTO POSITIVO">
-                                <span class="material-symbols-outlined text-emerald-500 text-lg">eco</span> IMPACTO POSITIVO
+                                <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">eco</span> <span class="pointer-events-none">IMPACTO POSITIVO</span>
                             </div>
                             <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="RECAUDACIÓN">
-                                <span class="material-symbols-outlined text-emerald-500 text-lg">volunteer_activism</span> RECAUDACIÓN
+                                <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">volunteer_activism</span> <span class="pointer-events-none">RECAUDACIÓN</span>
                             </div>
                             <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="LIMPIEZA">
-                                <span class="material-symbols-outlined text-emerald-500 text-lg">cleaning_services</span> LIMPIEZA
+                                <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">cleaning_services</span> <span class="pointer-events-none">LIMPIEZA</span>
                             </div>
                             <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="TALLER">
-                                <span class="material-symbols-outlined text-emerald-500 text-lg">construction</span> TALLER
+                                <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">construction</span> <span class="pointer-events-none">TALLER</span>
                             </div>
                             <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="CONFERENCIA">
-                                <span class="material-symbols-outlined text-emerald-500 text-lg">groups</span> CONFERENCIA
+                                <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">groups</span> <span class="pointer-events-none">CONFERENCIA</span>
                             </div>
                             <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="RECICLAJE">
-                                <span class="material-symbols-outlined text-emerald-500 text-lg">recycling</span> RECICLAJE
+                                <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">recycling</span> <span class="pointer-events-none">RECICLAJE</span>
                             </div>
                             <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="CONCIENTIZACIÓN">
-                                <span class="material-symbols-outlined text-emerald-500 text-lg">campaign</span> CONCIENTIZACIÓN
+                                <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">campaign</span> <span class="pointer-events-none">CONCIENTIZACIÓN</span>
                             </div>
                         </div>
                     </div>
@@ -236,11 +236,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.option-item').forEach(item => {
         item.addEventListener('click', function(e) {
             e.stopPropagation();
-            const dropdown = this.closest('.custom-dropdown');
+            const el = e.currentTarget;
+            const dropdown = el.closest('.custom-dropdown');
             const hiddenInput = dropdown.querySelector('input[type="hidden"]');
             const selectedText = dropdown.querySelector('.selected-text');
-            hiddenInput.value = this.dataset.value;
-            selectedText.innerHTML = this.innerHTML;
+            hiddenInput.value = el.dataset.value;
+            selectedText.innerHTML = el.innerHTML;
             selectedText.classList.remove('text-gray-500', 'dark:text-gray-400');
             selectedText.classList.add('text-gray-900', 'dark:text-white');
             dropdown.querySelector('.dropdown-options').classList.add('hidden');

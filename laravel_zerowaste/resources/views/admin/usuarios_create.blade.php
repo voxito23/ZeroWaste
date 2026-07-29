@@ -96,19 +96,19 @@
                             
                             <div class="dropdown-options hidden absolute z-50 w-full mt-2 bg-white dark:bg-[#0F2A20] border border-gray-100 dark:border-emerald-800/50 rounded-xl shadow-xl overflow-hidden">
                                 <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Usuario Eco-consciente">
-                                    <span class="material-symbols-outlined text-emerald-500 text-lg">eco</span> Usuario Eco-consciente
+                                    <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">eco</span> <span class="pointer-events-none">Usuario Eco-consciente</span>
                                 </div>
                                 <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Entusiasta del Desarrollo Sostenible">
-                                    <span class="material-symbols-outlined text-emerald-500 text-lg">public</span> Entusiasta del Desarrollo Sostenible
+                                    <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">public</span> <span class="pointer-events-none">Entusiasta del Desarrollo Sostenible</span>
                                 </div>
                                 <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Guardián de la Tierra">
-                                    <span class="material-symbols-outlined text-emerald-500 text-lg">landscape</span> Guardián de la Tierra
+                                    <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">landscape</span> <span class="pointer-events-none">Guardián de la Tierra</span>
                                 </div>
                                 <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Reciclador Estrella">
-                                    <span class="material-symbols-outlined text-emerald-500 text-lg">star</span> Reciclador Estrella
+                                    <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">star</span> <span class="pointer-events-none">Reciclador Estrella</span>
                                 </div>
                                 <div class="option-item p-3 hover:bg-emerald-50 dark:hover:bg-emerald-900/30 cursor-pointer flex items-center gap-2 text-gray-700 dark:text-gray-300 transition-colors text-sm" data-value="Eco-guerrero">
-                                    <span class="material-symbols-outlined text-emerald-500 text-lg">shield</span> Eco-guerrero
+                                    <span class="material-symbols-outlined text-emerald-500 text-lg pointer-events-none">shield</span> <span class="pointer-events-none">Eco-guerrero</span>
                                 </div>
                             </div>
                         </div>
@@ -276,12 +276,13 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.option-item').forEach(item => {
         item.addEventListener('click', function(e) {
             e.stopPropagation();
-            const dropdown = this.closest('.custom-dropdown');
+            const el = e.currentTarget;
+            const dropdown = el.closest('.custom-dropdown');
             const hiddenInput = dropdown.querySelector('input[type="hidden"]');
             const selectedText = dropdown.querySelector('.selected-text');
             
-            hiddenInput.value = this.dataset.value;
-            selectedText.innerHTML = this.innerHTML;
+            hiddenInput.value = el.dataset.value;
+            selectedText.innerHTML = el.innerHTML;
             selectedText.classList.remove('text-gray-500', 'dark:text-gray-400');
             selectedText.classList.add('text-gray-900', 'dark:text-white');
             
