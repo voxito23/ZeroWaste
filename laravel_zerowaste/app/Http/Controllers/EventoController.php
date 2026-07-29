@@ -22,7 +22,7 @@ class EventoController extends Controller
     {
         $rules = [
             'titulo' => 'required|string|max:150',
-            'descripcion' => 'required|string',
+            'descripcion' => 'required|string|max:500',
             'lugar' => 'nullable|string|max:200',
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date',
@@ -34,6 +34,7 @@ class EventoController extends Controller
             'titulo.required' => 'El título del evento es obligatorio.',
             'titulo.max' => 'El título no puede exceder los 150 caracteres.',
             'descripcion.required' => 'La descripción es obligatoria.',
+            'descripcion.max' => 'La descripción no puede exceder los 500 caracteres.',
             'fecha_inicio.required' => 'La fecha de inicio es obligatoria.',
             'fecha_inicio.date' => 'Debe ingresar una fecha de inicio válida.',
             'fecha_fin.required' => 'La fecha de fin es obligatoria.',
@@ -72,7 +73,7 @@ class EventoController extends Controller
     {
         $rules = [
             'titulo' => 'required|string|max:150',
-            'descripcion' => 'required|string',
+            'descripcion' => 'required|string|max:500',
             'lugar' => 'nullable|string|max:200',
             'fecha_inicio' => 'required|date',
             'fecha_fin' => 'required|date',
@@ -84,6 +85,7 @@ class EventoController extends Controller
             'titulo.required' => 'El título del evento es obligatorio.',
             'titulo.max' => 'El título no puede exceder los 150 caracteres.',
             'descripcion.required' => 'La descripción es obligatoria.',
+            'descripcion.max' => 'La descripción no puede exceder los 500 caracteres.',
             'fecha_inicio.required' => 'La fecha de inicio es obligatoria.',
             'fecha_inicio.date' => 'Debe ingresar una fecha de inicio válida.',
             'fecha_fin.required' => 'La fecha de fin es obligatoria.',

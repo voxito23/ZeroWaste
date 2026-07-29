@@ -38,7 +38,7 @@
                 <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Descripción</label>
                 <div class="relative">
                     <div class="absolute top-3 left-0 pl-4 flex items-start pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">subject</span></div>
-                    <textarea name="descripcion" rows="4" required class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">{{ $evento->descripcion }}</textarea>
+                    <textarea name="descripcion" rows="4" required maxlength="500" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">{{ $evento->descripcion }}</textarea>
                 </div>
                 <div class="flex justify-between items-center mt-1">
                     <span id="err-descripcion" class="hidden text-red-500 text-xs font-medium ml-1"></span>
@@ -252,6 +252,9 @@ document.addEventListener('DOMContentLoaded', function() {
             errDesc.classList.remove('hidden'); descripcion.classList.add('border-red-500'); isValid = false;
         } else if (descVal.length < 10) {
             errDesc.textContent = 'La descripción debe tener al menos 10 caracteres.';
+            errDesc.classList.remove('hidden'); descripcion.classList.add('border-red-500'); isValid = false;
+        } else if (descVal.length > 500) {
+            errDesc.textContent = 'La descripción no puede exceder los 500 caracteres.';
             errDesc.classList.remove('hidden'); descripcion.classList.add('border-red-500'); isValid = false;
         }
 

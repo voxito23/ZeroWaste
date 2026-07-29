@@ -22,7 +22,7 @@ class CampaignController extends Controller
     {
         $rules = [
             'nombre' => 'required|string|max:150',
-            'descripcion' => 'required|string',
+            'descripcion' => 'required|string|max:500',
             'lugar' => 'nullable|string|max:200',
             'fecha_inicio' => 'nullable|date',
             'fecha_fin' => 'nullable|date',
@@ -34,6 +34,7 @@ class CampaignController extends Controller
             'nombre.required' => 'El nombre de la campaña es obligatorio.',
             'nombre.max' => 'El nombre no puede exceder los 150 caracteres.',
             'descripcion.required' => 'La descripción es obligatoria.',
+            'descripcion.max' => 'La descripción no puede exceder los 500 caracteres.',
             'fecha_inicio.date' => 'Debe ingresar una fecha de inicio válida.',
             'fecha_fin.date' => 'Debe ingresar una fecha de fin válida.',
             'imagen_archivo.image' => 'El archivo debe ser una imagen válida.',
@@ -73,7 +74,7 @@ class CampaignController extends Controller
     {
         $rules = [
             'nombre' => 'required|string|max:150',
-            'descripcion' => 'required|string',
+            'descripcion' => 'required|string|max:500',
             'lugar' => 'nullable|string|max:200',
             'fecha_inicio' => 'nullable|date',
             'fecha_fin' => 'nullable|date',
@@ -85,6 +86,7 @@ class CampaignController extends Controller
             'nombre.required' => 'El nombre de la campaña es obligatorio.',
             'nombre.max' => 'El nombre no puede exceder los 150 caracteres.',
             'descripcion.required' => 'La descripción es obligatoria.',
+            'descripcion.max' => 'La descripción no puede exceder los 500 caracteres.',
             'fecha_inicio.date' => 'Debe ingresar una fecha de inicio válida.',
             'fecha_fin.date' => 'Debe ingresar una fecha de fin válida.',
             'imagen_archivo.image' => 'El archivo debe ser una imagen válida.',
