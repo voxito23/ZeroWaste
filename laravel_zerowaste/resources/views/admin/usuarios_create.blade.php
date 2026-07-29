@@ -42,11 +42,11 @@
                     <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Nombre Completo</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">badge</span></div>
-                        <input type="text" name="nombre" id="input-nombre" required maxlength="100" placeholder="Ej. María Martínez" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                        <input type="text" name="nombre" id="input-nombre" required maxlength="30" placeholder="Ej. María Martínez" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
                     </div>
                     <div class="flex justify-between items-center mt-1">
                         <span id="err-nombre" class="hidden text-red-500 text-xs font-medium ml-1"></span>
-                        <span id="counter-nombre" class="text-xs font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">0/100</span>
+                        <span id="counter-nombre" class="text-xs font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">0/30</span>
                     </div>
                 </div>
                 
@@ -76,11 +76,11 @@
                         <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Ubicación</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">location_on</span></div>
-                            <input type="text" name="ubicacion" id="input-ubicacion" required maxlength="100" placeholder="Querétaro, Qro." class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                            <input type="text" name="ubicacion" id="input-ubicacion" required maxlength="30" placeholder="Querétaro, Qro." class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
                         </div>
                         <div class="flex justify-between items-center mt-1">
                             <span id="err-ubicacion" class="hidden text-red-500 text-xs font-medium ml-1"></span>
-                            <span id="counter-ubicacion" class="text-xs font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">0/100</span>
+                            <span id="counter-ubicacion" class="text-xs font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">0/30</span>
                         </div>
                     </div>
                     <div>
@@ -247,13 +247,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (inputNombre) {
         inputNombre.addEventListener('input', function() {
             filterNombre(this);
-            updateCounter(this, 'counter-nombre', 100, 2, 'err-nombre');
+            updateCounter(this, 'counter-nombre', 30, 2, 'err-nombre');
         });
         // Prevenir pegar caracteres especiales
         inputNombre.addEventListener('paste', function(e) {
             setTimeout(() => {
                 filterNombre(this);
-                updateCounter(this, 'counter-nombre', 100, 2, 'err-nombre');
+                updateCounter(this, 'counter-nombre', 30, 2, 'err-nombre');
             }, 0);
         });
     }
@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputUbicacion = document.getElementById('input-ubicacion');
     if (inputUbicacion) {
         inputUbicacion.addEventListener('input', function() {
-            updateCounter(this, 'counter-ubicacion', 100, 2, 'err-ubicacion');
+            updateCounter(this, 'counter-ubicacion', 30, 2, 'err-ubicacion');
         });
     }
 
@@ -348,8 +348,8 @@ document.addEventListener('DOMContentLoaded', function() {
             errNombre.classList.remove('hidden');
             nombre.classList.add('border-red-500', 'dark:border-red-500');
             isValid = false;
-        } else if (nombreVal.length > 100) {
-            errNombre.textContent = 'El nombre no puede exceder los 100 caracteres.';
+        } else if (nombreVal.length > 30) {
+            errNombre.textContent = 'El nombre no puede exceder los 30 caracteres.';
             errNombre.classList.remove('hidden');
             nombre.classList.add('border-red-500', 'dark:border-red-500');
             isValid = false;
@@ -389,8 +389,8 @@ document.addEventListener('DOMContentLoaded', function() {
             errUbicacion.classList.remove('hidden');
             ubicacion.classList.add('border-red-500', 'dark:border-red-500');
             isValid = false;
-        } else if (ubicacionVal.length > 100) {
-            errUbicacion.textContent = 'La ubicación no puede exceder los 100 caracteres.';
+        } else if (ubicacionVal.length > 30) {
+            errUbicacion.textContent = 'La ubicación no puede exceder los 30 caracteres.';
             errUbicacion.classList.remove('hidden');
             ubicacion.classList.add('border-red-500', 'dark:border-red-500');
             isValid = false;

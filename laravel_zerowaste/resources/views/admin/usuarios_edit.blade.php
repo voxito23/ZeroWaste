@@ -92,11 +92,11 @@
                     <label>Nombre Completo</label>
                     <div class="relative">
                         <span class="field-icon material-symbols-outlined">badge</span>
-                        <input type="text" name="nombre" id="input-nombre" value="{{ old('nombre', $user->nombre) }}" required maxlength="100" class="field-input">
+                        <input type="text" name="nombre" id="input-nombre" value="{{ old('nombre', $user->nombre) }}" required maxlength="30" class="field-input">
                     </div>
                     <div class="flex justify-between items-center mt-1">
                         <span id="err-nombre" class="hidden text-red-500 text-[11px] font-medium"></span>
-                        <span id="counter-nombre" class="text-[11px] font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">{{ strlen(old('nombre', $user->nombre)) }}/100</span>
+                        <span id="counter-nombre" class="text-[11px] font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">{{ strlen(old('nombre', $user->nombre)) }}/30</span>
                     </div>
                 </div>
 
@@ -115,11 +115,11 @@
                     <label>Ubicación</label>
                     <div class="relative">
                         <span class="field-icon material-symbols-outlined">location_on</span>
-                        <input type="text" name="ubicacion" id="input-ubicacion" value="{{ old('ubicacion', $user->ubicacion) }}" required maxlength="100" placeholder="Querétaro, Qro." class="field-input">
+                        <input type="text" name="ubicacion" id="input-ubicacion" value="{{ old('ubicacion', $user->ubicacion) }}" required maxlength="30" placeholder="Querétaro, Qro." class="field-input">
                     </div>
                     <div class="flex justify-between items-center mt-1">
                         <span id="err-ubicacion" class="hidden text-red-500 text-[11px] font-medium"></span>
-                        <span id="counter-ubicacion" class="text-[11px] font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">{{ strlen(old('ubicacion', $user->ubicacion)) }}/100</span>
+                        <span id="counter-ubicacion" class="text-[11px] font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">{{ strlen(old('ubicacion', $user->ubicacion)) }}/30</span>
                     </div>
                 </div>
 
@@ -333,12 +333,12 @@ document.addEventListener('DOMContentLoaded', function() {
     // Real-time validation
     const inputNombre = document.getElementById('input-nombre');
     if (inputNombre) {
-        inputNombre.addEventListener('input', function() { filterAlphaNum(this); updateCounter(this, 'counter-nombre', 100, 2, 'err-nombre'); });
-        inputNombre.addEventListener('paste', function() { setTimeout(() => { filterAlphaNum(this); updateCounter(this, 'counter-nombre', 100, 2, 'err-nombre'); }, 0); });
+        inputNombre.addEventListener('input', function() { filterAlphaNum(this); updateCounter(this, 'counter-nombre', 30, 2, 'err-nombre'); });
+        inputNombre.addEventListener('paste', function() { setTimeout(() => { filterAlphaNum(this); updateCounter(this, 'counter-nombre', 30, 2, 'err-nombre'); }, 0); });
     }
     const inputUbicacion = document.getElementById('input-ubicacion');
     if (inputUbicacion) {
-        inputUbicacion.addEventListener('input', function() { updateCounter(this, 'counter-ubicacion', 100, 2, 'err-ubicacion'); });
+        inputUbicacion.addEventListener('input', function() { updateCounter(this, 'counter-ubicacion', 30, 2, 'err-ubicacion'); });
     }
 
     // Dropdown personalizado
@@ -409,8 +409,8 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (nombreVal.length < 2) {
             errNombre.textContent = 'El nombre debe tener al menos 2 caracteres.';
             errNombre.classList.remove('hidden'); nombre.classList.add('border-red-500'); isValid = false;
-        } else if (nombreVal.length > 100) {
-            errNombre.textContent = 'El nombre no puede exceder los 100 caracteres.';
+        } else if (nombreVal.length > 30) {
+            errNombre.textContent = 'El nombre no puede exceder los 30 caracteres.';
             errNombre.classList.remove('hidden'); nombre.classList.add('border-red-500'); isValid = false;
         } else if (!nombreRegex.test(nombreVal)) {
             errNombre.textContent = 'El nombre contiene caracteres no válidos.';
@@ -442,8 +442,8 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (ubicacionVal.length < 2) {
             errUbicacion.textContent = 'La ubicación debe tener al menos 2 caracteres.';
             errUbicacion.classList.remove('hidden'); ubicacion.classList.add('border-red-500'); isValid = false;
-        } else if (ubicacionVal.length > 100) {
-            errUbicacion.textContent = 'La ubicación no puede exceder los 100 caracteres.';
+        } else if (ubicacionVal.length > 30) {
+            errUbicacion.textContent = 'La ubicación no puede exceder los 30 caracteres.';
             errUbicacion.classList.remove('hidden'); ubicacion.classList.add('border-red-500'); isValid = false;
         }
 

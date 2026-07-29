@@ -65,10 +65,10 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'nombre' => 'required|string|min:2|max:100',
+            'nombre' => 'required|string|min:2|max:30',
             'email' => 'required|email|max:100|unique:usuarios',
             'password' => 'required|string|min:6',
-            'ubicacion' => 'nullable|string|max:100',
+            'ubicacion' => 'nullable|string|max:30',
             'titulo_perfil' => 'nullable|string|max:100',
             'biografia' => 'nullable|string|max:500',
             'foto_perfil' => 'nullable|image|max:256000',
@@ -77,13 +77,13 @@ class UserController extends Controller
         $messages = [
             'nombre.required' => 'El nombre es obligatorio.',
             'nombre.min' => 'El nombre debe tener al menos 2 caracteres.',
-            'nombre.max' => 'El nombre no puede tener más de 100 caracteres.',
+            'nombre.max' => 'El nombre no puede tener más de 30 caracteres.',
             'email.required' => 'El correo electrónico es obligatorio.',
             'email.email' => 'Debe ingresar un correo válido.',
             'email.unique' => 'Este correo ya está registrado.',
             'password.required' => 'La contraseña es obligatoria.',
             'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
-            'ubicacion.max' => 'La ubicación no puede exceder los 100 caracteres.',
+            'ubicacion.max' => 'La ubicación no puede exceder los 30 caracteres.',
             'titulo_perfil.max' => 'El título del perfil no puede exceder los 100 caracteres.',
             'biografia.max' => 'La biografía no puede exceder los 500 caracteres.',
             'foto_perfil.image' => 'El archivo debe ser una imagen.',
@@ -138,10 +138,10 @@ class UserController extends Controller
         }
 
         $rules = [
-            'nombre' => 'required|string|min:2|max:100',
+            'nombre' => 'required|string|min:2|max:30',
             'email' => 'required|email|max:100|unique:usuarios,email,'.$user->id,
             'password' => 'nullable|string|min:6|confirmed',
-            'ubicacion' => 'nullable|string|max:100',
+            'ubicacion' => 'nullable|string|max:30',
             'titulo_perfil' => 'nullable|string|max:100',
             'biografia' => 'nullable|string|max:500',
             'foto_perfil' => 'nullable|image|max:256000',
@@ -150,13 +150,13 @@ class UserController extends Controller
         $messages = [
             'nombre.required' => 'El nombre es obligatorio.',
             'nombre.min' => 'El nombre debe tener al menos 2 caracteres.',
-            'nombre.max' => 'El nombre no puede tener más de 100 caracteres.',
+            'nombre.max' => 'El nombre no puede tener más de 30 caracteres.',
             'email.required' => 'El correo electrónico es obligatorio.',
             'email.email' => 'Debe ingresar un correo válido.',
             'email.unique' => 'Este correo ya está registrado.',
             'password_actual' => 'required_with:password|string',
             'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
-            'ubicacion.max' => 'La ubicación no puede exceder los 100 caracteres.',
+            'ubicacion.max' => 'La ubicación no puede exceder los 30 caracteres.',
             'titulo_perfil.max' => 'El título del perfil no puede exceder los 100 caracteres.',
             'biografia.max' => 'La biografía no puede exceder los 500 caracteres.',
             'foto_perfil.image' => 'El archivo debe ser una imagen.',
