@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   # ===========================
-  # Caddy — Proxy HTTPS Automático
+  # Caddy — Proxy HTTPS Automático + Balanceador de Carga
   # ===========================
   caddy:
     image: caddy:2-alpine
@@ -21,7 +21,7 @@ services:
       - fast_api
 
   # ===========================
-  # Flask — Sitio Principal
+  # Flask — Sitio Principal (Servidor Público)
   # ===========================
   cliente:
     build: ./flask_zerowaste
@@ -39,7 +39,7 @@ services:
       - HTTPS_ENABLED=false
 
   # ===========================
-  # Laravel — Panel Admin
+  # Laravel — Panel Admin (Servidor Privado)
   # ===========================
   admin:
     build: ./laravel_zerowaste
@@ -60,7 +60,7 @@ services:
       # El APP_KEY ahora se carga desde ./laravel_zerowaste/.env
 
   # ===========================
-  # FastAPI — API Backend
+  # FastAPI — API Backend (Servidor Privado)
   # ===========================
   fast_api:
     build: ./fast_api
@@ -77,8 +77,44 @@ services:
       - APP_ENV=production
 
   # ===========================
-  # PostgreSQL — Eliminado (Migrado a Supabase)
+  # Prometheus — Monitoreo del Sistema
   # ===========================
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus_monitor
+    restart: always
+    expose:
+      - "9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+    depends_on:
+      - fast_api
+
+  # ===========================
+  # Grafana — Dashboard de Monitoreo
+  # ===========================
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: grafana_dashboard
+    restart: always
+    expose:
+      - "3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=ZeroWaste2026!
+      - GF_SERVER_ROOT_URL=https://zerowaste-qro.com/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    depends_on:
+      - prometheus
 
   # ===========================
   # Tailwind — CSS Builder
@@ -98,3 +134,5 @@ volumes:
   perfiles_compartidos:
   caddy_data:
   caddy_config:
+  prometheus_data:
+  grafana_data:

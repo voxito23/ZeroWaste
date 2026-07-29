@@ -11,3 +11,4 @@ pysentimiento==0.7.3
 pandas==2.2.3
 slowapi>=0.1.9
 matplotlib==3.10.8
+prometheus-fastapi-instrumentator>=7.0.0

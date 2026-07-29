@@ -1,15 +1,15 @@
 zerowaste-qro.com, www.zerowaste-qro.com {
-    # Laravel (Panel Admin)
+    # Laravel (Panel Admin — Servidor Privado)
     handle /zw-interno* {
         reverse_proxy admin:80
     }
 
-    # FastAPI (Backend / API)
+    # FastAPI (Backend / API — Servidor Privado)
     handle_path /api* {
         reverse_proxy fast_api:6000
     }
 
-    # FastAPI Docs y Redoc
+    # FastAPI Docs y Redoc (Protegidos con login de admin)
     handle /zw-docs* {
         reverse_proxy fast_api:6000
     }
@@ -20,7 +20,17 @@ zerowaste-qro.com, www.zerowaste-qro.com {
         reverse_proxy fast_api:6000
     }
 
-    # Flask (Resto del sitio - Página Principal)
+    # Prometheus — Monitoreo del Sistema (solo acceso interno)
+    handle_path /prometheus* {
+        reverse_proxy prometheus:9090
+    }
+
+    # Grafana — Dashboard de Monitoreo
+    handle_path /grafana* {
+        reverse_proxy grafana:3000
+    }
+
+    # Flask (Resto del sitio — Servidor Público)
     handle {
         reverse_proxy cliente:5000
     }

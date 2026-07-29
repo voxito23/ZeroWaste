@@ -1,21 +1,48 @@
+"""
+Router de autenticación para documentación API — solo administradores.
+Protege /zw-docs, /zw-redoc y /zw-openapi.json con cookie httponly + JWT.
+"""
+
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 from fastapi.security import OAuth2PasswordRequestForm
 import os
 
 from app.data.database import get_db
 from sqlalchemy.orm import Session
 from app.models.domain_models import Usuario
-from app.security.jwt_auth import verify_password
-from app.security.jwt_auth import create_access_token
+from app.security.jwt_auth import verify_password, create_access_token, SECRET_KEY, ALGORITHM
+
+from jose import JWTError, jwt  # type: ignore
 
 router = APIRouter(tags=["Docs Auth"])
 
 templates_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
 
+
+def _verify_docs_cookie(request: Request) -> bool:
+    """Verifica si la cookie docs_access_token contiene un JWT válido de admin."""
+    token_raw = request.cookies.get("docs_access_token")
+    if not token_raw:
+        return False
+    # La cookie se guarda como "Bearer <token>"
+    token = token_raw.replace("Bearer ", "", 1) if token_raw.startswith("Bearer ") else token_raw
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email = payload.get("sub")
+        if not email:
+            return False
+        return True
+    except JWTError:
+        return False
+
+
 @router.get("/zw-docs/login", response_class=HTMLResponse, include_in_schema=False)
 async def login_for_docs(request: Request):
-    """Página de inicio de sesión hermosamente diseñada para desarrolladores."""
+    """Página de inicio de sesión para desarrolladores administradores."""
+    # Si ya tiene cookie válida, redirigir directamente a docs
+    if _verify_docs_cookie(request):
+        return RedirectResponse(url="/zw-docs", status_code=status.HTTP_303_SEE_OTHER)
     with open(os.path.join(templates_dir, "docs_login.html"), "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content)
@@ -45,9 +72,6 @@ async def authenticate_for_docs(
     # Crear token válido para acceso a los docs
     access_token = create_access_token(data={"sub": user.email})
     
-    # Crear respuesta y setear cookie
-    cookie_response = dict(message="Login exitoso")
-    
     # Seteamos cookie httponly para la seguridad de Docs
     response.set_cookie(
         key="docs_access_token",
@@ -57,19 +81,12 @@ async def authenticate_for_docs(
         expires=1800,
         samesite="lax"
     )
-    return cookie_response
-
-
-async def get_current_user_from_cookie(request: Request):
-    token = request.cookies.get("docs_access_token")
-    if not token:
-        raise HTTPException(status_code=status.HTTP_303_SEE_OTHER, headers={"Location": "/zw-docs/login"})
-    return token
+    return {"message": "Login exitoso"}
 
 
 @router.get("/zw-docs/logout", include_in_schema=False)
 async def logout_for_docs():
-    """Redirige al panel Laravel Admin."""
+    """Cierra sesión de docs y redirige al panel Laravel Admin."""
     response = RedirectResponse(url="/zw-interno/dashboard", status_code=status.HTTP_303_SEE_OTHER)
     response.delete_cookie("docs_access_token")
     return response
@@ -77,7 +94,9 @@ async def logout_for_docs():
 
 @router.get("/zw-docs", response_class=HTMLResponse, include_in_schema=False)
 async def custom_swagger_ui_html(request: Request):
-    """Swagger UI Premium y rápido de acceder."""
+    """Swagger UI Premium — protegido con cookie de admin."""
+    if not _verify_docs_cookie(request):
+        return RedirectResponse(url="/zw-docs/login", status_code=status.HTTP_303_SEE_OTHER)
     with open(os.path.join(templates_dir, "custom_swagger.html"), "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content)
@@ -85,7 +104,9 @@ async def custom_swagger_ui_html(request: Request):
 
 @router.get("/zw-redoc", response_class=HTMLResponse, include_in_schema=False)
 async def custom_redoc_html(request: Request):
-    """ReDoc Premium y rápido de acceder."""
+    """ReDoc Premium — protegido con cookie de admin."""
+    if not _verify_docs_cookie(request):
+        return RedirectResponse(url="/zw-docs/login", status_code=status.HTTP_303_SEE_OTHER)
     with open(os.path.join(templates_dir, "custom_redoc.html"), "r", encoding="utf-8") as f:
         html_content = f.read()
     return HTMLResponse(content=html_content)
@@ -93,5 +114,10 @@ async def custom_redoc_html(request: Request):
 
 @router.get("/zw-openapi.json", include_in_schema=False)
 async def get_openapi_endpoint(request: Request):
-    """OpenAPI JSON schema."""
+    """OpenAPI JSON schema — protegido con cookie de admin."""
+    if not _verify_docs_cookie(request):
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"detail": "Acceso denegado. Inicia sesión en /zw-docs/login"}
+        )
     return request.app.openapi()

@@ -131,10 +131,10 @@ def registro(
         )
 
     # Validaciones de longitud
-    if len(nombre.strip()) <= 10:
+    if len(nombre.strip()) < 2:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="El nombre completo debe tener más de 10 caracteres.",
+            detail="El nombre completo debe tener al menos 2 caracteres.",
         )
 
     if len(password) < 6:
@@ -204,8 +204,8 @@ def mobile_registro(
     if existe:
         raise HTTPException(status_code=400, detail="El correo ya está registrado.")
 
-    if len(data.nombre.strip()) <= 10:
-        raise HTTPException(status_code=422, detail="El nombre completo debe tener más de 10 caracteres.")
+    if len(data.nombre.strip()) < 2:
+        raise HTTPException(status_code=422, detail="El nombre completo debe tener al menos 2 caracteres.")
 
     if len(data.password) < 6:
         raise HTTPException(status_code=422, detail="La contraseña debe tener al menos 6 caracteres.")

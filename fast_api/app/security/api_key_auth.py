@@ -69,6 +69,7 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
         "/zw-docs",
         "/zw-redoc",
         "/zw-openapi.json",
+        "/metrics",
     }
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
