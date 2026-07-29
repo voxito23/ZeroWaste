@@ -310,7 +310,28 @@
                 oauth2RedirectUrl: window.location.origin + '/zw-docs/oauth2-redirect',
                 displayRequestDuration: true,
                 defaultModelsExpandDepth: -1,
-                docExpansion: 'list'
+                docExpansion: 'list',
+                requestInterceptor: function(req) {
+                    // Inyectar X-API-Key automáticamente si el usuario la autorizó en Swagger
+                    if (window.ui && window.ui.getState) {
+                        try {
+                            var state = window.ui.getState();
+                            var authorized = state.getIn(['auth', 'authorized']);
+                            if (authorized) {
+                                var apiKeyAuth = authorized.get('ApiKeyAuth');
+                                if (apiKeyAuth) {
+                                    var apiKeyValue = apiKeyAuth.getIn(['value']);
+                                    if (apiKeyValue) {
+                                        req.headers['X-API-Key'] = apiKeyValue;
+                                    }
+                                }
+                            }
+                        } catch(e) {
+                            // Fallback silencioso si el state aún no está disponible
+                        }
+                    }
+                    return req;
+                }
             });
         };
     </script>
