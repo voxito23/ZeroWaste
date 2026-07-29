@@ -118,7 +118,7 @@ export default function ForumScreen() {
 
       <ScrollView 
         showsVerticalScrollIndicator={false} 
-        contentContainerStyle={{ paddingTop: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 130 }}
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >
@@ -158,7 +158,7 @@ export default function ForumScreen() {
             />
             <TouchableOpacity
               className="flex-1 bg-gray-50 h-10 rounded-full px-4 justify-center"
-              onPress={() => navigation.navigate('CreatePost')}
+              onPress={() => navigation.navigate('create-post')}
             >
               <Text className="text-gray-400 font-medium text-[14px]">¿Qué quieres compartir hoy?</Text>
             </TouchableOpacity>
@@ -272,7 +272,7 @@ export default function ForumScreen() {
 
                       <View className="flex-row items-center justify-between">
                         <TouchableOpacity
-                          onPress={() => navigation.navigate('PostDetail', { id: post.id })}
+                          onPress={() => navigation.navigate('post-detail', { id: post.id })}
                           className="flex-row items-center gap-2 bg-white border border-gray-200 px-6 py-3.5 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.04)]"
                         >
                           <Text className="text-[#064E3B] font-black text-[15px]">Leer más</Text>
@@ -359,7 +359,7 @@ export default function ForumScreen() {
 
                     <View className="flex-row items-center justify-between border-t border-gray-100 pt-4 mt-3">
                       <TouchableOpacity
-                        onPress={() => navigation.navigate('PostDetail', { id: post.id })}
+                        onPress={() => navigation.navigate('post-detail', { id: post.id })}
                         className="flex-row items-center gap-2 bg-emerald-500 px-5 py-2.5 rounded-xl"
                       >
                         <Text className="text-white font-black text-[13px]">Ver Post</Text>

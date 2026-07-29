@@ -74,7 +74,7 @@ export default function RegisterScreen({ navigation }) {
       const response = await api.post('/auth/mobile/registro', { nombre, email, password });
       if (response.data.success) {
         // En lugar de ir directo, redirigimos a VerifyScreen
-        navigation.navigate('Verify', { email });
+        navigation.navigate('verify', { email });
       } else {
         Alert.alert('Error', response.data.error || 'Error en el registro');
       }
@@ -262,7 +262,7 @@ export default function RegisterScreen({ navigation }) {
         {/* Footer */}
         <View className="flex-row justify-center mt-auto mb-4">
           <Text className="text-gray-500 font-medium">¿Ya tienes cuenta? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+          <TouchableOpacity onPress={() => navigation.navigate('login')}>
             <Text className="text-primary font-bold">Inicia sesión</Text>
           </TouchableOpacity>
         </View>

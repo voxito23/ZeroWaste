@@ -92,9 +92,12 @@
                     <label>Nombre Completo</label>
                     <div class="relative">
                         <span class="field-icon material-symbols-outlined">badge</span>
-                        <input type="text" name="nombre" value="{{ old('nombre', $user->nombre) }}" required class="field-input">
+                        <input type="text" name="nombre" id="input-nombre" value="{{ old('nombre', $user->nombre) }}" required maxlength="30" class="field-input">
                     </div>
-                    <span id="err-nombre" class="hidden text-red-500 text-[11px] mt-1 font-medium"></span>
+                    <div class="flex justify-between items-center mt-1">
+                        <span id="err-nombre" class="hidden text-red-500 text-[11px] font-medium"></span>
+                        <span id="counter-nombre" class="text-[11px] font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">{{ strlen(old('nombre', $user->nombre)) }}/30</span>
+                    </div>
                 </div>
 
                 {{-- Email --}}
@@ -112,9 +115,12 @@
                     <label>Ubicación</label>
                     <div class="relative">
                         <span class="field-icon material-symbols-outlined">location_on</span>
-                        <input type="text" name="ubicacion" value="{{ old('ubicacion', $user->ubicacion) }}" required placeholder="Querétaro, Qro." class="field-input">
+                        <input type="text" name="ubicacion" id="input-ubicacion" value="{{ old('ubicacion', $user->ubicacion) }}" required maxlength="30" placeholder="Querétaro, Qro." class="field-input">
                     </div>
-                    <span id="err-ubicacion" class="hidden text-red-500 text-[11px] mt-1 font-medium"></span>
+                    <div class="flex justify-between items-center mt-1">
+                        <span id="err-ubicacion" class="hidden text-red-500 text-[11px] font-medium"></span>
+                        <span id="counter-ubicacion" class="text-[11px] font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">{{ strlen(old('ubicacion', $user->ubicacion)) }}/30</span>
+                    </div>
                 </div>
 
                 {{-- Título del Perfil --}}
@@ -287,7 +293,45 @@ function previewImage(input) {
     }
 }
 
+function updateCounter(input, counterId, max, min, errId) {
+    const counter = document.getElementById(counterId);
+    const errSpan = document.getElementById(errId);
+    const len = input.value.length;
+    counter.textContent = len + '/' + max;
+    if (len >= max) {
+        counter.classList.remove('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.add('text-red-500', 'dark:text-red-400');
+        input.classList.add('border-red-500');
+        if (errSpan) { errSpan.textContent = 'Máximo ' + max + ' caracteres alcanzado.'; errSpan.classList.remove('hidden'); }
+    } else if (len > 0 && len < min) {
+        counter.classList.remove('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.add('text-red-500', 'dark:text-red-400');
+        input.classList.add('border-red-500');
+        if (errSpan) { errSpan.textContent = 'Mínimo ' + min + ' caracteres requeridos.'; errSpan.classList.remove('hidden'); }
+    } else {
+        counter.classList.add('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.remove('text-red-500', 'dark:text-red-400');
+        input.classList.remove('border-red-500');
+        if (errSpan) { errSpan.classList.add('hidden'); }
+    }
+}
+
+function filterAlphaNum(input) {
+    input.value = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s]/g, '');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Real-time validation
+    const inputNombre = document.getElementById('input-nombre');
+    if (inputNombre) {
+        inputNombre.addEventListener('input', function() { filterAlphaNum(this); updateCounter(this, 'counter-nombre', 30, 5, 'err-nombre'); });
+        inputNombre.addEventListener('paste', function() { setTimeout(() => { filterAlphaNum(this); updateCounter(this, 'counter-nombre', 30, 5, 'err-nombre'); }, 0); });
+    }
+    const inputUbicacion = document.getElementById('input-ubicacion');
+    if (inputUbicacion) {
+        inputUbicacion.addEventListener('input', function() { updateCounter(this, 'counter-ubicacion', 30, 5, 'err-ubicacion'); });
+    }
+
     // Dropdown personalizado
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.custom-dropdown')) {
@@ -337,8 +381,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let isValid = true;
 
-        if (password.value || confirmPassword.value) {
-            if (!passwordActual.value) {
+        if (password && confirmPassword && (password.value || confirmPassword.value)) {
+            if (passwordActual && !passwordActual.value) {
                 errPassActual.textContent = 'Debes ingresar la contraseña anterior para confirmar el cambio.';
                 errPassActual.classList.remove('hidden');
                 passwordActual.classList.add('border-red-500');
@@ -346,52 +390,56 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        if (!nombre.value.trim() || nombre.value.trim().length < 11) {
-            errNombre.textContent = 'El nombre completo debe tener al menos 11 caracteres.';
-            errNombre.classList.remove('hidden');
-            nombre.classList.add('border-red-500');
-            isValid = false;
+        // Nombre: mín 5, máx 30, solo alfanumérico
+        const nombreVal = nombre.value.trim();
+        const nombreRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s]+$/;
+        if (!nombreVal) {
+            errNombre.textContent = 'El nombre es obligatorio.';
+            errNombre.classList.remove('hidden'); nombre.classList.add('border-red-500'); isValid = false;
+        } else if (nombreVal.length < 5) {
+            errNombre.textContent = 'El nombre debe tener al menos 5 caracteres.';
+            errNombre.classList.remove('hidden'); nombre.classList.add('border-red-500'); isValid = false;
+        } else if (!nombreRegex.test(nombreVal)) {
+            errNombre.textContent = 'El nombre solo puede contener letras, números y espacios.';
+            errNombre.classList.remove('hidden'); nombre.classList.add('border-red-500'); isValid = false;
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email.value.trim() || !emailRegex.test(email.value.trim())) {
             errEmail.textContent = 'El correo debe tener @ y un dominio válido.';
-            errEmail.classList.remove('hidden');
-            email.classList.add('border-red-500');
-            isValid = false;
+            errEmail.classList.remove('hidden'); email.classList.add('border-red-500'); isValid = false;
         }
 
-        if (password.value) {
+        if (password && password.value) {
             if (password.value.length < 6) {
                 errPassword.textContent = 'La contraseña debe tener al menos 6 caracteres.';
-                errPassword.classList.remove('hidden');
-                password.classList.add('border-red-500');
-                isValid = false;
+                errPassword.classList.remove('hidden'); password.classList.add('border-red-500'); isValid = false;
             }
-            if (password.value !== confirmPassword.value) {
+            if (confirmPassword && password.value !== confirmPassword.value) {
                 errConfirmPass.textContent = 'Las contraseñas no coinciden.';
-                errConfirmPass.classList.remove('hidden');
-                confirmPassword.classList.add('border-red-500');
-                isValid = false;
+                errConfirmPass.classList.remove('hidden'); confirmPassword.classList.add('border-red-500'); isValid = false;
             }
         }
 
-        if (!ubicacion.value.trim()) {
+        // Ubicación: mín 5, máx 30
+        const ubicacionVal = ubicacion.value.trim();
+        if (!ubicacionVal) {
             errUbicacion.textContent = 'La ubicación es obligatoria.';
-            errUbicacion.classList.remove('hidden');
-            ubicacion.classList.add('border-red-500');
-            isValid = false;
+            errUbicacion.classList.remove('hidden'); ubicacion.classList.add('border-red-500'); isValid = false;
+        } else if (ubicacionVal.length < 5) {
+            errUbicacion.textContent = 'La ubicación debe tener al menos 5 caracteres.';
+            errUbicacion.classList.remove('hidden'); ubicacion.classList.add('border-red-500'); isValid = false;
+        } else if (ubicacionVal.length > 30) {
+            errUbicacion.textContent = 'La ubicación no puede exceder los 30 caracteres.';
+            errUbicacion.classList.remove('hidden'); ubicacion.classList.add('border-red-500'); isValid = false;
         }
 
         if (!titulo.value.trim()) {
             errTitulo.textContent = 'El título del perfil es obligatorio.';
-            errTitulo.classList.remove('hidden');
-            isValid = false;
+            errTitulo.classList.remove('hidden'); isValid = false;
         }
 
-        if (!isValid) {
-            e.preventDefault();
-        }
+        if (!isValid) { e.preventDefault(); }
     });
 });
 </script>

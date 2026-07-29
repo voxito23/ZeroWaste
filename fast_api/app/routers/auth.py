@@ -48,7 +48,7 @@ def login(
     """
     usuario = db.query(Usuario).filter(Usuario.email == form_data.username).first()
 
-    if not usuario or not verify_password(form_data.password, usuario.password):
+    if not usuario or not verify_password(form_data.password, str(usuario.password)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Correo o contraseña incorrectos.",
@@ -71,6 +71,7 @@ def login(
     access_token = create_access_token(data={"sub": usuario.email})
     return Token(access_token=access_token)
 
+
 @router.post("/mobile/login", summary="Login exclusivo para App Móvil (React Native)")
 def mobile_login(
     credentials: MobileLogin,
@@ -78,11 +79,11 @@ def mobile_login(
 ):
     """
     Recibe JSON con email y password, permite acceso a TODOS los usuarios (no solo admins),
-    y devuelve el access_token y los datos del usuario.
+    y devuelve el access_token y los datos del usuario con rol e is_admin.
     """
     usuario = db.query(Usuario).filter(Usuario.email == credentials.email).first()
 
-    if not usuario or not verify_password(credentials.password, usuario.password):
+    if not usuario or not verify_password(credentials.password, str(usuario.password)):
         raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos.")
 
     if usuario.bloqueado:
@@ -97,6 +98,8 @@ def mobile_login(
             "id": usuario.id,
             "nombre": usuario.nombre,
             "email": usuario.email,
+            "rol": usuario.rol or ("admin" if usuario.is_admin else "usuario"),
+            "is_admin": usuario.is_admin,
             "foto_perfil": usuario.foto_perfil,
             "profile_completed": usuario.profile_completed
         }
@@ -142,7 +145,7 @@ def registro(
 
     # B) Guardado de Imagen en la Nueva Ruta
     # Validar extensión de archivo
-    extension = foto_perfil.filename.rsplit(".", 1)[-1].lower() if "." in foto_perfil.filename else ""
+    extension = foto_perfil.filename.rsplit(".", 1)[-1].lower() if (foto_perfil.filename and "." in foto_perfil.filename) else ""
     if extension not in ALLOWED_IMAGE_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -218,6 +218,7 @@ class PostResponse(BaseModel):
 
 class PostDetailResponse(PostResponse):
     autor_nombre: Optional[str] = None
+    autor_foto: Optional[str] = None
     categoria_nombre: Optional[str] = None
     total_respuestas: int = 0
     total_likes: int = 0
@@ -235,6 +236,7 @@ class PostDetailResponse(PostResponse):
                     "imagen": "compostaje_tips.jpg",
                     "created_at": "2026-05-20T10:15:30Z",
                     "autor_nombre": "Ana Sánchez",
+                    "autor_foto": "foto_ana.jpg",
                     "categoria_nombre": "Compostaje",
                     "total_respuestas": 15,
                     "total_likes": 240

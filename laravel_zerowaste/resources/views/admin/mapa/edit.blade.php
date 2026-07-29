@@ -41,9 +41,12 @@
                 <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Nombre del Punto</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">storefront</span></div>
-                    <input type="text" name="nombre" value="{{ $location->nombre }}" required class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                    <input type="text" name="nombre" id="input-nombre" value="{{ $location->nombre }}" required maxlength="30" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
                 </div>
-                <span id="err-nombre" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
+                <div class="flex justify-between items-center mt-1">
+                    <span id="err-nombre" class="hidden text-red-500 text-xs font-medium ml-1"></span>
+                    <span id="counter-nombre" class="text-xs font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">{{ strlen($location->nombre) }}/30</span>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -51,9 +54,12 @@
                     <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Calle y Colonia</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">signpost</span></div>
-                        <input type="text" id="input-calle" value="{{ $calleStr }}" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20" required placeholder="Ej. Av. Universidad">
+                        <input type="text" id="input-calle" value="{{ $calleStr }}" maxlength="30" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20" required placeholder="Ej. Av. Universidad">
                     </div>
-                    <span id="err-calle" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
+                    <div class="flex justify-between items-center mt-1">
+                        <span id="err-calle" class="hidden text-red-500 text-xs font-medium ml-1"></span>
+                        <span id="counter-calle" class="text-xs font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">{{ strlen($calleStr) }}/30</span>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
@@ -313,6 +319,44 @@ document.addEventListener('DOMContentLoaded', function() {
     inNum.addEventListener('blur', geocodeAddress);
     inCP.addEventListener('blur', geocodeAddress);
 
+function updateCounter(input, counterId, max, min, errId) {
+    const counter = document.getElementById(counterId);
+    const errSpan = document.getElementById(errId);
+    if (!counter) return;
+    const len = input.value.length;
+    counter.textContent = len + '/' + max;
+    if (len >= max) {
+        counter.classList.remove('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.add('text-red-500', 'dark:text-red-400');
+        input.classList.add('border-red-500');
+        if (errSpan) { errSpan.textContent = 'Máximo ' + max + ' caracteres alcanzado.'; errSpan.classList.remove('hidden'); }
+    } else if (len > 0 && len < min) {
+        counter.classList.remove('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.add('text-red-500', 'dark:text-red-400');
+        input.classList.add('border-red-500');
+        if (errSpan) { errSpan.textContent = 'Mínimo ' + min + ' caracteres requeridos.'; errSpan.classList.remove('hidden'); }
+    } else {
+        counter.classList.add('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.remove('text-red-500', 'dark:text-red-400');
+        input.classList.remove('border-red-500');
+        if (errSpan) { errSpan.classList.add('hidden'); }
+    }
+}
+function filterAlphaNum(input) {
+    input.value = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s]/g, '');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const inputNombre = document.getElementById('input-nombre');
+    if (inputNombre) {
+        inputNombre.addEventListener('input', function() { filterAlphaNum(this); updateCounter(this, 'counter-nombre', 30, 5, 'err-nombre'); });
+        inputNombre.addEventListener('paste', function() { setTimeout(() => { filterAlphaNum(this); updateCounter(this, 'counter-nombre', 30, 5, 'err-nombre'); }, 0); });
+    }
+    const inputCalle = document.getElementById('input-calle');
+    if (inputCalle) {
+        inputCalle.addEventListener('input', function() { updateCounter(this, 'counter-calle', 30, 5, 'err-calle'); });
+    }
+
     const form = document.getElementById('customForm');
     if (!form) return;
 
@@ -336,15 +380,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
         let isValid = true;
 
-        if (!nombre.value.trim()) {
+        const nombreVal = nombre.value.trim();
+        if (!nombreVal) {
             errNombre.textContent = 'El nombre del punto es obligatorio.';
+            errNombre.classList.remove('hidden');
+            nombre.classList.add('border-red-500');
+            isValid = false;
+        } else if (nombreVal.length < 5) {
+            errNombre.textContent = 'El nombre debe tener al menos 5 caracteres.';
             errNombre.classList.remove('hidden');
             nombre.classList.add('border-red-500');
             isValid = false;
         }
 
-        if (!inCalle.value.trim()) {
+        const calleVal = inCalle.value.trim();
+        if (!calleVal) {
             errCalle.textContent = 'Obligatorio.';
+            errCalle.classList.remove('hidden');
+            inCalle.classList.add('border-red-500');
+            isValid = false;
+        } else if (calleVal.length < 5) {
+            errCalle.textContent = 'Mínimo 5 caracteres.';
             errCalle.classList.remove('hidden');
             inCalle.classList.add('border-red-500');
             isValid = false;

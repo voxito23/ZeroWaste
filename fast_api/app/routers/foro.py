@@ -2,9 +2,11 @@
 Router del foro — CRUD completo: posts, respuestas y likes.
 """
 
+import os
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.data.database import get_db
@@ -19,6 +21,27 @@ from app.models.schemas import (
 from app.security.jwt_auth import get_current_user
 
 router = APIRouter(prefix="/foro", tags=["Foro"])
+
+
+# Imágenes
+
+@router.get("/perfiles/{filename}", summary="Obtener imagen de perfil de usuario")
+def get_perfil_image(filename: str):
+    """Devuelve la imagen de perfil solicitada. Busca en el volumen compartido."""
+    # En desarrollo local la ruta es static/img/perfiles. En Docker es el volumen compartido.
+    path = f"static/img/perfiles/{filename}"
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Imagen no encontrada")
+    return FileResponse(path)
+
+
+@router.get("/posts/imagenes/{filename}", summary="Obtener imagen de post")
+def get_post_image(filename: str):
+    """Devuelve la imagen de un post."""
+    path = f"static/img/posts/{filename}"
+    if not os.path.exists(path):
+        raise HTTPException(status_code=404, detail="Imagen no encontrada")
+    return FileResponse(path)
 
 
 # Categorías del foro
@@ -50,6 +73,7 @@ def list_posts(
             imagen=post.imagen,
             created_at=post.created_at,
             autor_nombre=post.autor_rel.nombre if post.autor_rel else None,
+            autor_foto=post.autor_rel.foto_perfil if post.autor_rel else None,
             categoria_nombre=post.categoria_rel.nombre if post.categoria_rel else None,
             total_respuestas=len(post.respuestas),
             total_likes=len(post.likes),
@@ -77,6 +101,7 @@ def get_post(
         imagen=post.imagen,
         created_at=post.created_at,
         autor_nombre=post.autor_rel.nombre if post.autor_rel else None,
+        autor_foto=post.autor_rel.foto_perfil if post.autor_rel else None,
         categoria_nombre=post.categoria_rel.nombre if post.categoria_rel else None,
         total_respuestas=len(post.respuestas),
         total_likes=len(post.likes),

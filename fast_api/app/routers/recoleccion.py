@@ -40,10 +40,11 @@ def mis_solicitudes(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user),
 ):
-    """Devuelve el historial de solicitudes de recolección del usuario actual."""
-    solicitudes = db.query(SolicitudRecoleccion).filter(
-        SolicitudRecoleccion.usuario_id == current_user.id
-    ).order_by(SolicitudRecoleccion.created_at.desc()).all()
+    """Devuelve el historial de solicitudes de recolección o todas si el usuario es recolector/admin."""
+    query = db.query(SolicitudRecoleccion)
+    if current_user.rol not in ['recolector', 'admin'] and not current_user.is_admin:
+        query = query.filter(SolicitudRecoleccion.usuario_id == current_user.id)
+    solicitudes = query.order_by(SolicitudRecoleccion.created_at.desc()).all()
     return solicitudes
 
 @router.post("/{solicitud_id}/calificar", response_model=MessageResponse, summary="Calificar al recolector")
@@ -84,8 +85,8 @@ def completar_recoleccion_qr(
     Endpoint para que el recolector escanee el QR (que contiene el ID de la solicitud)
     y la marque como completada al instante.
     """
-    if current_user.rol != 'recolector':
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo los recolectores pueden escanear el QR.")
+    if current_user.rol not in ['recolector', 'admin'] and not current_user.is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo los recolectores pueden escanear el QR de recolección.")
 
     solicitud = db.query(SolicitudRecoleccion).filter(SolicitudRecoleccion.id == solicitud_id).first()
     if not solicitud:
@@ -95,6 +96,7 @@ def completar_recoleccion_qr(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Esta recolección ya fue completada anteriormente.")
     
     solicitud.estado = "completada"
+    solicitud.recolector_id = current_user.id
     db.commit()
 
     return MessageResponse(success=True, message="QR validado. Recolección completada con éxito.")

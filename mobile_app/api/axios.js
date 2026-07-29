@@ -23,6 +23,7 @@ export const api = axios.create({
   baseURL: getFastApiUrl(),
   headers: {
     'Content-Type': 'application/json',
+    'X-API-Key': process.env.EXPO_PUBLIC_API_KEY || 'zw_mobile_secret_key_2026',
   },
 });
 
@@ -35,6 +36,11 @@ export const laravelApi = axios.create({
 
 api.interceptors.request.use(async (config) => {
   try {
+    const apiKey = process.env.EXPO_PUBLIC_API_KEY || 'zw_mobile_secret_key_2026';
+    if (apiKey) {
+      config.headers['X-API-Key'] = apiKey;
+    }
+
     const token = await SecureStore.getItemAsync('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;

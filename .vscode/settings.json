@@ -9,7 +9,6 @@
     "php.problems.exclude": {
         "**/laravel_zerowaste/**": true
     },
-
     // ── Intelephense (if installed) ──────────────────────────────────────
     // Suppress false-positive "undefined function / method" diagnostics
     // that occur because Intelephense may not fully index Laravel's
@@ -17,10 +16,10 @@
     "intelephense.diagnostics.undefinedFunctions": false,
     "intelephense.diagnostics.undefinedMethods": false,
     "intelephense.diagnostics.undefinedTypes": false,
-
     // ── File exclusions ─────────────────────────────────────────────────
     "files.exclude": {
         "**/__pycache__": true,
         "**/node_modules": true
-    }
+    },
+    "java.compile.nullAnalysis.mode": "automatic"
 }

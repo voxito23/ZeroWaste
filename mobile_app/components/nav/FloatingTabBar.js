@@ -2,17 +2,22 @@ import React from 'react';
 import { Animated, TouchableOpacity, StyleSheet } from 'react-native';
 import { Home, MessageSquare, Map as MapIcon, User, Camera } from 'lucide-react-native';
 import { useScrollContext } from '../../context/ScrollContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function FloatingTabBar({ state, descriptors, navigation }) {
   const { tabY } = useScrollContext();
+  const insets = useSafeAreaInsets();
+  const bottomInset = Math.max(insets.bottom + 14, 24);
 
   return (
     <Animated.View 
-      className="absolute bottom-6 left-6 right-6 flex-row bg-surface rounded-full py-4 px-6 justify-between items-center shadow-lg shadow-black/10 elevation-5"
-      style={{ transform: [{ translateY: tabY }] }}
+      className="absolute left-6 right-6 flex-row bg-surface rounded-full py-4 px-6 justify-between items-center shadow-lg shadow-black/10 elevation-5"
+      style={{ bottom: bottomInset, transform: [{ translateY: tabY }] }}
     >
       {state.routes.map((route, index) => {
         const { options } = descriptors[route.key];
+        if (options.href === null) return null;
+
         const isFocused = state.index === index;
 
         const onPress = () => {
@@ -34,16 +39,17 @@ export default function FloatingTabBar({ state, descriptors, navigation }) {
           });
         };
 
+        const routeName = route.name.toLowerCase();
         let IconComponent = Home;
-        if (route.name === 'Forum') IconComponent = MessageSquare;
-        if (route.name === 'Scanner') IconComponent = Camera;
-        if (route.name === 'Map') IconComponent = MapIcon;
-        if (route.name === 'Profile') IconComponent = User;
+        if (routeName === 'forum') IconComponent = MessageSquare;
+        if (routeName === 'scanner') IconComponent = Camera;
+        if (routeName === 'map') IconComponent = MapIcon;
+        if (routeName === 'profile') IconComponent = User;
 
         const color = isFocused ? '#064E3B' : '#9CA3AF'; // primary or gray-400
 
         // Central elevated button
-        if (route.name === 'Scanner') {
+        if (routeName === 'scanner') {
           return (
             <TouchableOpacity
               key={index}

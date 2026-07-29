@@ -214,7 +214,7 @@ export default function HomeScreen() {
 
       <ScrollView 
         showsVerticalScrollIndicator={false} 
-        contentContainerStyle={{ paddingTop: 16, paddingBottom: 100 }}
+        contentContainerStyle={{ paddingTop: 16, paddingBottom: 130 }}
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >

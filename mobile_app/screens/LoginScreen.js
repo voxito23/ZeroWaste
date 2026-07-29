@@ -42,7 +42,7 @@ export default function LoginScreen({ navigation }) {
     } catch (error) {
       // Si el backend pide validación de PIN (is_verified = False)
       if (error.response?.data?.need_verification) {
-        navigation.navigate('Verify', { email });
+        navigation.navigate('verify', { email });
         return;
       }
       const msg = error.response?.data?.detail || 'Error de conexión. Verifica tu internet o el estado del servidor.';
@@ -154,7 +154,7 @@ export default function LoginScreen({ navigation }) {
         {/* Footer */}
         <View className="flex-row justify-center mt-auto mb-4">
           <Text className="text-gray-500 font-medium">¿No tienes cuenta? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+          <TouchableOpacity onPress={() => navigation.navigate('register')}>
             <Text className="text-primary font-bold">Regístrate</Text>
           </TouchableOpacity>
         </View>

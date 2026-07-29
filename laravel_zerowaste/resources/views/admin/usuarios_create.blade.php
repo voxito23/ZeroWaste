@@ -32,7 +32,8 @@
                     </label>
                 </div>
                 <input type="file" name="foto_perfil" id="foto-input" accept="image/*" class="hidden" onchange="previewImage(this)">
-                <label for="foto-input" class="text-xs px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-bold rounded-full cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-800/40 transition-colors border border-emerald-200 dark:border-emerald-700/50">Subir Fotografía</label>
+                <label for="foto-input" id="foto-label" class="text-xs px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-bold rounded-full cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-800/40 transition-colors border border-emerald-200 dark:border-emerald-700/50">Subir Fotografía</label>
+                <span id="err-foto" class="hidden text-red-500 text-xs mt-2 font-medium text-center"></span>
             </div>
 
             <!-- Right col: Form -->
@@ -41,9 +42,12 @@
                     <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Nombre Completo</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">badge</span></div>
-                        <input type="text" name="nombre" required placeholder="Ej. María Martínez" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                        <input type="text" name="nombre" id="input-nombre" required maxlength="30" placeholder="Ej. María Martínez" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
                     </div>
-                    <span id="err-nombre" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
+                    <div class="flex justify-between items-center mt-1">
+                        <span id="err-nombre" class="hidden text-red-500 text-xs font-medium ml-1"></span>
+                        <span id="counter-nombre" class="text-xs font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">0/30</span>
+                    </div>
                 </div>
                 
                 <div>
@@ -72,9 +76,12 @@
                         <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Ubicación</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">location_on</span></div>
-                            <input type="text" name="ubicacion" required placeholder="Querétaro, Qro." class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                            <input type="text" name="ubicacion" id="input-ubicacion" required maxlength="30" placeholder="Querétaro, Qro." class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
                         </div>
-                        <span id="err-ubicacion" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
+                        <div class="flex justify-between items-center mt-1">
+                            <span id="err-ubicacion" class="hidden text-red-500 text-xs font-medium ml-1"></span>
+                            <span id="counter-ubicacion" class="text-xs font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">0/30</span>
+                        </div>
                     </div>
                     <div>
                         <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Título del Perfil</label>
@@ -155,10 +162,92 @@ function previewImage(input) {
             document.getElementById('preview-foto').src = e.target.result;
         }
         reader.readAsDataURL(input.files[0]);
+        // Limpiar error de foto al subir
+        const errFoto = document.getElementById('err-foto');
+        const fotoLabel = document.getElementById('foto-label');
+        if (errFoto) errFoto.classList.add('hidden');
+        if (fotoLabel) {
+            fotoLabel.classList.remove('border-red-500', 'text-red-500', 'bg-red-50', 'dark:bg-red-900/20');
+            fotoLabel.classList.add('border-emerald-200', 'dark:border-emerald-700/50', 'text-emerald-600', 'dark:text-emerald-400', 'bg-emerald-50', 'dark:bg-emerald-900/30');
+        }
     }
 }
 
+/**
+ * Actualiza el contador de caracteres y aplica borde rojo si está fuera de rango (min 5, max 30).
+ * El contador aparece debajo del rectángulo.
+ */
+function updateCounter(input, counterId, max, min, errId) {
+    const counter = document.getElementById(counterId);
+    const errSpan = document.getElementById(errId);
+    const len = input.value.length;
+    counter.textContent = len + '/' + max;
+
+    if (len >= max) {
+        // Límite máximo alcanzado → rojo
+        counter.classList.remove('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.add('text-red-500', 'dark:text-red-400');
+        input.classList.add('border-red-500', 'dark:border-red-500');
+        input.classList.remove('border-gray-200', 'dark:border-emerald-800/30');
+        if (errSpan) {
+            errSpan.textContent = 'Máximo ' + max + ' caracteres alcanzado.';
+            errSpan.classList.remove('hidden');
+        }
+    } else if (len > 0 && len < min) {
+        // Menos del mínimo → rojo
+        counter.classList.remove('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.add('text-red-500', 'dark:text-red-400');
+        input.classList.add('border-red-500', 'dark:border-red-500');
+        input.classList.remove('border-gray-200', 'dark:border-emerald-800/30');
+        if (errSpan) {
+            errSpan.textContent = 'Mínimo ' + min + ' caracteres requeridos.';
+            errSpan.classList.remove('hidden');
+        }
+    } else {
+        // Dentro del rango válido → normal
+        counter.classList.add('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.remove('text-red-500', 'dark:text-red-400');
+        input.classList.remove('border-red-500', 'dark:border-red-500');
+        input.classList.add('border-gray-200', 'dark:border-emerald-800/30');
+        if (errSpan) {
+            errSpan.classList.add('hidden');
+        }
+    }
+}
+
+/**
+ * Filtra caracteres especiales del campo nombre: solo permite letras (con acentos), números y espacios.
+ */
+function filterNombre(input) {
+    // Permitir letras (incluyendo acentuadas/ñ), números y espacios
+    input.value = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s]/g, '');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // ── Validación en tiempo real para Nombre ──
+    const inputNombre = document.getElementById('input-nombre');
+    if (inputNombre) {
+        inputNombre.addEventListener('input', function() {
+            filterNombre(this);
+            updateCounter(this, 'counter-nombre', 30, 5, 'err-nombre');
+        });
+        // Prevenir pegar caracteres especiales
+        inputNombre.addEventListener('paste', function(e) {
+            setTimeout(() => {
+                filterNombre(this);
+                updateCounter(this, 'counter-nombre', 30, 5, 'err-nombre');
+            }, 0);
+        });
+    }
+
+    // ── Validación en tiempo real para Ubicación ──
+    const inputUbicacion = document.getElementById('input-ubicacion');
+    if (inputUbicacion) {
+        inputUbicacion.addEventListener('input', function() {
+            updateCounter(this, 'counter-ubicacion', 30, 5, 'err-ubicacion');
+        });
+    }
+
     // Dropdown personalizado
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.custom-dropdown')) {
@@ -179,9 +268,9 @@ document.addEventListener('DOMContentLoaded', function() {
             selectedText.classList.add('text-gray-900', 'dark:text-white');
             
             dropdown.querySelector('.dropdown-options').classList.add('hidden');
-            dropdown.classList.remove('border-red-500'); // clear error state if any
-            const errSpan = dropdown.nextElementSibling;
-            if(errSpan && errSpan.id.startsWith('err-')) errSpan.classList.add('hidden');
+            dropdown.querySelector('.dropdown-selected').classList.remove('border-red-500');
+            const errSpan = dropdown.closest('div').querySelector('[id^="err-"]') || dropdown.nextElementSibling;
+            if(errSpan && errSpan.id && errSpan.id.startsWith('err-')) errSpan.classList.add('hidden');
         });
     });
 
@@ -194,28 +283,65 @@ document.addEventListener('DOMContentLoaded', function() {
         const password = form.querySelector('input[name="password"]');
         const ubicacion = form.querySelector('input[name="ubicacion"]');
         const titulo = form.querySelector('input[name="titulo_perfil"]');
+        const fotoInput = document.getElementById('foto-input');
 
         const errNombre = document.getElementById('err-nombre');
         const errEmail = document.getElementById('err-email');
         const errPass = document.getElementById('err-password');
         const errUbicacion = document.getElementById('err-ubicacion');
         const errTitulo = document.getElementById('err-titulo');
+        const errFoto = document.getElementById('err-foto');
+        const fotoLabel = document.getElementById('foto-label');
 
-        // Limpiar
-        [errNombre, errEmail, errPass, errUbicacion, errTitulo].forEach(el => el.classList.add('hidden'));
-        [nombre, email, password, ubicacion].forEach(el => el.classList.remove('border-red-500'));
+        // Limpiar todos los errores
+        [errNombre, errEmail, errPass, errUbicacion, errTitulo, errFoto].forEach(el => { if(el) el.classList.add('hidden'); });
+        [nombre, email, password, ubicacion].forEach(el => el.classList.remove('border-red-500', 'dark:border-red-500'));
         const tituloDropdown = titulo.closest('.custom-dropdown').querySelector('.dropdown-selected');
         if (tituloDropdown) tituloDropdown.classList.remove('border-red-500');
+        if (fotoLabel) {
+            fotoLabel.classList.remove('border-red-500', 'text-red-500', 'bg-red-50', 'dark:bg-red-900/20');
+            fotoLabel.classList.add('border-emerald-200', 'dark:border-emerald-700/50', 'text-emerald-600', 'dark:text-emerald-400', 'bg-emerald-50', 'dark:bg-emerald-900/30');
+        }
 
         let isValid = true;
 
-        if (!nombre.value.trim() || nombre.value.trim().length < 11) {
-            errNombre.textContent = 'El nombre completo debe tener al menos 11 caracteres.';
-            errNombre.classList.remove('hidden');
-            nombre.classList.add('border-red-500');
+        // ── Validar Fotografía (obligatoria) ──
+        if (!fotoInput.files || fotoInput.files.length === 0) {
+            errFoto.textContent = 'Debes subir una fotografía de perfil.';
+            errFoto.classList.remove('hidden');
+            if (fotoLabel) {
+                fotoLabel.classList.add('border-red-500', 'text-red-500', 'bg-red-50', 'dark:bg-red-900/20');
+                fotoLabel.classList.remove('border-emerald-200', 'dark:border-emerald-700/50', 'text-emerald-600', 'dark:text-emerald-400', 'bg-emerald-50', 'dark:bg-emerald-900/30');
+            }
             isValid = false;
         }
 
+        // ── Validar Nombre (obligatorio, solo letras/números/espacios, mín 5, máx 30) ──
+        const nombreVal = nombre.value.trim();
+        const nombreRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s]+$/;
+        if (!nombreVal) {
+            errNombre.textContent = 'El nombre es obligatorio.';
+            errNombre.classList.remove('hidden');
+            nombre.classList.add('border-red-500', 'dark:border-red-500');
+            isValid = false;
+        } else if (nombreVal.length < 5) {
+            errNombre.textContent = 'El nombre debe tener al menos 5 caracteres.';
+            errNombre.classList.remove('hidden');
+            nombre.classList.add('border-red-500', 'dark:border-red-500');
+            isValid = false;
+        } else if (!nombreRegex.test(nombreVal)) {
+            errNombre.textContent = 'El nombre solo puede contener letras, números y espacios.';
+            errNombre.classList.remove('hidden');
+            nombre.classList.add('border-red-500', 'dark:border-red-500');
+            isValid = false;
+        } else if (nombreVal.length > 30) {
+            errNombre.textContent = 'El nombre no puede exceder los 30 caracteres.';
+            errNombre.classList.remove('hidden');
+            nombre.classList.add('border-red-500', 'dark:border-red-500');
+            isValid = false;
+        }
+
+        // ── Validar Email ──
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!email.value.trim() || !emailRegex.test(email.value.trim())) {
             errEmail.textContent = 'El correo debe tener @ y un dominio válido.';
@@ -224,6 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid = false;
         }
 
+        // ── Validar Contraseña ──
         if (!password.value || password.value.length < 6) {
             errPass.textContent = 'La contraseña debe tener al menos 6 caracteres.';
             errPass.classList.remove('hidden');
@@ -231,13 +358,26 @@ document.addEventListener('DOMContentLoaded', function() {
             isValid = false;
         }
 
-        if (!ubicacion.value.trim()) {
+        // ── Validar Ubicación (obligatoria, mín 5, máx 30) ──
+        const ubicacionVal = ubicacion.value.trim();
+        if (!ubicacionVal) {
             errUbicacion.textContent = 'La ubicación es obligatoria.';
             errUbicacion.classList.remove('hidden');
-            ubicacion.classList.add('border-red-500');
+            ubicacion.classList.add('border-red-500', 'dark:border-red-500');
+            isValid = false;
+        } else if (ubicacionVal.length < 5) {
+            errUbicacion.textContent = 'La ubicación debe tener al menos 5 caracteres.';
+            errUbicacion.classList.remove('hidden');
+            ubicacion.classList.add('border-red-500', 'dark:border-red-500');
+            isValid = false;
+        } else if (ubicacionVal.length > 30) {
+            errUbicacion.textContent = 'La ubicación no puede exceder los 30 caracteres.';
+            errUbicacion.classList.remove('hidden');
+            ubicacion.classList.add('border-red-500', 'dark:border-red-500');
             isValid = false;
         }
 
+        // ── Validar Título del Perfil ──
         if (!titulo.value.trim()) {
             errTitulo.textContent = 'El título del perfil es obligatorio.';
             errTitulo.classList.remove('hidden');

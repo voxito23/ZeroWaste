@@ -26,9 +26,12 @@
                 <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Nombre de la Campaña</label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">edit_note</span></div>
-                    <input type="text" name="nombre" value="{{ $campaign->nombre }}" required class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                    <input type="text" name="nombre" id="input-nombre" value="{{ $campaign->nombre }}" required maxlength="30" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
                 </div>
-                <span id="err-nombre" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
+                <div class="flex justify-between items-center mt-1">
+                    <span id="err-nombre" class="hidden text-red-500 text-xs font-medium ml-1"></span>
+                    <span id="counter-nombre" class="text-xs font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">{{ strlen($campaign->nombre) }}/30</span>
+                </div>
             </div>
 
             <div>
@@ -37,7 +40,10 @@
                     <div class="absolute top-3 left-0 pl-4 flex items-start pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">subject</span></div>
                     <textarea name="descripcion" rows="4" required class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">{{ $campaign->descripcion }}</textarea>
                 </div>
-                <span id="err-descripcion" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
+                <div class="flex justify-between items-center mt-1">
+                    <span id="err-descripcion" class="hidden text-red-500 text-xs font-medium ml-1"></span>
+                    <span id="counter-descripcion" class="text-xs font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">{{ strlen($campaign->descripcion) }}/500</span>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -45,7 +51,11 @@
                     <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Lugar</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">place</span></div>
-                        <input type="text" name="lugar" value="{{ $campaign->lugar }}" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                        <input type="text" name="lugar" id="input-lugar" value="{{ $campaign->lugar }}" maxlength="30" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3.5 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                    </div>
+                    <div class="flex justify-between items-center mt-1">
+                        <span id="err-lugar" class="hidden text-red-500 text-xs font-medium ml-1"></span>
+                        <span id="counter-lugar" class="text-xs font-semibold text-gray-400 dark:text-emerald-500/50 ml-auto">{{ strlen($campaign->lugar) }}/30</span>
                     </div>
                 </div>
                 <div>
@@ -150,9 +160,53 @@
 
 @push('scripts')
 <script>
+function updateCounter(input, counterId, max, min, errId) {
+    const counter = document.getElementById(counterId);
+    const errSpan = document.getElementById(errId);
+    const len = input.value.length;
+    counter.textContent = len + '/' + max;
+    if (len >= max) {
+        counter.classList.remove('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.add('text-red-500', 'dark:text-red-400');
+        input.classList.add('border-red-500', 'dark:border-red-500');
+        input.classList.remove('border-gray-200', 'dark:border-emerald-800/30');
+        if (errSpan) { errSpan.textContent = 'Máximo ' + max + ' caracteres alcanzado.'; errSpan.classList.remove('hidden'); }
+    } else if (len > 0 && len < min) {
+        counter.classList.remove('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.add('text-red-500', 'dark:text-red-400');
+        input.classList.add('border-red-500', 'dark:border-red-500');
+        input.classList.remove('border-gray-200', 'dark:border-emerald-800/30');
+        if (errSpan) { errSpan.textContent = 'Mínimo ' + min + ' caracteres requeridos.'; errSpan.classList.remove('hidden'); }
+    } else {
+        counter.classList.add('text-gray-400', 'dark:text-emerald-500/50');
+        counter.classList.remove('text-red-500', 'dark:text-red-400');
+        input.classList.remove('border-red-500', 'dark:border-red-500');
+        input.classList.add('border-gray-200', 'dark:border-emerald-800/30');
+        if (errSpan) { errSpan.classList.add('hidden'); }
+    }
+}
+function filterAlphaNum(input) {
+    input.value = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ0-9\s]/g, '');
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('customForm');
     if (!form) return;
+
+    // Real-time validation
+    const inputNombre = document.getElementById('input-nombre');
+    if (inputNombre) {
+        inputNombre.addEventListener('input', function() { filterAlphaNum(this); updateCounter(this, 'counter-nombre', 30, 5, 'err-nombre'); });
+        inputNombre.addEventListener('paste', function() { setTimeout(() => { filterAlphaNum(this); updateCounter(this, 'counter-nombre', 30, 5, 'err-nombre'); }, 0); });
+    }
+    const inputLugar = document.getElementById('input-lugar');
+    if (inputLugar) {
+        inputLugar.addEventListener('input', function() { updateCounter(this, 'counter-lugar', 30, 5, 'err-lugar'); });
+    }
+    const textDescripcion = form.querySelector('textarea[name="descripcion"]');
+    if (textDescripcion) {
+        textDescripcion.addEventListener('input', function() { updateCounter(this, 'counter-descripcion', 500, 10, 'err-descripcion'); });
+    }
 
     // Etiqueta dropdown
     document.addEventListener('click', function(e) {
@@ -173,34 +227,43 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', function(e) {
         const nombre = form.querySelector('input[name="nombre"]');
         const descripcion = form.querySelector('textarea[name="descripcion"]');
+        const lugar = form.querySelector('input[name="lugar"]');
         const errNombre = document.getElementById('err-nombre');
         const errDesc = document.getElementById('err-descripcion');
+        const errLugar = document.getElementById('err-lugar');
 
-        // Limpiar
-        errNombre.classList.add('hidden');
-        errDesc.classList.add('hidden');
-        nombre.classList.remove('border-red-500');
-        descripcion.classList.remove('border-red-500');
+        [errNombre, errDesc, errLugar].forEach(el => { if(el) el.classList.add('hidden'); });
+        [nombre, descripcion, lugar].forEach(el => { if(el) el.classList.remove('border-red-500', 'dark:border-red-500'); });
 
         let isValid = true;
 
-        if (!nombre.value.trim()) {
+        const nombreVal = nombre.value.trim();
+        if (!nombreVal) {
             errNombre.textContent = 'El nombre de la campaña es obligatorio.';
-            errNombre.classList.remove('hidden');
-            nombre.classList.add('border-red-500');
-            isValid = false;
+            errNombre.classList.remove('hidden'); nombre.classList.add('border-red-500'); isValid = false;
+        } else if (nombreVal.length < 5) {
+            errNombre.textContent = 'El nombre debe tener al menos 5 caracteres.';
+            errNombre.classList.remove('hidden'); nombre.classList.add('border-red-500'); isValid = false;
         }
 
-        if (!descripcion.value.trim()) {
+        const descVal = descripcion.value.trim();
+        if (!descVal) {
             errDesc.textContent = 'La descripción es obligatoria.';
-            errDesc.classList.remove('hidden');
-            descripcion.classList.add('border-red-500');
-            isValid = false;
+            errDesc.classList.remove('hidden'); descripcion.classList.add('border-red-500'); isValid = false;
+        } else if (descVal.length < 10) {
+            errDesc.textContent = 'La descripción debe tener al menos 10 caracteres.';
+            errDesc.classList.remove('hidden'); descripcion.classList.add('border-red-500'); isValid = false;
         }
 
-        if (!isValid) {
-            e.preventDefault();
+        if (lugar) {
+            const lugarVal = lugar.value.trim();
+            if (lugarVal.length > 0 && lugarVal.length < 5) {
+                errLugar.textContent = 'El lugar debe tener al menos 5 caracteres.';
+                errLugar.classList.remove('hidden'); lugar.classList.add('border-red-500'); isValid = false;
+            }
         }
+
+        if (!isValid) { e.preventDefault(); }
     });
 });
 </script>

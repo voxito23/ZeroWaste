@@ -58,7 +58,7 @@ export default function ProfileScreen() {
       
       <ScrollView 
         showsVerticalScrollIndicator={false} 
-        contentContainerStyle={{ paddingBottom: 120 }}
+        contentContainerStyle={{ paddingBottom: 140 }}
         onScroll={handleScroll}
         scrollEventThrottle={16}
       >

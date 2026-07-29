@@ -23,10 +23,12 @@
       ],
       "package": "com.vic45.mobile_app"
     },
+    "scheme": "zerowaste",
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      "expo-router",
       "expo-secure-store",
       "expo-font",
       "expo-splash-screen",

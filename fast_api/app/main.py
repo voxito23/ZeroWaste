@@ -14,6 +14,7 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from app.routers import auth, usuarios, foro, mapa, eventos, analisis, formularios, docs_auth, campanas, recoleccion
+from app.security.api_key_auth import ApiKeyMiddleware
 
 # ==========================================================================
 #  Rate Limiter global
@@ -42,10 +43,17 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
 
+# Middleware de API-Key (identificación de sistemas permitidos)
+app.add_middleware(ApiKeyMiddleware)
+
 # CORS restringido a orígenes conocidos (NO usar "*" con credenciales)
 ALLOWED_ORIGINS = [
     "http://localhost:5001",
     "http://localhost:8001",
+    "http://localhost:8081",
+    "http://localhost:19006",
+    "http://localhost:3000",
+    "http://10.0.2.2",
     "http://167.99.239.121:5001",
     "http://167.99.239.121:8001",
 ]
@@ -54,8 +62,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-API-Key"],
 )
 
 # Registro de todos los routers de la aplicación
