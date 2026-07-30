@@ -112,8 +112,8 @@ export default function ScannerScreen() {
       />
       
       {/* Overlay UI */}
-      <SafeAreaView className="flex-1 justify-between pointer-events-none">
-        <View className="items-center pt-8">
+      <SafeAreaView className="flex-1 justify-between" pointerEvents="box-none">
+        <View className="items-center pt-8" pointerEvents="box-none">
           <View className="bg-black/70 px-6 py-3 rounded-full flex-row items-center gap-2 border border-white/10">
             {isRecolector ? (
               <Truck color="#10B981" size={20} />
@@ -126,8 +126,7 @@ export default function ScannerScreen() {
           </View>
         </View>
 
-        {/* Viewfinder frame */}
-        <View className="items-center justify-center">
+        <View className="items-center justify-center" pointerEvents="none">
           <View className="w-64 h-64 border-2 border-emerald-500 rounded-3xl relative">
             {/* Corners */}
             <View className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-emerald-400 rounded-tl-3xl -ml-0.5 -mt-0.5" />
@@ -137,7 +136,7 @@ export default function ScannerScreen() {
           </View>
         </View>
 
-        <View className="items-center px-8 pointer-events-auto" style={{ paddingBottom: Math.max(insets.bottom + 16, 32) }}>
+        <View className="items-center px-8" pointerEvents="box-none" style={{ paddingBottom: Math.max(insets.bottom + 16, 32) }}>
           <Text className="text-white text-sm text-center font-medium bg-black/70 px-4 py-3 rounded-2xl overflow-hidden mb-4 border border-white/10">
             {isRecolector 
               ? 'Apunta al código QR generado en la solicitud para marcarla como completada al instante.' 

@@ -78,8 +78,8 @@ export default function PostScreen() {
     if (!path || path === 'perfil_default.png' || path === 'default.png') return type === 'post' ? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80' : `https://api.dicebear.com/7.x/identicon/png?seed=${encodeURIComponent(name)}`;
     if (path.startsWith('http')) return path;
 
-    const baseUrl = api.defaults.baseURL ? api.defaults.baseURL.replace(/\/api\/?$/, '') : 'https://zerowaste-qro.com';
-    return type === 'post' ? `${baseUrl}/static/img/posts/${path}` : `${baseUrl}/static/img/perfiles/${path}`;
+    const baseUrl = api.defaults.baseURL || 'https://www.zerowaste-qro.com/api';
+    return type === 'post' ? `${baseUrl}/foro/posts/imagenes/${path}` : `${baseUrl}/foro/perfiles/${path}`;
   };
 
   const stripHtml = (html) => {

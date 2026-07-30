@@ -105,10 +105,7 @@ const sabiasQueData = [
   { id: '4', icon: Award, val: '30%', label: 'Tasa de reciclaje estatal alcanzada', bg: '#FFF7ED', iconBg: '#FFEDD5', c: '#EA580C' },
 ];
 
-const defaultCampaigns = [
-  { id: 1, title: 'Recolección de Electrónicos', date: '12 May', location: 'Plaza Central', tag: 'CAMPAÑA', img: require('../assets/images/event1.png'), likes: 234 },
-  { id: 2, title: 'Limpieza de Playa', date: '20 May', location: 'Playa Norte', tag: 'EVENTO', img: require('../assets/images/event2.jpg'), likes: 512 },
-];
+
 
 /* ─── ANIMATED PRIMITIVES ─────────────────────────────────────────── */
 const TouchableScale = ({ children, style, onPress, scaleVal = 0.97 }) => {
@@ -161,7 +158,7 @@ export default function HomeScreen() {
   const { handleScroll } = useScrollContext();
   const [tendIndex, setTendIndex] = useState(0);
   const [sabiasIndex, setSabiasIndex] = useState(0);
-  const [campaignsList, setCampaignsList] = useState(defaultCampaigns);
+  const [campaignsList, setCampaignsList] = useState([]);
 
   useEffect(() => {
     const fetchActiveCampaignsAndEvents = async () => {

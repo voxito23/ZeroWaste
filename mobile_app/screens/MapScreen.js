@@ -315,7 +315,7 @@ export default function MapScreen() {
       {/* Modal para Solicitar Recoleccion */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
         <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           className="flex-1 justify-end bg-black/40"
         >
           <ScrollView 
