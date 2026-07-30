@@ -17,7 +17,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useScrollContext } from '../context/ScrollContext';
 import { useAuth } from '../store/useAuth';
-import api from '../api/axios';
+import { api } from '../api/axios';
 import {
   Search,
   Users,

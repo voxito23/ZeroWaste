@@ -34,6 +34,7 @@ const { width } = Dimensions.get('window');
 
 // Strip HTML tags from content
 const stripHtml = (html) => {
+  if (!html || typeof html !== 'string') return '';
   return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
 };
 
@@ -158,7 +159,7 @@ export default function ForumScreen() {
             />
             <TouchableOpacity
               className="flex-1 bg-gray-50 h-10 rounded-full px-4 justify-center"
-              onPress={() => navigation.navigate('create-post')}
+              onPress={() => navigation.navigate('CreatePost')}
             >
               <Text className="text-gray-400 font-medium text-[14px]">¿Qué quieres compartir hoy?</Text>
             </TouchableOpacity>
@@ -203,6 +204,9 @@ export default function ForumScreen() {
               if (isTrend) {
                 // Función para replicar el texto verde del diseño en Flask
                 const renderTrendTitle = (title) => {
+                  if (!title || typeof title !== 'string') {
+                    return <Text className="text-[#1F2937]">{title || ''}</Text>;
+                  }
                   const parts = title.split(':');
                   if (parts.length > 1) {
                     const main = parts[0] + ':';
@@ -274,7 +278,7 @@ export default function ForumScreen() {
 
                       <View className="flex-row items-center justify-between">
                         <TouchableOpacity
-                          onPress={() => navigation.navigate('post-detail', { id: post.id })}
+                          onPress={() => navigation.navigate('PostDetail', { id: post.id })}
                           className="flex-row items-center gap-2 bg-white border border-gray-200 px-6 py-3.5 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.04)]"
                         >
                           <Text className="text-[#064E3B] font-black text-[15px]">Leer más</Text>
@@ -361,7 +365,7 @@ export default function ForumScreen() {
 
                     <View className="flex-row items-center justify-between border-t border-gray-100 pt-4 mt-3">
                       <TouchableOpacity
-                        onPress={() => navigation.navigate('post-detail', { id: post.id })}
+                        onPress={() => navigation.navigate('PostDetail', { id: post.id })}
                         className="flex-row items-center gap-2 bg-emerald-500 px-5 py-2.5 rounded-xl"
                       >
                         <Text className="text-white font-black text-[13px]">Ver Post</Text>

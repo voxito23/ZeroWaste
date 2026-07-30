@@ -40,9 +40,8 @@ export default function LoginScreen({ navigation }) {
         Alert.alert('Error', response.data.error || 'Credenciales inválidas');
       }
     } catch (error) {
-      // Si el backend pide validación de PIN (is_verified = False)
       if (error.response?.data?.need_verification) {
-        navigation.navigate('verify', { email });
+        Alert.alert('Verificación requerida', 'Tu cuenta requiere verificación previa por el administrador.');
         return;
       }
       const msg = error.response?.data?.detail || 'Error de conexión. Verifica tu internet o el estado del servidor.';
@@ -154,7 +153,7 @@ export default function LoginScreen({ navigation }) {
         {/* Footer */}
         <View className="flex-row justify-center mt-auto mb-4">
           <Text className="text-gray-500 font-medium">¿No tienes cuenta? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('register')}>
+          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
             <Text className="text-primary font-bold">Regístrate</Text>
           </TouchableOpacity>
         </View>

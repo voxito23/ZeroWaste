@@ -60,7 +60,7 @@ export default function ScannerScreen() {
       const res = await api.post(`/recolecciones/${solId}/completar-qr`);
       Alert.alert('Recolección Completada ✅', res.data?.message || 'QR validado. Recolección marcada como completada.');
       setModalVisible(false);
-      navigation.navigate('home');
+      navigation.navigate('Home');
     } catch (error) {
       console.error(error);
       const msg = error.response?.data?.detail || 'No se pudo validar el QR para esta recolección.';
@@ -81,7 +81,7 @@ export default function ScannerScreen() {
       });
       Alert.alert('Éxito', `Has calificado la recolección con ${calificacion} estrellas.\n¡Gracias por contribuir a ZeroWaste!`);
       setModalVisible(false);
-      navigation.navigate('home');
+      navigation.navigate('Home');
     } catch (error) {
       console.error(error);
       const msg = error.response?.data?.detail || 'Hubo un problema al enviar la calificación.';
@@ -244,7 +244,7 @@ export default function ScannerScreen() {
                       variant="outline" 
                       onPress={() => {
                         setModalVisible(false);
-                        navigation.navigate('home');
+                        navigation.navigate('Home');
                       }} 
                     />
                   </View>

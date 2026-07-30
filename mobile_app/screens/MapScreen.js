@@ -168,29 +168,7 @@ export default function MapScreen() {
           animationDuration={2000}
         />
         
-        {/* Capa de Edificios 3D para mayor inmersión */}
-        <Mapbox.VectorSource id="composite" url="mapbox://mapbox.mapbox-streets-v8">
-          <Mapbox.FillExtrusionLayer
-            id="building3d"
-            sourceLayerID="building"
-            minZoomLevel={15}
-            filter={['==', 'extrude', 'true']}
-            style={{
-              fillExtrusionOpacity: 0.85,
-              fillExtrusionColor: '#d8f3e5',
-              fillExtrusionHeight: ['get', 'height'],
-              fillExtrusionBase: ['get', 'min_height'],
-            }}
-          />
-        </Mapbox.VectorSource>
-        
-        <Mapbox.UserLocation 
-          visible={true}
-          showsUserHeadingIndicator={true}
-          onUpdate={(location) => setUserLocation([location.coords.longitude, location.coords.latitude])}
-        />
-
-        {puntos.filter(p => p.longitud && p.latitud).map((p) => (
+        {puntos.filter(p => p.longitud && p.latitud && !isNaN(parseFloat(p.longitud)) && !isNaN(parseFloat(p.latitud))).map((p) => (
           <Mapbox.PointAnnotation
             key={p.id}
             id={`punto-${p.id}`}
@@ -225,7 +203,7 @@ export default function MapScreen() {
             <Text className="text-subtext text-base font-semibold">Buscar punto de acopio...</Text>
           </View>
           <TouchableOpacity 
-            onPress={() => navigation.navigate('mis-recolecciones')}
+            onPress={() => navigation.navigate('MisRecolecciones')}
             className="bg-primary w-14 h-14 rounded-full shadow-lg items-center justify-center elevation-5 border-2 border-surface"
           >
             <MapPin color="white" size={24} />
@@ -309,7 +287,7 @@ export default function MapScreen() {
         <View className="absolute right-6 z-20 flex-row gap-2" style={{ bottom: bottomSafeArea + 230 }}>
           {isRecolector && (
             <TouchableOpacity 
-              onPress={() => navigation.navigate('scanner')}
+              onPress={() => navigation.navigate('Scanner')}
               className="bg-emerald-700 flex-row items-center justify-center px-4 py-3.5 rounded-full shadow-lg elevation-6 border-2 border-surface"
             >
               <QrCode color="white" size={20} className="mr-1.5" />
@@ -337,50 +315,55 @@ export default function MapScreen() {
       {/* Modal para Solicitar Recoleccion */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
         <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           className="flex-1 justify-end bg-black/40"
         >
-          <View className="bg-white rounded-t-3xl p-6 pt-4 shadow-2xl" style={{ paddingBottom: Math.max(insets.bottom + 20, 24) }}>
-            <View className="flex-row justify-between items-center mb-6">
-              <View>
-                <Text className="text-2xl font-black text-text mb-1">Recolección a Domicilio</Text>
-                <Text className="text-subtext text-sm">Un recolector pasará por los materiales.</Text>
+          <ScrollView 
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View className="bg-white rounded-t-3xl p-6 pt-4 shadow-2xl" style={{ paddingBottom: Math.max(insets.bottom + 20, 24) }}>
+              <View className="flex-row justify-between items-center mb-6">
+                <View>
+                  <Text className="text-2xl font-black text-text mb-1">Recolección a Domicilio</Text>
+                  <Text className="text-subtext text-sm">Un recolector pasará por los materiales.</Text>
+                </View>
+                <TouchableOpacity onPress={() => setModalVisible(false)} className="p-2 bg-gray-100 rounded-full">
+                  <X color="#374151" size={20} />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity onPress={() => setModalVisible(false)} className="p-2 bg-gray-100 rounded-full">
-                <X color="#374151" size={20} />
-              </TouchableOpacity>
-            </View>
-            
-            <View className="mb-4">
-              <Text className="font-bold text-text mb-2 text-sm">Dirección de Recolección</Text>
-              <TextInput
-                placeholder="Ej. Calle Primavera 123, Col. Centro"
-                value={direccion}
-                onChangeText={setDireccion}
-                className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-text text-base"
-                placeholderTextColor="#9CA3AF"
+              
+              <View className="mb-4">
+                <Text className="font-bold text-text mb-2 text-sm">Dirección de Recolección</Text>
+                <TextInput
+                  placeholder="Ej. Calle Primavera 123, Col. Centro"
+                  value={direccion}
+                  onChangeText={setDireccion}
+                  className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-text text-base"
+                  placeholderTextColor="#9CA3AF"
+                />
+              </View>
+
+              <View className="mb-6">
+                <Text className="font-bold text-text mb-2 text-sm">¿Qué materiales entregarás?</Text>
+                <TextInput
+                  placeholder="Ej. 2kg PET, Cartón, Electrónicos"
+                  value={materiales}
+                  onChangeText={setMateriales}
+                  className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-text text-base min-h-[100px]"
+                  multiline
+                  textAlignVertical="top"
+                  placeholderTextColor="#9CA3AF"
+                />
+              </View>
+
+              <CustomButton 
+                title={submitting ? "Enviando Solicitud..." : "Solicitar Recolección"} 
+                onPress={handleSolicitar} 
+                disabled={submitting}
               />
             </View>
-
-            <View className="mb-6">
-              <Text className="font-bold text-text mb-2 text-sm">¿Qué materiales entregarás?</Text>
-              <TextInput
-                placeholder="Ej. 2kg PET, Cartón, Electrónicos"
-                value={materiales}
-                onChangeText={setMateriales}
-                className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-text text-base min-h-[100px]"
-                multiline
-                textAlignVertical="top"
-                placeholderTextColor="#9CA3AF"
-              />
-            </View>
-
-            <CustomButton 
-              title={submitting ? "Enviando Solicitud..." : "Solicitar Recolección"} 
-              onPress={handleSolicitar} 
-              disabled={submitting}
-            />
-          </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
     </View>
