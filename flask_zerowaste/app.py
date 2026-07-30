@@ -13,6 +13,9 @@ import random
 from sqlalchemy.sql import func
 from datetime import datetime, timedelta
 import requests as http_requests
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
+from urllib.parse import urlparse
 
 # Solo permitir OAuth inseguro en desarrollo local
 if os.environ.get('FLASK_DEBUG', 'false').lower() == 'true':
@@ -43,26 +46,55 @@ def sanitize_text(text, max_length=500):
 # ==========================================================================
 #  Inicialización de la App
 # ==========================================================================
+def require_env(name):
+    """Return a mandatory setting without exposing its value in errors."""
+    value = os.environ.get(name, '').strip()
+    if not value:
+        raise RuntimeError(f'Required environment variable is not configured: {name}')
+    return value
+
+
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=[
-    'http://localhost:5001',
-    'http://localhost:8001',
-    'http://167.99.239.121:5001',
-    'http://167.99.239.121:8001',
-])
+allowed_origins = [
+    origin.strip()
+    for origin in os.environ.get(
+        'ALLOWED_ORIGINS',
+        'https://zerowaste-qro.com,https://www.zerowaste-qro.com',
+    ).split(',')
+    if origin.strip()
+]
+CORS(app, supports_credentials=True, origins=allowed_origins)
 
 # Secretos desde variables de entorno (NUNCA hardcoded)
-app.secret_key = os.environ.get('SECRET_KEY', os.urandom(32).hex())
+app.secret_key = require_env('SECRET_KEY')
 app.permanent_session_lifetime = timedelta(days=30)
 app.config['SESSION_COOKIE_NAME'] = 'zerowaste_session'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = os.environ.get('HTTPS_ENABLED', 'false').lower() == 'true'
+app.config['SESSION_COOKIE_SECURE'] = os.environ.get('HTTPS_ENABLED', 'true').lower() == 'true'
 app.config['MAX_CONTENT_LENGTH'] = MAX_UPLOAD_SIZE_MB * 1024 * 1024  # 250MB max upload
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # Para "Recordarme"
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'postgresql://postgres:postgrespassword@127.0.0.1:5432/zerowaste_db')
+database_url = require_env('DATABASE_URL')
+if urlparse(database_url).scheme not in {'postgresql', 'postgresql+psycopg2'}:
+    raise RuntimeError('DATABASE_URL must use the PostgreSQL psycopg2 driver')
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+database_connect_args = {
+    'sslmode': os.environ.get('DB_SSLMODE', 'require'),
+    'connect_timeout': int(os.environ.get('DB_CONNECT_TIMEOUT', '10')),
+}
+statement_timeout_ms = os.environ.get('DB_STATEMENT_TIMEOUT_MS', '').strip()
+if statement_timeout_ms:
+    database_connect_args['options'] = f'-c statement_timeout={int(statement_timeout_ms)}'
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_size': int(os.environ.get('DB_POOL_SIZE', '5')),
+    'max_overflow': int(os.environ.get('DB_MAX_OVERFLOW', '5')),
+    'pool_timeout': int(os.environ.get('DB_POOL_TIMEOUT', '10')),
+    'pool_recycle': int(os.environ.get('DB_POOL_RECYCLE', '300')),
+    'connect_args': database_connect_args,
+}
 
 # ===== Rate Limiter =====
 limiter = Limiter(
@@ -110,7 +142,7 @@ def send_email_resend(to_email, subject, html_body):
         return False
 
 # Variable dinámica para Producción vs Desarrollo
-PUBLIC_API_URL = os.environ.get('PUBLIC_API_URL', 'http://localhost:6001')
+PUBLIC_API_URL = require_env('PUBLIC_API_URL')
 
 @app.context_processor
 def inject_global_vars():
@@ -118,8 +150,33 @@ def inject_global_vars():
 
 db.init_app(app)
 
-with app.app_context():
-    db.create_all()
+
+@app.errorhandler(SQLAlchemyError)
+def handle_database_error(error):
+    """Fail clearly without leaking connection details or changing schema."""
+    app.logger.error('Database operation failed: %s', type(error).__name__)
+    payload = {'status': 'error', 'message': 'La base de datos no está disponible o su esquema no es compatible.'}
+    if request.path.startswith('/ajax/') or request.accept_mimetypes.best == 'application/json':
+        return jsonify(payload), 503
+    return render_template('500.html'), 503
+
+
+@app.get('/health')
+def health():
+    """Liveness only: never opens a database connection."""
+    return jsonify({'status': 'ok', 'service': 'flask'})
+
+
+@app.get('/ready')
+def readiness():
+    """Read-only dependency check; never creates or migrates schema."""
+    try:
+        db.session.execute(text('SELECT 1'))
+        return jsonify({'status': 'ready', 'service': 'flask', 'database': 'ok'})
+    except SQLAlchemyError as error:
+        db.session.rollback()
+        app.logger.error('Database readiness check failed: %s', type(error).__name__)
+        return jsonify({'status': 'not_ready', 'service': 'flask', 'database': 'unavailable'}), 503
 
 # ==========================================================================
 #  Template Filters

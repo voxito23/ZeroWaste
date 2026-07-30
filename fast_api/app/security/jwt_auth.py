@@ -19,7 +19,9 @@ from app.models.domain_models import Usuario
 from app.models.schemas import TokenData
 
 # Configuración de JWT
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "zerowaste_super_secret_jwt_2026")
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "").strip()
+if not SECRET_KEY:
+    raise RuntimeError("Required environment variable is not configured: JWT_SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
 

@@ -4,6 +4,7 @@ Incluye TODOS los routers del proyecto + hardening de seguridad.
 Monitoreo con Prometheus + Firewall WAF integrado.
 """
 
+import logging
 import os
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,10 +14,15 @@ from fastapi.responses import FileResponse, JSONResponse
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.routers import auth, usuarios, foro, mapa, eventos, analisis, formularios, docs_auth, campanas, recoleccion, firewall_monitor
 from app.security.api_key_auth import ApiKeyMiddleware
 from app.security.firewall import FirewallMiddleware
+from app.data.database import engine
+
+logger = logging.getLogger("zerowaste.api")
 
 # ==========================================================================
 #  Rate Limiter global
@@ -59,19 +65,14 @@ app.add_middleware(ApiKeyMiddleware)
 app.add_middleware(FirewallMiddleware)
 
 # 3. CORS restringido a orígenes conocidos (NO usar "*" con credenciales)
-ALLOWED_ORIGINS = [
-    "http://localhost:5001",
-    "http://localhost:8001",
-    "http://localhost:8081",
-    "http://localhost:19006",
-    "http://localhost:3000",
-    "http://10.0.2.2",
-    "http://167.99.239.121:5001",
-    "http://167.99.239.121:8001",
+DEFAULT_ALLOWED_ORIGINS = [
     "https://zerowaste-qro.com",
     "https://www.zerowaste-qro.com",
-    "http://zerowaste-qro.com",
-    "http://www.zerowaste-qro.com",
+]
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", ",".join(DEFAULT_ALLOWED_ORIGINS)).split(",")
+    if origin.strip()
 ]
 
 app.add_middleware(
@@ -125,7 +126,7 @@ def custom_openapi():
         "type": "apiKey",
         "in": "header",
         "name": "X-API-Key",
-        "description": "API-Key de sistema obligatoria para todas las peticiones protegidas (ej. zw_mobile_secret_key_2026)"
+        "description": "API-Key de sistema obligatoria para todas las peticiones protegidas."
     }
     
     # Añadir a los requerimientos globales de seguridad
@@ -162,6 +163,27 @@ app.include_router(docs_auth.router)
 @app.get("/", tags=["Salud"])
 def health_check():
     return {"status": "ok", "service": "ZeroWaste FastAPI", "version": "2.1.0"}
+
+
+@app.get("/health", tags=["Salud"], include_in_schema=False)
+def health():
+    """Liveness only: never opens a database connection."""
+    return {"status": "ok", "service": "fastapi"}
+
+
+@app.get("/ready", tags=["Salud"], include_in_schema=False)
+def readiness():
+    """Read-only dependency check; it never creates or migrates schema."""
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        return {"status": "ready", "service": "fastapi", "database": "ok"}
+    except SQLAlchemyError as exc:
+        logger.error("Database readiness check failed: %s", type(exc).__name__)
+        return JSONResponse(
+            status_code=503,
+            content={"status": "not_ready", "service": "fastapi", "database": "unavailable"},
+        )
 
 
 @app.get("/favicon.ico", include_in_schema=False)

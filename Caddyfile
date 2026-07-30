@@ -13,8 +13,20 @@ zerowaste-qro.com, www.zerowaste-qro.com {
     }
 
     # FastAPI (Backend / API — Servidor Privado)
-    handle_path /api* {
-        reverse_proxy fast_api:6000
+    handle /api {
+        rewrite * /
+        reverse_proxy fast_api:6000 {
+            header_up Host {host}
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-Prefix /api
+        }
+    }
+    handle_path /api/* {
+        reverse_proxy fast_api:6000 {
+            header_up Host {host}
+            header_up X-Forwarded-Proto {scheme}
+            header_up X-Forwarded-Prefix /api
+        }
     }
 
     # FastAPI Docs y Redoc (Protegidos con login de admin)

@@ -16,7 +16,7 @@ from app.security.jwt_auth import get_current_user, get_current_admin_user
 router = APIRouter(prefix="/campanas", tags=["Campañas"])
 
 
-@router.get("/", response_model=List[CampaignResponse], summary="Listar todas las campañas")
+@router.get("", response_model=List[CampaignResponse], summary="Listar todas las campañas")
 def list_campanas(db: Session = Depends(get_db)):
     """Devuelve todas las campañas activas ordenadas por fecha de creación."""
     return db.query(Campaign).filter(Campaign.activa == True).order_by(Campaign.created_at.desc()).all()
@@ -32,7 +32,7 @@ def get_campana(campana_id: int, db: Session = Depends(get_db)):
 
 
 @router.post(
-    "/",
+    "",
     response_model=CampaignResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Crear una nueva campaña",

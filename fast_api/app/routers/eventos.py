@@ -16,7 +16,7 @@ from app.security.jwt_auth import get_current_user, get_current_admin_user
 router = APIRouter(prefix="/eventos", tags=["Eventos y Jornadas"])
 
 
-@router.get("/", response_model=List[EventoResponse], summary="Listar todos los eventos")
+@router.get("", response_model=List[EventoResponse], summary="Listar todos los eventos")
 def list_eventos(db: Session = Depends(get_db)):
     """Devuelve todos los eventos activos ordenados por fecha más reciente."""
     return db.query(Evento).filter(Evento.activa == True).order_by(Evento.fecha_inicio.desc()).all()
@@ -32,7 +32,7 @@ def get_evento(evento_id: int, db: Session = Depends(get_db)):
 
 
 @router.post(
-    "/",
+    "",
     response_model=EventoResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Crear un nuevo evento",

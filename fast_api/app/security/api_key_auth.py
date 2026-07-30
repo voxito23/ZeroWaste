@@ -24,8 +24,14 @@ def get_allowed_api_keys() -> List[str]:
     Obtiene la lista de API-Keys autorizadas desde la configuración de entorno (.env).
     Soporta múltiples claves separadas por coma.
     """
-    raw_keys = os.getenv("SYSTEM_API_KEY", "zw_mobile_secret_key_2026")
+    raw_keys = os.getenv("SYSTEM_API_KEY", "")
+    if not raw_keys.strip():
+        raise RuntimeError("Required environment variable is not configured: SYSTEM_API_KEY")
     return [k.strip() for k in raw_keys.split(",") if k.strip()]
+
+
+# Validate configuration during process startup, without logging any key.
+get_allowed_api_keys()
 
 
 def verify_api_key(api_key: Optional[str]) -> bool:
@@ -70,6 +76,8 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
         "/zw-redoc",
         "/zw-openapi.json",
         "/metrics",
+        "/health",
+        "/ready",
     }
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:

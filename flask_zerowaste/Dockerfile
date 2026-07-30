@@ -22,4 +22,4 @@ RUN cd frontend_build && npx tailwindcss -i ../static/src/input.css -o ../static
 
 EXPOSE 5000
 
-CMD ["python", "app.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--timeout", "60", "--access-logfile", "-", "--error-logfile", "-", "app:app"]

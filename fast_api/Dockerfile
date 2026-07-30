@@ -22,4 +22,4 @@ COPY . .
 
 EXPOSE 6000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "6000", "--reload"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "6000", "--proxy-headers", "--forwarded-allow-ips=*"]
