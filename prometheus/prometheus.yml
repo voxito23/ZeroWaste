@@ -56,7 +56,7 @@ scrape_configs:
 
   - job_name: blackbox-laravel-replicas
     metrics_path: /probe
-    params: {module: [http_2xx]}
+    params: {module: [http_2xx_internal]}
     static_configs:
       - targets:
           - http://admin/up
