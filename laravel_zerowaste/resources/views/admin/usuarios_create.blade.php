@@ -411,7 +411,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         e.preventDefault();
 
-        fetch(`/zw-interno/usuarios/check-email?email=${encodeURIComponent(email.value.trim())}`)
+        const checkEmailUrl = "{{ route('usuarios.checkEmail') }}";
+        fetch(`${checkEmailUrl}?email=${encodeURIComponent(email.value.trim())}`)
             .then(res => res.json())
             .then(data => {
                 if (data.exists) {

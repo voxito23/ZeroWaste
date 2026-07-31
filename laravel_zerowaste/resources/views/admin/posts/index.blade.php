@@ -285,7 +285,8 @@ window.deleteRespuesta = function(id) {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            fetch('/zw-interno/respuestas/' + id, {
+            const deleteReplyUrl = "{{ route('respuestas.destroy', ['id' => 'REPLACE_ID']) }}".replace('REPLACE_ID', id);
+            fetch(deleteReplyUrl, {
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': '{{ csrf_token() }}',

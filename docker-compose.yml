@@ -93,6 +93,7 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
+      ADMIN_PATH_PREFIX: zw-interno
       APP_URL: https://www.zerowaste-qro.com/zw-interno
       ASSET_URL: https://www.zerowaste-qro.com
       CACHE_STORE: redis
@@ -127,7 +128,8 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
-      APP_URL: https://www.zerowaste-qro.com/zw-interno
+      ADMIN_PATH_PREFIX: zw-interno/2
+      APP_URL: https://www.zerowaste-qro.com/zw-interno/2
       ASSET_URL: https://www.zerowaste-qro.com
       CACHE_STORE: redis
       REDIS_CLIENT: phpredis

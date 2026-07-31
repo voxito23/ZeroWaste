@@ -22,7 +22,8 @@
         const threadContainer = document.getElementById('replyThread');
         threadContainer.innerHTML = '<div class="text-center py-4 text-gray-400"><span class="material-symbols-outlined animate-spin">progress_activity</span><br>Cargando conversación...</div>';
         
-        let threadUrl = "/zw-interno/mensajes/" + id + "/thread";
+        let threadUrlTemplate = "{{ route('mensajes.thread', ['id' => 'REPLACE_ID']) }}";
+        let threadUrl = threadUrlTemplate.replace('REPLACE_ID', id);
         fetch(threadUrl)
             .then(r => r.json())
             .then(data => {

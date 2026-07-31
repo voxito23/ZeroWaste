@@ -7,6 +7,7 @@ the same versioned source directory:
 - `admin2` (`laravel_admin_2`) is the passive backup.
 - `nginx_api` detects connection and gateway failures and sends a safe retry to
   the backup.
+- `/zw-interno/2/` routes explicitly to `admin2` for validation and diagnostics.
 
 Both containers use the external PostgreSQL database, Redis cache/rate-limit
 state, the same application environment, and the shared profile volume. No
@@ -47,3 +48,9 @@ docker-compose ps admin admin2 nginx_api
 
 Expected result: both HTTP checks return `200`, and the Nginx access log shows
 `admin2`'s upstream address while the primary is stopped.
+
+The secondary can also be checked without stopping the primary:
+
+```bash
+curl -fsS -o /dev/null -w 'secondary=%{http_code}\n' https://www.zerowaste-qro.com/zw-interno/2/login
+```

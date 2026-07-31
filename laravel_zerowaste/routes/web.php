@@ -16,16 +16,20 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\RecoleccionController;
 use App\Http\Controllers\ReportesRecoleccionController;
 
-Route::get('/zw-interno/login', function () {
+$adminPrefix = trim((string) env('ADMIN_PATH_PREFIX', 'zw-interno'), '/');
+$adminBase = '/'.$adminPrefix;
+
+Route::get($adminBase.'/login', function () {
     return view('welcome');
 })->name('login');
 
-Route::redirect('/zw-interno', '/zw-interno/login');
-Route::redirect('/', '/zw-interno/login');
+Route::redirect($adminBase, $adminBase.'/login');
+Route::redirect($adminBase.'/', $adminBase.'/login');
+Route::redirect('/', $adminBase.'/login');
 
-Route::post('/zw-interno/login', [AuthController::class, 'login'])->name('admin.login');
+Route::post($adminBase.'/login', [AuthController::class, 'login'])->name('admin.login');
 
-Route::prefix('zw-interno')->middleware(['auth', 'admin'])->group(function () {
+Route::prefix($adminPrefix)->middleware(['auth', 'admin'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
