@@ -33,6 +33,8 @@ services:
         condition: service_healthy
       admin:
         condition: service_healthy
+      admin2:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8081/nginx-health"]
       interval: 30s
@@ -78,7 +80,42 @@ services:
 
   admin:
     build: ./laravel_zerowaste
+    image: zerowaste-laravel:local
     container_name: laravel_admin
+    restart: unless-stopped
+    expose: ["80"]
+    volumes:
+      - ./laravel_zerowaste:/var/www/html
+      - /var/www/html/vendor
+      - perfiles_compartidos:/var/www/html/public/img/perfiles
+      - ./flask_zerowaste/static/img:/var/www/flask_zerowaste/static/img
+    env_file: [./laravel_zerowaste/.env]
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_URL: https://www.zerowaste-qro.com/zw-interno
+      ASSET_URL: https://www.zerowaste-qro.com
+      CACHE_STORE: redis
+      REDIS_CLIENT: phpredis
+      REDIS_URL: redis://redis:6379/0
+      SESSION_SECURE_COOKIE: "true"
+      SESSION_HTTP_ONLY: "true"
+      SESSION_SAME_SITE: lax
+    networks: [app_network, data_network, backend_egress]
+    depends_on:
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1/up"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+
+  admin2:
+    build: ./laravel_zerowaste
+    image: zerowaste-laravel:local
+    container_name: laravel_admin_2
     restart: unless-stopped
     expose: ["80"]
     volumes:
