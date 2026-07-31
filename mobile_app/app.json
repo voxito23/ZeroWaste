@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "ZeroWaste",
-    "slug": "mobile_app",
+    "slug": "zerowaste",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/branding/zerowaste-icon.png",
@@ -47,8 +47,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "103770e7-e3cd-4b91-adf4-d71942d06165"
+        "projectId": "8fb4a3cb-8dc7-4b1c-935c-dcbce54979ab"
       }
-    }
+    },
+    "owner": "vic45"
   }
 }
