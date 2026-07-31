@@ -1,47 +1,69 @@
-FROM php:8.4-apache
+FROM php:8.4.6-apache-bookworm AS php-base
 
-# 1. Instalar dependencias del sistema y Node.js (para Tailwind/Vite)
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    libzip-dev \
-    libpq-dev \
-    curl \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        $PHPIZE_DEPS \
+        ca-certificates \
+        curl \
+        libfreetype6-dev \
+        libicu-dev \
+        libjpeg-dev \
+        libonig-dev \
+        libpng-dev \
+        libpq-dev \
+        libzip-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_pgsql zip gd
+    && docker-php-ext-install -j"$(nproc)" pdo_pgsql zip gd mbstring intl opcache \
+    && pecl install redis-6.1.0 \
+    && docker-php-ext-enable redis \
+    && apt-get purge -y --auto-remove $PHPIZE_DEPS \
+    && rm -rf /var/lib/apt/lists/* /tmp/pear
 
-# Redis is the shared cache/rate-limit backend; no credentials are baked in.
-RUN pecl install redis && docker-php-ext-enable redis
 
-# Configurar límites de subida de PHP para permitir imágenes grandes
-RUN echo "upload_max_filesize = 64M\npost_max_size = 64M\nmemory_limit = 256M" > /usr/local/etc/php/conf.d/uploads.ini
+FROM php-base AS vendor
 
-# 2. Habilitar mod_rewrite de Apache
-RUN a2enmod rewrite
-
-# 3. Cambiar el document root a la carpeta public de Laravel
-RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf
+COPY --from=composer:2.8.8 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
+COPY composer.json composer.lock ./
+RUN composer install \
+    --no-dev \
+    --no-interaction \
+    --no-progress \
+    --no-scripts \
+    --prefer-dist \
+    --optimize-autoloader
 
-# 4. Traer Composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
-
-# 5. Copiar los archivos del proyecto
 COPY . .
+RUN composer dump-autoload \
+    --no-dev \
+    --no-interaction \
+    --optimize \
+    --classmap-authoritative
 
-# 6. Instalar dependencias (Instalación limpia ignorando reqs del sistema anfitrión)
-RUN composer install --no-interaction --optimize-autoloader --ignore-platform-reqs --no-scripts
 
-# 7. Crear directorios de imágenes compartidos con Flask y permisos correctos
-RUN mkdir -p /var/www/flask_zerowaste/static/img/perfiles \
-    /var/www/flask_zerowaste/static/img/eventos \
-    && chmod -R 777 /var/www/flask_zerowaste/static/img
+FROM php-base AS runtime
 
-# 8. Permisos de Laravel
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache || true
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+
+RUN a2enmod rewrite headers expires
+
+COPY docker/apache-vhost.conf /etc/apache2/sites-available/000-default.conf
+COPY docker/php-production.ini /usr/local/etc/php/conf.d/99-zerowaste-production.ini
+
+WORKDIR /var/www/html
+COPY . .
+COPY --from=vendor /var/www/html/vendor ./vendor
+
+RUN mkdir -p \
+        storage/framework/cache/data \
+        storage/framework/sessions \
+        storage/framework/views \
+        storage/logs \
+        bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R u=rwX,g=rwX,o= storage bootstrap/cache
+
+EXPOSE 80
+
+CMD ["apache2-foreground"]

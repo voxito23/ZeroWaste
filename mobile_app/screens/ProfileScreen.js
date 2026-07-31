@@ -1,13 +1,15 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Award, ChevronRight, Gift, History, LogOut, MapPin, Settings, Shield, UserRoundPen } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { api } from '../api/axios';
+import RemoteImage from '../components/ui/RemoteImage';
 import { useScrollContext } from '../context/ScrollContext';
 import { useAuth } from '../store/useAuth';
+import { normalizeMediaUrl } from '../utils/media';
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -42,9 +44,10 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const imageSource = profile?.foto_perfil && !['perfil_default.png', 'default.png'].includes(profile.foto_perfil)
-    ? { uri: profile.foto_perfil.startsWith('http') ? profile.foto_perfil : `https://www.zerowaste-qro.com/static/img/perfiles/${profile.foto_perfil}` }
-    : require('../assets/images/logo.png');
+  const avatarValue = profile?.avatar_url ?? profile?.foto_perfil;
+  const avatarUrl = !['perfil_default.png', 'default.png'].includes(avatarValue)
+    ? normalizeMediaUrl(avatarValue, 'perfiles')
+    : null;
 
   return (
     <SafeAreaView className="flex-1 bg-[#FAFAFA]" edges={['top']}>
@@ -65,7 +68,7 @@ export default function ProfileScreen() {
 
         <View className="mx-6 rounded-[28px] bg-white border border-gray-100 p-6">
           <View className="flex-row items-center">
-            <Image source={imageSource} className="w-20 h-20 rounded-full bg-emerald-50" resizeMode="cover" />
+            <RemoteImage uri={avatarUrl} fallbackSource={require('../assets/images/logo.png')} className="h-20 w-20 rounded-full bg-emerald-50" aspectRatio={1} accessibilityLabel="Avatar del perfil" />
             <View className="ml-4 flex-1">
               <Text className="text-2xl font-black text-gray-900">{profile?.nombre || 'Usuario'}</Text>
               <Text className="text-gray-500 mt-1">{profile?.email || ''}</Text>

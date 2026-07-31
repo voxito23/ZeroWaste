@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Evento;
+use App\Support\Media;
 
 class EventoController extends Controller
 {
@@ -28,7 +29,7 @@ class EventoController extends Controller
             'fecha_fin' => 'required|date',
             'tipo_etiqueta' => 'nullable|string|max:50',
             'link_evento' => 'nullable|string|max:500',
-            'imagen_archivo' => 'nullable|image|max:256000',
+            'imagen_archivo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ];
         $messages = [
             'titulo.required' => 'El título del evento es obligatorio.',
@@ -41,26 +42,24 @@ class EventoController extends Controller
             'fecha_fin.date' => 'Debe ingresar una fecha de fin válida.',
             'imagen_archivo.image' => 'El archivo debe ser una imagen válida.',
             'imagen_archivo.uploaded' => 'Error al subir la imagen. Verifica que el archivo no exceda el tamaño permitido.',
-            'imagen_archivo.max' => 'La imagen no debe superar los 250MB.',
+            'imagen_archivo.max' => 'La imagen no debe superar 5 MB.',
         ];
         $data = $request->validate($rules, $messages);
 
+        $newImage = null;
         if ($request->hasFile('imagen_archivo')) {
-            try {
-                $img = $request->file('imagen_archivo');
-                $nombreImg = uniqid('evt_') . '.' . $img->getClientOriginalExtension();
-                $destino = app()->basePath('../flask_zerowaste/static/img/eventos/');
-                if (!file_exists($destino)) { mkdir($destino, 0777, true); }
-                $img->move($destino, $nombreImg);
-                $data['imagen_url'] = $nombreImg;
-            } catch (\Exception $e) {
-                \Log::error("Error subiendo imagen de evento: " . $e->getMessage());
-            }
+            $newImage = Media::store($request->file('imagen_archivo'), 'eventos');
+            $data['imagen_url'] = $newImage;
         }
         unset($data['imagen_archivo']);
         $data['activa'] = $request->has('activa') ? 'true' : 'false';
 
-        Evento::create($data);
+        try {
+            Evento::create($data);
+        } catch (\Throwable $error) {
+            Media::discard($newImage, 'eventos');
+            throw $error;
+        }
         
         return redirect()->route('eventos.index')->with('success', 'Evento o Jornada creada exitosamente.');
     }
@@ -80,7 +79,7 @@ class EventoController extends Controller
             'fecha_fin' => 'required|date',
             'tipo_etiqueta' => 'nullable|string|max:50',
             'link_evento' => 'nullable|string|max:500',
-            'imagen_archivo' => 'nullable|image|max:256000',
+            'imagen_archivo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ];
         $messages = [
             'titulo.required' => 'El título del evento es obligatorio.',
@@ -93,26 +92,24 @@ class EventoController extends Controller
             'fecha_fin.date' => 'Debe ingresar una fecha de fin válida.',
             'imagen_archivo.image' => 'El archivo debe ser una imagen válida.',
             'imagen_archivo.uploaded' => 'Error al subir la imagen. Verifica que el archivo no exceda el tamaño permitido.',
-            'imagen_archivo.max' => 'La imagen no debe superar los 250MB.',
+            'imagen_archivo.max' => 'La imagen no debe superar 5 MB.',
         ];
         $data = $request->validate($rules, $messages);
 
+        $newImage = null;
         if ($request->hasFile('imagen_archivo')) {
-            try {
-                $img = $request->file('imagen_archivo');
-                $nombreImg = uniqid('evt_') . '.' . $img->getClientOriginalExtension();
-                $destino = app()->basePath('../flask_zerowaste/static/img/eventos/');
-                if (!file_exists($destino)) { mkdir($destino, 0777, true); }
-                $img->move($destino, $nombreImg);
-                $data['imagen_url'] = $nombreImg;
-            } catch (\Exception $e) {
-                \Log::error("Error subiendo imagen de evento edit: " . $e->getMessage());
-            }
+            $newImage = Media::store($request->file('imagen_archivo'), 'eventos');
+            $data['imagen_url'] = $newImage;
         }
         unset($data['imagen_archivo']);
         $data['activa'] = $request->has('activa') ? 'true' : 'false';
 
-        $evento->update($data);
+        try {
+            $evento->update($data);
+        } catch (\Throwable $error) {
+            Media::discard($newImage, 'eventos');
+            throw $error;
+        }
         return redirect()->route('eventos.index')->with('success', 'Evento o Jornada actualizada exitosamente.');
     }
 

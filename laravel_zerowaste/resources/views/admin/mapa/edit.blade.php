@@ -178,7 +178,7 @@
                 <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Fotografía del Punto</label>
                 @if($location->imagen && $location->imagen !== 'default_punto.png')
                 <div class="mb-3 flex items-center gap-3 bg-gray-50 dark:bg-[#0B1F18] p-3 rounded-xl border border-gray-200 dark:border-emerald-800/30">
-                    <img src="https://zerowaste-qro.com/static/img/{{ $location->imagen }}" alt="Imagen actual" class="h-16 w-24 object-cover rounded-lg border border-emerald-200 dark:border-emerald-700/50" onerror="this.style.display='none'">
+                    <img src="{{ $location->image_url }}" alt="Imagen actual" class="h-16 w-24 object-cover rounded-lg border border-emerald-200 dark:border-emerald-700/50" onerror="this.style.display='none'">
                     <span class="text-xs font-bold text-gray-500 dark:text-emerald-500/80">Imagen actual: {{ $location->imagen }}</span>
                 </div>
                 @endif

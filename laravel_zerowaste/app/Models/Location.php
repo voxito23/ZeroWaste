@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Media;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -41,8 +42,15 @@ class Location extends Model
         'materiales',
     ];
 
+    protected $appends = ['image_url'];
+
     public function campaigns()
     {
         return $this->hasMany(Campaign::class);
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return Media::url($this->imagen, 'puntos');
     }
 }

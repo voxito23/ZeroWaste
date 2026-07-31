@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\Log;
+use App\Support\Media;
 
 class UserController extends Controller
 {
@@ -71,7 +71,7 @@ class UserController extends Controller
             'ubicacion' => 'nullable|string|max:30',
             'titulo_perfil' => 'nullable|string|max:100',
             'biografia' => 'nullable|string|max:500',
-            'foto_perfil' => 'nullable|image|max:256000',
+            'foto_perfil' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ];
 
         $messages = [
@@ -87,7 +87,7 @@ class UserController extends Controller
             'titulo_perfil.max' => 'El título del perfil no puede exceder los 100 caracteres.',
             'biografia.max' => 'La biografía no puede exceder los 500 caracteres.',
             'foto_perfil.image' => 'El archivo debe ser una imagen.',
-            'foto_perfil.max' => 'La imagen no debe pesar más de 250MB.',
+            'foto_perfil.max' => 'La imagen no debe pesar más de 5 MB.',
             'foto_perfil.uploaded' => 'Error al subir la imagen. Intenta con una de menor tamaño.',
         ];
 
@@ -99,25 +99,18 @@ class UserController extends Controller
         $data['auth_provider'] = 'local';
         $data['profile_completed'] = 'true';
 
-        // Manejar subida de foto de perfil
+        $newImage = null;
         if ($request->hasFile('foto_perfil')) {
-            try {
-                $foto = $request->file('foto_perfil');
-                $nombreFoto = uniqid() . '.' . $foto->getClientOriginalExtension();
-
-                // Guardar en el volumen compartido (named volume perfiles_compartidos)
-                $destinoCompartido = public_path('img/perfiles');
-                if (!file_exists($destinoCompartido)) { mkdir($destinoCompartido, 0777, true); }
-                $foto->move($destinoCompartido, $nombreFoto);
-
-                $data['foto_perfil'] = $nombreFoto;
-            } catch (\Exception $e) {
-                // Si falla la subida de imagen, continuar sin foto
-                error_log('No se pudo guardar la foto de perfil: ' . $e->getMessage());
-            }
+            $newImage = Media::store($request->file('foto_perfil'), 'perfiles');
+            $data['foto_perfil'] = $newImage;
         }
 
-        User::create($data);
+        try {
+            User::create($data);
+        } catch (\Throwable $error) {
+            Media::discard($newImage, 'perfiles');
+            throw $error;
+        }
         return redirect()->route('usuarios.index')->with('success', 'Usuario creado correctamente.');
     }
 
@@ -144,7 +137,7 @@ class UserController extends Controller
             'ubicacion' => 'nullable|string|max:30',
             'titulo_perfil' => 'nullable|string|max:100',
             'biografia' => 'nullable|string|max:500',
-            'foto_perfil' => 'nullable|image|max:256000',
+            'foto_perfil' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ];
 
         $messages = [
@@ -160,7 +153,7 @@ class UserController extends Controller
             'titulo_perfil.max' => 'El título del perfil no puede exceder los 100 caracteres.',
             'biografia.max' => 'La biografía no puede exceder los 500 caracteres.',
             'foto_perfil.image' => 'El archivo debe ser una imagen.',
-            'foto_perfil.max' => 'La imagen no debe pesar más de 250MB.',
+            'foto_perfil.max' => 'La imagen no debe pesar más de 5 MB.',
             'foto_perfil.uploaded' => 'Error al subir la imagen. Intenta con una de menor tamaño.',
         ];
 
@@ -178,24 +171,18 @@ class UserController extends Controller
             $data['password'] = \Illuminate\Support\Facades\Hash::make($request->input('password'));
         }
 
-        // Manejar subida de foto de perfil
+        $newImage = null;
         if ($request->hasFile('foto_perfil')) {
-            try {
-                $foto = $request->file('foto_perfil');
-                $nombreFoto = uniqid() . '.' . $foto->getClientOriginalExtension();
-
-                // Guardar en el volumen compartido (named volume perfiles_compartidos)
-                $destinoCompartido = public_path('img/perfiles');
-                if (!file_exists($destinoCompartido)) { mkdir($destinoCompartido, 0777, true); }
-                $foto->move($destinoCompartido, $nombreFoto);
-
-                $data['foto_perfil'] = $nombreFoto;
-            } catch (\Exception $e) {
-                error_log('No se pudo actualizar la foto de perfil: ' . $e->getMessage());
-            }
+            $newImage = Media::store($request->file('foto_perfil'), 'perfiles');
+            $data['foto_perfil'] = $newImage;
         }
 
-        $user->update($data);
+        try {
+            $user->update($data);
+        } catch (\Throwable $error) {
+            Media::discard($newImage, 'perfiles');
+            throw $error;
+        }
         return redirect()->route('usuarios.index')->with('success', 'Usuario actualizado correctamente.');
     }
 

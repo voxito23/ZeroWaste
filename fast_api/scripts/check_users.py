@@ -1,14 +1,20 @@
 """
 Script para verificar los usuarios registrados en la base de datos.
-Ejecutar: docker exec fastapi_app python check_users.py
+No imprime correos, hashes ni otros datos personales.
 """
 
 from app.data.database import SessionLocal
+from sqlalchemy import func
+
 from app.models.domain_models import Usuario
 
 db = SessionLocal()
-users = db.query(Usuario).all()
-for u in users:
-    print(f"ID={u.id} | {u.email} | is_admin={u.is_admin} | hash_type={u.password[:15]}")
-print(f"\nTotal: {len(users)} usuarios")
-db.close()
+try:
+    total = db.query(func.count(Usuario.id)).scalar() or 0
+    admins = db.query(func.count(Usuario.id)).filter(Usuario.is_admin.is_(True)).scalar() or 0
+    blocked = db.query(func.count(Usuario.id)).filter(Usuario.bloqueado.is_(True)).scalar() or 0
+    print(f"Total users: {total}")
+    print(f"Administrators: {admins}")
+    print(f"Blocked users: {blocked}")
+finally:
+    db.close()

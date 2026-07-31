@@ -1,0 +1,134 @@
+"""Backend media and service-contract tests that never connect to a database."""
+
+from __future__ import annotations
+
+import importlib.util
+import io
+import os
+import re
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+from PIL import Image
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def load_module(name: str, path: Path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"Unable to load test module: {path.name}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+class BackendMediaContractTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.fastapi_media = load_module(
+            "zerowaste_fastapi_media",
+            ROOT / "fast_api" / "app" / "services" / "media.py",
+        )
+        cls.flask_media = load_module(
+            "zerowaste_flask_media",
+            ROOT / "flask_zerowaste" / "media.py",
+        )
+
+    def test_media_url_contract(self):
+        base = "https://www.zerowaste-qro.com/media"
+        for media in (self.fastapi_media, self.flask_media):
+            build = media.build_public_media_url
+            self.assertEqual(f"{base}/foro/post.jpg", build("post.jpg", "foro"))
+            self.assertEqual(f"{base}/puntos/punto.webp", build("/media/puntos/punto.webp"))
+            self.assertEqual(
+                f"{base}/recompensas/termo.png",
+                build("/images/recompensas/termo.png"),
+            )
+            self.assertEqual(
+                f"{base}/perfiles/avatar.jpg", build("/img/perfiles/avatar.jpg")
+            )
+            self.assertEqual(
+                "https://cdn.example.com/image.png",
+                build("https://cdn.example.com/image.png"),
+            )
+
+            for unsafe in (
+                "javascript:alert(1)",
+                "file:///etc/passwd",
+                "http://example.com/image.jpg",
+                "https://localhost/image.jpg",
+                "/data/media/foro/internal.jpg",
+                "../escape.jpg",
+                "C:\\media\\private.jpg",
+            ):
+                with self.subTest(unsafe=unsafe):
+                    self.assertIsNone(build(unsafe, "foro"))
+
+    def test_fastapi_image_storage_uses_uuid_and_category(self):
+        stream = io.BytesIO()
+        Image.new("RGB", (8, 8), (0, 128, 64)).save(stream, format="PNG")
+        with tempfile.TemporaryDirectory(dir=ROOT) as temp_dir:
+            with patch.dict(os.environ, {"MEDIA_ROOT": temp_dir}):
+                filename = self.fastapi_media.save_media_image(
+                    stream.getvalue(), "puntos"
+                )
+            self.assertRegex(filename, r"^[0-9a-f]{32}\.png$")
+            self.assertTrue((Path(temp_dir) / "puntos" / filename).is_file())
+            self.assertFalse((Path(temp_dir) / "eventos" / filename).exists())
+
+    def test_fastapi_image_storage_rejects_non_image(self):
+        with tempfile.TemporaryDirectory(dir=ROOT) as temp_dir:
+            with patch.dict(os.environ, {"MEDIA_ROOT": temp_dir}):
+                with self.assertRaises(self.fastapi_media.MediaValidationError):
+                    self.fastapi_media.save_media_image(b"not-an-image", "foro")
+
+    def test_backend_source_contracts_are_safe(self):
+        domain_models = (ROOT / "fast_api/app/models/domain_models.py").read_text(encoding="utf-8")
+        foro_block = domain_models.split("class Foro", 1)[1].split("class RespuestaForo", 1)[0]
+        rules_block = domain_models.split("class ReglaPuntos", 1)[1].split("class SaldoPuntos", 1)[0]
+        self.assertIn("aprobado = Column", foro_block)
+        self.assertIn("aprobado_por = Column", foro_block)
+        self.assertIn('foreign_keys="Foro.autor_id"', domain_models)
+        self.assertIn("foreign_keys=[autor_id]", foro_block)
+        self.assertIn("foreign_keys=[aprobado_por]", foro_block)
+        self.assertNotIn("aprobado = Column", rules_block)
+
+        map_router = (ROOT / "fast_api/app/routers/mapa.py").read_text(encoding="utf-8")
+        self.assertIn("math.isfinite", map_router)
+        self.assertIn('imagen=getattr(punto, "imagen", None)', map_router)
+        self.assertIn(
+            '"puntos"',
+            (ROOT / "fast_api/app/services/media.py").read_text(encoding="utf-8"),
+        )
+
+        flask_app = (ROOT / "flask_zerowaste/app.py").read_text(encoding="utf-8")
+        self.assertNotIn("fastapi_app", flask_app)
+        self.assertIn("FASTAPI_INTERNAL_URL", flask_app)
+        self.assertNotIn("static', 'img', 'posts'", flask_app)
+
+        dashboard = (
+            ROOT / "laravel_zerowaste/app/Http/Controllers/DashboardController.php"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("fastapi_app", dashboard)
+        self.assertNotIn("FASTAPI_KEY", dashboard)
+        services = (ROOT / "laravel_zerowaste/config/services.php").read_text(encoding="utf-8")
+        self.assertIn("FASTAPI_INTERNAL_URL", services)
+        self.assertIn("SYSTEM_API_KEY", services)
+
+    def test_maintenance_scripts_do_not_embed_or_print_credentials(self):
+        create_script = (ROOT / "fast_api/scripts/crear_admin.py").read_text(encoding="utf-8")
+        check_script = (ROOT / "fast_api/scripts/check_users.py").read_text(encoding="utf-8")
+
+        self.assertIn('require_env("ADMIN_EMAIL")', create_script)
+        self.assertIn('require_env("ADMIN_PASSWORD")', create_script)
+        self.assertNotIn('getenv("ADMIN_EMAIL",', create_script)
+        self.assertNotIn("u.email", check_script)
+        self.assertNotIn("u.password", check_script)
+
+
+if __name__ == "__main__":
+    unittest.main()

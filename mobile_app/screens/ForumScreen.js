@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, Dimensions, RefreshControl, Share } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Dimensions, RefreshControl, Share } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import {
@@ -25,7 +25,7 @@ import { ArrowRight } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useScrollContext } from '../context/ScrollContext';
-import { forumPostImageUrl, profileImageUrl } from '../utils/media';
+import { normalizeMediaUrl } from '../utils/media';
 import { formatRelativeDate } from '../utils/date';
 import RemoteImage from '../components/ui/RemoteImage';
 
@@ -86,8 +86,6 @@ export default function ForumScreen() {
 
   const getTimeAgo = formatRelativeDate;
 
-  const getImageUrl = (path, type) => type === 'post' ? forumPostImageUrl(path) : profileImageUrl(path);
-
   const getCatStyle = (catName) => {
     const defaultStyle = { bg: 'transparent', text: '#4B5563', border: '#E5E7EB', icon: <Folder size={10} color="#4B5563" /> };
     if (!catName) return defaultStyle;
@@ -104,6 +102,8 @@ export default function ForumScreen() {
     title: post.titulo,
     message: `${post.titulo}\nhttps://www.zerowaste-qro.com/foro`,
   }).catch(() => {});
+
+  const currentAvatarUrl = normalizeMediaUrl(user?.avatar_url ?? user?.foto_perfil, 'perfiles');
 
   return (
     <SafeAreaView className="flex-1 bg-[#ECFDF5]" edges={['top']}>
@@ -150,7 +150,7 @@ export default function ForumScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => navigation.navigate('Profile')} className="w-12 h-12 rounded-full bg-white shadow-sm border border-gray-100 p-0.5">
-              <Image source={getImageUrl(user?.foto_perfil, 'perfil') ? { uri: getImageUrl(user.foto_perfil, 'perfil') } : require('../assets/images/logo.png')} className="w-full h-full rounded-full" />
+              <RemoteImage uri={currentAvatarUrl} fallbackSource={require('../assets/images/logo.png')} className="h-full w-full rounded-full" aspectRatio={1} accessibilityLabel="Avatar del usuario" />
             </TouchableOpacity>
           </View>
         </View>
@@ -158,7 +158,7 @@ export default function ForumScreen() {
         {/* ─── CREATE POST (Facebook style) ────────────────────── */}
         <View className="px-5 mb-6">
           <View className="bg-white rounded-[24px] p-4 shadow-sm border border-gray-100 flex-row items-center gap-3">
-            <Image source={getImageUrl(user?.foto_perfil, 'perfil') ? { uri: getImageUrl(user.foto_perfil, 'perfil') } : require('../assets/images/logo.png')} className="w-10 h-10 rounded-full bg-gray-100" />
+            <RemoteImage uri={currentAvatarUrl} fallbackSource={require('../assets/images/logo.png')} className="h-10 w-10 rounded-full bg-gray-100" aspectRatio={1} accessibilityLabel="Avatar del usuario" />
             <TouchableOpacity
               className="flex-1 bg-gray-50 h-10 rounded-full px-4 justify-center"
               onPress={() => navigation.navigate('CreatePost')}
@@ -205,7 +205,7 @@ export default function ForumScreen() {
               })
               .map((post, index) => {
                 const catStyle = getCatStyle(post.categoria_nombre);
-                const postImageUrl = getImageUrl(post.imagen, 'post');
+                const postImageUrl = normalizeMediaUrl(post.image_url ?? post.imagen, 'foro');
                 const isTrend = Boolean(postImageUrl) && index === 0 && (activeTab === 'Todo' || activeTab === 'Todos');
 
               if (isTrend) {
@@ -333,9 +333,12 @@ export default function ForumScreen() {
                           <Text className="text-[13px] font-bold text-gray-800">{post.autor_nombre || 'Usuario'}</Text>
                           <Text className="text-[11px] font-medium text-gray-500 mt-0.5">{getTimeAgo(post.created_at)}</Text>
                         </View>
-                        <Image
-                          source={getImageUrl(post.autor_foto, 'perfil') ? { uri: getImageUrl(post.autor_foto, 'perfil') } : require('../assets/images/logo.png')}
-                          className="w-10 h-10 rounded-full border border-gray-100"
+                        <RemoteImage
+                          uri={normalizeMediaUrl(post.avatar_url ?? post.autor_foto, 'perfiles')}
+                          fallbackSource={require('../assets/images/logo.png')}
+                          className="h-10 w-10 rounded-full border border-gray-100"
+                          aspectRatio={1}
+                          accessibilityLabel="Avatar del autor"
                         />
                       </View>
                     </View>

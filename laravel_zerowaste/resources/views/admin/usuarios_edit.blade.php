@@ -38,8 +38,7 @@
         <div class="flex flex-col sm:flex-row items-center gap-6 relative z-10">
             {{-- Avatar --}}
             <div class="avatar-ring shrink-0">
-                @php $currentFoto = $user->foto_perfil ?? 'perfil_default.png'; @endphp
-                <img id="preview-foto" src="{{ url('/static/img/perfiles/' . $currentFoto) }}"
+                <img id="preview-foto" src="{{ $user->avatar_url ?: url('/static/img/perfiles/default.png') }}"
                      alt="{{ $user->nombre }}" class="w-full h-full rounded-full object-cover border-[3px] border-white dark:border-[#0B1F18] shadow-xl"
                      onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 120%22><rect fill=%22%2334D399%22 width=%22120%22 height=%22120%22 rx=%2260%22/><text x=%2250%%22 y=%2256%%22 text-anchor=%22middle%22 fill=%22%23064E3B%22 font-size=%2248%22 font-weight=%22bold%22 font-family=%22Inter%22>{{ strtoupper(substr($user->nombre, 0, 1)) }}</text></svg>';">
             </div>

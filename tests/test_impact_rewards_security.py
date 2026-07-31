@@ -35,11 +35,12 @@ class ImpactRewardsSecurityTests(unittest.TestCase):
         self.assertIn("uq_movimiento_recompensa", migration)
 
     def test_forum_upload_restricts_size_type_and_filename(self):
-        source = (ROOT / "fast_api/app/routers/foro.py").read_text(encoding="utf-8")
-        self.assertIn("MAX_POST_IMAGE_BYTES = 5 * 1024 * 1024", source)
-        self.assertIn('ALLOWED_POST_IMAGE_FORMATS', source)
-        self.assertIn("uuid.uuid4().hex", source)
-        self.assertIn("os.path.basename", source)
+        router = (ROOT / "fast_api/app/routers/foro.py").read_text(encoding="utf-8")
+        media = (ROOT / "fast_api/app/services/media.py").read_text(encoding="utf-8")
+        self.assertIn("MAX_IMAGE_BYTES = 5 * 1024 * 1024", media)
+        self.assertIn('_IMAGE_FORMATS', media)
+        self.assertIn("uuid4().hex", media)
+        self.assertIn("os.path.basename", router)
 
     def test_new_schema_is_not_applied_during_startup(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8").lower()

@@ -471,7 +471,7 @@
                                     {% set resolved_img = 'event1.png' %}
                                 {% endif %}
                             {% endif %}
-                            <img src="{{ url_for('static', filename='img/eventos/' ~ resolved_img) }}" alt="{{ campaign.nombre }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                            <img src="{{ media_url(campaign.imagen_url, 'campanas') or url_for('static', filename='img/eventos/' ~ resolved_img) }}" alt="{{ campaign.nombre }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/eventos/' ~ resolved_img) }}';">
                             <span class="absolute top-4 left-4 z-20 px-3 py-1 bg-yellow-400 text-yellow-900 text-xs font-black uppercase tracking-wider rounded-full shadow-lg">
                                 {{ campaign.tipo_etiqueta or 'Campaña' }}
                             </span>
@@ -521,7 +521,7 @@
                                     {% set resolved_img = 'event1.png' %}
                                 {% endif %}
                             {% endif %}
-                            <img src="{{ url_for('static', filename='img/eventos/' ~ resolved_img) }}" alt="{{ campaign.nombre }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                            <img src="{{ media_url(campaign.imagen_url, 'campanas') or url_for('static', filename='img/eventos/' ~ resolved_img) }}" alt="{{ campaign.nombre }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/eventos/' ~ resolved_img) }}';">
                             <span class="absolute top-4 left-4 z-20 px-3 py-1 bg-yellow-400 text-yellow-900 text-xs font-black uppercase tracking-wider rounded-full shadow-lg">
                                 {{ campaign.tipo_etiqueta or 'Campaña' }}
                             </span>
@@ -574,7 +574,7 @@
                             {% set resolved_img = 'event1.png' %}
                         {% endif %}
                     {% endif %}
-                    <img src="{{ url_for('static', filename='img/eventos/' ~ resolved_img) }}" alt="{{ campaign.nombre }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    <img src="{{ media_url(campaign.imagen_url, 'campanas') or url_for('static', filename='img/eventos/' ~ resolved_img) }}" alt="{{ campaign.nombre }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/eventos/' ~ resolved_img) }}';">
                     <span class="absolute top-4 left-4 z-20 px-3 py-1 bg-yellow-400 text-yellow-900 text-xs font-black uppercase tracking-wider rounded-full shadow-lg">
                         {{ campaign.tipo_etiqueta or 'Campaña' }}
                     </span>
@@ -640,7 +640,7 @@
                                     {% set resolved_img = 'event1.png' %}
                                 {% endif %}
                             {% endif %}
-                            <img src="{{ url_for('static', filename='img/eventos/' ~ resolved_img) }}" alt="{{ evento.titulo }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                            <img src="{{ media_url(evento.imagen_url, 'eventos') or url_for('static', filename='img/eventos/' ~ resolved_img) }}" alt="{{ evento.titulo }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/eventos/' ~ resolved_img) }}';">
                             <span class="absolute top-4 left-4 z-20 px-3 py-1 bg-yellow-400 text-yellow-900 text-xs font-black uppercase tracking-wider rounded-full shadow-lg">
                                 {{ evento.tipo_etiqueta or 'Evento' }}
                             </span>
@@ -690,7 +690,7 @@
                                     {% set resolved_img = 'event1.png' %}
                                 {% endif %}
                             {% endif %}
-                            <img src="{{ url_for('static', filename='img/eventos/' ~ resolved_img) }}" alt="{{ evento.titulo }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                            <img src="{{ media_url(evento.imagen_url, 'eventos') or url_for('static', filename='img/eventos/' ~ resolved_img) }}" alt="{{ evento.titulo }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/eventos/' ~ resolved_img) }}';">
                             <span class="absolute top-4 left-4 z-20 px-3 py-1 bg-yellow-400 text-yellow-900 text-xs font-black uppercase tracking-wider rounded-full shadow-lg">
                                 {{ evento.tipo_etiqueta or 'Evento' }}
                             </span>
@@ -743,7 +743,7 @@
                             {% set resolved_img = 'event1.png' %}
                         {% endif %}
                     {% endif %}
-                    <img src="{{ url_for('static', filename='img/eventos/' ~ resolved_img) }}" alt="{{ evento.titulo }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                    <img src="{{ media_url(evento.imagen_url, 'eventos') or url_for('static', filename='img/eventos/' ~ resolved_img) }}" alt="{{ evento.titulo }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/eventos/' ~ resolved_img) }}';">
                     <span class="absolute top-4 left-4 z-20 px-3 py-1 bg-yellow-400 text-yellow-900 text-xs font-black uppercase tracking-wider rounded-full shadow-lg">
                         {{ evento.tipo_etiqueta or 'Evento' }}
                     </span>

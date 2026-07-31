@@ -9,13 +9,18 @@ from fastapi import APIRouter, Depends, HTTPException, status, Form, File, Uploa
 from sqlalchemy.orm import Session
 
 import os
-import uuid
 import json
 
 from app.data.database import get_db
 from app.models.domain_models import Usuario, Notificacion
 from app.models.schemas import UsuarioResponse, UsuarioUpdate, MessageResponse
 from app.security.jwt_auth import get_current_user, get_current_admin_user
+from app.services.media import (
+    MAX_IMAGE_BYTES,
+    MediaValidationError,
+    remove_media_file,
+    save_media_image,
+)
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 
@@ -55,8 +60,6 @@ def mark_notification_read(notification_id: int, db: Session = Depends(get_db), 
     return {"success": True}
 
 
-UPLOAD_DIR = "static/img/perfiles"
-
 @router.put("/me/foto", response_model=UsuarioResponse, summary="Actualizar foto de perfil rápidamente")
 def update_foto(
     foto_perfil: UploadFile = File(...),
@@ -64,18 +67,20 @@ def update_foto(
     current_user: Usuario = Depends(get_current_user)
 ):
     """Sube y actualiza únicamente la foto de perfil vía Fetch/AJAX."""
-    filename = foto_perfil.filename or ""
-    extension = filename.split(".")[-1] if "." in filename else "png"
-    nombre_archivo_unico = f"{uuid.uuid4().hex}.{extension}"
-    ruta_destino = f"{UPLOAD_DIR}/{nombre_archivo_unico}"
-
-    os.makedirs(os.path.dirname(ruta_destino), exist_ok=True)
-    with open(ruta_destino, "wb") as buffer:
-        buffer.write(foto_perfil.file.read())
+    content = foto_perfil.file.read(MAX_IMAGE_BYTES + 1)
+    try:
+        nombre_archivo_unico = save_media_image(content, "perfiles")
+    except MediaValidationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
 
     current_user.foto_perfil = nombre_archivo_unico  # type: ignore
-    db.commit()
-    db.refresh(current_user)
+    try:
+        db.commit()
+        db.refresh(current_user)
+    except Exception:
+        db.rollback()
+        remove_media_file(nombre_archivo_unico, "perfiles")
+        raise
     return current_user
 
 

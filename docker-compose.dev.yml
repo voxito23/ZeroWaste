@@ -1,0 +1,25 @@
+# Explicit local-development overlay.
+# Use: docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+# This file is deliberately not named docker-compose.override.yml so production
+# commands never apply source-code bind mounts implicitly.
+services:
+  cliente:
+    volumes:
+      - ./flask_zerowaste:/app
+
+  fast_api:
+    volumes:
+      - ./fast_api:/app
+
+  laravel1:
+    volumes:
+      - ./laravel_zerowaste:/var/www/html
+      - laravel_vendor_dev:/var/www/html/vendor
+
+  laravel2:
+    volumes:
+      - ./laravel_zerowaste:/var/www/html
+      - laravel_vendor_dev:/var/www/html/vendor
+
+volumes:
+  laravel_vendor_dev:

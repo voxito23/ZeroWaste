@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Campaign;
+use App\Support\Media;
 
 class CampaignController extends Controller
 {
@@ -28,7 +29,7 @@ class CampaignController extends Controller
             'fecha_fin' => 'nullable|date',
             'tipo_etiqueta' => 'nullable|string|max:50',
             'link_evento' => 'nullable|string|max:500',
-            'imagen_archivo' => 'nullable|image|max:256000',
+            'imagen_archivo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ];
         $messages = [
             'nombre.required' => 'El nombre de la campaña es obligatorio.',
@@ -39,29 +40,26 @@ class CampaignController extends Controller
             'fecha_fin.date' => 'Debe ingresar una fecha de fin válida.',
             'imagen_archivo.image' => 'El archivo debe ser una imagen válida.',
             'imagen_archivo.uploaded' => 'Error al subir la imagen. Verifica que el archivo no exceda el tamaño permitido.',
-            'imagen_archivo.max' => 'La imagen no debe superar los 250MB.',
+            'imagen_archivo.max' => 'La imagen no debe superar 5 MB.',
         ];
         $data = $request->validate($rules, $messages);
 
-        // Manejar subida de imagen
+        $newImage = null;
         if ($request->hasFile('imagen_archivo')) {
-            try {
-                $img = $request->file('imagen_archivo');
-                $nombreImg = uniqid('camp_') . '.' . $img->getClientOriginalExtension();
-                $destino = app()->basePath('../flask_zerowaste/static/img/eventos/');
-                if (!file_exists($destino)) { mkdir($destino, 0777, true); }
-                $img->move($destino, $nombreImg);
-                $data['imagen_url'] = $nombreImg;
-            } catch (\Exception $e) {
-                \Log::error("Error subiendo imagen de campaña: " . $e->getMessage());
-            }
+            $newImage = Media::store($request->file('imagen_archivo'), 'campanas');
+            $data['imagen_url'] = $newImage;
         }
         unset($data['imagen_archivo']);
 
         $data['activa'] = $request->has('activa') ? 'true' : 'false';
         
         // Así se actualiza la BD con la nueva campaña
-        Campaign::create($data);
+        try {
+            Campaign::create($data);
+        } catch (\Throwable $error) {
+            Media::discard($newImage, 'campanas');
+            throw $error;
+        }
         
         return redirect()->route('campanas.index')->with('success', 'Campaña creada.');
     }
@@ -81,7 +79,7 @@ class CampaignController extends Controller
             'fecha_fin' => 'nullable|date',
             'tipo_etiqueta' => 'nullable|string|max:50',
             'link_evento' => 'nullable|string|max:500',
-            'imagen_archivo' => 'nullable|image|max:256000',
+            'imagen_archivo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
         ];
         $messages = [
             'nombre.required' => 'El nombre de la campaña es obligatorio.',
@@ -92,27 +90,24 @@ class CampaignController extends Controller
             'fecha_fin.date' => 'Debe ingresar una fecha de fin válida.',
             'imagen_archivo.image' => 'El archivo debe ser una imagen válida.',
             'imagen_archivo.uploaded' => 'Error al subir la imagen. Verifica que el archivo no exceda el tamaño permitido.',
-            'imagen_archivo.max' => 'La imagen no debe superar los 250MB.',
+            'imagen_archivo.max' => 'La imagen no debe superar 5 MB.',
         ];
         $data = $request->validate($rules, $messages);
 
-        // Manejar subida de imagen
+        $newImage = null;
         if ($request->hasFile('imagen_archivo')) {
-            try {
-                $img = $request->file('imagen_archivo');
-                $nombreImg = uniqid('camp_') . '.' . $img->getClientOriginalExtension();
-                $destino = app()->basePath('../flask_zerowaste/static/img/eventos/');
-                if (!file_exists($destino)) { mkdir($destino, 0777, true); }
-                $img->move($destino, $nombreImg);
-                $data['imagen_url'] = $nombreImg;
-            } catch (\Exception $e) {
-                \Log::error("Error subiendo imagen de campaña edit: " . $e->getMessage());
-            }
+            $newImage = Media::store($request->file('imagen_archivo'), 'campanas');
+            $data['imagen_url'] = $newImage;
         }
         unset($data['imagen_archivo']);
 
         $data['activa'] = $request->has('activa') ? 'true' : 'false';
-        $campaign->update($data);
+        try {
+            $campaign->update($data);
+        } catch (\Throwable $error) {
+            Media::discard($newImage, 'campanas');
+            throw $error;
+        }
         return redirect()->route('campanas.index')->with('success', 'Campaña actualizada.');
     }
 

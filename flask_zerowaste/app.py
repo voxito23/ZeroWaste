@@ -7,6 +7,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from markupsafe import escape
 import os
 import re
+import math
 import uuid
 import string
 import random
@@ -17,7 +18,15 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from urllib.parse import urlparse
 
-REWARD_IMAGES_DIR = os.environ.get('REWARD_IMAGES_DIR', 'reward_images')
+from media import (
+    MediaValidationError,
+    build_public_media_url,
+    media_directory,
+    remove_media_file,
+    save_uploaded_image,
+)
+
+REWARD_IMAGES_DIR = str(media_directory('recompensas'))
 
 # Solo permitir OAuth inseguro en desarrollo local
 if os.environ.get('FLASK_DEBUG', 'false').lower() == 'true':
@@ -31,13 +40,8 @@ from models import (db, Usuario, Categoria, PuntoMapa, CalificacionPunto,
 # ==========================================================================
 #  Constantes de Seguridad
 # ==========================================================================
-ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-MAX_UPLOAD_SIZE_MB = 250
+MAX_REQUEST_SIZE_MB = 8
 EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$')
-
-def allowed_file(filename):
-    """Valida que la extensión del archivo sea una imagen permitida."""
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
 
 def sanitize_text(text, max_length=500):
     """Sanitiza texto de usuario para prevenir XSS."""
@@ -74,7 +78,7 @@ app.config['SESSION_COOKIE_NAME'] = 'zerowaste_session'
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = os.environ.get('HTTPS_ENABLED', 'true').lower() == 'true'
-app.config['MAX_CONTENT_LENGTH'] = MAX_UPLOAD_SIZE_MB * 1024 * 1024  # 250MB max upload
+app.config['MAX_CONTENT_LENGTH'] = MAX_REQUEST_SIZE_MB * 1024 * 1024
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)  # Para "Recordarme"
 
 database_url = require_env('DATABASE_URL')
@@ -134,21 +138,22 @@ def send_email_resend(to_email, subject, html_body):
             timeout=10,
         )
         if response.status_code in (200, 201):
-            app.logger.info(f'Email enviado exitosamente a {to_email}')
+            app.logger.info('Email enviado exitosamente mediante Resend.')
             return True
         else:
-            app.logger.error(f'Error Resend [{response.status_code}]: {response.text}')
+            app.logger.error('Resend rechazó la solicitud (status=%s).', response.status_code)
             return False
     except Exception as e:
-        app.logger.error(f'Error enviando email via Resend: {e}')
+        app.logger.error('Error enviando email vía Resend: %s', type(e).__name__)
         return False
 
 # Variable dinámica para Producción vs Desarrollo
 PUBLIC_API_URL = require_env('PUBLIC_API_URL')
+FASTAPI_INTERNAL_URL = os.environ.get('FASTAPI_INTERNAL_URL', 'http://fast_api:6000').rstrip('/')
 
 @app.context_processor
 def inject_global_vars():
-    return dict(API_URL=PUBLIC_API_URL)
+    return dict(API_URL=PUBLIC_API_URL, media_url=build_public_media_url)
 
 db.init_app(app)
 
@@ -200,6 +205,12 @@ def datetime_mx_filter(dt):
     meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
     mes_str = meses[mx_dt.month - 1]
     return f"{mx_dt.day:02d} {mes_str}, {mx_dt.strftime('%H:%M')}"
+
+
+@app.template_filter('media_url')
+def media_url_filter(value, category=None):
+    """Resolve database media metadata to one public HTTPS URL."""
+    return build_public_media_url(value, category)
 
 # ==========================================================================
 #  Rutas de navegación básica
@@ -371,7 +382,7 @@ def auth_firebase():
             session['intereses'] = usuario.intereses
             # Si es admin, redirigir al panel de Laravel
             if usuario.is_admin:
-                redirect_url = 'http://localhost:8001/admin/dashboard'
+                redirect_url = '/zw-interno/dashboard'
             else:
                 redirect_url = url_for('perfil')
 
@@ -458,19 +469,22 @@ def completar_perfil_save():
         if usuario.auth_provider == 'google':
             usuario.auth_provider = 'google+local'
 
-    # Foto de perfil (validación de extensión)
+    nueva_foto = None
     if foto_perfil_file and foto_perfil_file.filename:
-        if not allowed_file(foto_perfil_file.filename):
+        try:
+            nueva_foto = save_uploaded_image(foto_perfil_file, 'perfiles')
+        except MediaValidationError as error:
+            app.logger.warning('Carga de perfil rechazada: %s', type(error).__name__)
             return redirect(url_for('completar_perfil_view'))
-        extension = foto_perfil_file.filename.rsplit('.', 1)[1].lower()
-        nombre_foto = f"{uuid.uuid4().hex}.{extension}"
-        carpeta_destino = os.path.join(app.root_path, 'static', 'img', 'perfiles')
-        os.makedirs(carpeta_destino, exist_ok=True)
-        foto_perfil_file.save(os.path.join(carpeta_destino, nombre_foto))
-        usuario.foto_perfil = nombre_foto
+        usuario.foto_perfil = nueva_foto
 
     usuario.profile_completed = True
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        remove_media_file(nueva_foto, 'perfiles')
+        raise
 
     session['nombre'] = usuario.nombre
     session['foto_perfil'] = usuario.foto_perfil
@@ -812,6 +826,19 @@ def get_puntos_con_promedio():
     
     puntos = []
     for punto, promedio, total in resultados:
+        try:
+            latitud = float(punto.latitud)
+            longitud = float(punto.longitud)
+        except (TypeError, ValueError, OverflowError):
+            app.logger.warning('Punto omitido por coordenadas inválidas (id=%s).', punto.id)
+            continue
+        if (
+            not math.isfinite(latitud) or not math.isfinite(longitud)
+            or not -90 <= latitud <= 90 or not -180 <= longitud <= 180
+        ):
+            app.logger.warning('Punto omitido por coordenadas fuera de rango (id=%s).', punto.id)
+            continue
+
         resenas_raw = db.session.query(CalificacionPunto, Usuario)\
             .join(Usuario, CalificacionPunto.usuario_id == Usuario.id)\
             .filter(CalificacionPunto.location_id == punto.id)\
@@ -830,11 +857,12 @@ def get_puntos_con_promedio():
             'id': punto.id,
             'nombre': punto.nombre,
             'direccion': punto.direccion,
-            'latitud': float(punto.latitud),
-            'longitud': float(punto.longitud),
+            'latitud': latitud,
+            'longitud': longitud,
             'tipo': punto.tipo,
             'materiales': punto.materiales,
             'imagen': punto.imagen,
+            'image_url': build_public_media_url(punto.imagen, 'puntos'),
             'promedio': float(f"{float(promedio or 0):.1f}"),
             'total_reviews': total,
             'resenas': resenas_list
@@ -851,7 +879,7 @@ def recomendaciones():
     puntos = get_puntos_con_promedio()
     try:
         # aqui se manda llamar la api de fast api y analiza todo
-        sentimiento = http_requests.get('http://fastapi_app:6000/analisis/sentimiento', timeout=30).json().get('data', {"POS": 0, "NEG": 0, "NEU": 0, "total": 0})
+        sentimiento = http_requests.get(f'{FASTAPI_INTERNAL_URL}/analisis/sentimiento', timeout=30).json().get('data', {"POS": 0, "NEG": 0, "NEU": 0, "total": 0})
     except Exception:
         sentimiento = {"POS": 0, "NEG": 0, "NEU": 0, "total": 0}
     
@@ -982,20 +1010,6 @@ def editar_perfil():
         usuario.biografia = biografia[:100] if biografia else ""
         usuario.intereses = intereses
         
-        if foto_perfil_file and foto_perfil_file.filename:
-            if not allowed_file(foto_perfil_file.filename):
-                if request.headers.get('Accept') == 'application/json':
-                    return jsonify({'success': False, 'error': 'Formato de imagen no permitido. Usa PNG, JPG, GIF o WebP.'}), 400
-                return redirect(url_for('perfil'))
-            extension = foto_perfil_file.filename.rsplit('.', 1)[1].lower()
-            nombre_foto = f"{uuid.uuid4().hex}.{extension}"
-            carpeta_destino = os.path.join(app.root_path, 'static', 'img', 'perfiles')
-            os.makedirs(carpeta_destino, exist_ok=True)
-            ruta_completa = os.path.join(carpeta_destino, nombre_foto)
-            foto_perfil_file.save(ruta_completa)
-            usuario.foto_perfil = nombre_foto
-            session['foto_perfil'] = nombre_foto
-
         if password and len(password) >= 6:
             import bcrypt
             # Si el usuario ya tiene contraseña local, verificar la anterior
@@ -1025,14 +1039,31 @@ def editar_perfil():
                 if getattr(usuario, 'auth_provider', '') == 'google':
                     usuario.auth_provider = 'google+local'
 
-        db.session.commit()
-        db.session.refresh(usuario)
+        nueva_foto = None
+        if foto_perfil_file and foto_perfil_file.filename:
+            try:
+                nueva_foto = save_uploaded_image(foto_perfil_file, 'perfiles')
+            except MediaValidationError as error:
+                if request.headers.get('Accept') == 'application/json':
+                    return jsonify({'success': False, 'error': str(error)}), error.status_code
+                return redirect(url_for('perfil'))
+            usuario.foto_perfil = nueva_foto
+
+        try:
+            db.session.commit()
+            db.session.refresh(usuario)
+        except Exception:
+            db.session.rollback()
+            remove_media_file(nueva_foto, 'perfiles')
+            raise
         
         session['nombre'] = usuario.nombre
         session['ubicacion'] = usuario.ubicacion
         session['titulo_perfil'] = usuario.titulo_perfil
         session['biografia'] = usuario.biografia
         session['intereses'] = usuario.intereses
+        if nueva_foto:
+            session['foto_perfil'] = nueva_foto
 
     if request.headers.get('Accept') == 'application/json':
         return jsonify({'success': True, 'redirect': url_for('perfil')})
@@ -1048,25 +1079,29 @@ def actualizar_foto_perfil():
     if not foto_perfil_file or not foto_perfil_file.filename:
         return jsonify({'success': False, 'error': 'No se seleccionó ninguna imagen.'}), 400
 
-    if not allowed_file(foto_perfil_file.filename):
-        return jsonify({'success': False, 'error': 'Formato no permitido. Usa PNG, JPG, GIF o WebP.'}), 400
-
     usuario = Usuario.query.get(session['usuario_id'])
     if not usuario:
         return jsonify({'success': False, 'error': 'Usuario no encontrado.'}), 404
 
-    extension = foto_perfil_file.filename.rsplit('.', 1)[1].lower()
-    nombre_foto = f"{uuid.uuid4().hex}.{extension}"
-    carpeta_destino = os.path.join(app.root_path, 'static', 'img', 'perfiles')
-    os.makedirs(carpeta_destino, exist_ok=True)
-    ruta_completa = os.path.join(carpeta_destino, nombre_foto)
-    foto_perfil_file.save(ruta_completa)
+    try:
+        nombre_foto = save_uploaded_image(foto_perfil_file, 'perfiles')
+    except MediaValidationError as error:
+        return jsonify({'success': False, 'error': str(error)}), error.status_code
 
     usuario.foto_perfil = nombre_foto
-    db.session.commit()
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        remove_media_file(nombre_foto, 'perfiles')
+        raise
     session['foto_perfil'] = nombre_foto
 
-    return jsonify({'success': True, 'foto_perfil': nombre_foto})
+    return jsonify({
+        'success': True,
+        'foto_perfil': nombre_foto,
+        'avatar_url': build_public_media_url(nombre_foto, 'perfiles'),
+    })
 
 
 # ==========================================================================
@@ -1129,14 +1164,11 @@ def crear_post():
 
     nombre_imagen = None
     if imagen_file and imagen_file.filename:
-        if not allowed_file(imagen_file.filename):
+        try:
+            nombre_imagen = save_uploaded_image(imagen_file, 'foro')
+        except MediaValidationError as error:
+            app.logger.warning('Carga de foro rechazada: %s', type(error).__name__)
             return redirect(url_for('nuevo_post'))
-        extension = imagen_file.filename.rsplit('.', 1)[1].lower()
-        nombre_imagen = f"post_{uuid.uuid4().hex}.{extension}"
-        carpeta_destino = os.path.join(app.root_path, 'static', 'img', 'posts')
-        os.makedirs(carpeta_destino, exist_ok=True)
-        ruta_completa = os.path.join(carpeta_destino, nombre_imagen)
-        imagen_file.save(ruta_completa)
 
     nuevo_post = Foro(
         titulo=titulo, 
@@ -1145,17 +1177,21 @@ def crear_post():
         autor_id=session['usuario_id'], 
         imagen=nombre_imagen
     )
-    db.session.add(nuevo_post)
-    db.session.commit()
-
-    actividad = Actividad(
-        usuario_id=session['usuario_id'],
-        tipo='post',
-        descripcion=f'Publicó: {titulo[:80]}',
-        referencia_id=nuevo_post.id
-    )
-    db.session.add(actividad)
-    db.session.commit()
+    try:
+        db.session.add(nuevo_post)
+        db.session.flush()
+        actividad = Actividad(
+            usuario_id=session['usuario_id'],
+            tipo='post',
+            descripcion=f'Publicó: {titulo[:80]}',
+            referencia_id=nuevo_post.id
+        )
+        db.session.add(actividad)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        remove_media_file(nombre_imagen, 'foro')
+        raise
 
     return redirect(url_for('foro'))
 
@@ -1355,9 +1391,6 @@ def handle_registro():
     if not foto_perfil_file:
         return jsonify({'success': False, 'error': 'La foto de perfil es obligatoria.'})
 
-    if not allowed_file(foto_perfil_file.filename):
-        return jsonify({'success': False, 'error': 'Formato de imagen no permitido. Usa PNG, JPG, GIF o WebP.'}), 400
-
     if not EMAIL_REGEX.match(email_usuario):
         return jsonify({'success': False, 'error': 'Formato de correo electrónico inválido.'}), 400
 
@@ -1365,20 +1398,23 @@ def handle_registro():
     if existe:
         return jsonify({'success': False, 'error': 'El correo electrónico ya está registrado.'})
 
-    extension = foto_perfil_file.filename.rsplit('.', 1)[1].lower()
-    nombre_foto = f"{uuid.uuid4().hex}.{extension}"
-    carpeta_destino = os.path.join(app.root_path, 'static', 'img', 'perfiles')
-    os.makedirs(carpeta_destino, exist_ok=True)
-    ruta_completa = os.path.join(carpeta_destino, nombre_foto)
-    foto_perfil_file.save(ruta_completa)
+    try:
+        nombre_foto = save_uploaded_image(foto_perfil_file, 'perfiles')
+    except MediaValidationError as error:
+        return jsonify({'success': False, 'error': str(error)}), error.status_code
 
     # Usar bcrypt para compatibilidad con Laravel
     import bcrypt
     password_hasheado = bcrypt.hashpw(password_usuario.encode('utf-8'), bcrypt.gensalt()).decode('utf-8').replace('$2b$', '$2y$')
 
     nuevo_usuario = Usuario(nombre=nombre_usuario, email=email_usuario, password=password_hasheado, foto_perfil=nombre_foto)
-    db.session.add(nuevo_usuario)
-    db.session.commit()
+    try:
+        db.session.add(nuevo_usuario)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        remove_media_file(nombre_foto, 'perfiles')
+        raise
 
     session['usuario_id'] = nuevo_usuario.id
     session['nombre'] = nuevo_usuario.nombre
@@ -1401,7 +1437,7 @@ def vista_recomendaciones_ia():
         return redirect(url_for('login'))
 
     try:
-        sentimiento = http_requests.get('http://fastapi_app:6000/analisis/sentimiento', timeout=30).json().get('data', {"POS": 0, "NEG": 0, "NEU": 0, "total": 0})
+        sentimiento = http_requests.get(f'{FASTAPI_INTERNAL_URL}/analisis/sentimiento', timeout=30).json().get('data', {"POS": 0, "NEG": 0, "NEU": 0, "total": 0})
     except Exception:
         sentimiento = {"POS": 0, "NEG": 0, "NEU": 0, "total": 0}
     

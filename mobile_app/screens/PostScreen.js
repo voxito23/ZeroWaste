@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { 
   ArrowLeft, 
@@ -18,7 +18,7 @@ import { api } from '../api/axios';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { forumPostImageUrl, profileImageUrl } from '../utils/media';
+import { normalizeMediaUrl } from '../utils/media';
 import { formatRelativeDate } from '../utils/date';
 import RemoteImage from '../components/ui/RemoteImage';
 
@@ -80,8 +80,6 @@ export default function PostScreen() {
       setIsSubmitting(false);
     }
   };
-
-  const getImageUrl = (path, type) => type === 'post' ? forumPostImageUrl(path) : profileImageUrl(path);
 
   const stripHtml = (html) => {
     return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
@@ -148,9 +146,12 @@ export default function PostScreen() {
         <View className="bg-white px-5 py-6 shadow-sm border-b border-[#D1FAE5]">
           <View className="flex-row items-center justify-between mb-5">
             <View className="flex-row items-center gap-3">
-              <Image 
-                source={getImageUrl(post.autor_foto, 'perfil') ? { uri: getImageUrl(post.autor_foto, 'perfil') } : require('../assets/images/logo.png')}
-                className="w-12 h-12 rounded-full border border-gray-200" 
+              <RemoteImage
+                uri={normalizeMediaUrl(post.avatar_url ?? post.autor_foto, 'perfiles')}
+                fallbackSource={require('../assets/images/logo.png')}
+                className="h-12 w-12 rounded-full border border-gray-200"
+                aspectRatio={1}
+                accessibilityLabel="Avatar del autor"
               />
               <View>
                 <Text className="font-bold text-[#064E3B] text-[16px]">{post.autor_nombre}</Text>
@@ -174,8 +175,8 @@ export default function PostScreen() {
           <Text className="font-black text-[#022C22] text-[22px] leading-tight mb-4">{post.titulo}</Text>
           <Text className="text-[#047857] text-[16px] leading-relaxed mb-6">{stripHtml(post.contenido)}</Text>
 
-          {forumPostImageUrl(post.imagen) && (
-            <RemoteImage uri={forumPostImageUrl(post.imagen)} className="w-full h-48 rounded-2xl mb-4" />
+          {normalizeMediaUrl(post.image_url ?? post.imagen, 'foro') && (
+            <RemoteImage uri={normalizeMediaUrl(post.image_url ?? post.imagen, 'foro')} className="mb-4 h-48 w-full rounded-2xl" accessibilityLabel="Imagen de la publicación" />
           )}
 
           <View className="flex-row items-center gap-6 mt-2 pt-4 border-t border-gray-100">
@@ -205,7 +206,13 @@ export default function PostScreen() {
               <View key={resp.id || i} className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-[#D1FAE5]">
                 <View className="flex-row items-center justify-between mb-2">
                   <View className="flex-row items-center gap-2">
-                    <Image source={getImageUrl(resp.autor_foto, 'perfil') ? { uri: getImageUrl(resp.autor_foto, 'perfil') } : require('../assets/images/logo.png')} className="w-8 h-8 rounded-full" />
+                    <RemoteImage
+                      uri={normalizeMediaUrl(resp.avatar_url ?? resp.autor_foto, 'perfiles')}
+                      fallbackSource={require('../assets/images/logo.png')}
+                      className="h-8 w-8 rounded-full"
+                      aspectRatio={1}
+                      accessibilityLabel="Avatar de quien respondió"
+                    />
                     <Text className="font-bold text-[#064E3B] text-[13px]">{resp.autor_nombre}</Text>
                   </View>
                   <Text className="text-[#059669] text-[11px] font-semibold">{getTimeAgo(resp.created_at)}</Text>

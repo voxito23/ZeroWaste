@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Location;
+use App\Support\Media;
 
 class MapController extends Controller
 {
@@ -23,10 +24,10 @@ class MapController extends Controller
         $rules = [
             'nombre' => 'required|string|max:150',
             'direccion' => 'required|string',
-            'latitud' => 'required|numeric',
-            'longitud' => 'required|numeric',
+            'latitud' => 'required|numeric|between:-90,90',
+            'longitud' => 'required|numeric|between:-180,180',
             'tipo' => 'required|string|max:100',
-            'imagen_archivo' => 'nullable|image|max:256000',
+            'imagen_archivo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'materiales' => 'nullable|string|max:255',
         ];
         $messages = [
@@ -37,30 +38,25 @@ class MapController extends Controller
             'tipo.required' => 'El tipo de punto es obligatorio.',
             'imagen_archivo.image' => 'El archivo debe ser una imagen válida.',
             'imagen_archivo.uploaded' => 'Error al subir la imagen. Verifica que el archivo no exceda el tamaño permitido.',
-            'imagen_archivo.max' => 'La imagen no debe superar los 250MB.',
+            'imagen_archivo.max' => 'La imagen no debe superar 5 MB.',
         ];
         $request->validate($rules, $messages);
 
         $data = $request->only(['nombre', 'direccion', 'latitud', 'longitud', 'tipo']);
         $data['materiales'] = $request->input('materiales', 'No especificado (Material General)');
 
-        // Manejar subida de imagen del punto
+        $newImage = null;
         if ($request->hasFile('imagen_archivo')) {
-            try {
-                $img = $request->file('imagen_archivo');
-                $nombreImg = uniqid('punto_') . '.' . $img->getClientOriginalExtension();
-                $destino = base_path('../flask_zerowaste/static/img/');
-                if (!file_exists($destino)) { mkdir($destino, 0777, true); }
-                $img->move($destino, $nombreImg);
-                $data['imagen'] = $nombreImg;
-            } catch (\Exception $e) {
-                // If it fails due to permissions, log it and continue without image
-                // so the user doesn't get a 500 error.
-                \Log::error("Error subiendo imagen de punto: " . $e->getMessage());
-            }
+            $newImage = Media::store($request->file('imagen_archivo'), 'puntos');
+            $data['imagen'] = $newImage;
         }
 
-        Location::query()->create($data);
+        try {
+            Location::query()->create($data);
+        } catch (\Throwable $error) {
+            Media::discard($newImage, 'puntos');
+            throw $error;
+        }
         return redirect()->route('mapa.index')->with('success', 'Punto de acopio creado exitosamente.');
     }
 
@@ -74,10 +70,10 @@ class MapController extends Controller
         $rules = [
             'nombre' => 'required|string|max:150',
             'direccion' => 'required|string',
-            'latitud' => 'required|numeric',
-            'longitud' => 'required|numeric',
+            'latitud' => 'required|numeric|between:-90,90',
+            'longitud' => 'required|numeric|between:-180,180',
             'tipo' => 'required|string|max:100',
-            'imagen_archivo' => 'nullable|image|max:256000',
+            'imagen_archivo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'materiales' => 'nullable|string|max:255',
         ];
         $messages = [
@@ -88,28 +84,25 @@ class MapController extends Controller
             'tipo.required' => 'El tipo de punto es obligatorio.',
             'imagen_archivo.image' => 'El archivo debe ser una imagen válida.',
             'imagen_archivo.uploaded' => 'Error al subir la imagen. Verifica que el archivo no exceda el tamaño permitido.',
-            'imagen_archivo.max' => 'La imagen no debe superar los 250MB.',
+            'imagen_archivo.max' => 'La imagen no debe superar 5 MB.',
         ];
         $request->validate($rules, $messages);
 
         $data = $request->only(['nombre', 'direccion', 'latitud', 'longitud', 'tipo']);
         $data['materiales'] = $request->input('materiales', 'No especificado (Material General)');
 
-        // Manejar subida de imagen del punto
+        $newImage = null;
         if ($request->hasFile('imagen_archivo')) {
-            try {
-                $img = $request->file('imagen_archivo');
-                $nombreImg = uniqid('punto_') . '.' . $img->getClientOriginalExtension();
-                $destino = base_path('../flask_zerowaste/static/img/');
-                if (!file_exists($destino)) { mkdir($destino, 0777, true); }
-                $img->move($destino, $nombreImg);
-                $data['imagen'] = $nombreImg;
-            } catch (\Exception $e) {
-                \Log::error("Error subiendo imagen de punto en edit: " . $e->getMessage());
-            }
+            $newImage = Media::store($request->file('imagen_archivo'), 'puntos');
+            $data['imagen'] = $newImage;
         }
 
-        $location->update($data);
+        try {
+            $location->update($data);
+        } catch (\Throwable $error) {
+            Media::discard($newImage, 'puntos');
+            throw $error;
+        }
         return redirect()->route('mapa.index')->with('success', 'Punto actualizado exitosamente.');
     }
 

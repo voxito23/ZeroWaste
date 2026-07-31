@@ -79,7 +79,7 @@ class DashboardController extends Controller
         // Sentimiento NLP
         $sentimiento = ['POS' => 0, 'NEU' => 0, 'NEG' => 0];
         try {
-            $response = Http::withHeaders(['X-API-Key' => env('FASTAPI_KEY', 'zw_mobile_secret_key_2026')])->timeout(60)->get('http://fastapi_app:6000/analisis/sentimiento');
+            $response = $this->fastApiRequest()->get($this->fastApiUrl('/analisis/sentimiento'));
             if ($response->successful()) {
                 $sentimiento = $response->json()['data'];
             } else {
@@ -126,7 +126,7 @@ class DashboardController extends Controller
         ];
 
         try {
-            $response = Http::withHeaders(['X-API-Key' => env('FASTAPI_KEY', 'zw_mobile_secret_key_2026')])->timeout(60)->get('http://fastapi_app:6000/analisis/sentimiento');
+            $response = $this->fastApiRequest()->get($this->fastApiUrl('/analisis/sentimiento'));
             if ($response->successful()) {
                 $data['sentimiento'] = $response->json()['data'];
             }
@@ -144,5 +144,21 @@ class DashboardController extends Controller
         $pdf->save($reportFolder . '/' . $filename);
 
         return $pdf->download('Reporte_ZeroWaste_' . Carbon::now()->format('Ymd') . '.pdf');
+    }
+
+    private function fastApiRequest(): \Illuminate\Http\Client\PendingRequest
+    {
+        $request = Http::timeout(60);
+        $apiKey = trim((string) config('services.fastapi.system_api_key'));
+        if ($apiKey !== '') {
+            $request = $request->withHeaders(['X-API-Key' => $apiKey]);
+        }
+
+        return $request;
+    }
+
+    private function fastApiUrl(string $path): string
+    {
+        return rtrim((string) config('services.fastapi.url'), '/').'/'.ltrim($path, '/');
     }
 }

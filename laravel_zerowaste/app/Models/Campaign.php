@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Media;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -48,4 +49,11 @@ class Campaign extends Model
         'activa',
         'created_at'
     ];
+
+    protected $appends = ['cover_url'];
+
+    public function getCoverUrlAttribute(): ?string
+    {
+        return Media::url($this->imagen_url, 'campanas');
+    }
 }

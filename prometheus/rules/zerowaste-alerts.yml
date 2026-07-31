@@ -8,6 +8,12 @@ groups:
       - record: zerowaste:public_availability:ratio
         expr: avg(probe_success{job="blackbox-https"})
 
+      - record: zerowaste:laravel_replicas_available:count
+        expr: sum(probe_success{job="blackbox-internal",instance=~"http://laravel[12]/up"})
+
+      - record: zerowaste:dependency_readiness:ratio
+        expr: avg(probe_success{job="blackbox-readiness"})
+
       - record: zerowaste:http_requests:rate5m
         expr: sum(rate(http_requests_total[5m]))
 
@@ -47,10 +53,40 @@ groups:
         annotations: {summary: "Public ZeroWaste endpoint is down", description: "{{ $labels.instance }} has failed HTTPS probes for 2 minutes."}
 
       - alert: LaravelReplicaDown
-        expr: probe_success{job="blackbox-laravel-replicas"} == 0
+        expr: probe_success{job="blackbox-internal",instance=~"http://laravel[12]/up"} == 0
         for: 1m
         labels: {severity: warning}
         annotations: {summary: "A Laravel replica is unavailable", description: "{{ $labels.instance }} is down; traffic is being served by the surviving replica."}
+
+      - alert: InternalServiceDown
+        expr: probe_success{job="blackbox-internal"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "An internal ZeroWaste service is unavailable", description: "{{ $labels.instance }} has failed its private liveness probe for 2 minutes."}
+
+      - alert: DependencyReadinessFailed
+        expr: probe_success{job="blackbox-readiness"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "A backend cannot reach its required dependency", description: "{{ $labels.instance }} is not ready; no migration or write is performed by this probe."}
+
+      - alert: MediaDeliveryRouteBroken
+        expr: probe_success{job="blackbox-media-route"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "Canonical HTTPS media delivery is not returning the expected safe 404"}
+
+      - alert: MapEndpointDown
+        expr: probe_success{job="blackbox-https",instance="https://www.zerowaste-qro.com/api/mapa/puntos"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "The public map points endpoint is unavailable"}
+
+      - alert: RequiredMetricsTargetMissing
+        expr: absent(up{job="caddy"}) or absent(up{job="nginx-api"}) or absent(up{job="redis"}) or absent(up{job="zerowaste-fastapi"})
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "A required ZeroWaste metrics target disappeared from Prometheus"}
 
       - alert: ReadinessFailed
         expr: zerowaste_readiness == 0

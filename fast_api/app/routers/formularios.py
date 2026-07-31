@@ -1,3 +1,5 @@
+import os
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -57,7 +59,8 @@ def api_forgot_password(data: PasswordResetRequestCreate, db: Session = Depends(
     import requests
     try:
         # Reenviar la solicitud al servicio Flask que maneja el SMTP
-        flask_url = "http://flask_app:5000/forgot-password"
+        flask_base_url = os.getenv("FLASK_INTERNAL_URL", "http://cliente:5000").rstrip("/")
+        flask_url = f"{flask_base_url}/forgot-password"
         response = requests.post(flask_url, json={"email": data.email}, timeout=30)
         result = response.json()
         

@@ -420,8 +420,8 @@
                     $isAuth = \Illuminate\Support\Facades\Auth::check();
                     $uName = $isAuth ? \Illuminate\Support\Facades\Auth::user()->nombre : 'Visitante';
                     $uRole = ($isAuth && \Illuminate\Support\Facades\Auth::user()->is_admin) ? 'Administrador' : 'Usuario';
-                    $fotoPerfil = ($isAuth && \Illuminate\Support\Facades\Auth::user()->foto_perfil) ? \Illuminate\Support\Facades\Auth::user()->foto_perfil : 'default.png';
-                $fotoUrl = url('/static/img/perfiles/' . $fotoPerfil);
+                    $fotoUrl = $isAuth ? \Illuminate\Support\Facades\Auth::user()->avatar_url : null;
+                    $fotoUrl = $fotoUrl ?: url('/static/img/perfiles/default.png');
                 @endphp
                 <div class="relative group cursor-pointer">
                     <div class="flex items-center gap-3">

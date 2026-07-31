@@ -26,7 +26,7 @@
             <div class="inline-flex p-1 rounded-full bg-gradient-to-br from-primary to-emerald-600 mb-2 shadow-lg shadow-emerald-400/20">
                 <div class="h-16 w-16 rounded-full bg-white dark:bg-forest-dark flex items-center justify-center overflow-hidden border-4 border-white dark:border-forest-dark relative">
                     <span class="material-symbols-outlined text-gray-200 dark:text-emerald-900/40 text-4xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">person</span>
-                    {% set avatar_src = usuario.foto_perfil if usuario.foto_perfil and usuario.foto_perfil.startswith('http') else ('/static/img/perfiles/' + usuario.foto_perfil if usuario.foto_perfil and usuario.foto_perfil != 'None' else '') %}
+                    {% set avatar_src = media_url(usuario.foto_perfil, 'perfiles') %}
                     <img id="preview-avatar" src="{{ avatar_src }}" alt="Avatar" class="h-full w-full object-cover relative z-10 {% if not avatar_src %}hidden{% endif %}" onerror="this.style.display='none';">
                 </div>
             </div>

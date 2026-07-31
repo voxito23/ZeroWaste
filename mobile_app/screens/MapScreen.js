@@ -1,17 +1,19 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, ScrollView, Modal, TextInput, Alert, TouchableOpacity, KeyboardAvoidingView, Platform, Dimensions, Linking } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text, ScrollView, Modal, TextInput, Alert, TouchableOpacity, KeyboardAvoidingView, Platform, Linking } from 'react-native';
 import Mapbox from '@rnmapbox/maps';
 import { api } from '../api/axios';
 import CustomButton from '../components/ui/CustomButton';
-import { Truck, Navigation, X, MapPin, QrCode, ShieldCheck, Leaf } from 'lucide-react-native';
+import { Truck, Navigation, X, MapPin, QrCode, Leaf } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../store/useAuth';
 
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN?.trim() || '';
 const HAS_VALID_MAPBOX_TOKEN = MAPBOX_TOKEN.startsWith('pk.') && !MAPBOX_TOKEN.includes('YOUR_');
+const MAP_LOAD_TIMEOUT_MS = 15000;
+const SAFE_MAP_LOAD_ERROR = 'No fue posible cargar el mapa. Revisa tu conexión e inténtalo nuevamente.';
 if (HAS_VALID_MAPBOX_TOKEN) Mapbox.setAccessToken(MAPBOX_TOKEN);
 
 const normalizePoint = (point) => {
@@ -27,21 +29,26 @@ export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const cameraRef = useRef(null);
+  const mapReadyRef = useRef(false);
+  const locationRequestRef = useRef(null);
   
   const [puntos, setPuntos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [mapLoaded, setMapLoaded] = useState(false);
+  const [loadingToken] = useState(false);
+  const [loadingMap, setLoadingMap] = useState(HAS_VALID_MAPBOX_TOKEN);
+  const [loadingLocations, setLoadingLocations] = useState(true);
+  const [mapReady, setMapReady] = useState(false);
   const [mapKey, setMapKey] = useState(0);
   const [mapError, setMapError] = useState(HAS_VALID_MAPBOX_TOKEN ? '' : 'El token público de Mapbox no está configurado correctamente.');
-  const [pointsError, setPointsError] = useState('');
+  const [locationsError, setLocationsError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
+  const [permissionState, setPermissionState] = useState('unknown');
   
   // Location and Navigation States
   const [userLocation, setUserLocation] = useState(null);
   const [isNavigating, setIsNavigating] = useState(false);
   const [routeData, setRouteData] = useState(null);
   const [etaInfo, setEtaInfo] = useState(null); // { duration: "15 min", distance: "4 km", trafficStatus, trafficColor, badgeBg }
+  const [routeLoading, setRouteLoading] = useState(false);
 
   // Modal recoleccion a domicilio
   const [modalVisible, setModalVisible] = useState(false);
@@ -55,6 +62,57 @@ export default function MapScreen() {
     return !needle || `${point.nombre || ''} ${point.direccion || ''} ${point.materiales || ''}`.toLocaleLowerCase('es').includes(needle);
   });
 
+  const handleMapReady = () => {
+    if (mapReadyRef.current) return;
+    mapReadyRef.current = true;
+    setMapReady(true);
+    setLoadingMap(false);
+    setMapError('');
+  };
+
+  const handleMapLoadingError = () => {
+    if (typeof __DEV__ !== 'undefined' && __DEV__) {
+      console.warn(`[map] Mapbox reportó un error ${mapReadyRef.current ? 'no fatal después de cargar' : 'recuperable durante la carga'}.`);
+    }
+  };
+
+  const retryMap = () => {
+    if (!HAS_VALID_MAPBOX_TOKEN) return;
+    mapReadyRef.current = false;
+    setMapReady(false);
+    setMapError('');
+    setLoadingMap(true);
+    setMapKey((value) => value + 1);
+  };
+
+  const requestLocationPermission = async () => {
+    if (locationRequestRef.current) return locationRequestRef.current;
+    const request = (async () => {
+      setPermissionState('requesting');
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          setPermissionState('denied');
+          return null;
+        }
+        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        const coordinates = [loc.coords.longitude, loc.coords.latitude];
+        setUserLocation(coordinates);
+        setPermissionState('granted');
+        return coordinates;
+      } catch {
+        setPermissionState('unavailable');
+        return null;
+      }
+    })();
+    locationRequestRef.current = request;
+    try {
+      return await request;
+    } finally {
+      locationRequestRef.current = null;
+    }
+  };
+
   const centerUser = async () => {
     const coordinates = userLocation || await requestLocationPermission();
     if (!coordinates) return;
@@ -62,39 +120,23 @@ export default function MapScreen() {
   };
 
   useEffect(() => {
-    fetchPuntos();
-    requestLocationPermission();
+    void fetchPuntos();
+    void requestLocationPermission();
   }, []);
 
   useEffect(() => {
-    if (mapLoaded || mapError || !HAS_VALID_MAPBOX_TOKEN) return undefined;
+    if (loadingToken || !HAS_VALID_MAPBOX_TOKEN || mapReadyRef.current) return undefined;
     const timeout = setTimeout(() => {
-      setMapError('No fue posible cargar el mapa. Revisa tu conexión e inténtalo nuevamente.');
-    }, 15000);
+      if (mapReadyRef.current) return;
+      setLoadingMap(false);
+      setMapError(SAFE_MAP_LOAD_ERROR);
+    }, MAP_LOAD_TIMEOUT_MS);
     return () => clearTimeout(timeout);
-  }, [mapKey, mapLoaded, mapError]);
-
-  const requestLocationPermission = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        setLocationPermissionDenied(true);
-        return null;
-      }
-      setLocationPermissionDenied(false);
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      const coordinates = [loc.coords.longitude, loc.coords.latitude];
-      setUserLocation(coordinates);
-      return coordinates;
-    } catch {
-      setLocationPermissionDenied(true);
-      return null;
-    }
-  };
+  }, [loadingToken, mapKey]);
 
   const fetchPuntos = async () => {
-    setLoading(true);
-    setPointsError('');
+    setLoadingLocations(true);
+    setLocationsError('');
     try {
       const response = await api.get('/mapa/puntos');
       const seen = new Set();
@@ -104,23 +146,24 @@ export default function MapScreen() {
       setPuntos(validPoints);
     } catch (e) {
       setPuntos([]);
-      setPointsError(e.userMessage || 'No se pudieron cargar los puntos de reciclaje.');
+      setLocationsError(e.userMessage || 'No se pudieron cargar los puntos de reciclaje.');
     } finally {
-      setLoading(false);
+      setLoadingLocations(false);
     }
   };
 
   const startNavigation = async (punto) => {
-    if (!userLocation) {
+    const currentLocation = userLocation || await requestLocationPermission();
+    if (!currentLocation) {
       Alert.alert('Error', 'No se ha detectado tu ubicación actual.');
       return;
     }
     
-    setLoading(true);
+    setRouteLoading(true);
     try {
       const destCoords = [punto.longitud, punto.latitud];
       // Using Mapbox driving-traffic profile for real-time traffic aware navigation
-      const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${userLocation[0]},${userLocation[1]};${destCoords[0]},${destCoords[1]}?geometries=geojson&annotations=congestion,duration,distance&access_token=${MAPBOX_TOKEN}`;
+      const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${currentLocation[0]},${currentLocation[1]};${destCoords[0]},${destCoords[1]}?geometries=geojson&annotations=congestion,duration,distance&access_token=${MAPBOX_TOKEN}`;
       
       const response = await fetch(url);
       if (!response.ok) throw new Error(`Mapbox Directions HTTP ${response.status}`);
@@ -162,7 +205,7 @@ export default function MapScreen() {
     } catch (error) {
       Alert.alert('Error', 'Ocurrió un problema trazando la ruta de navegación.');
     } finally {
-      setLoading(false);
+      setRouteLoading(false);
     }
   };
 
@@ -179,15 +222,16 @@ export default function MapScreen() {
     }
     setSubmitting(true);
     try {
-      if (!userLocation) {
+      const currentLocation = userLocation || await requestLocationPermission();
+      if (!currentLocation) {
         Alert.alert('Ubicación requerida', 'Activa la ubicación para enviar las coordenadas de la solicitud.');
         return;
       }
       await api.post('/recolecciones', {
         direccion,
         materiales,
-        longitud: userLocation[0],
-        latitud: userLocation[1],
+        longitud: currentLocation[0],
+        latitud: currentLocation[1],
       });
       Alert.alert('Éxito', 'Tu solicitud ha sido enviada. Un recolector la atenderá pronto.');
       setModalVisible(false);
@@ -212,27 +256,26 @@ export default function MapScreen() {
         styleURL={isNavigating ? Mapbox.StyleURL.TrafficDay : Mapbox.StyleURL.Street}
         logoEnabled={false}
         attributionEnabled={false}
-        onDidFinishLoadingMap={() => {
-          setMapLoaded(true);
-          setMapError('');
-        }}
-        onMapLoadingError={(event) => {
-          setMapLoaded(false);
-          setMapError(event?.message || 'Mapbox no pudo cargar el mapa.');
-        }}
+        onWillStartLoadingMap={() => { if (!mapReadyRef.current) setLoadingMap(true); }}
+        onDidFinishLoadingMap={handleMapReady}
+        onMapLoadingError={handleMapLoadingError}
       >
         <Mapbox.Camera
           ref={cameraRef}
           zoomLevel={isNavigating ? 17 : 13.5}
           pitch={isNavigating ? 70 : 0}
           centerCoordinate={!isNavigating ? [-100.3929, 20.5888] : undefined}
-          followUserLocation={isNavigating}
+          followUserLocation={isNavigating && permissionState === 'granted'}
           followUserMode={isNavigating ? 'course' : 'normal'}
           followZoomLevel={17}
           followPitch={70}
           animationMode="flyTo"
           animationDuration={2000}
         />
+
+        {permissionState === 'granted' ? (
+          <Mapbox.LocationPuck puckBearingEnabled puckBearing="heading" />
+        ) : null}
         
         {visiblePoints.map((p) => (
           <Mapbox.PointAnnotation
@@ -262,32 +305,32 @@ export default function MapScreen() {
         )}
       </Mapbox.MapView> : <View style={styles.map} />}
 
-      {(!mapLoaded || mapError) && (
-        <View className="absolute inset-0 items-center justify-center bg-white px-8">
-          <Text className="text-lg font-black text-gray-900 text-center">{mapError || 'Cargando mapa…'}</Text>
-          {mapError ? (
-            <TouchableOpacity onPress={() => { setMapError(''); setMapLoaded(false); setMapKey((value) => value + 1); }} className="mt-4 rounded-xl bg-emerald-700 px-6 py-3">
+      {!mapReady && (loadingToken || loadingMap || mapError) ? (
+        <View className="absolute inset-0 z-40 items-center justify-center bg-white px-8">
+          <Text className="text-lg font-black text-gray-900 text-center">{mapError || (loadingToken ? 'Validando configuración del mapa…' : 'Cargando mapa…')}</Text>
+          {mapError && HAS_VALID_MAPBOX_TOKEN ? (
+            <TouchableOpacity onPress={retryMap} className="mt-4 rounded-xl bg-emerald-700 px-6 py-3">
               <Text className="text-white font-black">Reintentar</Text>
             </TouchableOpacity>
-          ) : <ActivityIndicator className="mt-4" color="#047857" />}
+          ) : !mapError ? <ActivityIndicator className="mt-4" color="#047857" /> : null}
         </View>
-      )}
+      ) : null}
 
-      {pointsError ? (
+      {locationsError ? (
         <View className="absolute left-5 right-5 top-24 rounded-2xl bg-red-50 border border-red-200 p-4 z-30">
-          <Text className="text-red-700 font-bold text-center">{pointsError}</Text>
+          <Text className="text-red-700 font-bold text-center">{locationsError}</Text>
           <TouchableOpacity onPress={fetchPuntos} className="mt-2 self-center"><Text className="text-red-700 font-black">Reintentar</Text></TouchableOpacity>
         </View>
       ) : null}
 
-      {mapLoaded && !loading && !pointsError && puntos.length === 0 ? (
+      {mapReady && !loadingLocations && !locationsError && puntos.length === 0 ? (
         <View className="absolute left-5 right-5 top-24 rounded-2xl bg-white border border-gray-200 p-4 z-30">
           <Text className="text-gray-700 font-bold text-center">No hay puntos de reciclaje disponibles.</Text>
           <TouchableOpacity onPress={fetchPuntos} className="mt-2 self-center"><Text className="text-emerald-700 font-black">Actualizar</Text></TouchableOpacity>
         </View>
       ) : null}
 
-      {locationPermissionDenied ? (
+      {mapReady && ['denied', 'unavailable'].includes(permissionState) && !locationsError ? (
         <View className="absolute left-5 right-5 top-24 rounded-2xl bg-amber-50 border border-amber-200 p-4 z-30">
           <Text className="text-amber-900 font-bold text-center">La ubicación está desactivada. El mapa funciona, pero no puede centrarte ni crear rutas.</Text>
           <TouchableOpacity onPress={() => Linking.openSettings()} className="mt-2 self-center"><Text className="text-amber-900 font-black">Abrir Ajustes</Text></TouchableOpacity>
@@ -403,7 +446,7 @@ export default function MapScreen() {
         </View>
       )}
 
-      {loading && (
+      {routeLoading && (
         <View className="absolute inset-0 items-center justify-center bg-black/20 z-50">
           <View className="bg-white p-4 rounded-2xl shadow-xl">
             <ActivityIndicator size="large" color="#064E3B" />

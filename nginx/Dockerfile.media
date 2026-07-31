@@ -1,0 +1,14 @@
+FROM nginx:1.27.5-alpine
+
+ARG MEDIA_GID=2000
+
+# Nginx calls initgroups() when its workers drop privileges. Recording the
+# deployment media group inside the image preserves read access even when the
+# host directories use 2770/0660 rather than world-readable permissions.
+RUN set -eux; \
+    media_group="$(awk -F: -v gid="${MEDIA_GID}" '$3 == gid { print $1; exit }' /etc/group)"; \
+    if [ -z "${media_group}" ]; then \
+        media_group=zerowaste-media; \
+        addgroup -g "${MEDIA_GID}" -S "${media_group}"; \
+    fi; \
+    addgroup nginx "${media_group}"

@@ -3,6 +3,8 @@ Router del mapa — puntos de reciclaje, calificaciones y recomendaciones.
 Replica la lógica de consulta de puntos del microservicio Flask.
 """
 
+import logging
+import math
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -18,6 +20,44 @@ from app.models.schemas import (
 from app.security.jwt_auth import get_current_user
 
 router = APIRouter(prefix="/mapa", tags=["Mapa"])
+logger = logging.getLogger(__name__)
+
+
+def _coordinate(value: object, minimum: float, maximum: float) -> float | None:
+    try:
+        coordinate = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return None
+    if not math.isfinite(coordinate) or not minimum <= coordinate <= maximum:
+        return None
+    return coordinate
+
+
+def _serialize_punto(
+    punto: PuntoMapa,
+    promedio: object = 0,
+    total: object = 0,
+) -> PuntoMapaResponse | None:
+    latitud = _coordinate(getattr(punto, "latitud", None), -90, 90)
+    longitud = _coordinate(getattr(punto, "longitud", None), -180, 180)
+    if latitud is None or longitud is None:
+        return None
+    return PuntoMapaResponse(
+        id=int(getattr(punto, "id", 0)),
+        nombre=str(getattr(punto, "nombre", "")),
+        direccion=str(getattr(punto, "direccion", "")),
+        latitud=latitud,
+        longitud=longitud,
+        tipo=str(getattr(punto, "tipo", "")),
+        materiales=(
+            str(getattr(punto, "materiales"))
+            if getattr(punto, "materiales", None)
+            else None
+        ),
+        imagen=getattr(punto, "imagen", None),
+        promedio=round(float(promedio or 0), 1),
+        total_reviews=int(total or 0),
+    )
 
 
 # Función auxiliar para consultar puntos con promedios
@@ -41,17 +81,14 @@ def _get_puntos_con_promedio(db: Session) -> List[PuntoMapaResponse]:
 
     puntos = []
     for punto, promedio, total in resultados:
-        puntos.append(PuntoMapaResponse(
-            id=int(getattr(punto, "id", 0)),
-            nombre=str(getattr(punto, "nombre", "")),
-            direccion=str(getattr(punto, "direccion", "")),
-            latitud=float(str(getattr(punto, "latitud", 0.0))),
-            longitud=float(str(getattr(punto, "longitud", 0.0))),
-            tipo=str(getattr(punto, "tipo", "")),
-            materiales=str(getattr(punto, "materiales", "")) if getattr(punto, "materiales", None) else None,
-            promedio=round(float(promedio or 0), 1),
-            total_reviews=int(total or 0),
-        ))
+        serialized = _serialize_punto(punto, promedio, total)
+        if serialized is None:
+            logger.warning(
+                "Punto de acopio omitido por coordenadas inválidas (id=%s).",
+                getattr(punto, "id", "desconocido"),
+            )
+            continue
+        puntos.append(serialized)
     return puntos
 
 
@@ -82,17 +119,13 @@ def get_punto(punto_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Punto no encontrado.")
 
     punto, promedio, total = resultado
-    return PuntoMapaResponse(
-        id=punto.id,
-        nombre=punto.nombre,
-        direccion=punto.direccion,
-        latitud=float(punto.latitud),
-        longitud=float(punto.longitud),
-        tipo=punto.tipo,
-        materiales=punto.materiales,
-        promedio=round(float(promedio or 0), 1),
-        total_reviews=total,
-    )
+    serialized = _serialize_punto(punto, promedio, total)
+    if serialized is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="El punto tiene coordenadas inválidas.",
+        )
+    return serialized
 
 
 @router.post(
@@ -114,22 +147,16 @@ def create_punto(
         longitud=punto_in.longitud,
         tipo=punto_in.tipo,
         materiales=punto_in.materiales,
+        imagen=punto_in.imagen,
     )
     db.add(nuevo_punto)
     db.commit()
     db.refresh(nuevo_punto)
 
-    return PuntoMapaResponse(
-        id=int(getattr(nuevo_punto, "id", 0)),
-        nombre=str(getattr(nuevo_punto, "nombre", "")),
-        direccion=str(getattr(nuevo_punto, "direccion", "")),
-        latitud=float(str(getattr(nuevo_punto, "latitud", 0.0))),
-        longitud=float(str(getattr(nuevo_punto, "longitud", 0.0))),
-        tipo=str(getattr(nuevo_punto, "tipo", "")),
-        materiales=str(getattr(nuevo_punto, "materiales", "")) if getattr(nuevo_punto, "materiales", None) else None,
-        promedio=0.0,
-        total_reviews=0,
-    )
+    serialized = _serialize_punto(nuevo_punto)
+    if serialized is None:  # Defensivo: Pydantic ya valida el rango.
+        raise HTTPException(status_code=422, detail="Coordenadas inválidas.")
+    return serialized
 
 
 @router.put("/puntos/{punto_id}", response_model=PuntoMapaResponse, summary="Actualizar punto")
@@ -155,17 +182,10 @@ def update_punto(
     promedio = db.query(func.avg(CalificacionPunto.estrellas)).filter_by(location_id=punto_id).scalar()
     total = db.query(func.count(CalificacionPunto.id)).filter_by(location_id=punto_id).scalar()
 
-    return PuntoMapaResponse(
-        id=int(getattr(punto, "id", 0)),
-        nombre=str(getattr(punto, "nombre", "")),
-        direccion=str(getattr(punto, "direccion", "")),
-        latitud=float(str(getattr(punto, "latitud", 0.0))),
-        longitud=float(str(getattr(punto, "longitud", 0.0))),
-        tipo=str(getattr(punto, "tipo", "")),
-        materiales=str(getattr(punto, "materiales", "")) if getattr(punto, "materiales", None) else None,
-        promedio=round(float(promedio or 0), 1),
-        total_reviews=int(total or 0),
-    )
+    serialized = _serialize_punto(punto, promedio, total)
+    if serialized is None:
+        raise HTTPException(status_code=422, detail="Coordenadas inválidas.")
+    return serialized
 
 
 @router.delete("/puntos/{punto_id}", response_model=MessageResponse, summary="Eliminar punto")

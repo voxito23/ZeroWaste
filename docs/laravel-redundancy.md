@@ -1,93 +1,90 @@
 # Laravel active/active redundancy
 
-ZeroWaste runs two Laravel containers from the same immutable Docker image and
-the same versioned source directory:
+ZeroWaste runs `laravel1` and `laravel2` from the same
+`zerowaste-laravel:${ZEROWASTE_IMAGE_TAG}` image. Both replicas use the same
+versioned code and vendor directory baked into that image; production has no
+source-code bind mount and no anonymous vendor volume.
 
-- `admin` and `admin2` serve the normal route concurrently through Nginx
-  equal-weight round-robin balancing.
-- If either replica fails, Nginx temporarily removes it and retries safely on
-  the surviving replica.
-- The explicit `/2` route prefers `admin2` and falls back to `admin`.
-- `/zw-interno/2/` is an explicit external alias for `admin2`. Nginx translates
-  it to the original Laravel prefix and rewrites generated links back to `/2`.
-  Internally, the backup deliberately accepts `/zw-interno/*` so automatic
-  failover can forward the unchanged primary request without producing a 404.
+Nginx uses equal-weight round-robin for `/zw-interno`. If a replica fails,
+passive health handling removes it temporarily and retries safe requests on the
+survivor. `/zw-interno/2/` remains a compatibility route that prefers
+`laravel2` and falls back to `laravel1`.
 
-Both containers use the external PostgreSQL database, Redis cache/rate-limit
-state, the same application environment, and the shared profile volume. No
-application port is published on the host.
+Both replicas load the same untracked Laravel `.env` and therefore share
+`APP_KEY` and Supabase. Compose additionally enforces:
 
-This protects against a Laravel process/container failure. It is not host-level
-high availability: the Droplet, Nginx, Redis and the Docker daemon remain single
-points of failure. Host-level HA requires a second Droplet and a load balancer.
+- `SESSION_DRIVER=redis` and `SESSION_CONNECTION=default`.
+- A single cookie name, domain and `/zw-interno` path.
+- Secure, HttpOnly and SameSite=Lax cookies.
+- Explicit Redis and cache prefixes.
+- The same Redis service and persistent Redis volume.
+- The same persistent media root and supplementary `MEDIA_GID`.
 
-## Zero-downtime deployment order
+This protects against a Laravel process/container failure. Nginx, Redis, the
+Docker daemon and the Droplet remain host-level single points of failure.
 
-Build the common image first. Start and validate the backup before reloading
-Nginx. Recreate the primary only after the backup is healthy.
+## Production validation order
+
+Run each command separately. None of these commands runs a migration:
 
 ```bash
-docker-compose build admin admin2
-docker-compose up -d --no-deps admin2
-docker-compose ps admin2
-docker-compose exec nginx_api nginx -t
-docker-compose exec nginx_api nginx -s reload
-docker-compose up -d --no-deps admin
-docker-compose ps admin admin2 nginx_api
+docker compose config
+```
+
+```bash
+docker compose build laravel1 laravel2
+```
+
+```bash
+docker compose up -d --no-deps laravel2
+docker compose ps laravel2
+```
+
+```bash
+docker compose exec nginx_api nginx -t
+docker compose exec nginx_api nginx -s reload
+```
+
+```bash
+docker compose up -d --no-deps laravel1
+docker compose ps laravel1 laravel2 nginx_api
 ```
 
 ## Failover test
 
-Run the public request before and after stopping the primary. Restore the
-primary immediately after the test.
+Perform this only during a controlled verification window and restore the
+replica immediately:
 
 ```bash
 curl -fsS -o /dev/null -w 'before=%{http_code}\n' https://www.zerowaste-qro.com/zw-interno/login
-docker-compose stop admin
-curl -fsS -o /dev/null -w 'backup=%{http_code}\n' https://www.zerowaste-qro.com/zw-interno/login
-docker-compose logs --tail=20 nginx_api
-docker-compose up -d --no-deps admin
-docker-compose ps admin admin2 nginx_api
+docker compose stop laravel1
+curl -fsS -o /dev/null -w 'survivor=%{http_code}\n' https://www.zerowaste-qro.com/zw-interno/login
+docker compose up -d --no-deps laravel1
+docker compose ps laravel1 laravel2 nginx_api
 ```
 
-Expected result: both HTTP checks return `200`, and the Nginx access log shows
-`admin2`'s upstream address while the primary is stopped.
+Expected: both HTTP requests succeed and the second is served by `laravel2`.
 
-The secondary can also be checked without stopping the primary:
+## Shared-session test
 
-```bash
-curl -fsS -o /dev/null -w 'secondary=%{http_code}\n' https://www.zerowaste-qro.com/zw-interno/2/login
-```
+Use a non-production test account in a browser or HTTP client that retains its
+cookie jar:
 
-## Short equal-distribution test
+1. Authenticate through the normal `/zw-interno/login` route.
+2. Confirm that both replicas are healthy.
+3. Stop the replica that handled the login request.
+4. Request an authenticated page with the same cookie jar.
+5. Confirm the session and CSRF-protected form remain valid.
+6. Restore the stopped replica.
 
-This test sends ten application requests. With both replicas healthy, the
-equal-weight round-robin upstream sends five requests to `admin` and five to
-`admin2`. A unique user agent avoids counting Prometheus/Blackbox probes.
+Do not use filesystem sessions or sticky sessions to make this test pass.
+Redis must contain the shared session state.
 
-Run each command separately:
+## Observability limitation
 
-```bash
-docker-compose ps admin admin2 nginx_api
-```
-
-```bash
-TEST_START=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-```
-
-```bash
-for i in $(seq 1 10); do curl -sS -A ZeroWaste-Balance-Test -o /dev/null -w "request=$i status=%{http_code}\n" https://www.zerowaste-qro.com/zw-interno/login; done
-```
-
-```bash
-docker-compose logs --since="$TEST_START" admin | grep 'ZeroWaste-Balance-Test' | wc -l
-```
-
-```bash
-docker-compose logs --since="$TEST_START" admin2 | grep 'ZeroWaste-Balance-Test' | wc -l
-```
-
-Expected result: `5` for `admin` and `5` for `admin2`. If a replica is
-unhealthy, the surviving replica receives all requests; that is expected
-failover behavior. Browser refreshes are not a deterministic balancing test
-because one page load can create several HTTP requests.
+The open-source Nginx `stub_status` endpoint provides aggregate connections and
+request counts. It does not expose per-upstream 5xx rates, latency or exact
+traffic distribution. Grafana therefore shows replica liveness, Blackbox
+latency, Redis aggregates and cAdvisor resource data without inventing
+per-replica HTTP metrics. Add Laravel instrumentation or a privacy-safe Nginx
+log exporter before creating those panels.

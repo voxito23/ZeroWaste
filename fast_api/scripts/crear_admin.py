@@ -1,7 +1,7 @@
 """
 Script para crear/actualizar los administradores del sistema en PostgreSQL.
 Las contraseñas se hashean con bcrypt ($2y$) para compatibilidad con FastAPI y Laravel.
-Ejecutar: docker exec fastapi_app python crear_admin.py
+Ejecutar manualmente dentro del servicio fast_api sólo con variables explícitas.
 """
 
 import os
@@ -9,32 +9,46 @@ from app.data.database import SessionLocal
 from app.models.domain_models import Usuario
 from app.security.jwt_auth import hash_password
 
-db = SessionLocal()
+def require_env(name: str) -> str:
+    value = os.getenv(name, "").strip()
+    if not value:
+        raise RuntimeError(f"Required environment variable is not configured: {name}")
+    return value
 
-admins = [
-    {"nombre": "Victor Admin",      "email": os.getenv("ADMIN_EMAIL", "admin@ejemplo.com"),           "password": "123456"}
-]
 
-try:
-    for admin in admins:
+def main() -> None:
+    admin = {
+        "nombre": require_env("ADMIN_NAME"),
+        "email": require_env("ADMIN_EMAIL"),
+        "password": require_env("ADMIN_PASSWORD"),
+    }
+    if len(admin["password"]) < 12:
+        raise RuntimeError("ADMIN_PASSWORD must contain at least 12 characters")
+
+    db = SessionLocal()
+    try:
         hashed = hash_password(admin["password"])
-        existe = db.query(Usuario).filter(Usuario.email == admin["email"]).first()
-
-        if existe:
-            existe.is_admin = True  # type: ignore
-            existe.password = hashed  # type: ignore
-            print(f"  [ACTUALIZADO] {admin['email']}")
+        existing = db.query(Usuario).filter(Usuario.email == admin["email"]).first()
+        if existing:
+            existing.is_admin = True  # type: ignore
+            existing.password = hashed  # type: ignore
+            action = "updated"
         else:
-            nuevo = Usuario(
+            db.add(Usuario(
                 nombre=admin["nombre"],
                 email=admin["email"],
                 password=hashed,
                 is_admin=True,
-            )
-            db.add(nuevo)
-            print(f"  [CREADO]      {admin['email']}")
+            ))
+            action = "created"
+        db.commit()
+        print(f"Administrator {action} successfully; credentials were not printed.")
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
-    db.commit()
-    print("\nAdministradores procesados exitosamente.")
-finally:
-    db.close()
+
+if __name__ == "__main__":
+    main()

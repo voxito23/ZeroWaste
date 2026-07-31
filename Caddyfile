@@ -1,11 +1,27 @@
 {
-	servers {
-		trusted_proxies static private_ranges
-		client_ip_headers X-Forwarded-For X-Real-IP
+	admin off
+	metrics {
+		per_host
 	}
 }
 
-zerowaste-qro.com, www.zerowaste-qro.com {
+# Read-only process telemetry for Prometheus. Port 2019 is internal to Docker;
+# the mutable Caddy administration API is disabled globally.
+:2019 {
+	handle /metrics {
+		metrics
+	}
+	handle /health {
+		respond "ok" 200
+	}
+	respond 404
+}
+
+zerowaste-qro.com {
+	redir https://www.zerowaste-qro.com{uri} 308
+}
+
+www.zerowaste-qro.com {
 	encode zstd gzip
 
 	log {
@@ -21,18 +37,53 @@ zerowaste-qro.com, www.zerowaste-qro.com {
 		-Server
 	}
 
-	@private path /metrics /api/metrics /prometheus* /stub_status
+	@private path /metrics /metrics/* /api/metrics /api/metrics/* /grafana/metrics /grafana/metrics/* /prometheus /prometheus/* /stub_status /nginx-health
 	respond @private 404
 
-	handle /grafana* {
-		reverse_proxy grafana:3000
+	handle /grafana {
+		redir /grafana/ 308
+	}
+	handle /grafana/* {
+		reverse_proxy grafana:3000 {
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	@legacy_rewards path_regexp legacy_rewards ^/images/recompensas/(.+)$
+	redir @legacy_rewards /media/recompensas/{re.legacy_rewards.1} 308
+
+	@legacy_profiles path_regexp legacy_profiles ^/img/perfiles/(.+)$
+	redir @legacy_profiles /media/perfiles/{re.legacy_profiles.1} 308
+
+	@legacy_static_profiles path_regexp legacy_static_profiles ^/static/img/perfiles/(.+)$
+	redir @legacy_static_profiles /media/perfiles/{re.legacy_static_profiles.1} 308
+
+	@legacy_forum path_regexp legacy_forum ^/static/img/posts/(.+)$
+	redir @legacy_forum /media/foro/{re.legacy_forum.1} 308
+
+	handle /media/* {
+		reverse_proxy media_static:8080 {
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	@api path /api /api/* /zw-docs /zw-docs/* /zw-openapi.json /zw-redoc /zw-redoc/*
+	handle @api {
+		reverse_proxy nginx_api:8080 {
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	@admin path /zw-interno /zw-interno/*
+	handle @admin {
+		reverse_proxy nginx_api:8080 {
+			header_up X-Real-IP {remote_host}
+		}
 	}
 
 	handle {
-		reverse_proxy nginx_api:8081 {
-			header_up Host {host}
-			header_up X-Real-IP {client_ip}
-			header_up X-Forwarded-For {client_ip}
+		reverse_proxy cliente:5000 {
+			header_up X-Real-IP {remote_host}
 		}
 	}
 }

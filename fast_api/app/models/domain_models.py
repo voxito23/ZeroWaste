@@ -36,7 +36,11 @@ class Usuario(Base):
     licencia_conducir = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    posts = relationship("Foro", back_populates="autor_rel")
+    posts = relationship(
+        "Foro",
+        back_populates="autor_rel",
+        foreign_keys="Foro.autor_id",
+    )
     respuestas = relationship("RespuestaForo", back_populates="autor_rel")
     actividades = relationship("Actividad", back_populates="usuario", cascade="all, delete-orphan")
 
@@ -95,10 +99,18 @@ class Foro(Base):
     categoria_id = Column(Integer, ForeignKey("categorias.id"), nullable=False)
     autor_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     imagen = Column(String(255), nullable=True)
+    aprobado = Column(Boolean, nullable=False, default=False)
+    aprobado_por = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    aprobado_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     categoria_rel = relationship("Categoria", back_populates="posts")
-    autor_rel = relationship("Usuario", back_populates="posts")
+    autor_rel = relationship(
+        "Usuario",
+        back_populates="posts",
+        foreign_keys=[autor_id],
+    )
+    aprobador_rel = relationship("Usuario", foreign_keys=[aprobado_por])
     respuestas = relationship("RespuestaForo", back_populates="post")
     likes = relationship("LikeForo", back_populates="post_rel")
 
@@ -276,9 +288,6 @@ class ReglaPuntos(Base):
     activa = Column(Boolean, nullable=False, default=True)
     updated_by = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    aprobado = Column(Boolean, nullable=False, default=False)
-    aprobado_por = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
-    aprobado_at = Column(DateTime, nullable=True)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     __table_args__ = (CheckConstraint("puntos >= 0", name="ck_reglas_puntos_no_negativos"),)
 

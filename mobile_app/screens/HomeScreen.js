@@ -21,6 +21,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useScrollContext } from '../context/ScrollContext';
 import { useAuth } from '../store/useAuth';
 import { api } from '../api/axios';
+import RemoteImage from '../components/ui/RemoteImage';
+import { normalizeMediaUrl } from '../utils/media';
 import {
   Search,
   Users,
@@ -185,7 +187,8 @@ export default function HomeScreen() {
             date: c.fecha_inicio ? new Date(c.fecha_inicio).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : 'Próximamente',
             location: c.lugar || 'Querétaro',
             tag: (c.tipo_etiqueta || 'CAMPAÑA').toUpperCase(),
-            img: c.imagen_url ? { uri: c.imagen_url.startsWith('http') ? c.imagen_url : `https://zerowaste-qro.com/static/img/campanas/${c.imagen_url}` } : require('../assets/images/event1.png'),
+            imageUrl: normalizeMediaUrl(c.cover_url ?? c.image_url ?? c.imagen_url ?? c.imagen, 'campanas'),
+            fallbackImage: require('../assets/images/event1.png'),
             link: c.link_evento || null
           }));
           const dbEvents = (evRes.data || []).map(e => ({
@@ -194,7 +197,8 @@ export default function HomeScreen() {
             date: e.fecha_inicio ? new Date(e.fecha_inicio).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : 'Próximamente',
             location: e.lugar || 'Querétaro',
             tag: (e.tipo_etiqueta || 'EVENTO').toUpperCase(),
-            img: e.imagen_url ? { uri: e.imagen_url.startsWith('http') ? e.imagen_url : `https://zerowaste-qro.com/static/img/eventos/${e.imagen_url}` } : require('../assets/images/event2.jpg'),
+            imageUrl: normalizeMediaUrl(e.cover_url ?? e.image_url ?? e.imagen_url ?? e.imagen, 'eventos'),
+            fallbackImage: require('../assets/images/event2.jpg'),
             link: e.link_evento || null
           }));
           setCampaignsList([...dbCampaigns, ...dbEvents]);
@@ -248,6 +252,8 @@ export default function HomeScreen() {
     tendListRef.current?.scrollToIndex({ index: next, animated: true });
   };
 
+  const avatarUrl = normalizeMediaUrl(user?.avatar_url ?? user?.foto_perfil, 'perfiles');
+
   return (
     <SafeAreaView className="flex-1 bg-[#FAFAFA]" edges={['top']}>
       <StatusBar style="dark" />
@@ -278,11 +284,13 @@ export default function HomeScreen() {
             </TouchableScale>
             <TouchableScale scaleVal={0.9} onPress={() => navigation.navigate('Profile')}>
               <View className="w-10 h-10 rounded-full bg-emerald-500 items-center justify-center border-2 border-emerald-100 overflow-hidden">
-                {user?.foto_perfil && user.foto_perfil !== 'perfil_default.png' ? (
-                  <Image 
-                    source={{ uri: user.foto_perfil.startsWith('http') ? user.foto_perfil : `https://zerowaste-qro.com/static/img/perfiles/${user.foto_perfil}` }} 
-                    className="w-full h-full"
-                    resizeMode="cover"
+                {avatarUrl ? (
+                  <RemoteImage
+                    uri={avatarUrl}
+                    fallbackSource={require('../assets/images/logo.png')}
+                    className="h-full w-full"
+                    aspectRatio={1}
+                    accessibilityLabel="Avatar del usuario"
                   />
                 ) : (
                   <Text className="text-white text-[14px] font-black">{user?.nombre?.charAt(0).toUpperCase() || 'V'}</Text>
@@ -440,7 +448,7 @@ export default function HomeScreen() {
                     style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.08, shadowRadius: 24, elevation: 10 }}
                   >
                     <View className="relative h-[190px]">
-                      <Image source={camp.img} className="w-full h-full" resizeMode="cover" />
+                      <RemoteImage uri={camp.imageUrl} fallbackSource={camp.fallbackImage} className="h-full w-full" accessibilityLabel={`Imagen de ${camp.title}`} />
                       
                       <View className="absolute top-4 left-4 bg-black/60 px-3 py-1.5 rounded-full border border-white/10">
                         <Text className="text-white text-[10px] font-black uppercase tracking-[0.1em]">{camp.tag}</Text>

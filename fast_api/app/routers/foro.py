@@ -2,16 +2,12 @@
 Router del foro — CRUD completo: posts, respuestas y likes.
 """
 
-import io
 import os
-import uuid
 from typing import List
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from PIL import Image, UnidentifiedImageError
-
 from app.data.database import get_db
 from app.models.domain_models import (
     Usuario, Categoria, Foro, RespuestaForo, LikeForo, Actividad, Notificacion
@@ -22,41 +18,23 @@ from app.models.schemas import (
     LikeResponse, CategoriaResponse, MessageResponse,
 )
 from app.security.jwt_auth import get_current_user
+from app.services.media import (
+    MAX_IMAGE_BYTES,
+    MediaValidationError,
+    media_directory,
+    remove_media_file,
+    save_media_image,
+)
 from app.services.points import award_points
 
 router = APIRouter(prefix="/foro", tags=["Foro"])
 
-POST_IMAGE_DIR = os.getenv("FORUM_MEDIA_DIR", "static/img/posts")
-MAX_POST_IMAGE_BYTES = 5 * 1024 * 1024
-ALLOWED_POST_IMAGE_FORMATS = {"JPEG": "jpg", "PNG": "png", "WEBP": "webp"}
-
-
 async def _store_post_image(upload: UploadFile) -> str:
-    content = await upload.read(MAX_POST_IMAGE_BYTES + 1)
-    if not content or len(content) > MAX_POST_IMAGE_BYTES:
-        raise HTTPException(status_code=413, detail="La imagen debe pesar como máximo 5 MB.")
+    content = await upload.read(MAX_IMAGE_BYTES + 1)
     try:
-        source = Image.open(io.BytesIO(content))
-        source.verify()
-        source = Image.open(io.BytesIO(content))
-        image_format = (source.format or "").upper()
-        extension = ALLOWED_POST_IMAGE_FORMATS.get(image_format)
-        if not extension:
-            raise HTTPException(status_code=415, detail="Usa una imagen JPEG, PNG o WebP.")
-        if source.width > 6000 or source.height > 6000:
-            raise HTTPException(status_code=422, detail="La imagen excede las dimensiones permitidas.")
-        clean = source.convert("RGB") if image_format == "JPEG" else source.copy()
-    except HTTPException:
-        raise
-    except (UnidentifiedImageError, OSError, ValueError):
-        raise HTTPException(status_code=415, detail="El archivo no es una imagen válida.")
-
-    os.makedirs(POST_IMAGE_DIR, exist_ok=True)
-    filename = f"{uuid.uuid4().hex}.{extension}"
-    destination = os.path.join(POST_IMAGE_DIR, filename)
-    save_format = "JPEG" if extension == "jpg" else image_format
-    clean.save(destination, format=save_format, quality=88, optimize=True)
-    return filename
+        return save_media_image(content, "foro")
+    except MediaValidationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
 
 
 # Imágenes
@@ -64,11 +42,10 @@ async def _store_post_image(upload: UploadFile) -> str:
 @router.get("/perfiles/{filename}", summary="Obtener imagen de perfil de usuario")
 def get_perfil_image(filename: str):
     """Devuelve la imagen de perfil solicitada. Busca en el volumen compartido."""
-    # En desarrollo local la ruta es static/img/perfiles. En Docker es el volumen compartido.
     safe_name = os.path.basename(filename)
     if safe_name != filename:
         raise HTTPException(status_code=400, detail="Nombre de archivo inválido")
-    path = os.path.join("static", "img", "perfiles", safe_name)
+    path = media_directory("perfiles") / safe_name
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Imagen no encontrada")
     return FileResponse(path)
@@ -80,7 +57,7 @@ def get_post_image(filename: str):
     safe_name = os.path.basename(filename)
     if safe_name != filename:
         raise HTTPException(status_code=400, detail="Nombre de archivo inválido")
-    path = os.path.join(POST_IMAGE_DIR, safe_name)
+    path = media_directory("foro") / safe_name
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Imagen no encontrada")
     return FileResponse(path)
@@ -227,7 +204,7 @@ async def create_post_with_image(
         db.rollback()
         if filename:
             try:
-                os.remove(os.path.join(POST_IMAGE_DIR, filename))
+                remove_media_file(filename, "foro")
             except OSError:
                 pass
         raise

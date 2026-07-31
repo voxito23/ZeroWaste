@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.data.database import get_db
 from app.models.domain_models import Canje, MovimientoPuntos, Recompensa, SaldoPuntos, Usuario
 from app.security.jwt_auth import get_current_user
+from app.services.media import build_public_media_url
 
 router = APIRouter(prefix="/impacto", tags=["Impacto y recompensas"])
 
@@ -16,13 +17,16 @@ class CanjeCreate(BaseModel):
 
 
 def _reward_dict(recompensa: Recompensa) -> dict:
+    image_url = build_public_media_url(recompensa.imagen, "recompensas")
     return {
         "id": recompensa.id,
         "nombre": recompensa.nombre,
         "descripcion": recompensa.descripcion,
         "costo_puntos": recompensa.costo_puntos,
         "stock": recompensa.stock,
-        "imagen_url": f"https://www.zerowaste-qro.com/images/recompensas/{recompensa.imagen}" if recompensa.imagen else None,
+        "imagen": recompensa.imagen,
+        "image_url": image_url,
+        "imagen_url": image_url,
         "activa": recompensa.activa,
         "limite_por_usuario": recompensa.limite_por_usuario,
     }
@@ -41,6 +45,7 @@ def ranking(limit: int = Query(default=50, ge=1, le=100), db: Session = Depends(
         "usuario_id": user.id,
         "nombre": user.nombre,
         "avatar": user.foto_perfil,
+        "avatar_url": build_public_media_url(user.foto_perfil, "perfiles"),
         "impacto_historico": balance.impacto_historico,
     } for index, (user, balance) in enumerate(rows, start=1)]
 
@@ -55,6 +60,7 @@ def my_impact(db: Session = Depends(get_db), current_user: Usuario = Depends(get
         "usuario_id": current_user.id,
         "nombre": current_user.nombre,
         "avatar": current_user.foto_perfil,
+        "avatar_url": build_public_media_url(current_user.foto_perfil, "perfiles"),
         "posicion": position,
         "impacto_historico": impact,
         "puntos_disponibles": available,

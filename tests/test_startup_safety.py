@@ -69,7 +69,7 @@ class StartupSafetyTests(unittest.TestCase):
         caddy = (ROOT / "Caddyfile").read_text(encoding="utf-8")
         nginx = (ROOT / "nginx" / "api.conf").read_text(encoding="utf-8")
         proxy_params = (ROOT / "nginx" / "proxy_params").read_text(encoding="utf-8")
-        self.assertIn("reverse_proxy nginx_api:8081", caddy)
+        self.assertIn("reverse_proxy nginx_api:8080", caddy)
         self.assertIn("location /api/", nginx)
         self.assertIn("proxy_set_header X-Forwarded-Prefix /api", nginx)
         self.assertIn("proxy_set_header X-Forwarded-Proto $forwarded_proto", proxy_params)

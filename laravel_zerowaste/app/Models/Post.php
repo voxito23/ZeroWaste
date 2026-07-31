@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Media;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -32,6 +33,8 @@ class Post extends Model
         'created_at' => 'datetime',
     ];
 
+    protected $appends = ['image_url'];
+
     public function categoria()
     {
         return $this->belongsTo(Categoria::class, 'categoria_id');
@@ -45,5 +48,10 @@ class Post extends Model
     public function respuestas()
     {
         return $this->hasMany(Respuesta::class, 'post_id');
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return Media::url($this->imagen, 'foro');
     }
 }

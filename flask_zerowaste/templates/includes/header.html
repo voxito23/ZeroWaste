@@ -253,9 +253,9 @@
                         <span class="material-symbols-outlined text-gray-300 dark:text-[#3B6B4F] text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">person</span>
                         {% set avatar = session.get('foto_perfil') or session.get('usuario_foto') or 'default.png' %}
                         {% set avatar = (avatar.split('=')[0] ~ '=s400-c') if 'googleusercontent.com' in avatar else avatar %}
-                        <img alt="User Avatar" class="w-full h-full object-cover relative z-10 rounded-full border-2 border-white dark:border-forest-dark ring-2 ring-white/50" 
-                             src="{{ avatar if avatar.startswith('http') else '/static/img/perfiles/' + avatar }}" 
-                             onerror="this.style.display='none';">
+                        <img alt="User Avatar" class="w-full h-full object-cover relative z-10 rounded-full border-2 border-white dark:border-forest-dark ring-2 ring-white/50"
+                             src="{{ media_url(avatar, 'perfiles') or url_for('static', filename='img/perfiles/default.png') }}"
+                             onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/perfiles/default.png') }}';">
                     </div>
                 </button>
                 
@@ -298,11 +298,7 @@
     <div class="flex flex-col items-center py-6 px-5 border-b border-gray-200 dark:border-[#3B6B4F]">
         {% set avatar = session.get('foto_perfil', session.get('usuario_foto', 'default.png')) %}
         {% set avatar = (avatar.split('=')[0] ~ '=s400-c') if 'googleusercontent.com' in avatar else avatar %}
-        {% if avatar and avatar.startswith('http') %}
-        <img alt="User Avatar" class="profile-pic-mobile shadow-md mb-3 rounded-full object-cover" src="{{ avatar }}" onerror="this.src='/static/img/perfiles/default.png'"/>
-        {% else %}
-        <img alt="User Avatar" class="profile-pic-mobile shadow-md mb-3 rounded-full object-cover" src="/static/img/perfiles/{{ avatar }}" onerror="this.src='/static/img/perfiles/default.png'"/>
-        {% endif %}
+        <img alt="User Avatar" class="profile-pic-mobile shadow-md mb-3 rounded-full object-cover" src="{{ media_url(avatar, 'perfiles') or url_for('static', filename='img/perfiles/default.png') }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/perfiles/default.png') }}';"/>
         <span class="font-bold text-lg text-secondary dark:text-white">{{ session.get('nombre', 'Usuario') }}</span>
         
         <!-- Modo oscuro toggle dentro del sidebar -->

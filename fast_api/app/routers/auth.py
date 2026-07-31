@@ -3,8 +3,6 @@ Router de autenticación — login y registro con JWT.
 Incluye rate limiting y validación estricta de inputs.
 """
 
-import os
-import uuid
 from fastapi import APIRouter, Depends, HTTPException, status, File, UploadFile, Form, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -17,6 +15,13 @@ from app.models.domain_models import Usuario
 from app.models.schemas import Token, UsuarioResponse, MessageResponse
 from app.security.jwt_auth import verify_password, hash_password, create_access_token
 from app.security.login_throttle import INVALID_MESSAGE, get_client_ip, get_login_throttle
+from app.services.media import (
+    MAX_IMAGE_BYTES,
+    MediaValidationError,
+    build_public_media_url,
+    remove_media_file,
+    save_media_image,
+)
 from pydantic import BaseModel
 
 class MobileLogin(BaseModel):
@@ -27,13 +32,6 @@ class MobileRegister(BaseModel):
     nombre: str
     email: str
     password: str
-
-# Constantes de seguridad
-ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-MAX_UPLOAD_SIZE = 250 * 1024 * 1024  # 250MB
-
-UPLOAD_DIR = "static/img/perfiles"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
@@ -114,6 +112,7 @@ def mobile_login(
             "rol": usuario.rol or ("admin" if usuario.is_admin else "usuario"),
             "is_admin": usuario.is_admin,
             "foto_perfil": usuario.foto_perfil,
+            "avatar_url": build_public_media_url(usuario.foto_perfil, "perfiles"),
             "profile_completed": usuario.profile_completed
         }
     }
@@ -156,38 +155,14 @@ def registro(
             detail="La contraseña debe tener al menos 6 caracteres.",
         )
 
-    # B) Guardado de Imagen en la Nueva Ruta
-    # Validar extensión de archivo
-    extension = foto_perfil.filename.rsplit(".", 1)[-1].lower() if (foto_perfil.filename and "." in foto_perfil.filename) else ""
-    if extension not in ALLOWED_IMAGE_EXTENSIONS:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Formato de imagen no permitido. Usa: {', '.join(ALLOWED_IMAGE_EXTENSIONS)}",
-        )
-
-    # Validar tamaño de archivo
-    contents = foto_perfil.file.read()
-    if len(contents) > MAX_UPLOAD_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="La imagen no debe superar 250MB.",
-        )
-    foto_perfil.file.seek(0)
-
-    nombre_archivo_unico = f"{uuid.uuid4().hex}.{extension}"
-    ruta_destino = f"{UPLOAD_DIR}/{nombre_archivo_unico}"
-
-    # Asegurar que el directorio padre exista antes de escribir el archivo
-    os.makedirs(os.path.dirname(ruta_destino), exist_ok=True)
-
+    contents = foto_perfil.file.read(MAX_IMAGE_BYTES + 1)
     try:
-        with open(ruta_destino, "wb") as buffer:
-            buffer.write(foto_perfil.file.read())
-    except Exception:
+        nombre_archivo_unico = save_media_image(contents, "perfiles")
+    except MediaValidationError as exc:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Ocurrió un error al guardar la imagen de perfil en el servidor."
-        )
+            status_code=exc.status_code,
+            detail=str(exc),
+        ) from exc
 
     # Mapeo explícito de la variable "nombre" junto con el resto de los campos
     nuevo_usuario = Usuario(
@@ -197,10 +172,14 @@ def registro(
         foto_perfil=nombre_archivo_unico,
     )
     
-    db.add(nuevo_usuario)
-    db.commit()
-    
-    db.refresh(nuevo_usuario)
+    try:
+        db.add(nuevo_usuario)
+        db.commit()
+        db.refresh(nuevo_usuario)
+    except Exception:
+        db.rollback()
+        remove_media_file(nombre_archivo_unico, "perfiles")
+        raise
 
     return nuevo_usuario
 

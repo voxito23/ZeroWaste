@@ -55,7 +55,7 @@
                 const el = document.createElement('div');
                 el.innerHTML = '<div style="background:#064E3B; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:3px solid #00E096; cursor:pointer;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#00E096"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/></svg></div>';
 
-                let imgHtml = loc.imagen ? `<img src="https://zerowaste-qro.com/static/img/${loc.imagen}" class="w-full h-32 object-cover rounded-xl mb-3 shadow-md">` : '';
+                let imgHtml = loc.image_url ? `<img src="${loc.image_url}" class="w-full h-32 object-cover rounded-xl mb-3 shadow-md" onerror="this.style.display='none'">` : '';
                 
                 const popup = new mapboxgl.Popup({ offset: 25, maxWidth: '220px' })
                     .setHTML(`
@@ -134,8 +134,8 @@
                 <div class="flex gap-3">
                     {{-- Imagen --}}
                     <div class="shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-emerald-900/30 border border-slate-200/60 dark:border-emerald-800/50">
-                        @if($loc->imagen)
-                        <img src="https://zerowaste-qro.com/static/img/{{ $loc->imagen }}" alt="{{ $loc->nombre }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                        @if($loc->image_url)
+                        <img src="{{ $loc->image_url }}" alt="{{ $loc->nombre }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" onerror="this.style.display='none'">
                         @else
                         <div class="w-full h-full flex items-center justify-center text-emerald-400/50">
                             <span class="material-symbols-outlined text-[24px]">image_not_supported</span>

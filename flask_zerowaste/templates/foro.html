@@ -187,7 +187,7 @@
                 <div class="text-gray-800 dark:text-gray-300 text-lg mb-6 line-clamp-2 contenido-post">{{ post.contenido | safe }}</div>
                 <div class="flex items-center gap-4">
                     <div class="flex items-center gap-3">
-                        <img alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" src="{{ post.autor_rel.foto_perfil if 'http' in post.autor_rel.foto_perfil|string else url_for('static', filename='img/perfiles/' ~ post.autor_rel.foto_perfil) if post.autor_rel.foto_perfil else url_for('static', filename='img/default.png') }}"/>
+                        <img alt="User Avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" src="{{ media_url(post.autor_rel.foto_perfil, 'perfiles') or url_for('static', filename='img/perfiles/default.png') }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/perfiles/default.png') }}';"/>
                         <span class="text-sm font-bold text-secondary dark:text-emerald-100">{{ post.autor_rel.nombre }}</span>
                     </div>
                     <div class="w-1 h-1 rounded-full bg-gray-300"></div>

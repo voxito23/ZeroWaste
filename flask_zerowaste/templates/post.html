@@ -132,7 +132,7 @@
         <article class="relative z-10 bg-white dark:bg-[#022018] w-full h-full rounded-[1.85rem] p-8 md:p-10 flex flex-col">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div class="flex items-center gap-4">
-                    <img alt="{{ post.autor_rel.nombre }}" class="w-14 h-14 rounded-full border-2 border-emerald-50 object-cover shadow-sm" src="{{ post.autor_rel.foto_perfil if 'http' in post.autor_rel.foto_perfil|string else url_for('static', filename='img/perfiles/' ~ post.autor_rel.foto_perfil) if post.autor_rel.foto_perfil else url_for('static', filename='img/perfiles/perfil_default.png') }}"/>
+                    <img alt="{{ post.autor_rel.nombre }}" class="w-14 h-14 rounded-full border-2 border-emerald-50 object-cover shadow-sm" src="{{ media_url(post.autor_rel.foto_perfil, 'perfiles') or url_for('static', filename='img/perfiles/default.png') }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/perfiles/default.png') }}';"/>
                     <div>
                         <h3 class="font-bold text-secondary dark:text-white text-lg leading-tight">{{ post.autor_rel.nombre }}</h3>
                         <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -153,9 +153,10 @@
             <div class="prose prose-lg prose-emerald dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 mb-8 no-hyphens contenido-post" style="white-space: pre-wrap;">
             {{ post.contenido | safe }}
             </div>
-{% if post.imagen %}
+{% set post_image_url = media_url(post.imagen, 'foro') %}
+{% if post_image_url %}
 <div class="rounded-2xl overflow-hidden mb-8 shadow-md border border-gray-100 dark:border-white/10">
-    <img alt="Post Imagen" class="w-full h-auto max-h-[500px] object-cover hover:scale-105 transition-transform duration-700" src="/static/img/posts/{{ post.imagen }}"/>
+    <img alt="Imagen de la publicación" class="w-full aspect-video max-h-[500px] object-cover hover:scale-105 transition-transform duration-700" src="{{ post_image_url }}" onerror="this.closest('div').style.display='none';"/>
 </div>
 {% endif %}
 <div class="flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-gray-100 dark:border-white/10">
@@ -181,7 +182,7 @@
 {% for r in respuestas %}
 <div class="bg-white dark:bg-white/5 rounded-2xl p-6 shadow-sm border border-emerald-50 dark:border-white/5">
 <div class="flex gap-4 text-left">
-<img alt="{{ r.autor_rel.nombre }}" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" src="{{ r.autor_rel.foto_perfil if 'http' in r.autor_rel.foto_perfil|string else url_for('static', filename='img/perfiles/' ~ r.autor_rel.foto_perfil) if r.autor_rel.foto_perfil else url_for('static', filename='img/default.png') }}"/>
+<img alt="{{ r.autor_rel.nombre }}" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" src="{{ media_url(r.autor_rel.foto_perfil, 'perfiles') or url_for('static', filename='img/perfiles/default.png') }}" onerror="this.onerror=null;this.src='{{ url_for('static', filename='img/perfiles/default.png') }}';"/>
 <div class="flex-grow">
 <div class="flex justify-between items-start">
 <h4 class="font-bold text-secondary dark:text-emerald-100">{{ r.autor_rel.nombre }}</h4>

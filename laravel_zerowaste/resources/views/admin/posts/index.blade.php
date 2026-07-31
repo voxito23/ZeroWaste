@@ -16,11 +16,6 @@
         return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700';
     }
 
-    function getImageUrl($imagePath) {
-        if (!$imagePath) return null;
-        if (str_starts_with($imagePath, 'http')) return $imagePath;
-        return '/static/img/posts/' . $imagePath; // Asumiendo ruta local
-    }
 @endphp
 
 @section('content')
@@ -54,7 +49,7 @@
                             <div class="flex items-center gap-3">
                                 @if($post->imagen)
                                     <div class="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-800 flex-shrink-0 overflow-hidden border border-gray-200 dark:border-gray-700">
-                                        <img src="{{ getImageUrl($post->imagen) }}" alt="Img" class="w-full h-full object-cover">
+                                        <img src="{{ $post->image_url }}" alt="Img" class="w-full h-full object-cover" onerror="this.style.display='none'">
                                     </div>
                                 @else
                                     <div class="w-12 h-12 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center flex-shrink-0 border border-emerald-100 dark:border-emerald-800/30 text-emerald-500">
@@ -70,7 +65,7 @@
                         <td>
                             <div class="flex items-center gap-2">
                                 <div class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex-shrink-0 border border-gray-300 dark:border-gray-600">
-                                    <img src="{{ $post->autor && $post->autor->foto_perfil ? '/static/img/perfiles/' . $post->autor->foto_perfil : '/static/img/perfiles/default.png' }}" 
+                                    <img src="{{ $post->autor?->avatar_url ?: '/static/img/perfiles/default.png' }}"
                                          alt="Avatar" class="w-full h-full object-cover" onerror="this.src='/static/img/perfiles/default.png'">
                                 </div>
                                 <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $post->autor->nombre ?? 'Usuario Eliminado' }}</span>
@@ -100,8 +95,8 @@
                                     data-category="{{ $catName }}"
                                     data-catclass="{{ $catClass }}"
                                     data-date="{{ $post->created_at ? $post->created_at->format('d/m/Y H:i') : '' }}"
-                                    data-image="{{ getImageUrl($post->imagen) }}"
-                                    data-author-image="{{ $post->autor && $post->autor->foto_perfil ? '/static/img/perfiles/' . $post->autor->foto_perfil : '/static/img/perfiles/default.png' }}"
+                                    data-image="{{ $post->image_url }}"
+                                    data-author-image="{{ $post->autor?->avatar_url ?: '/static/img/perfiles/default.png' }}"
                                     data-comments="{{ base64_encode(json_encode($post->respuestas)) }}"
                                     onclick="viewPostDetail(this)"
                                     class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors" title="Ver Detalles">
@@ -190,7 +185,7 @@ function viewPostDetail(btn) {
         
         comments.forEach(c => {
             const cAuthor = c.autor ? c.autor.nombre : 'Usuario';
-            const cAuthorImg = c.autor && c.autor.foto_perfil ? '/static/img/perfiles/' + c.autor.foto_perfil : '/static/img/perfiles/default.png';
+            const cAuthorImg = c.autor && c.autor.avatar_url ? c.autor.avatar_url : '/static/img/perfiles/default.png';
             const cDate = new Date(c.created_at).toLocaleString('es-MX', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'});
             
             commentsHtml += `

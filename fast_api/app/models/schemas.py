@@ -6,7 +6,9 @@ Cubre TODAS las entidades del proyecto ZeroWaste.
 from datetime import datetime
 from typing import Optional, List
 from decimal import Decimal
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field, model_validator
+
+from app.services.media import build_public_media_url
 
 
 # Esquemas de token JWT
@@ -83,6 +85,7 @@ class UsuarioUpdate(BaseModel):
 class UsuarioResponse(UsuarioBase):
     id: int
     foto_perfil: Optional[str] = None
+    avatar_url: Optional[str] = None
     titulo_perfil: Optional[str] = None
     biografia: Optional[str] = None
     ubicacion: Optional[str] = None
@@ -91,6 +94,11 @@ class UsuarioResponse(UsuarioBase):
     edad: Optional[int] = None
     licencia_conducir: Optional[str] = None
     created_at: Optional[datetime] = None
+
+    @model_validator(mode="after")
+    def populate_avatar_url(self):
+        self.avatar_url = build_public_media_url(self.foto_perfil, "perfiles")
+        return self
 
     model_config = {
         "from_attributes": True,
@@ -196,7 +204,13 @@ class PostResponse(BaseModel):
     categoria_id: int
     autor_id: int
     imagen: Optional[str] = None
+    image_url: Optional[str] = None
     created_at: Optional[datetime] = None
+
+    @model_validator(mode="after")
+    def populate_image_url(self):
+        self.image_url = build_public_media_url(self.imagen, "foro")
+        return self
 
     model_config = {
         "from_attributes": True,
@@ -219,9 +233,15 @@ class PostResponse(BaseModel):
 class PostDetailResponse(PostResponse):
     autor_nombre: Optional[str] = None
     autor_foto: Optional[str] = None
+    avatar_url: Optional[str] = None
     categoria_nombre: Optional[str] = None
     total_respuestas: int = 0
     total_likes: int = 0
+
+    @model_validator(mode="after")
+    def populate_author_avatar_url(self):
+        self.avatar_url = build_public_media_url(self.autor_foto, "perfiles")
+        return self
 
     model_config = {
         "from_attributes": True,
@@ -300,10 +320,11 @@ class LikeResponse(BaseModel):
 class PuntoMapaCreate(BaseModel):
     nombre: str
     direccion: str
-    latitud: Decimal
-    longitud: Decimal
+    latitud: Decimal = Field(ge=-90, le=90, allow_inf_nan=False)
+    longitud: Decimal = Field(ge=-180, le=180, allow_inf_nan=False)
     tipo: str
     materiales: Optional[str] = None
+    imagen: Optional[str] = None
 
     model_config = {
         "json_schema_extra": {
@@ -324,10 +345,11 @@ class PuntoMapaCreate(BaseModel):
 class PuntoMapaUpdate(BaseModel):
     nombre: Optional[str] = None
     direccion: Optional[str] = None
-    latitud: Optional[Decimal] = None
-    longitud: Optional[Decimal] = None
+    latitud: Optional[Decimal] = Field(default=None, ge=-90, le=90, allow_inf_nan=False)
+    longitud: Optional[Decimal] = Field(default=None, ge=-180, le=180, allow_inf_nan=False)
     tipo: Optional[str] = None
     materiales: Optional[str] = None
+    imagen: Optional[str] = None
 
     model_config = {
         "json_schema_extra": {
@@ -354,8 +376,14 @@ class PuntoMapaResponse(BaseModel):
     tipo: str
     materiales: Optional[str] = None
     imagen: Optional[str] = "default_punto.png"
+    image_url: Optional[str] = None
     promedio: float = 0.0
     total_reviews: int = 0
+
+    @model_validator(mode="after")
+    def populate_image_url(self):
+        self.image_url = build_public_media_url(self.imagen, "puntos")
+        return self
 
     model_config = {
         "from_attributes": True,
@@ -477,8 +505,14 @@ class EventoResponse(BaseModel):
     descripcion: Optional[str] = ""
     tipo_etiqueta: Optional[str] = None
     imagen_url: Optional[str] = None
+    cover_url: Optional[str] = None
     link_evento: Optional[str] = None
     activa: Optional[bool] = True
+
+    @model_validator(mode="after")
+    def populate_cover_url(self):
+        self.cover_url = build_public_media_url(self.imagen_url, "eventos")
+        return self
 
     model_config = {
         "from_attributes": True,
@@ -567,10 +601,16 @@ class CampaignResponse(BaseModel):
     descripcion: Optional[str] = ""
     tipo_etiqueta: Optional[str] = None
     imagen_url: Optional[str] = None
+    cover_url: Optional[str] = None
     link_evento: Optional[str] = None
     recompensa_puntos: Optional[int] = 0
     activa: Optional[bool] = True
     created_at: Optional[datetime] = None
+
+    @model_validator(mode="after")
+    def populate_cover_url(self):
+        self.cover_url = build_public_media_url(self.imagen_url, "campanas")
+        return self
 
     model_config = {
         "from_attributes": True,
