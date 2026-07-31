@@ -44,6 +44,7 @@ scrape_configs:
           - https://www.zerowaste-qro.com/api/ready
           - https://www.zerowaste-qro.com/api/mapa/puntos
           - https://www.zerowaste-qro.com/zw-interno/login
+          - https://www.zerowaste-qro.com/zw-interno/2/login
           - https://www.zerowaste-qro.com/grafana/login
     relabel_configs:
       - source_labels: [__address__]
