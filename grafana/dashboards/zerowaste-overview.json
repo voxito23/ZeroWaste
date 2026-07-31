@@ -1,0 +1,31 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "graphTooltip": 1,
+  "panels": [
+    {"id":1,"type":"stat","title":"Services Up","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"sum(up)","refId":"A"}],"gridPos":{"h":4,"w":4,"x":0,"y":0}},
+    {"id":2,"type":"stat","title":"Supabase readiness","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"zerowaste_readiness","refId":"A"}],"gridPos":{"h":4,"w":4,"x":4,"y":0}},
+    {"id":3,"type":"stat","title":"Login failures (1h)","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"increase(zerowaste_login_failures_total[1h])","refId":"A"}],"gridPos":{"h":4,"w":4,"x":8,"y":0}},
+    {"id":4,"type":"stat","title":"Login lockouts (1h)","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"increase(zerowaste_login_lockouts_total[1h])","refId":"A"}],"gridPos":{"h":4,"w":4,"x":12,"y":0}},
+    {"id":5,"type":"stat","title":"Nginx active connections","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"nginx_connections_active","refId":"A"}],"gridPos":{"h":4,"w":4,"x":16,"y":0}},
+    {"id":6,"type":"stat","title":"TLS days remaining","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"min((probe_ssl_earliest_cert_expiry-time())/86400)","refId":"A"}],"gridPos":{"h":4,"w":4,"x":20,"y":0}},
+    {"id":7,"type":"timeseries","title":"Requests per second","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"sum by (method) (rate(http_requests_total[5m]))","legendFormat":"{{method}}","refId":"A"}],"gridPos":{"h":8,"w":8,"x":0,"y":4}},
+    {"id":8,"type":"timeseries","title":"HTTP 4xx / 5xx","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"sum by (status) (rate(http_requests_total{status=~\"4..|5..\"}[5m]))","legendFormat":"{{status}}","refId":"A"}],"gridPos":{"h":8,"w":8,"x":8,"y":4}},
+    {"id":9,"type":"timeseries","title":"Latency p50 / p95 / p99","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"histogram_quantile(0.50,sum by(le)(rate(http_request_duration_seconds_bucket[5m])))","legendFormat":"p50","refId":"A"},{"expr":"histogram_quantile(0.95,sum by(le)(rate(http_request_duration_seconds_bucket[5m])))","legendFormat":"p95","refId":"B"},{"expr":"histogram_quantile(0.99,sum by(le)(rate(http_request_duration_seconds_bucket[5m])))","legendFormat":"p99","refId":"C"}],"gridPos":{"h":8,"w":8,"x":16,"y":4}},
+    {"id":10,"type":"timeseries","title":"Host CPU / RAM %","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"100-(avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))*100)","legendFormat":"CPU","refId":"A"},{"expr":"100*(1-node_memory_MemAvailable_bytes/node_memory_MemTotal_bytes)","legendFormat":"RAM","refId":"B"}],"gridPos":{"h":8,"w":8,"x":0,"y":12}},
+    {"id":11,"type":"timeseries","title":"Disk available %","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"100*node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay\"}/node_filesystem_size_bytes{fstype!~\"tmpfs|overlay\"}","legendFormat":"{{mountpoint}}","refId":"A"}],"gridPos":{"h":8,"w":8,"x":8,"y":12}},
+    {"id":12,"type":"timeseries","title":"Container CPU / Memory","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"sum by(name)(rate(container_cpu_usage_seconds_total{name!=\"\"}[5m]))","legendFormat":"CPU {{name}}","refId":"A"},{"expr":"sum by(name)(container_memory_working_set_bytes{name!=\"\"})","legendFormat":"RAM {{name}}","refId":"B"}],"gridPos":{"h":8,"w":8,"x":16,"y":12}},
+    {"id":13,"type":"table","title":"Endpoint availability and latency","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"probe_success","format":"table","instant":true,"refId":"A"},{"expr":"probe_duration_seconds","format":"table","instant":true,"refId":"B"}],"gridPos":{"h":8,"w":12,"x":0,"y":20}},
+    {"id":14,"type":"timeseries","title":"Container network traffic","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"sum by(name)(rate(container_network_receive_bytes_total{name!=\"\"}[5m]))","legendFormat":"RX {{name}}","refId":"A"},{"expr":"sum by(name)(rate(container_network_transmit_bytes_total{name!=\"\"}[5m]))","legendFormat":"TX {{name}}","refId":"B"}],"gridPos":{"h":8,"w":12,"x":12,"y":20}},
+    {"id":15,"type":"table","title":"Active alerts","datasource":{"type":"prometheus","uid":"prometheus"},"targets":[{"expr":"ALERTS{alertstate=\"firing\"}","format":"table","instant":true,"refId":"A"}],"gridPos":{"h":7,"w":24,"x":0,"y":28}}
+  ],
+  "refresh":"30s",
+  "schemaVersion":39,
+  "tags":["zerowaste","production"],
+  "templating":{"list":[]},
+  "time":{"from":"now-6h","to":"now"},
+  "timezone":"browser",
+  "title":"ZeroWaste Overview",
+  "uid":"zerowaste-overview",
+  "version":1
+}

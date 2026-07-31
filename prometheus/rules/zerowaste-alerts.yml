@@ -1,0 +1,62 @@
+groups:
+  - name: zerowaste
+    rules:
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "ZeroWaste service is down", description: "{{ $labels.job }} / {{ $labels.instance }} has been unreachable for 2 minutes."}
+
+      - alert: PublicEndpointDown
+        expr: probe_success == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "Public ZeroWaste endpoint is down", description: "{{ $labels.instance }} has failed HTTPS probes for 2 minutes."}
+
+      - alert: ReadinessFailed
+        expr: zerowaste_readiness == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "FastAPI cannot reach its required dependency"}
+
+      - alert: HighHttp5xxRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 1) > 0.05
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "More than 5% HTTP 5xx responses"}
+
+      - alert: HighP95Latency
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m]))) > 2
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "FastAPI p95 latency exceeds 2 seconds"}
+
+      - alert: HostMemoryHigh
+        expr: 100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 90
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Host memory usage is above 90%"}
+
+      - alert: HostDiskLow
+        expr: 100 * node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} < 15
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Host filesystem has less than 15% available"}
+
+      - alert: ContainerRestarting
+        expr: changes(container_start_time_seconds{name!=""}[10m]) > 2
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: "Container is restarting repeatedly"}
+
+      - alert: TLSCertificateExpiring
+        expr: (probe_ssl_earliest_cert_expiry - time()) < 14 * 24 * 3600
+        for: 10m
+        labels: {severity: warning}
+        annotations: {summary: "TLS certificate expires in less than 14 days"}
+
+      - alert: ElevatedLoginLockouts
+        expr: increase(zerowaste_login_lockouts_total[10m]) > 10
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Elevated number of login lockouts"}
