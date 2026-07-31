@@ -8,6 +8,8 @@ the same versioned source directory:
 - `nginx_api` detects connection and gateway failures and sends a safe retry to
   the backup.
 - `/zw-interno/2/` routes explicitly to `admin2` for validation and diagnostics.
+  Its base URL is normalized by Nginx to the HTTPS secondary login route so
+  Apache cannot emit a downgrade redirect.
 
 Both containers use the external PostgreSQL database, Redis cache/rate-limit
 state, the same application environment, and the shared profile volume. No
