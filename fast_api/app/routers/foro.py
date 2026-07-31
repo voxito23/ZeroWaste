@@ -280,8 +280,8 @@ def create_respuesta(
 @router.post("/posts/{post_id}/like", summary="Dar/quitar like a un post")
 def toggle_like(
     post_id: int,
-    usuario_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
 ):
     """
     Toggle de like: si ya existe lo quita, si no existe lo agrega.
@@ -291,6 +291,7 @@ def toggle_like(
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
 
+    usuario_id = current_user.id
     like = db.query(LikeForo).filter_by(post_id=post_id, usuario_id=usuario_id).first()
 
     if like:

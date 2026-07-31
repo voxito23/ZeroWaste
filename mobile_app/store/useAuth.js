@@ -12,6 +12,10 @@ export const useAuth = create((set) => ({
     await SecureStore.setItemAsync('user', JSON.stringify(user));
     set({ user, token });
   },
+  updateUser: async (user) => {
+    await SecureStore.setItemAsync('user', JSON.stringify(user));
+    set({ user });
+  },
   logout: async () => {
     await SecureStore.deleteItemAsync('token');
     await SecureStore.deleteItemAsync('user');

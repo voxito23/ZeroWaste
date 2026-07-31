@@ -30,10 +30,6 @@ def get_allowed_api_keys() -> List[str]:
     return [k.strip() for k in raw_keys.split(",") if k.strip()]
 
 
-# Validate configuration during process startup, without logging any key.
-get_allowed_api_keys()
-
-
 def verify_api_key(api_key: Optional[str]) -> bool:
     """Verifica si la API-Key proporcionada es válida."""
     if not api_key:

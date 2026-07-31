@@ -37,12 +37,7 @@
           "locationAlwaysAndWhenInUsePermission": "ZeroWaste necesita acceder a tu ubicación para mostrarte los centros de acopio cercanos."
         }
       ],
-      [
-        "@rnmapbox/maps",
-        {
-          "RNMAPBOX_MAPS_DOWNLOAD_TOKEN": "sk.YOUR_MAPBOX_SECRET_TOKEN_HERE"
-        }
-      ]
+      "@rnmapbox/maps"
     ],
     "extra": {
       "eas": {

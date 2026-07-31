@@ -18,7 +18,6 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.routers import auth, usuarios, foro, mapa, eventos, analisis, formularios, docs_auth, campanas, recoleccion, firewall_monitor
-from app.security.api_key_auth import ApiKeyMiddleware
 from app.security.firewall import FirewallMiddleware
 from app.data.database import engine
 
@@ -59,7 +58,6 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # ty
 # ==========================================================================
 
 # 1. Middleware de API-Key (identificación de sistemas permitidos)
-app.add_middleware(ApiKeyMiddleware)
 
 # 2. Middleware de Firewall WAF (rate limiting, detección de ataques, bloqueo de IPs)
 app.add_middleware(FirewallMiddleware)
@@ -116,24 +114,6 @@ def custom_openapi():
             {"url": "/api", "description": "Servidor de Producción ZeroWaste (/api)"}
         ],
     )
-    # Inyectar el esquema de seguridad de X-API-Key
-    if "components" not in openapi_schema:
-        openapi_schema["components"] = {}
-    if "securitySchemes" not in openapi_schema["components"]:
-        openapi_schema["components"]["securitySchemes"] = {}
-        
-    openapi_schema["components"]["securitySchemes"]["ApiKeyAuth"] = {
-        "type": "apiKey",
-        "in": "header",
-        "name": "X-API-Key",
-        "description": "API-Key de sistema obligatoria para todas las peticiones protegidas."
-    }
-    
-    # Añadir a los requerimientos globales de seguridad
-    if "security" not in openapi_schema:
-        openapi_schema["security"] = []
-    openapi_schema["security"].append({"ApiKeyAuth": []})
-    
     # Asegurar que el servidor principal en Swagger UI siempre sea /api
     openapi_schema["servers"] = [
         {"url": "/api", "description": "Servidor de Producción ZeroWaste (/api)"}

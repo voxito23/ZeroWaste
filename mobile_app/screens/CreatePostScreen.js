@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, ActivityIndicator, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -14,20 +14,31 @@ export default function CreatePostScreen() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categoryId, setCategoryId] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [error, setError] = useState('');
+
+  React.useEffect(() => {
+    api.get('/foro/categorias')
+      .then(({ data }) => setCategories(Array.isArray(data) ? data : []))
+      .catch((requestError) => setError(requestError.userMessage || 'No se pudieron cargar las categorías.'));
+  }, []);
 
   const handleSubmit = async () => {
-    if (!title.trim() || !content.trim()) return;
+    if (!title.trim() || !content.trim() || !categoryId) {
+      setError('Completa título, contenido y categoría.');
+      return;
+    }
     setIsSubmitting(true);
     try {
-      // Por ahora mandamos categoria 1 (Todo) por defecto o null
       await api.post('/foro/posts', {
         titulo: title,
         contenido: content,
-        categoria_id: 1, // Require category id in backend usually
+        categoria_id: categoryId,
       });
       navigation.goBack();
     } catch (e) {
-      console.log('Error creando post:', e);
+      setError(e.userMessage || 'No se pudo crear la publicación.');
     } finally {
       setIsSubmitting(false);
     }
@@ -59,6 +70,14 @@ export default function CreatePostScreen() {
       </View>
 
       <View className="px-5 py-6">
+        {error ? <Text className="mb-4 text-red-700 font-bold">{error}</Text> : null}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-5">
+          {categories.map((category) => (
+            <TouchableOpacity key={category.id} onPress={() => setCategoryId(category.id)} className={`mr-2 rounded-full px-4 py-2 ${categoryId === category.id ? 'bg-emerald-700' : 'bg-gray-100'}`}>
+              <Text className={categoryId === category.id ? 'text-white font-bold' : 'text-gray-700 font-bold'}>{category.nombre}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
         <TextInput
           placeholder="Título de tu publicación..."
           placeholderTextColor="#9CA3AF"

@@ -44,7 +44,7 @@ export default function LoginScreen({ navigation }) {
         Alert.alert('Verificación requerida', 'Tu cuenta requiere verificación previa por el administrador.');
         return;
       }
-      const msg = error.response?.data?.detail || 'Error de conexión. Verifica tu internet o el estado del servidor.';
+      const msg = error.userMessage || error.response?.data?.detail || 'Error de conexión. Verifica tu internet o el estado del servidor.';
       Alert.alert('Error', msg);
     } finally {
       setLoading(false);

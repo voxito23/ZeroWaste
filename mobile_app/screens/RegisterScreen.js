@@ -79,7 +79,7 @@ export default function RegisterScreen({ navigation }) {
         Alert.alert('Error', response.data.error || 'Error en el registro');
       }
     } catch (error) {
-      const msg = error.response?.data?.detail || 'Error de conexión. Verifica tu internet o el estado del servidor.';
+      const msg = error.userMessage || error.response?.data?.detail || 'Error de conexión. Verifica tu internet o el estado del servidor.';
       Alert.alert('Error', msg);
     } finally {
       setLoading(false);

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, ScrollView, Modal, TextInput, Alert, TouchableOpacity, KeyboardAvoidingView, Platform, Dimensions } from 'react-native';
+import { View, StyleSheet, ActivityIndicator, Text, ScrollView, Modal, TextInput, Alert, TouchableOpacity, KeyboardAvoidingView, Platform, Dimensions, Linking } from 'react-native';
 import Mapbox from '@rnmapbox/maps';
 import { api } from '../api/axios';
 import CustomButton from '../components/ui/CustomButton';
@@ -10,8 +10,17 @@ import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../store/useAuth';
 
-const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN || 'pk.YOUR_MAPBOX_TOKEN_HERE';
-Mapbox.setAccessToken(MAPBOX_TOKEN);
+const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN?.trim() || '';
+const HAS_VALID_MAPBOX_TOKEN = MAPBOX_TOKEN.startsWith('pk.') && !MAPBOX_TOKEN.includes('YOUR_');
+if (HAS_VALID_MAPBOX_TOKEN) Mapbox.setAccessToken(MAPBOX_TOKEN);
+
+const normalizePoint = (point) => {
+  const latitude = Number(point?.latitud);
+  const longitude = Number(point?.longitud);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
+  return { ...point, latitud: latitude, longitud: longitude };
+};
 
 export default function MapScreen() {
   const navigation = useNavigation();
@@ -21,6 +30,10 @@ export default function MapScreen() {
   
   const [puntos, setPuntos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState(HAS_VALID_MAPBOX_TOKEN ? '' : 'El token público de Mapbox no está configurado correctamente.');
+  const [pointsError, setPointsError] = useState('');
+  const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   
   // Location and Navigation States
   const [userLocation, setUserLocation] = useState(null);
@@ -44,19 +57,27 @@ export default function MapScreen() {
   const requestLocationPermission = async () => {
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permiso denegado', 'No se puede trazar rutas sin tu ubicación.');
+      setLocationPermissionDenied(true);
       return;
     }
+    setLocationPermissionDenied(false);
     const loc = await Location.getCurrentPositionAsync({});
     setUserLocation([loc.coords.longitude, loc.coords.latitude]);
   };
 
   const fetchPuntos = async () => {
+    setLoading(true);
+    setPointsError('');
     try {
       const response = await api.get('/mapa/puntos');
-      setPuntos(response.data);
+      const seen = new Set();
+      const validPoints = (Array.isArray(response.data) ? response.data : [])
+        .map(normalizePoint)
+        .filter((point) => point && !seen.has(String(point.id)) && seen.add(String(point.id)));
+      setPuntos(validPoints);
     } catch (e) {
-      console.error('Error fetching map points', e);
+      setPuntos([]);
+      setPointsError(e.userMessage || 'No se pudieron cargar los puntos de reciclaje.');
     } finally {
       setLoading(false);
     }
@@ -70,11 +91,12 @@ export default function MapScreen() {
     
     setLoading(true);
     try {
-      const destCoords = [parseFloat(punto.longitud), parseFloat(punto.latitud)];
+      const destCoords = [punto.longitud, punto.latitud];
       // Using Mapbox driving-traffic profile for real-time traffic aware navigation
       const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${userLocation[0]},${userLocation[1]};${destCoords[0]},${destCoords[1]}?geometries=geojson&annotations=congestion,duration,distance&access_token=${MAPBOX_TOKEN}`;
       
       const response = await fetch(url);
+      if (!response.ok) throw new Error(`Mapbox Directions HTTP ${response.status}`);
       const data = await response.json();
       
       if (data.routes && data.routes.length > 0) {
@@ -131,7 +153,16 @@ export default function MapScreen() {
     }
     setSubmitting(true);
     try {
-      await api.post('/recolecciones', { direccion, materiales });
+      if (!userLocation) {
+        Alert.alert('Ubicación requerida', 'Activa la ubicación para enviar las coordenadas de la solicitud.');
+        return;
+      }
+      await api.post('/recolecciones', {
+        direccion,
+        materiales,
+        longitud: userLocation[0],
+        latitud: userLocation[1],
+      });
       Alert.alert('Éxito', 'Tu solicitud ha sido enviada. Un recolector la atenderá pronto.');
       setModalVisible(false);
       setDireccion('');
@@ -149,11 +180,19 @@ export default function MapScreen() {
   return (
     <View className="flex-1 bg-background relative">
       <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
-      <Mapbox.MapView 
+      {HAS_VALID_MAPBOX_TOKEN ? <Mapbox.MapView
         style={styles.map}
         styleURL={isNavigating ? Mapbox.StyleURL.TrafficDay : Mapbox.StyleURL.Street}
         logoEnabled={false}
         attributionEnabled={false}
+        onDidFinishLoadingMap={() => {
+          setMapLoaded(true);
+          setMapError('');
+        }}
+        onMapLoadingError={(event) => {
+          setMapLoaded(false);
+          setMapError(event?.message || 'Mapbox no pudo cargar el mapa.');
+        }}
       >
         <Mapbox.Camera
           ref={cameraRef}
@@ -168,11 +207,11 @@ export default function MapScreen() {
           animationDuration={2000}
         />
         
-        {puntos.filter(p => p.longitud && p.latitud && !isNaN(parseFloat(p.longitud)) && !isNaN(parseFloat(p.latitud))).map((p) => (
+        {puntos.map((p) => (
           <Mapbox.PointAnnotation
             key={p.id}
             id={`punto-${p.id}`}
-            coordinate={[parseFloat(p.longitud), parseFloat(p.latitud)]}
+            coordinate={[p.longitud, p.latitud]}
           >
             {/* Marcador idéntico a la imagen (hoja verde sobre círculo verde oscuro con borde verde neón) */}
             <View className="w-12 h-12 bg-[#064E3B] border-[3px] border-[#34D399] rounded-full items-center justify-center shadow-xl elevation-6">
@@ -194,7 +233,39 @@ export default function MapScreen() {
             />
           </Mapbox.ShapeSource>
         )}
-      </Mapbox.MapView>
+      </Mapbox.MapView> : <View style={styles.map} />}
+
+      {(!mapLoaded || mapError) && (
+        <View className="absolute inset-0 items-center justify-center bg-white px-8">
+          <Text className="text-lg font-black text-gray-900 text-center">{mapError || 'Cargando mapa…'}</Text>
+          {mapError ? (
+            <TouchableOpacity onPress={() => { setMapError(''); setMapLoaded(false); }} className="mt-4 rounded-xl bg-emerald-700 px-6 py-3">
+              <Text className="text-white font-black">Reintentar</Text>
+            </TouchableOpacity>
+          ) : <ActivityIndicator className="mt-4" color="#047857" />}
+        </View>
+      )}
+
+      {pointsError ? (
+        <View className="absolute left-5 right-5 top-24 rounded-2xl bg-red-50 border border-red-200 p-4 z-30">
+          <Text className="text-red-700 font-bold text-center">{pointsError}</Text>
+          <TouchableOpacity onPress={fetchPuntos} className="mt-2 self-center"><Text className="text-red-700 font-black">Reintentar</Text></TouchableOpacity>
+        </View>
+      ) : null}
+
+      {mapLoaded && !loading && !pointsError && puntos.length === 0 ? (
+        <View className="absolute left-5 right-5 top-24 rounded-2xl bg-white border border-gray-200 p-4 z-30">
+          <Text className="text-gray-700 font-bold text-center">No hay puntos de reciclaje disponibles.</Text>
+          <TouchableOpacity onPress={fetchPuntos} className="mt-2 self-center"><Text className="text-emerald-700 font-black">Actualizar</Text></TouchableOpacity>
+        </View>
+      ) : null}
+
+      {locationPermissionDenied ? (
+        <View className="absolute left-5 right-5 top-24 rounded-2xl bg-amber-50 border border-amber-200 p-4 z-30">
+          <Text className="text-amber-900 font-bold text-center">La ubicación está desactivada. El mapa funciona, pero no puede centrarte ni crear rutas.</Text>
+          <TouchableOpacity onPress={() => Linking.openSettings()} className="mt-2 self-center"><Text className="text-amber-900 font-black">Abrir Ajustes</Text></TouchableOpacity>
+        </View>
+      ) : null}
 
       {/* Barra superior normal con Safe Area Superior */}
       {!isNavigating && (

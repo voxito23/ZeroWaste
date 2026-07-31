@@ -17,7 +17,6 @@ import {
 } from 'lucide-react-native';
 import { api } from '../api/axios';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { supabase } from '../lib/supabase';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -34,12 +33,14 @@ export default function PostScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [replyText, setReplyText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (postId) fetchPostDetail();
   }, [postId]);
 
   const fetchPostDetail = async () => {
+    setError('');
     try {
       const response = await api.get(`/foro/posts/${postId}`);
       if (response.data) {
@@ -51,14 +52,17 @@ export default function PostScreen() {
         setRespuestas(respResponse.data);
       }
     } catch (e) {
-      console.log('Error cargando post desde FastAPI:', e);
+      setError(e.userMessage || 'No se pudo cargar la publicación.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const submitReply = async () => {
-    if (!replyText.trim()) return;
+    if (replyText.trim().length <= 10) {
+      setError('La respuesta debe tener más de 10 caracteres.');
+      return;
+    }
     setIsSubmitting(true);
     try {
       await api.post(`/foro/posts/${postId}/respuestas`, {
@@ -68,7 +72,7 @@ export default function PostScreen() {
       setReplyText('');
       fetchPostDetail(); // Refresh the list
     } catch (e) {
-      console.log('Error enviando respuesta a FastAPI:', e);
+      setError(e.userMessage || 'No se pudo enviar la respuesta.');
     } finally {
       setIsSubmitting(false);
     }
@@ -123,7 +127,8 @@ export default function PostScreen() {
   if (!post) {
     return (
       <View className="flex-1 bg-[#ECFDF5] items-center justify-center">
-        <Text className="text-[#064E3B] font-bold">Post no encontrado</Text>
+        <Text className="text-[#064E3B] font-bold text-center px-8">{error || 'Publicación no encontrada'}</Text>
+        {error ? <TouchableOpacity onPress={fetchPostDetail} className="mt-4 px-6 py-2 border border-[#059669] rounded-full"><Text className="text-[#059669] font-bold">Reintentar</Text></TouchableOpacity> : null}
         <TouchableOpacity onPress={() => navigation.goBack()} className="mt-4 px-6 py-2 bg-[#059669] rounded-full">
           <Text className="text-white font-bold">Volver</Text>
         </TouchableOpacity>
@@ -135,6 +140,7 @@ export default function PostScreen() {
     <SafeAreaView className="flex-1 bg-[#ECFDF5]" edges={['top']}>
       <StatusBar style="dark" />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        {error ? <View className="mx-5 mt-3 rounded-xl border border-red-200 bg-red-50 p-3"><Text className="text-red-700 font-bold text-center">{error}</Text></View> : null}
         {/* Background Gradient */}
         <LinearGradient colors={['#D1FAE5', '#ECFDF5']} locations={[0, 1]} className="absolute inset-0" />
 

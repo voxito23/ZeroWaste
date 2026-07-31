@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, Dimensions } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, Dimensions, RefreshControl } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import {
@@ -22,7 +22,6 @@ import {
 import { api } from '../api/axios';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../store/useAuth';
-import { supabase } from '../lib/supabase';
 import { ArrowRight } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -46,6 +45,8 @@ export default function ForumScreen() {
   const [posts, setPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [tabs, setTabs] = useState(['Todo']);
+  const [error, setError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchPosts();
@@ -53,6 +54,7 @@ export default function ForumScreen() {
 
   const fetchPosts = async () => {
     setIsLoading(true);
+    setError('');
     try {
       // 1. Obtener categorías desde FastAPI (o hardcoded temporalmente si no hay endpoint)
       // Como no hay endpoint directo de categorías en FastAPI sin auth, usamos api
@@ -62,7 +64,7 @@ export default function ForumScreen() {
           setTabs(['Todo', ...catRes.data.map((c) => c.nombre)]);
         }
       } catch (e) {
-        // Fallback silently
+        setError(e.userMessage || 'No se pudieron cargar las categorías.');
       }
 
       // 2. Cargar Posts desde FastAPI (arquitectura correcta: RN -> FastAPI -> Supabase)
@@ -73,8 +75,8 @@ export default function ForumScreen() {
         setPosts([]);
       }
     } catch (e) {
-      console.log('Fallo la conexión a FastAPI, mostrando lista vacía.', e);
       setPosts([]);
+      setError(e.userMessage || 'No se pudo cargar el foro.');
     } finally {
       setIsLoading(false);
     }
@@ -111,6 +113,14 @@ export default function ForumScreen() {
   return (
     <SafeAreaView className="flex-1 bg-[#ECFDF5]" edges={['top']}>
       <StatusBar style="dark" />
+      {error ? (
+        <View className="mx-5 mt-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+          <Text className="text-red-700 font-bold text-center">{error}</Text>
+          <TouchableOpacity onPress={fetchPosts} className="mt-3 self-center rounded-xl bg-red-600 px-5 py-2">
+            <Text className="text-white font-black">Reintentar</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
       <LinearGradient
         colors={['#D1FAE5', '#ECFDF5', '#ECFDF5']}
         locations={[0, 0.2, 1]}
@@ -122,6 +132,7 @@ export default function ForumScreen() {
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 130 }}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={fetchPosts} tintColor="#047857" />}
       >
 
         {/* ─── HEADER ──────────────────────────────── */}
@@ -131,6 +142,8 @@ export default function ForumScreen() {
             <TextInput
               placeholder="Buscar..."
               placeholderTextColor="#9CA3AF"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
               className="flex-1 ml-2 text-[15px] text-gray-800 font-medium h-full"
             />
           </View>
@@ -197,6 +210,10 @@ export default function ForumScreen() {
           ) : (
             posts
               .filter(post => activeTab === 'Todo' || activeTab === 'Todos' || post.categoria_nombre === activeTab)
+              .filter(post => {
+                const needle = searchQuery.trim().toLocaleLowerCase('es');
+                return !needle || `${post.titulo || ''} ${stripHtml(post.contenido)}`.toLocaleLowerCase('es').includes(needle);
+              })
               .map((post, index) => {
                 const catStyle = getCatStyle(post.categoria_nombre);
                 const isTrend = index === 0 && (activeTab === 'Todo' || activeTab === 'Todos');
