@@ -1,57 +1,38 @@
+{
+	servers {
+		trusted_proxies static private_ranges
+		client_ip_headers X-Forwarded-For X-Real-IP
+	}
+}
+
 zerowaste-qro.com, www.zerowaste-qro.com {
-    # Cabeceras de seguridad SSL / TLS A+ completas para el dominio
-    header {
-        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
-        X-Content-Type-Options "nosniff"
-        X-Frame-Options "SAMEORIGIN"
-        X-XSS-Protection "1; mode=block"
-    }
+	encode zstd gzip
 
-    # Laravel (Panel Admin — Servidor Privado)
-    handle /zw-interno* {
-        reverse_proxy admin:80
-    }
+	log {
+		output stdout
+		format json
+	}
 
-    # FastAPI (Backend / API — Servidor Privado)
-    handle /api {
-        rewrite * /
-        reverse_proxy fast_api:6000 {
-            header_up Host {host}
-            header_up X-Forwarded-Proto {scheme}
-            header_up X-Forwarded-Prefix /api
-        }
-    }
-    handle_path /api/* {
-        reverse_proxy fast_api:6000 {
-            header_up Host {host}
-            header_up X-Forwarded-Proto {scheme}
-            header_up X-Forwarded-Prefix /api
-        }
-    }
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
 
-    # FastAPI Docs y Redoc (Protegidos con login de admin)
-    handle /zw-docs* {
-        reverse_proxy fast_api:6000
-    }
-    handle /zw-openapi.json {
-        reverse_proxy fast_api:6000
-    }
-    handle /zw-redoc* {
-        reverse_proxy fast_api:6000
-    }
+	@private path /metrics /api/metrics /prometheus* /stub_status
+	respond @private 404
 
-    # Prometheus — Monitoreo del Sistema (solo acceso interno)
-    handle /prometheus* {
-        reverse_proxy prometheus:9090
-    }
+	handle /grafana* {
+		reverse_proxy grafana:3000
+	}
 
-    # Grafana — Dashboard de Monitoreo
-    handle /grafana* {
-        reverse_proxy grafana:3000
-    }
-
-    # Flask (Resto del sitio — Servidor Público)
-    handle {
-        reverse_proxy cliente:5000
-    }
+	handle {
+		reverse_proxy nginx_api:8081 {
+			header_up Host {host}
+			header_up X-Real-IP {client_ip}
+			header_up X-Forwarded-For {client_ip}
+		}
+	}
 }

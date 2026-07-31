@@ -49,7 +49,7 @@ class StartupSafetyTests(unittest.TestCase):
     def test_fastapi_production_command_has_no_reload(self):
         dockerfile = (ROOT / "fast_api" / "Dockerfile").read_text(encoding="utf-8")
         self.assertNotIn('"--reload"', dockerfile)
-        self.assertIn('"--proxy-headers"', dockerfile)
+        self.assertNotIn('"--forwarded-allow-ips=*"', dockerfile)
 
     def test_flask_uses_two_gunicorn_workers(self):
         dockerfile = (ROOT / "flask_zerowaste" / "Dockerfile").read_text(encoding="utf-8")
@@ -67,9 +67,12 @@ class StartupSafetyTests(unittest.TestCase):
 
     def test_proxy_preserves_public_scheme_and_api_prefix(self):
         caddy = (ROOT / "Caddyfile").read_text(encoding="utf-8")
-        self.assertIn("handle_path /api/*", caddy)
-        self.assertIn("header_up X-Forwarded-Proto {scheme}", caddy)
-        self.assertIn("header_up X-Forwarded-Prefix /api", caddy)
+        nginx = (ROOT / "nginx" / "api.conf").read_text(encoding="utf-8")
+        proxy_params = (ROOT / "nginx" / "proxy_params").read_text(encoding="utf-8")
+        self.assertIn("reverse_proxy nginx_api:8081", caddy)
+        self.assertIn("location /api/", nginx)
+        self.assertIn("proxy_set_header X-Forwarded-Prefix /api", nginx)
+        self.assertIn("proxy_set_header X-Forwarded-Proto $forwarded_proto", proxy_params)
 
     def test_secret_examples_do_not_contain_fallback_values(self):
         expected_blank = {
