@@ -7,9 +7,10 @@ the same versioned source directory:
 - `admin2` (`laravel_admin_2`) is the passive backup.
 - `nginx_api` detects connection and gateway failures and sends a safe retry to
   the backup.
-- `/zw-interno/2/` routes explicitly to `admin2` for validation and diagnostics.
-  Its base URL is normalized by Nginx to the HTTPS secondary login route so
-  Apache cannot emit a downgrade redirect.
+- `/zw-interno/2/` is an explicit external alias for `admin2`. Nginx translates
+  it to the original Laravel prefix and rewrites generated links back to `/2`.
+  Internally, the backup deliberately accepts `/zw-interno/*` so automatic
+  failover can forward the unchanged primary request without producing a 404.
 
 Both containers use the external PostgreSQL database, Redis cache/rate-limit
 state, the same application environment, and the shared profile volume. No

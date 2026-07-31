@@ -128,8 +128,10 @@ services:
     environment:
       APP_ENV: production
       APP_DEBUG: "false"
-      ADMIN_PATH_PREFIX: zw-interno/2
-      APP_URL: https://www.zerowaste-qro.com/zw-interno/2
+      # The backup must accept the original URI when Nginx fails over from
+      # admin. Nginx provides /zw-interno/2 as an explicit external alias.
+      ADMIN_PATH_PREFIX: zw-interno
+      APP_URL: https://www.zerowaste-qro.com/zw-interno
       ASSET_URL: https://www.zerowaste-qro.com
       CACHE_STORE: redis
       REDIS_CLIENT: phpredis
