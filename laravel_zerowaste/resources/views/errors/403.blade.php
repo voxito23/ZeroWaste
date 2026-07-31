@@ -18,7 +18,7 @@
     </p>
     
     <div class="flex gap-4 flex-wrap justify-center">
-        <a href="http://localhost:5001/" class="px-8 py-3 bg-primary hover:bg-emerald-400 text-secondary font-bold rounded-2xl shadow-lg shadow-primary/30 transition-all hover:-translate-y-1 flex items-center gap-2">
+        <a href="{{ route('login') }}" class="px-8 py-3 bg-primary hover:bg-emerald-400 text-secondary font-bold rounded-2xl shadow-lg shadow-primary/30 transition-all hover:-translate-y-1 flex items-center gap-2">
             <span class="material-symbols-outlined">home</span>
             Ir a la app principal
         </a>

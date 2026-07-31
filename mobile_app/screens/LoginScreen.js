@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Alert, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -15,10 +15,20 @@ export default function LoginScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [retryAfter, setRetryAfter] = useState(0);
   
   const { login } = useAuth();
 
+  useEffect(() => {
+    if (retryAfter <= 0) return undefined;
+    const timer = setInterval(() => {
+      setRetryAfter((seconds) => Math.max(seconds - 1, 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [retryAfter > 0]);
+
   const handleLogin = async () => {
+    if (loading || retryAfter > 0) return;
     if (!email || !password) {
       Alert.alert('Error', 'Completa todos los campos');
       return;
@@ -40,6 +50,15 @@ export default function LoginScreen({ navigation }) {
         Alert.alert('Error', response.data.error || 'Credenciales inválidas');
       }
     } catch (error) {
+      setPassword('');
+      if (error.response?.status === 429) {
+        const bodyRetry = Number(error.response?.data?.retry_after);
+        const headerRetry = Number(error.response?.headers?.['retry-after']);
+        const seconds = Math.max(bodyRetry || headerRetry || 60, 1);
+        setRetryAfter(seconds);
+        Alert.alert('Espera un momento', 'Demasiados intentos. Espera un minuto antes de volver a intentarlo.');
+        return;
+      }
       if (error.response?.data?.need_verification) {
         Alert.alert('Verificación requerida', 'Tu cuenta requiere verificación previa por el administrador.');
         return;
@@ -122,9 +141,10 @@ export default function LoginScreen({ navigation }) {
         
         {/* Login Button */}
         <CustomButton 
-          title="Iniciar sesión" 
+          title={retryAfter > 0 ? `Espera ${retryAfter}s` : 'Iniciar sesión'}
           onPress={handleLogin} 
           loading={loading}
+          disabled={loading || retryAfter > 0}
           className="rounded-xl py-4"
         />
 

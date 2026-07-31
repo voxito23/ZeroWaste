@@ -72,7 +72,7 @@
                     </div>
                     <span id="error-password" class="hidden text-red-500 text-sm mt-1 font-medium"></span>
                 </div>
-                <button type="submit" class="w-full py-4 bg-primary hover:bg-emerald-400 text-secondary font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all transform hover:-translate-y-1 mt-4">
+                <button id="login-submit" type="submit" class="w-full py-4 bg-primary hover:bg-emerald-400 text-secondary font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all transform hover:-translate-y-1 mt-4 disabled:opacity-60 disabled:cursor-not-allowed">
                     Iniciar Sesión
                 </button>
             </form>
@@ -101,8 +101,26 @@ function togglePass(id, btn) {
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('loginForm');
     if (!form) return;
+    const submitButton = document.getElementById('login-submit');
+    const initialRetry = Number(@json((int) session('retry_after', 0)));
+    let retryAfter = Number.isFinite(initialRetry) ? initialRetry : 0;
+    if (retryAfter > 0) {
+        const updateCountdown = function() {
+            submitButton.disabled = true;
+            submitButton.textContent = `Espera ${retryAfter}s`;
+            retryAfter -= 1;
+            if (retryAfter < 0) {
+                clearInterval(timer);
+                submitButton.disabled = false;
+                submitButton.textContent = 'Iniciar Sesión';
+            }
+        };
+        updateCountdown();
+        const timer = setInterval(updateCountdown, 1000);
+    }
 
     form.addEventListener('submit', function(e) {
+        if (submitButton.disabled) { e.preventDefault(); return; }
         const emailInput = document.getElementById('login-email');
         const passwordInput = document.getElementById('login-password');
         const errEmail = document.getElementById('error-email');
@@ -135,6 +153,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!isValid) {
             e.preventDefault();
+        } else {
+            submitButton.disabled = true;
+            submitButton.textContent = 'Ingresando…';
         }
     });
 });

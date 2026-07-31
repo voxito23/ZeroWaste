@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
 {
@@ -18,13 +20,21 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
+        $identifier = mb_strtolower(trim($credentials['email']));
+        $accountKey = 'admin-login:account:'.hash('sha256', $identifier);
+        $ipKey = 'admin-login:ip:'.hash('sha256', (string) $request->ip());
+        $accountLockKey = $accountKey.':lock';
+        $ipLockKey = $ipKey.':lock';
+        $retryAfter = $this->lockRemaining($accountLockKey, $ipLockKey);
+        if ($retryAfter > 0) {
+            return $this->lockedResponse($request, $retryAfter);
+        }
+
         // Buscar usuario
         $user = \App\Models\User::where('email', $credentials['email'])->first();
 
         if (!$user) {
-            return back()->withErrors([
-                'email' => 'Las credenciales proporcionadas no son correctas.',
-            ])->withInput(['email' => $request->input('email')]);
+            return $this->failedLogin($request, $accountKey, $ipKey, $accountLockKey, $ipLockKey);
         }
 
         $authenticated = false;
@@ -57,6 +67,7 @@ class AuthController extends Controller
         }
 
         if ($authenticated) {
+            RateLimiter::clear($accountKey);
             // Verificar permisos de administrador
             if (!Auth::user()->is_admin) {
                 Auth::logout();
@@ -68,9 +79,53 @@ class AuthController extends Controller
             return redirect()->intended(route('dashboard'));
         }
 
-        return back()->withErrors([
-            'email' => 'Las credenciales proporcionadas no son correctas.',
-        ])->withInput(['email' => $request->input('email')]);
+        return $this->failedLogin($request, $accountKey, $ipKey, $accountLockKey, $ipLockKey);
+    }
+
+    private function failedLogin(
+        Request $request,
+        string $accountKey,
+        string $ipKey,
+        string $accountLockKey,
+        string $ipLockKey
+    )
+    {
+        RateLimiter::hit($accountKey, 300);
+        RateLimiter::hit($ipKey, 300);
+        $locked = false;
+        if (RateLimiter::attempts($accountKey) >= 5) {
+            Cache::put($accountLockKey, time() + 60, 60);
+            RateLimiter::clear($accountKey);
+            $locked = true;
+        }
+        if (RateLimiter::attempts($ipKey) >= 20) {
+            Cache::put($ipLockKey, time() + 60, 60);
+            RateLimiter::clear($ipKey);
+            $locked = true;
+        }
+        if ($locked) {
+            return $this->lockedResponse($request, 60);
+        }
+        return back()->withErrors(['email' => 'Usuario o contraseña incorrectos.'])
+            ->withInput(['email' => $request->input('email')]);
+    }
+
+    private function lockRemaining(string ...$lockKeys): int
+    {
+        $expiresAt = 0;
+        foreach ($lockKeys as $key) {
+            $expiresAt = max($expiresAt, (int) Cache::get($key, 0));
+        }
+        return max($expiresAt - time(), 0);
+    }
+
+    private function lockedResponse(Request $request, int $retryAfter)
+    {
+        return back()
+            ->withErrors(['email' => 'Demasiados intentos. Espera un minuto antes de volver a intentarlo.'])
+            ->with('retry_after', $retryAfter)
+            ->withInput(['email' => $request->input('email')])
+            ->withHeaders(['Retry-After' => (string) $retryAfter]);
     }
 
     /**

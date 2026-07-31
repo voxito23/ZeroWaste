@@ -15,7 +15,7 @@ class CheckAdmin
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::check()) {
-            return redirect('http://localhost:5001/login');
+            return redirect()->route('login');
         }
 
         if (!Auth::user()->is_admin) {

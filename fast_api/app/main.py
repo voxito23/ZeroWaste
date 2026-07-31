@@ -6,7 +6,7 @@ Monitoreo con Prometheus + Firewall WAF integrado.
 
 import logging
 import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi.responses import FileResponse, JSONResponse
@@ -20,13 +20,21 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.routers import auth, usuarios, foro, mapa, eventos, analisis, formularios, docs_auth, campanas, recoleccion, firewall_monitor
 from app.security.firewall import FirewallMiddleware
 from app.data.database import engine
+from app.observability import READINESS
 
 logger = logging.getLogger("zerowaste.api")
 
 # ==========================================================================
 #  Rate Limiter global
 # ==========================================================================
-limiter = Limiter(key_func=get_remote_address, default_limits=["60/minute"])
+REDIS_URL = os.getenv("REDIS_URL")
+if not REDIS_URL:
+    raise RuntimeError("Required environment variable is not configured: REDIS_URL")
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["60/minute"],
+    storage_uri=REDIS_URL,
+)
 
 # ==========================================================================
 #  Inicialización de la app
@@ -52,6 +60,19 @@ app = FastAPI(
 # Registrar rate limiter
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
+
+
+@app.exception_handler(HTTPException)
+async def structured_http_exception(_request: Request, exc: HTTPException):
+    headers = exc.headers or {}
+    if exc.status_code == 429 and "Retry-After" in headers:
+        retry_after = max(int(headers["Retry-After"]), 1)
+        return JSONResponse(
+            status_code=429,
+            headers={"Retry-After": str(retry_after)},
+            content={"detail": exc.detail, "retry_after": retry_after},
+        )
+    return JSONResponse(status_code=exc.status_code, headers=headers, content={"detail": exc.detail})
 
 # ==========================================================================
 #  Middlewares de seguridad (orden importa: último registrado = primero ejecutado)
@@ -157,8 +178,10 @@ def readiness():
     try:
         with engine.connect() as connection:
             connection.execute(text("SELECT 1"))
+        READINESS.set(1)
         return {"status": "ready", "service": "fastapi", "database": "ok"}
     except SQLAlchemyError as exc:
+        READINESS.set(0)
         logger.error("Database readiness check failed: %s", type(exc).__name__)
         return JSONResponse(
             status_code=503,

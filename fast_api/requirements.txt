@@ -12,3 +12,4 @@ pandas==2.2.3
 slowapi>=0.1.9
 matplotlib==3.10.8
 prometheus-fastapi-instrumentator>=7.0.0
+redis[hiredis]>=5.2,<7

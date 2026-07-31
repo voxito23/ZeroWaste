@@ -392,9 +392,10 @@
                     </div>
                 </button>
 
-                <a href="{{ route('admin.logout') }}" class="nav-link flex items-center gap-3 font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" title="Cerrar Sesión">
+                <form method="POST" action="{{ route('admin.logout') }}">@csrf
+                <button type="submit" class="nav-link w-full flex items-center gap-3 font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20" title="Cerrar Sesión">
                     <span class="material-symbols-outlined text-xl">logout</span> <span class="nav-text">Cerrar Sesión</span>
-                </a>
+                </button></form>
             </div>
         </nav>
     </aside>
@@ -432,10 +433,11 @@
                             <span class="material-symbols-outlined text-lg">manage_accounts</span>
                             Configuración
                         </a>
-                        <a href="{{ route('admin.logout') }}" class="flex items-center gap-2 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-t border-gray-50 dark:border-emerald-800/50">
+                        <form method="POST" action="{{ route('admin.logout') }}">@csrf
+                        <button type="submit" class="w-full flex items-center gap-2 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors border-t border-gray-50 dark:border-emerald-800/50">
                             <span class="material-symbols-outlined text-lg">logout</span>
                             Cerrar Sesión
-                        </a>
+                        </button></form>
                     </div>
                 </div>
         </header>

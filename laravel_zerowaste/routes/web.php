@@ -24,9 +24,9 @@ Route::redirect('/zw-interno', '/zw-interno/login');
 Route::redirect('/', '/zw-interno/login');
 
 Route::post('/zw-interno/login', [AuthController::class, 'login'])->name('admin.login');
-Route::get('/zw-interno/logout', [AuthController::class, 'logout'])->name('admin.logout');
 
 Route::prefix('zw-interno')->middleware(['auth', 'admin'])->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('admin.logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Reportes

@@ -16,6 +16,7 @@ from app.data.database import get_db
 from app.models.domain_models import Usuario
 from app.models.schemas import Token, UsuarioResponse, MessageResponse
 from app.security.jwt_auth import verify_password, hash_password, create_access_token
+from app.security.login_throttle import INVALID_MESSAGE, get_client_ip, get_login_throttle
 from pydantic import BaseModel
 
 class MobileLogin(BaseModel):
@@ -39,6 +40,7 @@ router = APIRouter(prefix="/auth", tags=["Autenticación"])
 
 @router.post("/login", response_model=Token, summary="Iniciar sesión y obtener JWT")
 def login(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db),
 ):
@@ -46,15 +48,20 @@ def login(
     Recibe **username** (email) y **password** desde el formulario OAuth2 de Swagger
     y devuelve un `access_token` JWT si las credenciales son válidas.
     """
+    throttle = get_login_throttle()
+    client_ip = get_client_ip(request)
+    throttle.assert_allowed(form_data.username, client_ip)
     usuario = db.query(Usuario).filter(Usuario.email == form_data.username).first()
 
     if not usuario or not verify_password(form_data.password, str(usuario.password)):
+        throttle.record_failure(form_data.username, client_ip)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Correo o contraseña incorrectos.",
+            detail=INVALID_MESSAGE,
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    throttle.clear(form_data.username, client_ip)
     if usuario.bloqueado:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -74,6 +81,7 @@ def login(
 
 @router.post("/mobile/login", summary="Login exclusivo para App Móvil (React Native)")
 def mobile_login(
+    request: Request,
     credentials: MobileLogin,
     db: Session = Depends(get_db),
 ):
@@ -81,11 +89,16 @@ def mobile_login(
     Recibe JSON con email y password, permite acceso a TODOS los usuarios (no solo admins),
     y devuelve el access_token y los datos del usuario con rol e is_admin.
     """
+    throttle = get_login_throttle()
+    client_ip = get_client_ip(request)
+    throttle.assert_allowed(credentials.email, client_ip)
     usuario = db.query(Usuario).filter(Usuario.email == credentials.email).first()
 
     if not usuario or not verify_password(credentials.password, str(usuario.password)):
-        raise HTTPException(status_code=401, detail="Correo o contraseña incorrectos.")
+        throttle.record_failure(credentials.email, client_ip)
+        raise HTTPException(status_code=401, detail=INVALID_MESSAGE)
 
+    throttle.clear(credentials.email, client_ip)
     if usuario.bloqueado:
         raise HTTPException(status_code=403, detail="Usuario bloqueado.")
 
