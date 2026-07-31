@@ -1,12 +1,13 @@
-# Laravel active/passive redundancy
+# Laravel active/active redundancy
 
 ZeroWaste runs two Laravel containers from the same immutable Docker image and
 the same versioned source directory:
 
-- `admin` (`laravel_admin`) is the primary upstream.
-- `admin2` (`laravel_admin_2`) is the passive backup.
-- `nginx_api` detects connection and gateway failures and sends a safe retry to
-  the backup.
+- `admin` and `admin2` serve the normal route concurrently through Nginx
+  `least_conn` balancing.
+- If either replica fails, Nginx temporarily removes it and retries safely on
+  the surviving replica.
+- The explicit `/2` route prefers `admin2` and falls back to `admin`.
 - `/zw-interno/2/` is an explicit external alias for `admin2`. Nginx translates
   it to the original Laravel prefix and rewrites generated links back to `/2`.
   Internally, the backup deliberately accepts `/zw-interno/*` so automatic
