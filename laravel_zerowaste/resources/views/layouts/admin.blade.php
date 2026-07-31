@@ -358,6 +358,13 @@
                 <span class="material-symbols-outlined text-lg">insert_chart</span> <span class="nav-text">Reportes</span>
             </a>
 
+            <span class="text-[10px] text-gray-400 dark:text-emerald-600 font-bold uppercase tracking-wider px-3 mb-1 mt-4 nav-section-label">Impacto y recompensas</span>
+            <a href="{{ route('impacto.ranking') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('impacto.ranking') ? 'active' : '' }}"><span class="material-symbols-outlined">leaderboard</span><span class="nav-text">Ranking de impacto</span></a>
+            <a href="{{ route('impacto.recompensas') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('impacto.recompensas*') ? 'active' : '' }}"><span class="material-symbols-outlined">redeem</span><span class="nav-text">Tienda de recompensas</span></a>
+            <a href="{{ route('impacto.canjes') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('impacto.canjes*') ? 'active' : '' }}"><span class="material-symbols-outlined">inventory_2</span><span class="nav-text">Solicitudes de canje</span></a>
+            <a href="{{ route('impacto.reglas') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('impacto.reglas*') ? 'active' : '' }}"><span class="material-symbols-outlined">rule</span><span class="nav-text">Reglas de puntos</span></a>
+            <a href="{{ route('impacto.movimientos') }}" class="nav-link flex items-center gap-3 font-bold text-sm text-secondary dark:text-emerald-200 {{ request()->routeIs('impacto.movimientos') ? 'active' : '' }}"><span class="material-symbols-outlined">receipt_long</span><span class="nav-text">Movimientos de puntos</span></a>
+
             <div class="border-t border-emerald-100 dark:border-emerald-900/50 my-3"></div>
             
             @if(\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->email === config('app.admin_email'))

@@ -1,0 +1,5 @@
+@extends('layouts.admin')
+@section('title','Reglas de puntos') @section('page_title','Reglas de puntos')
+@section('content')
+<div class="space-y-4">@foreach($rows as $row)<form method="POST" action="{{ route('impacto.reglas.update',$row->id) }}" class="glass-card p-5 grid grid-cols-1 md:grid-cols-[1fr_130px_130px_auto] gap-4 items-end">@csrf @method('PUT')<label class="text-xs font-bold">{{ $row->codigo }}<input name="descripcion" value="{{ $row->descripcion }}" class="input-premium mt-1" required></label><label class="text-xs font-bold">Puntos<input type="number" min="0" name="puntos" value="{{ $row->puntos }}" class="input-premium mt-1"></label><label class="text-xs font-bold">Límite diario<input type="number" min="1" name="limite_diario" value="{{ $row->limite_diario }}" class="input-premium mt-1"></label><div><label class="mr-3 font-bold"><input type="checkbox" name="activa" value="1" @checked($row->activa)> Activa</label><button class="btn-primary">Guardar</button></div></form>@endforeach</div>
+@endsection

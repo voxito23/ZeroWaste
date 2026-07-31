@@ -1,0 +1,8 @@
+@extends('layouts.admin')
+@section('title','Tienda de recompensas') @section('page_title','Tienda de recompensas')
+@section('content')
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-5">@foreach($rows as $row)<form method="POST" action="{{ route('impacto.recompensas.update',$row->id) }}" class="glass-card p-5">@csrf @method('PUT')
+<div class="flex gap-4"><img src="/images/recompensas/{{ $row->imagen }}" alt="" class="w-24 h-24 object-contain rounded-xl bg-white"><div class="flex-1 space-y-3"><input name="nombre" value="{{ $row->nombre }}" class="input-premium" required><textarea name="descripcion" class="input-premium" required>{{ $row->descripcion }}</textarea></div></div>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4"><label class="text-xs font-bold">Costo<input type="number" min="1" name="costo_puntos" value="{{ $row->costo_puntos }}" class="input-premium mt-1"></label><label class="text-xs font-bold">Stock<input type="number" min="0" name="stock" value="{{ $row->stock }}" class="input-premium mt-1"></label><label class="text-xs font-bold">Orden<input type="number" min="0" name="orden" value="{{ $row->orden }}" class="input-premium mt-1"></label><label class="text-xs font-bold">Límite<input type="number" min="1" name="limite_por_usuario" value="{{ $row->limite_por_usuario }}" class="input-premium mt-1"></label></div>
+<input type="hidden" name="imagen" value="{{ $row->imagen }}"><div class="mt-4 flex items-center justify-between"><label class="font-bold"><input type="checkbox" name="activa" value="1" @checked($row->activa)> Activa</label><button class="btn-primary">Guardar</button></div></form>@endforeach</div><div class="mt-5">{{ $rows->links() }}</div>
+@endsection

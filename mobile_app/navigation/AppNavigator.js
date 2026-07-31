@@ -9,6 +9,15 @@ import { ActivityIndicator, View } from 'react-native';
 import MisRecoleccionesScreen from '../screens/MisRecoleccionesScreen';
 import PostScreen from '../screens/PostScreen';
 import CreatePostScreen from '../screens/CreatePostScreen';
+import ImpactStatsScreen from '../screens/ImpactStatsScreen';
+import RewardsStoreScreen from '../screens/RewardsStoreScreen';
+import RewardDetailScreen from '../screens/RewardDetailScreen';
+import MyRedemptionsScreen from '../screens/MyRedemptionsScreen';
+import PointsHistoryScreen from '../screens/PointsHistoryScreen';
+import NotificationsScreen from '../screens/NotificationsScreen';
+import SearchScreen from '../screens/SearchScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -37,6 +46,15 @@ export default function AppNavigator() {
             <Stack.Screen name="MisRecolecciones" component={MisRecoleccionesScreen} />
             <Stack.Screen name="PostDetail" component={PostScreen} />
             <Stack.Screen name="CreatePost" component={CreatePostScreen} />
+            <Stack.Screen name="ImpactStats" component={ImpactStatsScreen} />
+            <Stack.Screen name="RewardsStore" component={RewardsStoreScreen} />
+            <Stack.Screen name="RewardDetail" component={RewardDetailScreen} />
+            <Stack.Screen name="MyRedemptions" component={MyRedemptionsScreen} />
+            <Stack.Screen name="PointsHistory" component={PointsHistoryScreen} />
+            <Stack.Screen name="Notifications" component={NotificationsScreen} />
+            <Stack.Screen name="Search" component={SearchScreen} />
+            <Stack.Screen name="Settings" component={SettingsScreen} />
+            <Stack.Screen name="EditProfile" component={EditProfileScreen} />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthNavigator} />

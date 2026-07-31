@@ -7,7 +7,7 @@ NO se ejecuta create_all() — las tablas ya fueron creadas por Flask / Laravel.
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import (
     Column, Integer, String, Text, DateTime, Boolean, Numeric,
-    ForeignKey, UniqueConstraint,
+    ForeignKey, UniqueConstraint, CheckConstraint,
 )
 from sqlalchemy.orm import relationship, Session
 from app.data.database import Base
@@ -264,3 +264,97 @@ class SolicitudRecoleccion(Base):
     # Relaciones
     usuario_rel = relationship("Usuario", foreign_keys=[usuario_id])
     recolector_rel = relationship("Usuario", foreign_keys=[recolector_id])
+
+
+class ReglaPuntos(Base):
+    __tablename__ = "reglas_puntos"
+    id = Column(Integer, primary_key=True)
+    codigo = Column(String(60), nullable=False, unique=True, index=True)
+    descripcion = Column(String(255), nullable=False)
+    puntos = Column(Integer, nullable=False)
+    limite_diario = Column(Integer, nullable=True)
+    activa = Column(Boolean, nullable=False, default=True)
+    updated_by = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    aprobado = Column(Boolean, nullable=False, default=False)
+    aprobado_por = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    aprobado_at = Column(DateTime, nullable=True)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    __table_args__ = (CheckConstraint("puntos >= 0", name="ck_reglas_puntos_no_negativos"),)
+
+
+class SaldoPuntos(Base):
+    __tablename__ = "saldos_puntos"
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), primary_key=True)
+    puntos_disponibles = Column(Integer, nullable=False, default=0)
+    impacto_historico = Column(Integer, nullable=False, default=0)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    __table_args__ = (
+        CheckConstraint("puntos_disponibles >= 0", name="ck_saldo_no_negativo"),
+        CheckConstraint("impacto_historico >= 0", name="ck_impacto_no_negativo"),
+    )
+
+
+class MovimientoPuntos(Base):
+    __tablename__ = "movimientos_puntos"
+    id = Column(Integer, primary_key=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False, index=True)
+    tipo = Column(String(30), nullable=False)
+    cantidad = Column(Integer, nullable=False)
+    saldo_anterior = Column(Integer, nullable=False)
+    saldo_nuevo = Column(Integer, nullable=False)
+    impacto_anterior = Column(Integer, nullable=False)
+    impacto_nuevo = Column(Integer, nullable=False)
+    referencia_tipo = Column(String(50), nullable=True)
+    referencia_id = Column(String(100), nullable=True)
+    regla_id = Column(Integer, ForeignKey("reglas_puntos.id"), nullable=True)
+    descripcion = Column(String(255), nullable=False)
+    administrador_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    __table_args__ = (
+        UniqueConstraint("usuario_id", "referencia_tipo", "referencia_id", "regla_id", name="uq_movimiento_recompensa"),
+    )
+
+
+class Recompensa(Base):
+    __tablename__ = "recompensas"
+    id = Column(Integer, primary_key=True)
+    nombre = Column(String(150), nullable=False)
+    descripcion = Column(Text, nullable=False)
+    costo_puntos = Column(Integer, nullable=False)
+    stock = Column(Integer, nullable=False, default=0)
+    imagen = Column(String(255), nullable=True)
+    activa = Column(Boolean, nullable=False, default=True)
+    limite_por_usuario = Column(Integer, nullable=True)
+    orden = Column(Integer, nullable=False, default=0)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    __table_args__ = (
+        CheckConstraint("costo_puntos > 0", name="ck_recompensa_costo_positivo"),
+        CheckConstraint("stock >= 0", name="ck_recompensa_stock_no_negativo"),
+    )
+
+
+class Canje(Base):
+    __tablename__ = "canjes"
+    id = Column(Integer, primary_key=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False, index=True)
+    recompensa_id = Column(Integer, ForeignKey("recompensas.id"), nullable=False)
+    cantidad = Column(Integer, nullable=False, default=1)
+    puntos_utilizados = Column(Integer, nullable=False)
+    estado = Column(String(30), nullable=False, default="SOLICITADA")
+    administrador_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    recompensa = relationship("Recompensa")
+
+
+class TokenQrRecoleccion(Base):
+    __tablename__ = "tokens_qr_recoleccion"
+    id = Column(Integer, primary_key=True)
+    solicitud_id = Column(Integer, ForeignKey("solicitudes_recoleccion.id"), nullable=False, unique=True)
+    token_hash = Column(String(64), nullable=False, unique=True, index=True)
+    expires_at = Column(DateTime, nullable=False, index=True)
+    used_at = Column(DateTime, nullable=True)
+    used_by = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

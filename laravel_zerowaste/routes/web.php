@@ -15,6 +15,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\RecoleccionController;
 use App\Http\Controllers\ReportesRecoleccionController;
+use App\Http\Controllers\ImpactAdminController;
 
 $adminPrefix = trim((string) env('ADMIN_PATH_PREFIX', 'zw-interno'), '/');
 $adminBase = '/'.$adminPrefix;
@@ -87,6 +88,7 @@ Route::prefix($adminPrefix)->middleware(['auth', 'admin'])->group(function () {
     // Foro / Posts
     Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+    Route::post('/posts/{post}/aprobar', [PostController::class, 'approve'])->name('posts.approve');
     Route::delete('/respuestas/{id}', [PostController::class, 'destroyRespuesta'])->name('respuestas.destroy');
 
     // Recolecciones a Domicilio
@@ -94,6 +96,15 @@ Route::prefix($adminPrefix)->middleware(['auth', 'admin'])->group(function () {
     Route::post('/recolecciones/recolector', [RecoleccionController::class, 'storeRecolector'])->name('admin.recolecciones.recolector.store');
     Route::post('/recolecciones/{id}/completar', [RecoleccionController::class, 'completarSolicitud'])->name('admin.recolecciones.completar');
     Route::get('/recolecciones/reporte', [ReportesRecoleccionController::class, 'generarPDF'])->name('admin.recolecciones.reporte');
+
+    Route::get('/ranking', [ImpactAdminController::class, 'ranking'])->name('impacto.ranking');
+    Route::get('/recompensas', [ImpactAdminController::class, 'rewards'])->name('impacto.recompensas');
+    Route::put('/recompensas/{id}', [ImpactAdminController::class, 'updateReward'])->name('impacto.recompensas.update');
+    Route::get('/canjes', [ImpactAdminController::class, 'redemptions'])->name('impacto.canjes');
+    Route::put('/canjes/{id}', [ImpactAdminController::class, 'updateRedemption'])->name('impacto.canjes.update');
+    Route::get('/puntos/reglas', [ImpactAdminController::class, 'rules'])->name('impacto.reglas');
+    Route::put('/puntos/reglas/{id}', [ImpactAdminController::class, 'updateRule'])->name('impacto.reglas.update');
+    Route::get('/puntos/movimientos', [ImpactAdminController::class, 'movements'])->name('impacto.movimientos');
 
     // Solicitudes de recuperación de contraseña
     Route::get('/recuperacion', [PasswordResetRequestController::class, 'index'])->name('recuperacion.index');

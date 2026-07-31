@@ -203,3 +203,10 @@ scratch/
 CLAUDE.md
 AGENTS.md
 .claude/
+
+# Original reward image drop-zone files (tracked copies live in app public/assets folders)
+/termo_reutilizable.png
+/bolsa_reutilizable.png
+/kit_botes_separacion.png
+/kit_cubiertos_reutilizables.png
+/compostera_domestica.png

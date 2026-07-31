@@ -1,0 +1,5 @@
+@extends('layouts.admin')
+@section('title','Solicitudes de canje') @section('page_title','Solicitudes de canje')
+@section('content')
+<div class="glass-card p-5 overflow-x-auto"><table class="premium-table"><thead><tr><th>Usuario</th><th>Recompensa</th><th>Puntos</th><th>Fecha</th><th>Estado</th></tr></thead><tbody>@forelse($rows as $row)<tr><td>{{ $row->usuario }}</td><td>{{ $row->recompensa }} × {{ $row->cantidad }}</td><td>{{ number_format($row->puntos_utilizados) }}</td><td>{{ $row->created_at }}</td><td><form method="POST" action="{{ route('impacto.canjes.update',$row->id) }}" class="flex gap-2">@csrf @method('PUT')<select name="estado" class="input-premium"><option selected>{{ $row->estado }}</option>@foreach(['APROBADA','EN_PREPARACION','LISTA_PARA_ENTREGAR','ENTREGADA','RECHAZADA','CANCELADA'] as $state)<option>{{ $state }}</option>@endforeach</select><button class="btn-primary">Actualizar</button></form></td></tr>@empty<tr><td colspan="5" class="text-center py-10">No hay solicitudes.</td></tr>@endforelse</tbody></table><div class="mt-5">{{ $rows->links() }}</div></div>
+@endsection
