@@ -18,7 +18,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    NavigationBar.setButtonStyleAsync('dark').catch(() => {});
+    NavigationBar.setStyle('dark');
   }, []);
 
   if (!fontsLoaded) {
