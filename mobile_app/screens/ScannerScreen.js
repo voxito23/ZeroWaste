@@ -75,7 +75,6 @@ export default function ScannerScreen() {
       setModalVisible(false);
       navigation.navigate('Home');
     } catch (error) {
-      console.error(error);
       const msg = error.response?.data?.detail || 'No se pudo validar el QR para esta recolección.';
       Alert.alert('Error al Validar', msg);
     } finally {
@@ -103,7 +102,6 @@ export default function ScannerScreen() {
       setModalVisible(false);
       navigation.navigate('Home');
     } catch (error) {
-      console.error(error);
       const msg = error.response?.data?.detail || 'Hubo un problema al enviar la calificación.';
       Alert.alert('Aviso', msg);
     } finally {

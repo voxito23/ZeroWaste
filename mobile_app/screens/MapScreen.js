@@ -160,7 +160,6 @@ export default function MapScreen() {
         Alert.alert('Error', 'No se pudo encontrar una ruta al destino.');
       }
     } catch (error) {
-      console.error(error);
       Alert.alert('Error', 'Ocurrió un problema trazando la ruta de navegación.');
     } finally {
       setLoading(false);

@@ -154,9 +154,22 @@ export default function HomeScreen() {
   const [contentError, setContentError] = useState('');
   const [contentLoading, setContentLoading] = useState(true);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [impactSummary, setImpactSummary] = useState(null);
+  const [impactLoading, setImpactLoading] = useState(true);
+  const [impactError, setImpactError] = useState(false);
 
   useEffect(() => {
     api.get('/usuarios/me/notificaciones/no-leidas').then(({ data }) => setUnreadNotifications(Number(data?.total) || 0)).catch(() => setUnreadNotifications(0));
+    api.get('/impacto/me')
+      .then(({ data }) => {
+        setImpactSummary(data);
+        setImpactError(false);
+      })
+      .catch(() => {
+        setImpactSummary(null);
+        setImpactError(true);
+      })
+      .finally(() => setImpactLoading(false));
     const fetchActiveCampaignsAndEvents = async () => {
       setContentLoading(true);
       setContentError('');
@@ -292,7 +305,6 @@ export default function HomeScreen() {
                 <View className="absolute -top-16 -right-16 w-48 h-48 rounded-full" style={{ backgroundColor: 'rgba(16,185,129,0.08)' }} />
                 <View className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full" style={{ backgroundColor: 'rgba(34,211,238,0.06)' }} />
 
-                {/* El esquema actual no ofrece todavía un saldo o ranking verificable. */}
                 <View className="flex-row items-center gap-3 mb-7">
                   <Animated.View style={{ transform: [{ scale: ringPulse }] }}>
                     <View className="w-14 h-14 rounded-[20px] items-center justify-center border-2 border-emerald-500/30" style={{ backgroundColor: 'rgba(16,185,129,0.12)' }}>
@@ -301,12 +313,17 @@ export default function HomeScreen() {
                   </Animated.View>
                   <View>
                     <Text className="text-emerald-400 text-[11px] font-black uppercase tracking-[0.15em]">Tu impacto</Text>
-                    <Text className="text-white text-[18px] font-black tracking-tight mt-0.5">Estadísticas reales en preparación</Text>
+                    <Text className="text-white text-[18px] font-black tracking-tight mt-0.5">
+                      {impactLoading ? 'Consultando tus estadísticas…' : impactSummary ? `Posición #${impactSummary.posicion ?? '—'} · Nivel ${impactSummary.nivel ?? 'Inicial'}` : 'Consulta tu ranking de impacto'}
+                    </Text>
                   </View>
                 </View>
 
                 <View className="bg-white/5 rounded-2xl p-4 border border-white/5">
-                  <Text className="text-gray-300 text-[13px] font-medium leading-5">El ranking aparecerá cuando FastAPI disponga de un saldo y un historial de puntos verificables. No mostraremos cifras simuladas.</Text>
+                  {impactSummary ? <View className="flex-row justify-between">
+                    <View><Text className="text-[11px] font-bold uppercase text-gray-400">Impacto histórico</Text><Text className="mt-1 text-2xl font-black text-white">{Number(impactSummary.impacto_historico || 0).toLocaleString('es-MX')}</Text></View>
+                    <View><Text className="text-[11px] font-bold uppercase text-gray-400">Puntos disponibles</Text><Text className="mt-1 text-2xl font-black text-emerald-400">{Number(impactSummary.puntos_disponibles || 0).toLocaleString('es-MX')}</Text></View>
+                  </View> : <Text className="text-gray-300 text-[13px] font-medium leading-5">{impactError ? 'No fue posible consultar el impacto. Toca la tarjeta para reintentar desde el ranking.' : 'Cargando datos verificados del servidor.'}</Text>}
                 </View>
               </View>
             </View>
