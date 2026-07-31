@@ -17,7 +17,8 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.ACCESS_FINE_LOCATION"
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.CAMERA"
       ],
       "package": "com.vic45.mobile_app"
     },
@@ -41,6 +42,21 @@
         "expo-location",
         {
           "locationAlwaysAndWhenInUsePermission": "ZeroWaste necesita acceder a tu ubicación para mostrarte los centros de acopio cercanos."
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "ZeroWaste necesita la cámara para validar códigos QR de recolecciones.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "ZeroWaste necesita acceso a tus fotos para adjuntar imágenes a publicaciones.",
+          "cameraPermission": "ZeroWaste necesita la cámara para tomar imágenes para publicaciones."
         }
       ],
       "@rnmapbox/maps"

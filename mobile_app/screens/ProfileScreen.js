@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronRight, LogOut, MapPin, Shield } from 'lucide-react-native';
+import { Award, ChevronRight, Gift, History, LogOut, MapPin, Settings, Shield, UserRoundPen } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { api } from '../api/axios';
@@ -82,12 +82,30 @@ export default function ProfileScreen() {
         </View>
 
         <View className="mx-6 mt-6 rounded-[24px] bg-white border border-gray-100 overflow-hidden">
+          <TouchableOpacity onPress={() => navigation.navigate('EditProfile')} className="flex-row items-center justify-between p-5">
+            <View className="flex-row items-center"><View className="w-10 h-10 rounded-full bg-emerald-50 items-center justify-center"><UserRoundPen color="#059669" size={20} /></View><Text className="ml-4 text-gray-800 font-bold text-base">Editar perfil</Text></View><ChevronRight color="#9CA3AF" size={20} />
+          </TouchableOpacity>
           <TouchableOpacity onPress={() => navigation.navigate('MisRecolecciones')} className="flex-row items-center justify-between p-5">
             <View className="flex-row items-center">
               <View className="w-10 h-10 rounded-full bg-emerald-50 items-center justify-center"><MapPin color="#059669" size={20} /></View>
               <Text className="ml-4 text-gray-800 font-bold text-base">Mis recolecciones</Text>
             </View>
             <ChevronRight color="#9CA3AF" size={20} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('ImpactStats')} className="flex-row items-center justify-between border-t border-gray-100 p-5">
+            <View className="flex-row items-center"><View className="w-10 h-10 rounded-full bg-emerald-50 items-center justify-center"><Award color="#059669" size={20} /></View><Text className="ml-4 text-gray-800 font-bold text-base">Ranking e impacto</Text></View><ChevronRight color="#9CA3AF" size={20} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('RewardsStore')} className="flex-row items-center justify-between border-t border-gray-100 p-5">
+            <View className="flex-row items-center"><View className="w-10 h-10 rounded-full bg-emerald-50 items-center justify-center"><Gift color="#059669" size={20} /></View><Text className="ml-4 text-gray-800 font-bold text-base">Tienda de recompensas</Text></View><ChevronRight color="#9CA3AF" size={20} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('MyRedemptions')} className="flex-row items-center justify-between border-t border-gray-100 p-5">
+            <View className="flex-row items-center"><View className="w-10 h-10 rounded-full bg-emerald-50 items-center justify-center"><History color="#059669" size={20} /></View><Text className="ml-4 text-gray-800 font-bold text-base">Mis canjes</Text></View><ChevronRight color="#9CA3AF" size={20} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('PointsHistory')} className="flex-row items-center justify-between border-t border-gray-100 p-5">
+            <View className="flex-row items-center"><View className="w-10 h-10 rounded-full bg-emerald-50 items-center justify-center"><History color="#059669" size={20} /></View><Text className="ml-4 text-gray-800 font-bold text-base">Historial de puntos</Text></View><ChevronRight color="#9CA3AF" size={20} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Settings')} className="flex-row items-center justify-between border-t border-gray-100 p-5">
+            <View className="flex-row items-center"><View className="w-10 h-10 rounded-full bg-emerald-50 items-center justify-center"><Settings color="#059669" size={20} /></View><Text className="ml-4 text-gray-800 font-bold text-base">Configuración</Text></View><ChevronRight color="#9CA3AF" size={20} />
           </TouchableOpacity>
         </View>
 

@@ -31,8 +31,10 @@ export default function MapScreen() {
   const [puntos, setPuntos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapKey, setMapKey] = useState(0);
   const [mapError, setMapError] = useState(HAS_VALID_MAPBOX_TOKEN ? '' : 'El token público de Mapbox no está configurado correctamente.');
   const [pointsError, setPointsError] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [locationPermissionDenied, setLocationPermissionDenied] = useState(false);
   
   // Location and Navigation States
@@ -48,21 +50,46 @@ export default function MapScreen() {
   const [submitting, setSubmitting] = useState(false);
 
   const isRecolector = user?.rol === 'recolector' || user?.is_admin;
+  const visiblePoints = puntos.filter((point) => {
+    const needle = searchQuery.trim().toLocaleLowerCase('es');
+    return !needle || `${point.nombre || ''} ${point.direccion || ''} ${point.materiales || ''}`.toLocaleLowerCase('es').includes(needle);
+  });
+
+  const centerUser = async () => {
+    const coordinates = userLocation || await requestLocationPermission();
+    if (!coordinates) return;
+    cameraRef.current?.setCamera({ centerCoordinate: coordinates, zoomLevel: 15, animationDuration: 900 });
+  };
 
   useEffect(() => {
     fetchPuntos();
     requestLocationPermission();
   }, []);
 
+  useEffect(() => {
+    if (mapLoaded || mapError || !HAS_VALID_MAPBOX_TOKEN) return undefined;
+    const timeout = setTimeout(() => {
+      setMapError('No fue posible cargar el mapa. Revisa tu conexión e inténtalo nuevamente.');
+    }, 15000);
+    return () => clearTimeout(timeout);
+  }, [mapKey, mapLoaded, mapError]);
+
   const requestLocationPermission = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setLocationPermissionDenied(true);
+        return null;
+      }
+      setLocationPermissionDenied(false);
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      const coordinates = [loc.coords.longitude, loc.coords.latitude];
+      setUserLocation(coordinates);
+      return coordinates;
+    } catch {
       setLocationPermissionDenied(true);
-      return;
+      return null;
     }
-    setLocationPermissionDenied(false);
-    const loc = await Location.getCurrentPositionAsync({});
-    setUserLocation([loc.coords.longitude, loc.coords.latitude]);
   };
 
   const fetchPuntos = async () => {
@@ -181,6 +208,7 @@ export default function MapScreen() {
     <View className="flex-1 bg-background relative">
       <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
       {HAS_VALID_MAPBOX_TOKEN ? <Mapbox.MapView
+        key={mapKey}
         style={styles.map}
         styleURL={isNavigating ? Mapbox.StyleURL.TrafficDay : Mapbox.StyleURL.Street}
         logoEnabled={false}
@@ -207,7 +235,7 @@ export default function MapScreen() {
           animationDuration={2000}
         />
         
-        {puntos.map((p) => (
+        {visiblePoints.map((p) => (
           <Mapbox.PointAnnotation
             key={p.id}
             id={`punto-${p.id}`}
@@ -239,7 +267,7 @@ export default function MapScreen() {
         <View className="absolute inset-0 items-center justify-center bg-white px-8">
           <Text className="text-lg font-black text-gray-900 text-center">{mapError || 'Cargando mapa…'}</Text>
           {mapError ? (
-            <TouchableOpacity onPress={() => { setMapError(''); setMapLoaded(false); }} className="mt-4 rounded-xl bg-emerald-700 px-6 py-3">
+            <TouchableOpacity onPress={() => { setMapError(''); setMapLoaded(false); setMapKey((value) => value + 1); }} className="mt-4 rounded-xl bg-emerald-700 px-6 py-3">
               <Text className="text-white font-black">Reintentar</Text>
             </TouchableOpacity>
           ) : <ActivityIndicator className="mt-4" color="#047857" />}
@@ -270,11 +298,12 @@ export default function MapScreen() {
       {/* Barra superior normal con Safe Area Superior */}
       {!isNavigating && (
         <View className="absolute left-6 right-6 z-10 flex-row gap-2" style={{ top: topSafeArea }}>
-          <View className="flex-1 bg-surface rounded-full py-4 px-6 shadow-lg shadow-black/10 elevation-5 border border-gray-100 flex-row items-center">
-            <Text className="text-subtext text-base font-semibold">Buscar punto de acopio...</Text>
+          <View className="flex-1 bg-surface rounded-full px-6 shadow-lg shadow-black/10 elevation-5 border border-gray-100 flex-row items-center">
+            <TextInput value={searchQuery} onChangeText={setSearchQuery} placeholder="Buscar punto de acopio..." className="h-14 flex-1 text-base font-semibold text-gray-800" placeholderTextColor="#6B7280" />
           </View>
           <TouchableOpacity 
-            onPress={() => navigation.navigate('MisRecolecciones')}
+            onPress={centerUser}
+            accessibilityLabel="Centrar mi ubicación"
             className="bg-primary w-14 h-14 rounded-full shadow-lg items-center justify-center elevation-5 border-2 border-surface"
           >
             <MapPin color="white" size={24} />
@@ -322,7 +351,7 @@ export default function MapScreen() {
             snapToInterval={296}
             decelerationRate="fast"
           >
-            {puntos.map(p => (
+            {visiblePoints.map(p => (
               <View 
                 key={p.id}
                 className="bg-surface rounded-3xl p-4 w-[280px] mr-4 shadow-xl shadow-black/10 elevation-5 border border-gray-100"

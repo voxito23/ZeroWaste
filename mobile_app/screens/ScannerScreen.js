@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, TextInput, Alert, StyleSheet, Platform } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, Text, TouchableOpacity, Modal, TextInput, Alert, StyleSheet, Linking } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomButton from '../components/ui/CustomButton';
 import { Star, X, CheckCircle2, Truck } from 'lucide-react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { api } from '../api/axios';
 import { StatusBar } from 'expo-status-bar';
@@ -11,6 +11,7 @@ import { useAuth } from '../store/useAuth';
 
 export default function ScannerScreen() {
   const navigation = useNavigation();
+  const isFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
@@ -22,6 +23,14 @@ export default function ScannerScreen() {
   const [comentario, setComentario] = useState('');
   const [contenedorId, setContenedorId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useFocusEffect(useCallback(() => {
+    setScanned(false);
+    return () => {
+      setScanned(true);
+      setModalVisible(false);
+    };
+  }, []));
 
   const isRecolector = user?.rol === 'recolector' || user?.is_admin;
 
@@ -35,19 +44,17 @@ export default function ScannerScreen() {
         <Text className="text-white text-center text-lg mb-6 font-semibold">
           Necesitamos permiso para usar la cámara y escanear los códigos QR en ZeroWaste.
         </Text>
-        <CustomButton onPress={requestPermission} title="Otorgar Permiso" />
+        {permission.canAskAgain ? (
+          <CustomButton onPress={requestPermission} title="Otorgar permiso" />
+        ) : (
+          <CustomButton onPress={() => Linking.openSettings()} title="Abrir Ajustes" />
+        )}
       </SafeAreaView>
     );
   }
 
-  const parseId = (raw) => {
-    if (!raw) return 1;
-    const clean = String(raw).replace(/[^0-9]/g, '');
-    const num = parseInt(clean, 10);
-    return isNaN(num) ? 1 : num;
-  };
-
   const handleBarcodeScanned = ({ type, data }) => {
+    if (type !== 'qr' || scanned || submitting) return;
     setScanned(true);
     setContenedorId(data);
     setModalVisible(true);
@@ -55,9 +62,15 @@ export default function ScannerScreen() {
 
   const handleCompletarRecoleccion = async () => {
     setSubmitting(true);
-    const solId = parseId(contenedorId);
+    const qrToken = String(contenedorId || '').trim();
+    if (qrToken.length < 32) {
+      Alert.alert('Código QR inválido', 'Este código no pertenece a una recolección de ZeroWaste.');
+      setSubmitting(false);
+      setScanned(false);
+      return;
+    }
     try {
-      const res = await api.post(`/recolecciones/${solId}/completar-qr`);
+      const res = await api.post('/recolecciones/completar-qr', { token: qrToken });
       Alert.alert('Recolección Completada ✅', res.data?.message || 'QR validado. Recolección marcada como completada.');
       setModalVisible(false);
       navigation.navigate('Home');
@@ -73,7 +86,14 @@ export default function ScannerScreen() {
 
   const handleCalificar = async () => {
     setSubmitting(true);
-    const solId = parseId(contenedorId);
+    const match = String(contenedorId || '').trim().match(/^ZW-SOL-(\d+)$/i);
+    const solId = match ? Number(match[1]) : null;
+    if (!solId) {
+      Alert.alert('Código QR inválido', 'Este código no pertenece a una recolección de ZeroWaste.');
+      setSubmitting(false);
+      setScanned(false);
+      return;
+    }
     try {
       await api.post(`/recolecciones/${solId}/calificar`, {
         calificacion: calificacion,
@@ -102,14 +122,14 @@ export default function ScannerScreen() {
   return (
     <View className="flex-1 bg-black relative">
       <StatusBar style="light" />
-      <CameraView 
+      {isFocused ? <CameraView
         style={StyleSheet.absoluteFillObject} 
         facing="back"
         onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
         barcodeScannerSettings={{
           barcodeTypes: ["qr"],
         }}
-      />
+      /> : null}
       
       {/* Overlay UI */}
       <SafeAreaView className="flex-1 justify-between" pointerEvents="box-none">
@@ -143,16 +163,16 @@ export default function ScannerScreen() {
               : 'Apunta la cámara al código QR de la recolección para evaluarla.'}
           </Text>
           
-          <CustomButton 
+          {__DEV__ ? <CustomButton
             title={scanned ? "Procesando..." : "Simular Escaneo QR #1"} 
             variant="outline"
             className="w-full bg-black/80 border-emerald-500"
             onPress={() => {
-              setContenedorId('ZW-SOL-1');
+              setContenedorId('development-only-invalid-token');
               setScanned(true);
               setModalVisible(true);
             }}
-          />
+          /> : null}
         </View>
       </SafeAreaView>
 

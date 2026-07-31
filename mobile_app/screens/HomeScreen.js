@@ -17,6 +17,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 import { useScrollContext } from '../context/ScrollContext';
 import { useAuth } from '../store/useAuth';
 import { api } from '../api/axios';
@@ -33,8 +34,6 @@ import {
   ChevronRight,
   Recycle,
   Heart,
-  Share2,
-  Bookmark,
   Bell,
   Zap,
   Award,
@@ -141,6 +140,7 @@ const AnimCounter = ({ target, suffix = '', prefix = '', color = '#fff' }) => {
 
 /* ═══════════════════════════════════════════════════════════════════ */
 export default function HomeScreen() {
+  const navigation = useNavigation();
   const anims = Array.from({ length: 7 }, () => useRef(new Animated.Value(0)).current);
   const slides = Array.from({ length: 7 }, () => useRef(new Animated.Value(50)).current);
   const glow = useRef(new Animated.Value(0.4)).current;
@@ -153,8 +153,10 @@ export default function HomeScreen() {
   const [campaignsList, setCampaignsList] = useState([]);
   const [contentError, setContentError] = useState('');
   const [contentLoading, setContentLoading] = useState(true);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
+    api.get('/usuarios/me/notificaciones/no-leidas').then(({ data }) => setUnreadNotifications(Number(data?.total) || 0)).catch(() => setUnreadNotifications(0));
     const fetchActiveCampaignsAndEvents = async () => {
       setContentLoading(true);
       setContentError('');
@@ -250,20 +252,18 @@ export default function HomeScreen() {
             <Text className="text-[20px] font-black text-gray-900 tracking-tight">Zero Waste</Text>
           </View>
           <View className="flex-row items-center gap-2">
-            <TouchableScale scaleVal={0.9}>
+            <TouchableScale scaleVal={0.9} onPress={() => navigation.navigate('Search')}>
               <View className="w-10 h-10 rounded-full bg-white items-center justify-center border border-gray-100 shadow-sm">
                 <Search color="#374151" size={18} strokeWidth={2.5} />
               </View>
             </TouchableScale>
-            <TouchableScale scaleVal={0.9}>
+            <TouchableScale scaleVal={0.9} onPress={() => navigation.navigate('Notifications')}>
               <View className="w-10 h-10 rounded-full bg-white items-center justify-center border border-gray-100 shadow-sm">
                 <Bell color="#374151" size={18} strokeWidth={2.5} />
-                <View className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-red-500 items-center justify-center border-2 border-white">
-                  <Text className="text-white text-[8px] font-black">3</Text>
-                </View>
+                {unreadNotifications > 0 ? <View className="absolute -top-0.5 -right-0.5 min-w-4 h-4 rounded-full bg-red-500 items-center justify-center border border-white px-1"><Text className="text-white text-[8px] font-black">{unreadNotifications > 99 ? '99+' : unreadNotifications}</Text></View> : null}
               </View>
             </TouchableScale>
-            <TouchableScale scaleVal={0.9}>
+            <TouchableScale scaleVal={0.9} onPress={() => navigation.navigate('Profile')}>
               <View className="w-10 h-10 rounded-full bg-emerald-500 items-center justify-center border-2 border-emerald-100 overflow-hidden">
                 {user?.foto_perfil && user.foto_perfil !== 'perfil_default.png' ? (
                   <Image 
@@ -281,7 +281,7 @@ export default function HomeScreen() {
 
         {/* ═══ 1. IMPACT DASHBOARD (Premium Interactive) ═══════ */}
         <Animated.View style={anim(0)} className="px-5 mb-8 pt-2">
-          <TouchableScale scaleVal={0.98}>
+          <TouchableScale scaleVal={0.98} onPress={() => navigation.navigate('ImpactStats')}>
             <View
               className="rounded-[28px] overflow-hidden"
               style={{ shadowColor: '#064E3B', shadowOffset: { width: 0, height: 20 }, shadowOpacity: 0.25, shadowRadius: 30, elevation: 18 }}
@@ -365,10 +365,6 @@ export default function HomeScreen() {
                         <Text className="text-white text-[10px] font-black uppercase tracking-wider">{item.tag}</Text>
                       </View>
 
-                      {/* Bookmark Ribbon on top right */}
-                      <View className="absolute top-0 right-6 w-10 h-14 bg-[#059669] rounded-b-lg items-center justify-center shadow-sm z-10">
-                        <Bookmark color="#fff" size={18} fill="#34D399" className="-mt-2" />
-                      </View>
                     </View>
 
                     {/* Content Section */}
@@ -432,13 +428,6 @@ export default function HomeScreen() {
                       <View className="absolute top-4 left-4 bg-black/60 px-3 py-1.5 rounded-full border border-white/10">
                         <Text className="text-white text-[10px] font-black uppercase tracking-[0.1em]">{camp.tag}</Text>
                       </View>
-                      <View className="absolute top-4 right-4">
-                        <TouchableScale scaleVal={0.85}>
-                          <View className="w-9 h-9 rounded-full bg-white items-center justify-center shadow-sm">
-                            <Bookmark color="#374151" size={15} />
-                          </View>
-                        </TouchableScale>
-                      </View>
 
                       <View className="absolute bottom-0 w-full bg-black/50 px-4 py-2.5 flex-row justify-between items-center">
                         <View className="flex-row items-center gap-1.5">
@@ -496,11 +485,6 @@ export default function HomeScreen() {
                   style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 140 }}
                   pointerEvents="none"
                 />
-
-                {/* Bookmark Ribbon on top right */}
-                <View className="absolute top-0 right-6 w-10 h-14 bg-[#059669] rounded-b-lg items-center justify-center shadow-sm z-10">
-                  <Bookmark color="#fff" size={18} fill="#34D399" className="-mt-2" />
-                </View>
 
                 {/* Content over the blur */}
                 <View className="absolute top-4 left-4 flex-row items-center gap-2 z-20">

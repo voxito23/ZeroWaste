@@ -5,8 +5,9 @@ import { api } from '../api/axios';
 import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import CustomButton from '../components/ui/CustomButton';
-import { ArrowLeft, Star, QrCode } from 'lucide-react-native';
+import { ArrowLeft, Star } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
+import QRCode from 'react-native-qrcode-svg';
 
 export default function MisRecoleccionesScreen() {
   const { user } = useAuth();
@@ -23,6 +24,8 @@ export default function MisRecoleccionesScreen() {
   // Modal QR
   const [qrModalVisible, setQrModalVisible] = useState(false);
   const [qrData, setQrData] = useState(null);
+  const [qrLoading, setQrLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchRecolecciones();
@@ -33,9 +36,23 @@ export default function MisRecoleccionesScreen() {
       const { data } = await api.get('/recolecciones');
       setRecolecciones(data);
     } catch (e) {
-      console.error(e);
+      setError(e.userMessage || 'No se pudieron cargar las recolecciones.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openSecureQr = async (collection) => {
+    setQrLoading(true);
+    setError('');
+    try {
+      const { data } = await api.post(`/recolecciones/${collection.id}/qr`);
+      setQrData({ collection, token: data.token, expiresIn: data.expires_in });
+      setQrModalVisible(true);
+    } catch (requestError) {
+      Alert.alert('No se pudo generar el QR', requestError.userMessage);
+    } finally {
+      setQrLoading(false);
     }
   };
 
@@ -63,6 +80,7 @@ export default function MisRecoleccionesScreen() {
         </TouchableOpacity>
         <Text className="text-2xl font-black text-text">Mis Recolecciones</Text>
       </View>
+      {error ? <TouchableOpacity onPress={fetchRecolecciones} className="mb-4 rounded-xl bg-red-50 p-3"><Text className="text-center font-bold text-red-700">{error}{'\n'}Reintentar</Text></TouchableOpacity> : null}
 
       {loading ? (
         <ActivityIndicator size="large" color="#064E3B" className="mt-20" />
@@ -97,10 +115,8 @@ export default function MisRecoleccionesScreen() {
                 <CustomButton 
                   title="Generar QR de Seguridad" 
                   variant="outline"
-                  onPress={() => {
-                    setQrData(item);
-                    setQrModalVisible(true);
-                  }}
+                  onPress={() => openSecureQr(item)}
+                  disabled={qrLoading}
                   className="mt-2 border-emerald-500"
                 />
               )}
@@ -187,12 +203,13 @@ export default function MisRecoleccionesScreen() {
             </Text>
             
             <View className="bg-gray-50 p-6 rounded-2xl border border-gray-200 items-center justify-center mb-6 w-full aspect-square">
-              <QrCode size={180} color="#064E3B" strokeWidth={1.5} />
+              {qrData?.token ? <QRCode value={qrData.token} size={180} color="#064E3B" backgroundColor="#F9FAFB" /> : <ActivityIndicator color="#064E3B" />}
             </View>
 
             <View className="bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100 mb-8 w-full">
-              <Text className="text-center text-xs text-emerald-600 font-bold uppercase tracking-widest mb-1">CÓDIGO INTERNO</Text>
-              <Text className="text-center font-black text-xl tracking-widest text-[#064E3B]">ZWR-DOM-{qrData?.id}</Text>
+              <Text className="text-center text-xs text-emerald-600 font-bold uppercase tracking-widest mb-1">RECOLECCIÓN</Text>
+              <Text className="text-center font-black text-xl tracking-widest text-[#064E3B]">#{qrData?.collection?.id}</Text>
+              <Text className="mt-1 text-center text-xs text-emerald-700">Expira en 10 minutos y solo puede usarse una vez.</Text>
             </View>
 
             <View className="w-full">
