@@ -265,7 +265,9 @@ services:
     volumes:
       - ./blackbox/blackbox.yml:/etc/blackbox_exporter/config.yml:ro
     command: ["--config.file=/etc/blackbox_exporter/config.yml"]
-    networks: [monitoring_network, edge_network]
+    # app_network permits private health probes for the two Laravel replicas;
+    # no Blackbox port is published on the host.
+    networks: [monitoring_network, edge_network, app_network]
 
   tailwind:
     image: node:20-alpine
