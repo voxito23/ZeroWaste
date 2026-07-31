@@ -64,12 +64,15 @@ services:
     volumes:
       - ./flask_zerowaste:/app
       - perfiles_compartidos:/app/static/img/perfiles
+      - foro_media:/app/static/img/posts
+      - ./laravel_zerowaste/public/images/recompensas:/app/reward_images:ro
     env_file: [./flask_zerowaste/.env]
     environment:
       APP_ENV: production
       FLASK_DEBUG: "false"
       HTTPS_ENABLED: "true"
       REDIS_URL: redis://redis:6379/0
+      REWARD_IMAGES_DIR: /app/reward_images
     networks: [app_network, data_network, backend_egress]
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:5000/health"]
@@ -158,11 +161,13 @@ services:
     volumes:
       - ./fast_api:/app
       - perfiles_compartidos:/app/static/img/perfiles
+      - foro_media:/data/media/foro
     env_file: [./fast_api/.env]
     environment:
       APP_ENV: production
       REDIS_URL: redis://redis:6379/0
       TRUSTED_PROXY_CIDRS: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+      FORUM_MEDIA_DIR: /data/media/foro
     networks: [app_network, data_network, backend_egress, monitoring_network]
     depends_on:
       redis:
@@ -295,3 +300,4 @@ volumes:
   redis_data:
   prometheus_data:
   grafana_data:
+  foro_media:

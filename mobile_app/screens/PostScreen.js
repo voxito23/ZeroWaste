@@ -4,7 +4,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { 
   ArrowLeft, 
   MessageCircle, 
-  Share2, 
   Heart, 
   MoreHorizontal,
   Recycle,
@@ -18,7 +17,10 @@ import {
 import { api } from '../api/axios';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { forumPostImageUrl, profileImageUrl } from '../utils/media';
+import { formatRelativeDate } from '../utils/date';
+import RemoteImage from '../components/ui/RemoteImage';
 
 
 
@@ -27,6 +29,7 @@ export default function PostScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const postId = route.params?.id;
+  const insets = useSafeAreaInsets();
 
   const [post, setPost] = useState(null);
   const [respuestas, setRespuestas] = useState([]);
@@ -78,25 +81,13 @@ export default function PostScreen() {
     }
   };
 
-  const getImageUrl = (path, type, name = 'Usuario') => {
-    if (!path || path === 'perfil_default.png' || path === 'default.png') return type === 'post' ? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80' : `https://api.dicebear.com/7.x/identicon/png?seed=${encodeURIComponent(name)}`;
-    if (path.startsWith('http')) return path;
-
-    const baseUrl = api.defaults.baseURL || 'https://www.zerowaste-qro.com/api';
-    return type === 'post' ? `${baseUrl}/foro/posts/imagenes/${path}` : `${baseUrl}/foro/perfiles/${path}`;
-  };
+  const getImageUrl = (path, type) => type === 'post' ? forumPostImageUrl(path) : profileImageUrl(path);
 
   const stripHtml = (html) => {
     return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
   };
 
-  const getTimeAgo = (dateString) => {
-    const diff = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 60000);
-    if (diff < 60) return `Hace ${diff} min`;
-    const hours = Math.floor(diff / 60);
-    if (hours < 24) return `Hace ${hours}h`;
-    return `Hace ${Math.floor(hours / 24)}d`;
-  };
+  const getTimeAgo = formatRelativeDate;
 
   const getCatStyle = (catName) => {
     const defaultStyle = { bg: 'transparent', text: '#4B5563', border: '#E5E7EB', icon: <Folder size={12} color="#4B5563" /> };
@@ -158,7 +149,7 @@ export default function PostScreen() {
           <View className="flex-row items-center justify-between mb-5">
             <View className="flex-row items-center gap-3">
               <Image 
-                source={{ uri: getImageUrl(post.autor_foto, 'perfil', post.autor_nombre || 'Usuario') }} 
+                source={getImageUrl(post.autor_foto, 'perfil') ? { uri: getImageUrl(post.autor_foto, 'perfil') } : require('../assets/images/logo.png')}
                 className="w-12 h-12 rounded-full border border-gray-200" 
               />
               <View>
@@ -183,8 +174,8 @@ export default function PostScreen() {
           <Text className="font-black text-[#022C22] text-[22px] leading-tight mb-4">{post.titulo}</Text>
           <Text className="text-[#047857] text-[16px] leading-relaxed mb-6">{stripHtml(post.contenido)}</Text>
 
-          {post.imagen && (
-            <Image source={{ uri: getImageUrl(post.imagen, 'post') }} className="w-full h-48 rounded-2xl mb-4" resizeMode="cover" />
+          {forumPostImageUrl(post.imagen) && (
+            <RemoteImage uri={forumPostImageUrl(post.imagen)} className="w-full h-48 rounded-2xl mb-4" />
           )}
 
           <View className="flex-row items-center gap-6 mt-2 pt-4 border-t border-gray-100">
@@ -214,7 +205,7 @@ export default function PostScreen() {
               <View key={resp.id || i} className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-[#D1FAE5]">
                 <View className="flex-row items-center justify-between mb-2">
                   <View className="flex-row items-center gap-2">
-                    <Image source={{ uri: getImageUrl(resp.autor_foto, 'perfil', resp.autor_nombre || 'Usuario') }} className="w-8 h-8 rounded-full" />
+                    <Image source={getImageUrl(resp.autor_foto, 'perfil') ? { uri: getImageUrl(resp.autor_foto, 'perfil') } : require('../assets/images/logo.png')} className="w-8 h-8 rounded-full" />
                     <Text className="font-bold text-[#064E3B] text-[13px]">{resp.autor_nombre}</Text>
                   </View>
                   <Text className="text-[#059669] text-[11px] font-semibold">{getTimeAgo(resp.created_at)}</Text>
@@ -227,7 +218,7 @@ export default function PostScreen() {
       </ScrollView>
 
       {/* Input Area */}
-      <View className="px-5 py-3 bg-white border-t border-[#D1FAE5] flex-row items-end shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+      <View className="px-5 pt-3 bg-white border-t border-[#D1FAE5] flex-row items-end shadow-[0_-10px_20px_rgba(0,0,0,0.05)]" style={{ paddingBottom: Math.max(insets.bottom, 12) }}>
         <TextInput
           value={replyText}
           onChangeText={setReplyText}

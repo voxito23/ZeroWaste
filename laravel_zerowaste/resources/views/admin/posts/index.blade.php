@@ -91,6 +91,9 @@
                         </td>
                         <td class="text-right">
                             <div class="flex items-center justify-end gap-1">
+                                @if(!$post->aprobado)
+                                <form action="{{ route('posts.approve', $post->id) }}" method="POST">@csrf<button class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl" title="Aprobar y otorgar puntos"><span class="material-symbols-outlined text-[20px]">verified</span></button></form>
+                                @endif
                                 <button type="button" 
                                     data-title="{{ $post->titulo }}"
                                     data-author="{{ $post->autor->nombre ?? 'Desconocido' }}"

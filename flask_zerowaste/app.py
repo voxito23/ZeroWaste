@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify, session
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, send_from_directory
 from flask_cors import CORS
 # Email se envía via Resend HTTP API (DigitalOcean bloquea puertos SMTP)
 from flask_limiter import Limiter
@@ -16,6 +16,8 @@ import requests as http_requests
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from urllib.parse import urlparse
+
+REWARD_IMAGES_DIR = os.environ.get('REWARD_IMAGES_DIR', 'reward_images')
 
 # Solo permitir OAuth inseguro en desarrollo local
 if os.environ.get('FLASK_DEBUG', 'false').lower() == 'true':
@@ -165,6 +167,15 @@ def handle_database_error(error):
 def health():
     """Liveness only: never opens a database connection."""
     return jsonify({'status': 'ok', 'service': 'flask'})
+
+
+@app.get('/images/recompensas/<filename>')
+def reward_image(filename):
+    """Serve only curated reward images from the read-only catalog directory."""
+    safe_name = os.path.basename(filename)
+    if safe_name != filename or not safe_name.lower().endswith(('.png', '.webp', '.jpg', '.jpeg')):
+        return jsonify({'error': 'Imagen no encontrada'}), 404
+    return send_from_directory(REWARD_IMAGES_DIR, safe_name, conditional=True, max_age=86400)
 
 
 @app.get('/ready')

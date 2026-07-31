@@ -2,12 +2,15 @@
 Router del foro — CRUD completo: posts, respuestas y likes.
 """
 
+import io
 import os
+import uuid
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
+from PIL import Image, UnidentifiedImageError
 
 from app.data.database import get_db
 from app.models.domain_models import (
@@ -19,8 +22,41 @@ from app.models.schemas import (
     LikeResponse, CategoriaResponse, MessageResponse,
 )
 from app.security.jwt_auth import get_current_user
+from app.services.points import award_points
 
 router = APIRouter(prefix="/foro", tags=["Foro"])
+
+POST_IMAGE_DIR = os.getenv("FORUM_MEDIA_DIR", "static/img/posts")
+MAX_POST_IMAGE_BYTES = 5 * 1024 * 1024
+ALLOWED_POST_IMAGE_FORMATS = {"JPEG": "jpg", "PNG": "png", "WEBP": "webp"}
+
+
+async def _store_post_image(upload: UploadFile) -> str:
+    content = await upload.read(MAX_POST_IMAGE_BYTES + 1)
+    if not content or len(content) > MAX_POST_IMAGE_BYTES:
+        raise HTTPException(status_code=413, detail="La imagen debe pesar como máximo 5 MB.")
+    try:
+        source = Image.open(io.BytesIO(content))
+        source.verify()
+        source = Image.open(io.BytesIO(content))
+        image_format = (source.format or "").upper()
+        extension = ALLOWED_POST_IMAGE_FORMATS.get(image_format)
+        if not extension:
+            raise HTTPException(status_code=415, detail="Usa una imagen JPEG, PNG o WebP.")
+        if source.width > 6000 or source.height > 6000:
+            raise HTTPException(status_code=422, detail="La imagen excede las dimensiones permitidas.")
+        clean = source.convert("RGB") if image_format == "JPEG" else source.copy()
+    except HTTPException:
+        raise
+    except (UnidentifiedImageError, OSError, ValueError):
+        raise HTTPException(status_code=415, detail="El archivo no es una imagen válida.")
+
+    os.makedirs(POST_IMAGE_DIR, exist_ok=True)
+    filename = f"{uuid.uuid4().hex}.{extension}"
+    destination = os.path.join(POST_IMAGE_DIR, filename)
+    save_format = "JPEG" if extension == "jpg" else image_format
+    clean.save(destination, format=save_format, quality=88, optimize=True)
+    return filename
 
 
 # Imágenes
@@ -29,7 +65,10 @@ router = APIRouter(prefix="/foro", tags=["Foro"])
 def get_perfil_image(filename: str):
     """Devuelve la imagen de perfil solicitada. Busca en el volumen compartido."""
     # En desarrollo local la ruta es static/img/perfiles. En Docker es el volumen compartido.
-    path = f"static/img/perfiles/{filename}"
+    safe_name = os.path.basename(filename)
+    if safe_name != filename:
+        raise HTTPException(status_code=400, detail="Nombre de archivo inválido")
+    path = os.path.join("static", "img", "perfiles", safe_name)
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Imagen no encontrada")
     return FileResponse(path)
@@ -38,7 +77,10 @@ def get_perfil_image(filename: str):
 @router.get("/posts/imagenes/{filename}", summary="Obtener imagen de post")
 def get_post_image(filename: str):
     """Devuelve la imagen de un post."""
-    path = f"static/img/posts/{filename}"
+    safe_name = os.path.basename(filename)
+    if safe_name != filename:
+        raise HTTPException(status_code=400, detail="Nombre de archivo inválido")
+    path = os.path.join(POST_IMAGE_DIR, safe_name)
     if not os.path.exists(path):
         raise HTTPException(status_code=404, detail="Imagen no encontrada")
     return FileResponse(path)
@@ -59,7 +101,7 @@ def list_posts(
     db: Session = Depends(get_db),
 ):
     """Devuelve todos los posts del foro con información de autor, categoría, respuestas y likes."""
-    posts = db.query(Foro).order_by(Foro.created_at.desc()).all()
+    posts = db.query(Foro).filter(Foro.aprobado.is_(True)).order_by(Foro.created_at.desc()).all()
 
     resultado = []
     for post in posts:
@@ -86,7 +128,7 @@ def get_post(
     db: Session = Depends(get_db),
 ):
     """Devuelve un post específico con detalles completos."""
-    post = db.query(Foro).filter(Foro.id == post_id).first()
+    post = db.query(Foro).filter(Foro.id == post_id, Foro.aprobado.is_(True)).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
 
@@ -132,6 +174,7 @@ def create_post(
         categoria_id=post_in.categoria_id,
         autor_id=current_user.id,
         imagen=post_in.imagen,
+        aprobado=False,
     )
     db.add(nuevo_post)
     
@@ -144,6 +187,50 @@ def create_post(
     db.add(actividad)
     db.commit()
     db.refresh(nuevo_post)
+    return nuevo_post
+
+
+@router.post(
+    "/posts/con-imagen",
+    response_model=PostResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Crear un post con imagen opcional",
+)
+async def create_post_with_image(
+    titulo: str = Form(..., min_length=3, max_length=200),
+    contenido: str = Form(..., min_length=3),
+    categoria_id: int = Form(...),
+    imagen: UploadFile | None = File(None),
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    categoria = db.query(Categoria).filter(Categoria.id == categoria_id).first()
+    if not categoria:
+        raise HTTPException(status_code=422, detail="La categoría seleccionada no existe.")
+
+    filename = await _store_post_image(imagen) if imagen else None
+    nuevo_post = Foro(
+        titulo=titulo.strip(), contenido=contenido.strip(), categoria_id=categoria_id,
+        autor_id=current_user.id, imagen=filename,
+        aprobado=False,
+    )
+    db.add(nuevo_post)
+    db.add(Actividad(
+        usuario_id=current_user.id,
+        tipo="post",
+        descripcion="Publicó un nuevo post en el foro",
+    ))
+    try:
+        db.commit()
+        db.refresh(nuevo_post)
+    except Exception:
+        db.rollback()
+        if filename:
+            try:
+                os.remove(os.path.join(POST_IMAGE_DIR, filename))
+            except OSError:
+                pass
+        raise
     return nuevo_post
 
 
@@ -251,6 +338,12 @@ def create_respuesta(
         contenido=respuesta_in.contenido,
     )
     db.add(nueva_respuesta)
+    db.flush()
+    award_points(
+        db, user_id=current_user.id, rule_code="RESPUESTA_VALIDA",
+        reference_type="RESPUESTA_FORO", reference_id=str(nueva_respuesta.id),
+        description="Respuesta válida en el foro",
+    )
 
     # Notificar al autor del post (si no es el mismo que responde)
     if post.autor_id != current_user.id:

@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, Dimensions, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, TextInput, Dimensions, RefreshControl, Share } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import {
   Search,
   Bell,
-  Bookmark,
   Heart,
   MessageCircle,
   Share2,
@@ -26,6 +25,9 @@ import { ArrowRight } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useScrollContext } from '../context/ScrollContext';
+import { forumPostImageUrl, profileImageUrl } from '../utils/media';
+import { formatRelativeDate } from '../utils/date';
+import RemoteImage from '../components/ui/RemoteImage';
 
 const { width } = Dimensions.get('window');
 
@@ -82,21 +84,9 @@ export default function ForumScreen() {
     }
   };
 
-  const getTimeAgo = (dateString) => {
-    const diff = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / 60000);
-    if (diff < 60) return `Hace ${diff} min`;
-    const hours = Math.floor(diff / 60);
-    if (hours < 24) return `Hace ${hours}h`;
-    return `Hace ${Math.floor(hours / 24)}d`;
-  };
+  const getTimeAgo = formatRelativeDate;
 
-  const getImageUrl = (path, type, name = 'Usuario') => {
-    if (!path || path === 'perfil_default.png' || path === 'default.png') return type === 'post' ? 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80' : `https://api.dicebear.com/7.x/identicon/png?seed=${encodeURIComponent(name)}`;
-    if (path.startsWith('http')) return path;
-
-    const baseUrl = api.defaults.baseURL || 'https://www.zerowaste-qro.com/api';
-    return type === 'post' ? `${baseUrl}/foro/posts/imagenes/${path}` : `${baseUrl}/foro/perfiles/${path}`;
-  };
+  const getImageUrl = (path, type) => type === 'post' ? forumPostImageUrl(path) : profileImageUrl(path);
 
   const getCatStyle = (catName) => {
     const defaultStyle = { bg: 'transparent', text: '#4B5563', border: '#E5E7EB', icon: <Folder size={10} color="#4B5563" /> };
@@ -109,6 +99,11 @@ export default function ForumScreen() {
     if (name === 'Dudas') return { bg: 'transparent', text: '#be123c', border: '#fda4af', icon: <HelpCircle size={10} color="#be123c" /> };
     return defaultStyle;
   };
+
+  const sharePost = (post) => Share.share({
+    title: post.titulo,
+    message: `${post.titulo}\nhttps://www.zerowaste-qro.com/foro`,
+  }).catch(() => {});
 
   return (
     <SafeAreaView className="flex-1 bg-[#ECFDF5]" edges={['top']}>
@@ -149,16 +144,13 @@ export default function ForumScreen() {
           </View>
 
           <View className="flex-row items-center gap-3">
-            <TouchableOpacity className="w-12 h-12 rounded-full bg-white items-center justify-center shadow-sm border border-gray-100">
+            <TouchableOpacity onPress={() => navigation.navigate('Notifications')} className="w-12 h-12 rounded-full bg-white items-center justify-center shadow-sm border border-gray-100">
               <Bell color="#4B5563" size={20} />
               <View className="absolute top-3 right-3 w-2 h-2 rounded-full bg-red-500 border border-white" />
             </TouchableOpacity>
 
-            <TouchableOpacity className="w-12 h-12 rounded-full bg-white shadow-sm border border-gray-100 p-0.5">
-              <Image
-                source={{ uri: user?.foto_perfil ? getImageUrl(user.foto_perfil, 'perfil') : 'https://i.pravatar.cc/150?img=11' }}
-                className="w-full h-full rounded-full"
-              />
+            <TouchableOpacity onPress={() => navigation.navigate('Profile')} className="w-12 h-12 rounded-full bg-white shadow-sm border border-gray-100 p-0.5">
+              <Image source={getImageUrl(user?.foto_perfil, 'perfil') ? { uri: getImageUrl(user.foto_perfil, 'perfil') } : require('../assets/images/logo.png')} className="w-full h-full rounded-full" />
             </TouchableOpacity>
           </View>
         </View>
@@ -166,10 +158,7 @@ export default function ForumScreen() {
         {/* ─── CREATE POST (Facebook style) ────────────────────── */}
         <View className="px-5 mb-6">
           <View className="bg-white rounded-[24px] p-4 shadow-sm border border-gray-100 flex-row items-center gap-3">
-            <Image
-              source={{ uri: user?.foto_perfil ? getImageUrl(user.foto_perfil, 'perfil') : 'https://i.pravatar.cc/150?img=11' }}
-              className="w-10 h-10 rounded-full bg-gray-100"
-            />
+            <Image source={getImageUrl(user?.foto_perfil, 'perfil') ? { uri: getImageUrl(user.foto_perfil, 'perfil') } : require('../assets/images/logo.png')} className="w-10 h-10 rounded-full bg-gray-100" />
             <TouchableOpacity
               className="flex-1 bg-gray-50 h-10 rounded-full px-4 justify-center"
               onPress={() => navigation.navigate('CreatePost')}
@@ -216,7 +205,8 @@ export default function ForumScreen() {
               })
               .map((post, index) => {
                 const catStyle = getCatStyle(post.categoria_nombre);
-                const isTrend = index === 0 && (activeTab === 'Todo' || activeTab === 'Todos');
+                const postImageUrl = getImageUrl(post.imagen, 'post');
+                const isTrend = Boolean(postImageUrl) && index === 0 && (activeTab === 'Todo' || activeTab === 'Todos');
 
               if (isTrend) {
                 // Función para replicar el texto verde del diseño en Flask
@@ -247,11 +237,7 @@ export default function ForumScreen() {
                     className="bg-white rounded-[32px] overflow-hidden mb-8 shadow-[0_10px_40px_rgba(0,0,0,0.06)] border border-gray-100"
                   >
                     <View className="h-[340px] relative bg-gray-100">
-                      <Image
-                        source={{ uri: getImageUrl(post.imagen, 'post') }}
-                        className="w-full h-full"
-                        resizeMode="cover"
-                      />
+                      <RemoteImage uri={postImageUrl} className="w-full h-full" />
 
                       {/* White fade at bottom - Taller for the text */}
                       <LinearGradient
@@ -271,12 +257,6 @@ export default function ForumScreen() {
                         </BlurView>
                       </View>
 
-                      {/* BOOKMARK */}
-                      <View className="absolute top-6 right-5 w-11 h-11 rounded-full overflow-hidden border border-white/20">
-                        <BlurView intensity={40} tint="dark" className="w-full h-full items-center justify-center bg-black/20">
-                          <Bookmark color="#fff" size={20} />
-                        </BlurView>
-                      </View>
                     </View>
 
                     {/* CONTENT SECTION OVERLAPPING THE FADE */}
@@ -307,7 +287,7 @@ export default function ForumScreen() {
                             <Heart color="#1F2937" size={24} strokeWidth={2.5} />
                             <Text className="text-gray-800 text-[16px] font-black">{post.total_likes > 0 ? (post.total_likes > 999 ? '1.2k' : post.total_likes) : 0}</Text>
                           </View>
-                          <TouchableOpacity>
+                          <TouchableOpacity onPress={() => sharePost(post)} accessibilityLabel="Compartir publicación">
                             <Share2 color="#1F2937" size={24} strokeWidth={2.5} />
                           </TouchableOpacity>
                         </View>
@@ -324,12 +304,8 @@ export default function ForumScreen() {
                   className="bg-white rounded-[32px] overflow-hidden mb-6 shadow-sm border border-gray-100"
                 >
                   {/* ══ IMAGE SECTION ══ */}
-                  <View className="h-[220px] relative bg-gray-100">
-                    <Image
-                      source={{ uri: getImageUrl(post.imagen, 'post') }}
-                      className="w-full h-full"
-                      resizeMode="cover"
-                    />
+                  {postImageUrl ? <View className="h-[220px] relative bg-gray-100">
+                    <RemoteImage uri={postImageUrl} className="w-full h-full" />
 
                     {/* Premium smooth fade into white */}
                     <LinearGradient
@@ -339,12 +315,7 @@ export default function ForumScreen() {
                       pointerEvents="none"
                     />
 
-                    {/* Bookmark Ribbon */}
-                    <View className="absolute top-0 right-6 w-10 h-14 bg-[#059669] rounded-b-lg items-center justify-center shadow-sm">
-                      <Bookmark color="#fff" size={18} fill="#34D399" className="-mt-2" />
-                    </View>
-
-                  </View>
+                  </View> : null}
 
                   {/* ══ CONTENT SECTION ══ */}
                   <View className="px-6 pb-6 pt-4">
@@ -363,7 +334,7 @@ export default function ForumScreen() {
                           <Text className="text-[11px] font-medium text-gray-500 mt-0.5">{getTimeAgo(post.created_at)}</Text>
                         </View>
                         <Image
-                          source={{ uri: getImageUrl(post.autor_foto, 'perfil', post.autor_nombre || 'Usuario') }}
+                          source={getImageUrl(post.autor_foto, 'perfil') ? { uri: getImageUrl(post.autor_foto, 'perfil') } : require('../assets/images/logo.png')}
                           className="w-10 h-10 rounded-full border border-gray-100"
                         />
                       </View>
@@ -398,7 +369,7 @@ export default function ForumScreen() {
                           <MessageCircle color="#9CA3AF" size={18} />
                           <Text className="text-gray-600 text-[13px] font-bold">{post.total_respuestas || 0}</Text>
                         </View>
-                        <TouchableOpacity className="ml-1">
+                        <TouchableOpacity onPress={() => sharePost(post)} className="ml-1" accessibilityLabel="Compartir publicación">
                           <Share2 color="#9CA3AF" size={18} />
                         </TouchableOpacity>
                       </View>

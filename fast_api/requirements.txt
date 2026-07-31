@@ -6,6 +6,7 @@ python-jose[cryptography]==3.5.0
 bcrypt==4.3.0
 werkzeug==3.1.7
 python-multipart==0.0.22
+Pillow>=11.0,<13
 pydantic[email]==2.12.5
 pysentimiento==0.7.3
 pandas==2.2.3
