@@ -176,8 +176,8 @@
                 <a href="{{ route('mapa.index') }}" class="px-6 py-3 rounded-xl font-bold text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-emerald-900/30 transition-colors flex items-center gap-2">
                     <span class="material-symbols-outlined text-lg">arrow_back</span> Cancelar
                 </a>
-                <button type="submit" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-500/30 transition-all duration-300 hover:-translate-y-1 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-lg">save</span> Guardar Punto
+                <button type="submit" name="submit_action" value="save_and_qr" class="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-500/20 transition-all duration-200 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-lg">qr_code_2</span> Guardar y generar código QR
                 </button>
             </div>
         </form>

@@ -166,6 +166,11 @@
                                 <a href="{{ route('mapa.edit', $loc) }}" class="w-6 h-6 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 flex items-center justify-center transition-colors" title="Editar">
                                     <span class="material-symbols-outlined text-[13px]">edit</span>
                                 </a>
+                                <form action="{{ route('mapa.qr.generate', $loc) }}" method="POST">@csrf
+                                    <button type="submit" class="w-6 h-6 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 flex items-center justify-center transition-colors" title="Generar o ver QR">
+                                        <span class="material-symbols-outlined text-sm">qr_code_2</span>
+                                    </button>
+                                </form>
                                 <form id="delete-form-{{ $loc->id }}" action="{{ route('mapa.destroy', $loc) }}" method="POST">
                                     @csrf @method('DELETE')
                                     <button type="button" onclick="confirmarEliminar('delete-form-{{ $loc->id }}', '{{ $loc->nombre }}')" class="w-6 h-6 rounded-md bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400 flex items-center justify-center transition-colors" title="Eliminar">

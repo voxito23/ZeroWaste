@@ -1,280 +1,161 @@
-import React, { useCallback, useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, TextInput, Alert, StyleSheet, Linking } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import CustomButton from '../components/ui/CustomButton';
-import { Star, X, CheckCircle2, Truck } from 'lucide-react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  AccessibilityInfo,
+  ActivityIndicator,
+  Animated,
+  Linking,
+  Modal,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { api } from '../api/axios';
+import { CheckCircle2, Flashlight, RotateCcw, ScanLine, XCircle } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useAuth } from '../store/useAuth';
+
+import { api } from '../api/axios';
+
+const EXTERNAL_QR_ERROR = 'Error: este código QR no pertenece a ZeroWaste.';
+const OWN_QR_PATTERN = /^(https:\/\/(www\.)?zerowaste-qro\.com\/q\/[pc]\/zw1[pc]_[A-Za-z0-9_-]{40,}|zerowaste:\/\/qr\/zw1[pc]_[A-Za-z0-9_-]{40,})$/;
+
+const ERROR_MESSAGES = {
+  NOT_ZEROWASTE_QR: EXTERNAL_QR_ERROR,
+  QR_TAMPERED: 'Este código QR no es válido o fue modificado.',
+  QR_REVOKED: 'Este código QR ya no está activo.',
+  QR_EXPIRED: 'Este código QR ha vencido.',
+  QR_ALREADY_USED: 'Esta recolección ya fue confirmada anteriormente.',
+  COLLECTION_MISMATCH: 'Este código no corresponde a la recolección seleccionada.',
+  FORBIDDEN: 'No tienes permiso para confirmar esta recolección.',
+};
 
 export default function ScannerScreen() {
   const navigation = useNavigation();
-  const isFocused = useIsFocused();
-  const insets = useSafeAreaInsets();
-  const { user } = useAuth();
+  const focused = useIsFocused();
   const [permission, requestPermission] = useCameraPermissions();
-  const [scanned, setScanned] = useState(false);
-  
-  // Modal state
-  const [modalVisible, setModalVisible] = useState(false);
-  const [calificacion, setCalificacion] = useState(5);
-  const [comentario, setComentario] = useState('');
-  const [contenedorId, setContenedorId] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const [torch, setTorch] = useState(false);
+  const [result, setResult] = useState(null);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const lastCode = useRef({ value: '', at: 0 });
+  const scanLine = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion || locked || !focused) return undefined;
+    const animation = Animated.loop(Animated.sequence([
+      Animated.timing(scanLine, { toValue: 1, duration: 1600, useNativeDriver: true }),
+      Animated.timing(scanLine, { toValue: 0, duration: 1600, useNativeDriver: true }),
+    ]));
+    animation.start();
+    return () => animation.stop();
+  }, [focused, locked, reduceMotion, scanLine]);
 
   useFocusEffect(useCallback(() => {
-    setScanned(false);
-    return () => {
-      setScanned(true);
-      setModalVisible(false);
-    };
+    setLocked(false);
+    setResult(null);
+    return () => setLocked(true);
   }, []));
 
-  const isRecolector = user?.rol === 'recolector' || user?.is_admin;
+  const showError = (message) => setResult({ status: 'error', message });
 
-  if (!permission) {
-    return <View className="flex-1 bg-black justify-center items-center" />;
-  }
+  const validate = async (content) => {
+    const value = String(content || '').trim();
+    const now = Date.now();
+    if (lastCode.current.value === value && now - lastCode.current.at < 3000) return;
+    lastCode.current = { value, at: now };
+    setLocked(true);
 
+    if (!OWN_QR_PATTERN.test(value)) {
+      showError(EXTERNAL_QR_ERROR);
+      return;
+    }
+
+    setResult({ status: 'processing', message: 'Validando código de forma segura…' });
+    try {
+      const { data } = await api.post('/qr/validar', { contenido: value });
+      if (data?.valid && data.type === 'recycling_point' && data.point) {
+        setResult({ status: 'success', message: 'Punto de reciclaje verificado.' });
+        setTimeout(() => {
+          setResult(null);
+          navigation.navigate('LocationDetail', { point: data.point });
+        }, reduceMotion ? 0 : 450);
+        return;
+      }
+      if (data?.valid && data.type === 'collection') {
+        setResult({ status: 'success', message: 'Recolección verificada correctamente.' });
+        return;
+      }
+      showError(EXTERNAL_QR_ERROR);
+    } catch (error) {
+      if (!error.response) {
+        showError('No fue posible validar el código. Revisa tu conexión e inténtalo nuevamente.');
+        return;
+      }
+      const body = error.response?.data || {};
+      showError(ERROR_MESSAGES[body.code] || body.detail || 'Este código QR no es válido o fue modificado.');
+    }
+  };
+
+  const retry = () => {
+    setResult(null);
+    setLocked(false);
+  };
+
+  if (!permission) return <View className="flex-1 bg-black" />;
   if (!permission.granted) {
     return (
-      <SafeAreaView className="flex-1 bg-black justify-center items-center px-8">
-        <Text className="text-white text-center text-lg mb-6 font-semibold">
-          Necesitamos permiso para usar la cámara y escanear los códigos QR en ZeroWaste.
-        </Text>
-        {permission.canAskAgain ? (
-          <CustomButton onPress={requestPermission} title="Otorgar permiso" />
-        ) : (
-          <CustomButton onPress={() => Linking.openSettings()} title="Abrir Ajustes" />
-        )}
+      <SafeAreaView className="flex-1 items-center justify-center bg-slate-950 px-8">
+        <ScanLine color="#34D399" size={44} />
+        <Text className="mt-6 text-center text-lg font-bold text-white">Permite el acceso a la cámara para escanear códigos QR de ZeroWaste.</Text>
+        <TouchableOpacity onPress={permission.canAskAgain ? requestPermission : Linking.openSettings} className="mt-7 rounded-2xl bg-emerald-500 px-7 py-4">
+          <Text className="font-black text-emerald-950">{permission.canAskAgain ? 'Permitir cámara' : 'Abrir Ajustes'}</Text>
+        </TouchableOpacity>
       </SafeAreaView>
     );
   }
 
-  const handleBarcodeScanned = ({ type, data }) => {
-    if (type !== 'qr' || scanned || submitting) return;
-    setScanned(true);
-    setContenedorId(data);
-    setModalVisible(true);
-  };
-
-  const handleCompletarRecoleccion = async () => {
-    setSubmitting(true);
-    const qrToken = String(contenedorId || '').trim();
-    if (qrToken.length < 32) {
-      Alert.alert('Código QR inválido', 'Este código no pertenece a una recolección de ZeroWaste.');
-      setSubmitting(false);
-      setScanned(false);
-      return;
-    }
-    try {
-      const res = await api.post('/recolecciones/completar-qr', { token: qrToken });
-      Alert.alert('Recolección Completada ✅', res.data?.message || 'QR validado. Recolección marcada como completada.');
-      setModalVisible(false);
-      navigation.navigate('Home');
-    } catch (error) {
-      const msg = error.response?.data?.detail || 'No se pudo validar el QR para esta recolección.';
-      Alert.alert('Error al Validar', msg);
-    } finally {
-      setSubmitting(false);
-      setTimeout(() => setScanned(false), 2000);
-    }
-  };
-
-  const handleCalificar = async () => {
-    setSubmitting(true);
-    const match = String(contenedorId || '').trim().match(/^ZW-SOL-(\d+)$/i);
-    const solId = match ? Number(match[1]) : null;
-    if (!solId) {
-      Alert.alert('Código QR inválido', 'Este código no pertenece a una recolección de ZeroWaste.');
-      setSubmitting(false);
-      setScanned(false);
-      return;
-    }
-    try {
-      await api.post(`/recolecciones/${solId}/calificar`, {
-        calificacion: calificacion,
-        comentario: comentario || 'Sin comentarios adicionales'
-      });
-      Alert.alert('Éxito', `Has calificado la recolección con ${calificacion} estrellas.\n¡Gracias por contribuir a ZeroWaste!`);
-      setModalVisible(false);
-      navigation.navigate('Home');
-    } catch (error) {
-      const msg = error.response?.data?.detail || 'Hubo un problema al enviar la calificación.';
-      Alert.alert('Aviso', msg);
-    } finally {
-      setSubmitting(false);
-      setTimeout(() => setScanned(false), 2000);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setModalVisible(false);
-    setCalificacion(5);
-    setComentario('');
-    setTimeout(() => setScanned(false), 1500);
-  };
-
   return (
-    <View className="flex-1 bg-black relative">
+    <View className="flex-1 bg-black">
       <StatusBar style="light" />
-      {isFocused ? <CameraView
-        style={StyleSheet.absoluteFillObject} 
+      {focused && <CameraView
+        style={StyleSheet.absoluteFill}
         facing="back"
-        onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
-        barcodeScannerSettings={{
-          barcodeTypes: ["qr"],
-        }}
-      /> : null}
-      
-      {/* Overlay UI */}
-      <SafeAreaView className="flex-1 justify-between" pointerEvents="box-none">
-        <View className="items-center pt-8" pointerEvents="box-none">
-          <View className="bg-black/70 px-6 py-3 rounded-full flex-row items-center gap-2 border border-white/10">
-            {isRecolector ? (
-              <Truck color="#10B981" size={20} />
-            ) : (
-              <Star color="#10B981" size={20} />
-            )}
-            <Text className="text-white text-lg font-black tracking-wide">
-              {isRecolector ? 'Escanear QR Recolección' : 'Escanear Código QR'}
-            </Text>
-          </View>
+        enableTorch={torch}
+        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+        onBarcodeScanned={locked ? undefined : ({ data }) => validate(data)}
+      />}
+      <SafeAreaView className="flex-1 justify-between px-5 py-4">
+        <View className="flex-row items-center justify-between">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="h-12 w-12 items-center justify-center rounded-full bg-black/65" accessibilityLabel="Cerrar escáner"><XCircle color="white" size={25} /></TouchableOpacity>
+          <View className="rounded-full bg-black/65 px-5 py-3"><Text className="font-black text-white">Escáner ZeroWaste</Text></View>
+          <TouchableOpacity onPress={() => setTorch((value) => !value)} className={`h-12 w-12 items-center justify-center rounded-full ${torch ? 'bg-emerald-400' : 'bg-black/65'}`} accessibilityLabel={torch ? 'Apagar linterna' : 'Encender linterna'}><Flashlight color={torch ? '#052E25' : 'white'} size={23} /></TouchableOpacity>
         </View>
 
-        <View className="items-center justify-center" pointerEvents="none">
-          <View className="w-64 h-64 border-2 border-emerald-500 rounded-3xl relative">
-            {/* Corners */}
-            <View className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-emerald-400 rounded-tl-3xl -ml-0.5 -mt-0.5" />
-            <View className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-emerald-400 rounded-tr-3xl -mr-0.5 -mt-0.5" />
-            <View className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-emerald-400 rounded-bl-3xl -ml-0.5 -mb-0.5" />
-            <View className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-emerald-400 rounded-br-3xl -mr-0.5 -mb-0.5" />
+        <View className="items-center">
+          <View className="h-72 w-72 overflow-hidden rounded-[32px] border-2 border-emerald-300 bg-transparent">
+            {!reduceMotion && <Animated.View style={{ transform: [{ translateY: scanLine.interpolate({ inputRange: [0, 1], outputRange: [8, 276] }) }] }} className="h-0.5 bg-emerald-300 shadow-lg" />}
           </View>
+          <Text className="mt-7 max-w-xs text-center text-base font-semibold leading-6 text-white">Coloca el código dentro del marco. Solo se procesan códigos oficiales de ZeroWaste.</Text>
         </View>
-
-        <View className="items-center px-8" pointerEvents="box-none" style={{ paddingBottom: Math.max(insets.bottom + 16, 32) }}>
-          <Text className="text-white text-sm text-center font-medium bg-black/70 px-4 py-3 rounded-2xl overflow-hidden mb-4 border border-white/10">
-            {isRecolector 
-              ? 'Apunta al código QR generado en la solicitud para marcarla como completada al instante.' 
-              : 'Apunta la cámara al código QR de la recolección para evaluarla.'}
-          </Text>
-          
-          {__DEV__ ? <CustomButton
-            title={scanned ? "Procesando..." : "Simular Escaneo QR #1"} 
-            variant="outline"
-            className="w-full bg-black/80 border-emerald-500"
-            onPress={() => {
-              setContenedorId('development-only-invalid-token');
-              setScanned(true);
-              setModalVisible(true);
-            }}
-          /> : null}
-        </View>
+        <View className="h-16" />
       </SafeAreaView>
 
-      {/* Modal diferenciado para Recolector vs Ciudadano */}
-      <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={handleCloseModal}>
-        <View className="flex-1 justify-end bg-black/60">
-          <View className="bg-white rounded-t-3xl p-6 shadow-2xl" style={{ paddingBottom: Math.max(insets.bottom + 20, 24) }}>
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-2xl font-black text-text">
-                {isRecolector ? 'Validar Recolección' : 'Evaluar Recolección'}
-              </Text>
-              <TouchableOpacity onPress={handleCloseModal} className="p-2 bg-gray-100 rounded-full">
-                <X color="#374151" size={20} />
-              </TouchableOpacity>
-            </View>
-            
-            {contenedorId && (
-              <View className="bg-emerald-50 self-start px-3 py-1.5 rounded-xl border border-emerald-200 mb-4 flex-row items-center gap-1.5">
-                <Text className="text-emerald-700 font-extrabold text-sm">
-                  Código QR: {String(contenedorId)}
-                </Text>
-              </View>
-            )}
-
-            {isRecolector ? (
-              <>
-                <View className="bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-6 flex-row items-center gap-3">
-                  <View className="w-12 h-12 bg-emerald-100 rounded-full items-center justify-center">
-                    <CheckCircle2 color="#059669" size={28} />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-extrabold text-gray-800 text-base">Confirmar Entrega</Text>
-                    <Text className="text-gray-500 text-xs">
-                      Al completar esta acción, se notificará al ciudadano y la solicitud pasará a estado completada.
-                    </Text>
-                  </View>
-                </View>
-
-                <View className="flex-row gap-3">
-                  <View className="flex-1">
-                    <CustomButton 
-                      title="Cancelar" 
-                      variant="outline" 
-                      onPress={handleCloseModal} 
-                    />
-                  </View>
-                  <View className="flex-1">
-                    <CustomButton 
-                      title={submitting ? "Validando..." : "Completar"} 
-                      onPress={handleCompletarRecoleccion} 
-                      disabled={submitting}
-                    />
-                  </View>
-                </View>
-              </>
-            ) : (
-              <>
-                <Text className="text-subtext mb-5 font-medium text-base">
-                  ¿Cómo calificarías el servicio del recolector en esta entrega?
-                </Text>
-                
-                <View className="flex-row justify-center gap-3 mb-6">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <TouchableOpacity key={star} onPress={() => setCalificacion(star)} className="p-1">
-                      <Star 
-                        size={44} 
-                        color={star <= calificacion ? "#F59E0B" : "#D1D5DB"} 
-                        fill={star <= calificacion ? "#F59E0B" : "transparent"} 
-                      />
-                    </TouchableOpacity>
-                  ))}
-                </View>
-
-                <TextInput
-                  placeholder="Escribe un comentario opcional sobre el servicio..."
-                  value={comentario}
-                  onChangeText={setComentario}
-                  className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-text mb-6 min-h-[100px] font-medium"
-                  multiline
-                  textAlignVertical="top"
-                  placeholderTextColor="#9CA3AF"
-                />
-
-                <View className="flex-row gap-3">
-                  <View className="flex-1">
-                    <CustomButton 
-                      title="Omitir" 
-                      variant="outline" 
-                      onPress={() => {
-                        setModalVisible(false);
-                        navigation.navigate('Home');
-                      }} 
-                    />
-                  </View>
-                  <View className="flex-1">
-                    <CustomButton 
-                      title={submitting ? "Enviando..." : "Calificar"} 
-                      onPress={handleCalificar} 
-                      disabled={submitting}
-                    />
-                  </View>
-                </View>
-              </>
-            )}
+      <Modal visible={Boolean(result)} transparent animationType={reduceMotion ? 'none' : 'fade'} onRequestClose={retry}>
+        <View className="flex-1 items-center justify-center bg-black/75 px-6">
+          <View className="w-full max-w-sm items-center rounded-3xl bg-white p-7">
+            {result?.status === 'processing' && <ActivityIndicator size="large" color="#059669" />}
+            {result?.status === 'success' && <CheckCircle2 color="#059669" size={48} />}
+            {result?.status === 'error' && <XCircle color="#DC2626" size={48} />}
+            <Text accessibilityLiveRegion="polite" className="mt-5 text-center text-lg font-black leading-7 text-slate-900">{result?.message}</Text>
+            {result?.status === 'error' && <TouchableOpacity onPress={retry} className="mt-7 flex-row items-center rounded-2xl bg-emerald-700 px-6 py-4"><RotateCcw color="white" size={19} /><Text className="ml-2 font-black text-white">Volver a escanear</Text></TouchableOpacity>}
           </View>
         </View>
       </Modal>

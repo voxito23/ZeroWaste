@@ -72,6 +72,24 @@ class PuntoMapa(Base):
     calificaciones = relationship("CalificacionPunto", back_populates="punto")
 
 
+class PointQrCode(Base):
+    __tablename__ = "point_qr_codes"
+
+    id = Column(Integer, primary_key=True)
+    location_id = Column(Integer, ForeignKey("locations.id", ondelete="CASCADE"), nullable=False, index=True)
+    token_hash = Column(String(64), nullable=False, unique=True, index=True)
+    token_ciphertext = Column(Text, nullable=False)
+    version = Column(Integer, nullable=False, default=1)
+    active = Column(Boolean, nullable=False, default=True, index=True)
+    generated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    regenerated_at = Column(DateTime, nullable=True)
+    revoked_at = Column(DateTime, nullable=True)
+    created_by = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    point = relationship("PuntoMapa")
+
+
 # Modelo de calificación de punto
 class CalificacionPunto(Base):
     __tablename__ = "calificaciones_puntos"

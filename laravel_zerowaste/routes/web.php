@@ -16,6 +16,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\RecoleccionController;
 use App\Http\Controllers\ReportesRecoleccionController;
 use App\Http\Controllers\ImpactAdminController;
+use App\Http\Controllers\PointQrController;
 
 $adminPrefix = trim((string) env('ADMIN_PATH_PREFIX', 'zw-interno'), '/');
 $adminBase = '/'.$adminPrefix;
@@ -70,6 +71,11 @@ Route::prefix($adminPrefix)->middleware(['auth', 'admin'])->group(function () {
     Route::get('/mapa/{location}/edit', [MapController::class, 'edit'])->name('mapa.edit');
     Route::put('/mapa/{location}', [MapController::class, 'update'])->name('mapa.update');
     Route::delete('/mapa/{location}', [MapController::class, 'destroy'])->name('mapa.destroy');
+    Route::post('/mapa/{location}/qr', [PointQrController::class, 'generate'])->name('mapa.qr.generate');
+    Route::get('/mapa/{location}/qr', [PointQrController::class, 'show'])->name('mapa.qr.show');
+    Route::get('/mapa/{location}/qr/descargar/{format}', [PointQrController::class, 'download'])->name('mapa.qr.download');
+    Route::post('/mapa/{location}/qr/regenerar', [PointQrController::class, 'regenerate'])->name('mapa.qr.regenerate');
+    Route::post('/mapa/{location}/qr/revocar', [PointQrController::class, 'revoke'])->name('mapa.qr.revoke');
 
     // Eventos
     Route::get('/eventos', [EventoController::class, 'index'])->name('eventos.index');

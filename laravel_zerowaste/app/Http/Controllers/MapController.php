@@ -54,12 +54,20 @@ class MapController extends Controller
         }
 
         try {
-            Location::query()->create($data);
+            $location = Location::query()->create($data);
         } catch (\Throwable $error) {
             Media::discard($newImage, 'puntos');
             throw $error;
         }
-        return redirect()->route('mapa.index')->with('success', 'Punto de acopio creado exitosamente.');
+        if ($request->input('submit_action') === 'save_and_qr') {
+            try {
+                app(\App\Services\FastApiQrService::class)->generatePoint($location->id);
+                return redirect()->route('mapa.qr.show', $location)->with('success', 'Punto creado correctamente. El código QR fue generado correctamente.');
+            } catch (\Throwable $error) {
+                return redirect()->route('mapa.index')->with('error', 'El punto fue creado, pero no fue posible generar el código QR.');
+            }
+        }
+        return redirect()->route('mapa.index')->with('success', 'Punto creado correctamente.');
     }
 
     public function edit(Location $location)
