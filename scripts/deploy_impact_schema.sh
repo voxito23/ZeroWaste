@@ -113,6 +113,23 @@ psql -X -v ON_ERROR_STOP=1 --file=/work/scripts/supabase_schema_inventory.sql > 
 chmod 0600 "${BACKUP_ROOT}/${INVENTORY_AFTER}"
 
 printf 'Comprobando endpoints de producción...\n'
+check_public_endpoint() {
+  local endpoint="$1"
+  local attempt
+  for attempt in {1..12}; do
+    if curl --fail --silent --show-error --output /dev/null \
+      "https://www.zerowaste-qro.com${endpoint}"; then
+      printf 'OK %s\n' "$endpoint"
+      return 0
+    fi
+    if [[ "$attempt" -lt 12 ]]; then
+      printf 'Esperando a que responda %s (%s/12)...\n' "$endpoint" "$attempt"
+      sleep 5
+    fi
+  done
+  fail "el endpoint ${endpoint} no respondió correctamente después de 12 intentos"
+}
+
 for endpoint in \
   /api/health \
   /api/ready \
@@ -121,9 +138,7 @@ for endpoint in \
   /api/impacto/recompensas \
   /media/recompensas/termo_reutilizable.png
 do
-  curl --fail --silent --show-error --output /dev/null \
-    "https://www.zerowaste-qro.com${endpoint}"
-  printf 'OK %s\n' "$endpoint"
+  check_public_endpoint "$endpoint"
 done
 
 ejecutar_compose ps

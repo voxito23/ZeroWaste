@@ -44,6 +44,9 @@ class ProductionMigrationScriptTests(unittest.TestCase):
         self.assertIn("impact_tables", self.source)
         self.assertIn("/api/foro/posts", self.source)
         self.assertIn("/api/impacto/recompensas", self.source)
+        self.assertIn("check_public_endpoint", self.source)
+        self.assertIn("for attempt in {1..12}", self.source)
+        self.assertIn("sleep 5", self.source)
 
     def test_supports_modern_and_legacy_compose(self):
         self.assertIn("detectar_compose", self.source)
