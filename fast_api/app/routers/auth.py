@@ -22,6 +22,7 @@ from app.services.media import (
     remove_media_file,
     save_media_image,
 )
+from app.services.transactional_email import EmailDeliveryError, send_verification
 from pydantic import BaseModel
 
 class MobileLogin(BaseModel):
@@ -99,6 +100,8 @@ def mobile_login(
     throttle.clear(credentials.email, client_ip)
     if usuario.bloqueado:
         raise HTTPException(status_code=403, detail="Usuario bloqueado.")
+    if usuario.email_verified_at is None:
+        raise HTTPException(status_code=403, detail="Verifica tu correo antes de iniciar sesión.")
 
     access_token = create_access_token(data={"sub": usuario.email})
     
@@ -192,7 +195,7 @@ def mobile_registro(
     """
     Registro por JSON que no requiere subir foto obligatoria (usa default).
     """
-    existe = db.query(Usuario).filter(Usuario.email == data.email).first()
+    existe = db.query(Usuario).filter(Usuario.email == data.email.strip().lower()).first()
     if existe:
         raise HTTPException(status_code=400, detail="El correo ya está registrado.")
 
@@ -202,9 +205,10 @@ def mobile_registro(
     if len(data.password) < 6:
         raise HTTPException(status_code=422, detail="La contraseña debe tener al menos 6 caracteres.")
 
+    normalized_email = data.email.strip().lower()
     nuevo_usuario = Usuario(
         nombre=data.nombre,
-        email=data.email,
+        email=normalized_email,
         password=hash_password(data.password),
         foto_perfil="perfil_default.png",
     )
@@ -213,4 +217,14 @@ def mobile_registro(
     db.commit()
     db.refresh(nuevo_usuario)
 
-    return {"success": True, "message": "Cuenta creada con éxito."}
+    delivery = {"sent": False, "code": "EMAIL_DELIVERY_FAILED"}
+    try:
+        delivery = send_verification(db, nuevo_usuario)
+    except EmailDeliveryError:
+        pass
+    return {
+        "success": True,
+        "message": "Cuenta creada. Revisa tu correo para verificarla.",
+        "verification_email_sent": bool(delivery.get("sent")),
+        "verification_code": delivery.get("code"),
+    }

@@ -35,6 +35,7 @@ class Usuario(Base):
     edad = Column(Integer, nullable=True)
     licencia_conducir = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    email_verified_at = Column(DateTime(timezone=True), nullable=True)
 
     posts = relationship(
         "Foro",
@@ -420,3 +421,46 @@ class ScheduleException(Base):
     active = Column(Boolean, nullable=False, default=True)
     created_by = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class OauthAccount(Base):
+    __tablename__ = "oauth_accounts"
+    id = Column(Integer, primary_key=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False, index=True)
+    provider = Column(String(30), nullable=False)
+    provider_subject = Column(String(255), nullable=False)
+    provider_email = Column(String(255), nullable=True)
+    linked_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+    last_login_at = Column(DateTime(timezone=True), nullable=True)
+    __table_args__ = (
+        UniqueConstraint("provider", "provider_subject", name="uq_oauth_provider_subject"),
+        UniqueConstraint("usuario_id", "provider", name="uq_oauth_user_provider"),
+    )
+
+
+class OauthLoginState(Base):
+    __tablename__ = "oauth_login_states"
+    id = Column(Integer, primary_key=True)
+    state_hash = Column(String(64), nullable=False, unique=True, index=True)
+    verifier_ciphertext = Column(Text, nullable=False)
+    nonce_hash = Column(String(64), nullable=False)
+    handoff_hash = Column(String(64), nullable=True, unique=True, index=True)
+    claims_ciphertext = Column(Text, nullable=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=True)
+    status = Column(String(30), nullable=False, default="pending", index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    used_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class EmailVerificationToken(Base):
+    __tablename__ = "email_verification_tokens"
+    id = Column(Integer, primary_key=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False, index=True)
+    token_hash = Column(String(64), nullable=False, unique=True, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    used_at = Column(DateTime(timezone=True), nullable=True)
+    revoked_at = Column(DateTime(timezone=True), nullable=True)
+    provider_message_id = Column(String(255), nullable=True)
+    sent_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)

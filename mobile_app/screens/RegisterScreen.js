@@ -104,7 +104,16 @@ export default function RegisterScreen({ navigation }) {
         response = await api.post('/auth/mobile/registro', { nombre: nombre.trim(), email: email.trim(), password });
       }
       if (response.status >= 200 && response.status < 300) {
-        Alert.alert('Registro exitoso', '¡Tu cuenta ha sido creada con éxito! Ahora puedes iniciar sesión.');
+        let sent = Boolean(response.data?.verification_email_sent);
+        if (selectedImage) {
+          try {
+            await api.post('/auth/email/reenviar', { email: email.trim() });
+            sent = true;
+          } catch {
+            sent = false;
+          }
+        }
+        Alert.alert('Registro exitoso', sent ? 'Tu cuenta fue creada. Revisa tu correo para verificarla antes de iniciar sesión.' : 'Tu cuenta fue creada, pero el proveedor de correo todavía no está configurado. Solicita un nuevo correo cuando esté disponible.');
         navigation.navigate('Login');
       } else {
         Alert.alert('Error', response.data.error || 'Error en el registro');
