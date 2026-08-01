@@ -1,251 +1,283 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  ArrowLeft, 
-  MessageCircle, 
-  Heart, 
-  MoreHorizontal,
-  Recycle,
-  Leaf,
+import {
   Archive,
+  ArrowLeft,
   Calendar,
-  HelpCircle,
   Folder,
-  Send
+  HelpCircle,
+  Leaf,
+  MessageCircle,
+  Recycle,
+  Send,
 } from 'lucide-react-native';
-import { api } from '../api/axios';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { normalizeMediaUrl } from '../utils/media';
-import { formatRelativeDate } from '../utils/date';
+
+import { api } from '../api/axios';
+import LikeButton from '../components/forum/LikeButton';
 import RemoteImage from '../components/ui/RemoteImage';
+import UserAvatar from '../components/ui/UserAvatar';
+import { useAuth } from '../store/useAuth';
+import { formatRelativeDate } from '../utils/date';
+import { normalizeMediaUrl } from '../utils/media';
 
 
+const stripHtml = (value) => {
+  if (typeof value !== 'string') return '';
+  return value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+};
 
+const categoryStyle = (category) => {
+  const fallback = { text: '#4B5563', border: '#E5E7EB', icon: <Folder size={12} color="#4B5563" /> };
+  if (!category) return fallback;
+  const name = category.trim();
+  if (name === 'Reciclaje') return { text: '#B45309', border: '#FCD34D', icon: <Recycle size={12} color="#B45309" /> };
+  if (name === 'Compostaje') return { text: '#047857', border: '#6EE7B7', icon: <Leaf size={12} color="#047857" /> };
+  if (name === 'Reducción de residuos') return { text: '#0E7490', border: '#67E8F9', icon: <Archive size={12} color="#0E7490" /> };
+  if (name === 'Eventos') return { text: '#6D28D9', border: '#C4B5FD', icon: <Calendar size={12} color="#6D28D9" /> };
+  if (name === 'Dudas') return { text: '#BE123C', border: '#FDA4AF', icon: <HelpCircle size={12} color="#BE123C" /> };
+  return fallback;
+};
 
 export default function PostScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const postId = route.params?.id;
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
+  const listRef = useRef(null);
+  const likeRequestRef = useRef(false);
+  const commentRequestRef = useRef(false);
 
   const [post, setPost] = useState(null);
-  const [respuestas, setRespuestas] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [composerError, setComposerError] = useState('');
+  const [actionError, setActionError] = useState('');
   const [replyText, setReplyText] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [likePending, setLikePending] = useState(false);
 
-  useEffect(() => {
-    if (postId) fetchPostDetail();
+  const fetchPostDetail = useCallback(async () => {
+    if (!postId) return;
+    setLoading(true);
+    setLoadError('');
+    try {
+      const [postResponse, commentsResponse] = await Promise.all([
+        api.get(`/foro/posts/${postId}`),
+        api.get(`/foro/posts/${postId}/respuestas`),
+      ]);
+      setPost(postResponse.data || null);
+      setComments(Array.isArray(commentsResponse.data) ? commentsResponse.data : []);
+    } catch (error) {
+      setLoadError(error.userMessage || 'No se pudo cargar la publicación.');
+    } finally {
+      setLoading(false);
+    }
   }, [postId]);
 
-  const fetchPostDetail = async () => {
-    setError('');
-    try {
-      const response = await api.get(`/foro/posts/${postId}`);
-      if (response.data) {
-        setPost(response.data);
-      }
+  useFocusEffect(useCallback(() => {
+    void fetchPostDetail();
+  }, [fetchPostDetail]));
 
-      const respResponse = await api.get(`/foro/posts/${postId}/respuestas`);
-      if (respResponse.data) {
-        setRespuestas(respResponse.data);
-      }
-    } catch (e) {
-      setError(e.userMessage || 'No se pudo cargar la publicación.');
+  const toggleLike = async () => {
+    if (!post || likeRequestRef.current) return;
+    likeRequestRef.current = true;
+    const previousLiked = Boolean(post.liked_by_me);
+    const previousCount = Math.max(0, Number(post.likes_count ?? post.total_likes) || 0);
+    const nextLiked = !previousLiked;
+    const optimisticCount = Math.max(0, previousCount + (nextLiked ? 1 : -1));
+    setLikePending(true);
+    setActionError('');
+    setPost((current) => ({
+      ...current,
+      liked_by_me: nextLiked,
+      likes_count: optimisticCount,
+      total_likes: optimisticCount,
+    }));
+    try {
+      const response = nextLiked
+        ? await api.put(`/foro/posts/${postId}/like`)
+        : await api.delete(`/foro/posts/${postId}/like`);
+      const count = Math.max(0, Number(response.data?.likes_count ?? response.data?.total) || 0);
+      setPost((current) => ({
+        ...current,
+        liked_by_me: Boolean(response.data?.liked),
+        likes_count: count,
+        total_likes: count,
+      }));
+    } catch (error) {
+      setPost((current) => ({
+        ...current,
+        liked_by_me: previousLiked,
+        likes_count: previousCount,
+        total_likes: previousCount,
+      }));
+      setActionError(error.userMessage || 'No se pudo actualizar el Me gusta.');
     } finally {
-      setIsLoading(false);
+      likeRequestRef.current = false;
+      setLikePending(false);
     }
   };
 
   const submitReply = async () => {
-    if (replyText.trim().length <= 10) {
-      setError('La respuesta debe tener más de 10 caracteres.');
+    const content = replyText.trim();
+    if (content.length <= 10) {
+      setComposerError('Escribe al menos 11 caracteres.');
       return;
     }
-    setIsSubmitting(true);
+    if (commentRequestRef.current) return;
+    commentRequestRef.current = true;
+    setSubmitting(true);
+    setComposerError('');
     try {
-      await api.post(`/foro/posts/${postId}/respuestas`, {
-        contenido: replyText
+      const { data } = await api.post(`/foro/posts/${postId}/respuestas`, { contenido: content });
+      setComments((current) => [...current, data]);
+      setPost((current) => {
+        const count = Math.max(0, Number(current?.comments_count ?? current?.total_respuestas) || 0) + 1;
+        return { ...current, comments_count: count, total_respuestas: count };
       });
-      
       setReplyText('');
-      fetchPostDetail(); // Refresh the list
-    } catch (e) {
-      setError(e.userMessage || 'No se pudo enviar la respuesta.');
+      requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
+    } catch (error) {
+      setComposerError(error.userMessage || 'No se pudo enviar la respuesta. Tu texto se conservó.');
     } finally {
-      setIsSubmitting(false);
+      commentRequestRef.current = false;
+      setSubmitting(false);
     }
   };
 
-  const stripHtml = (html) => {
-    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-  };
-
-  const getTimeAgo = formatRelativeDate;
-
-  const getCatStyle = (catName) => {
-    const defaultStyle = { bg: 'transparent', text: '#4B5563', border: '#E5E7EB', icon: <Folder size={12} color="#4B5563" /> };
-    if (!catName) return defaultStyle;
-    const name = catName.trim();
-    if (name === 'Reciclaje') return { bg: 'transparent', text: '#b45309', border: '#fcd34d', icon: <Recycle size={12} color="#b45309" /> };
-    if (name === 'Compostaje') return { bg: 'transparent', text: '#047857', border: '#6ee7b7', icon: <Leaf size={12} color="#047857" /> };
-    if (name === 'Reducción de residuos') return { bg: 'transparent', text: '#0e7490', border: '#67e8f9', icon: <Archive size={12} color="#0e7490" /> };
-    if (name === 'Eventos') return { bg: 'transparent', text: '#6d28d9', border: '#c4b5fd', icon: <Calendar size={12} color="#6d28d9" /> };
-    if (name === 'Dudas') return { bg: 'transparent', text: '#be123c', border: '#fda4af', icon: <HelpCircle size={12} color="#be123c" /> };
-    return defaultStyle;
-  };
-
-  const formatDate = (dateString) => {
-    const d = new Date(dateString);
-    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-    return `${d.getDate()} ${months[d.getMonth()]}, ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-  };
-
-  if (isLoading) {
-    return (
-      <View className="flex-1 bg-[#ECFDF5] items-center justify-center">
-        <ActivityIndicator size="large" color="#059669" />
-      </View>
-    );
+  if (loading && !post) {
+    return <View className="flex-1 items-center justify-center bg-emerald-50"><ActivityIndicator size="large" color="#059669" /></View>;
   }
 
   if (!post) {
     return (
-      <View className="flex-1 bg-[#ECFDF5] items-center justify-center">
-        <Text className="text-[#064E3B] font-bold text-center px-8">{error || 'Publicación no encontrada'}</Text>
-        {error ? <TouchableOpacity onPress={fetchPostDetail} className="mt-4 px-6 py-2 border border-[#059669] rounded-full"><Text className="text-[#059669] font-bold">Reintentar</Text></TouchableOpacity> : null}
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mt-4 px-6 py-2 bg-[#059669] rounded-full">
-          <Text className="text-white font-bold">Volver</Text>
-        </TouchableOpacity>
+      <View className="flex-1 items-center justify-center bg-emerald-50 px-8">
+        <Text className="text-center font-bold text-emerald-950">{loadError || 'Publicación no encontrada'}</Text>
+        <TouchableOpacity onPress={fetchPostDetail} className="mt-4 rounded-full border border-emerald-600 px-6 py-3"><Text className="font-bold text-emerald-700">Reintentar</Text></TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.goBack()} className="mt-3 rounded-full bg-emerald-700 px-6 py-3"><Text className="font-bold text-white">Volver</Text></TouchableOpacity>
       </View>
     );
   }
 
-  return (
-    <SafeAreaView className="flex-1 bg-[#ECFDF5]" edges={['top']}>
-      <StatusBar style="dark" />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        {error ? <View className="mx-5 mt-3 rounded-xl border border-red-200 bg-red-50 p-3"><Text className="text-red-700 font-bold text-center">{error}</Text></View> : null}
-        {/* Background Gradient */}
-        <LinearGradient colors={['#D1FAE5', '#ECFDF5']} locations={[0, 1]} className="absolute inset-0" />
+  const category = categoryStyle(post.categoria_nombre);
+  const author = post.author || {};
+  const postAvatar = author.avatar_url ?? post.avatar_url ?? post.autor_foto;
+  const postImage = normalizeMediaUrl(post.image_url ?? post.imagen, 'foro');
+  const likesCount = post.likes_count ?? post.total_likes ?? 0;
+  const commentsCount = post.comments_count ?? post.total_respuestas ?? comments.length;
 
-        {/* Header */}
-        <View className="px-5 pt-4 pb-4 flex-row items-center border-b border-[#D1FAE5] bg-[#ECFDF5]/90 z-20">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm">
+  const postHeader = (
+    <>
+      {loadError || actionError ? (
+        <View className="mx-5 mt-3 rounded-xl border border-red-200 bg-red-50 p-3">
+          <Text className="text-center font-bold text-red-700">{loadError || actionError}</Text>
+        </View>
+      ) : null}
+      <View className="mt-4 border-y border-emerald-100 bg-white px-5 py-6">
+        <View className="mb-5 flex-row items-center gap-3">
+          <UserAvatar uri={postAvatar} name={author.nombre || post.autor_nombre} size={48} accessibilityLabel="Avatar del autor" />
+          <View className="flex-1">
+            <Text className="text-[16px] font-bold text-emerald-950">{author.nombre || post.autor_nombre || 'Usuario'}</Text>
+            <Text className="mt-0.5 text-[12px] font-medium text-slate-500">Miembro · {formatRelativeDate(post.created_at)}</Text>
+          </View>
+        </View>
+        <View className="mb-4 self-start flex-row items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1" style={{ borderWidth: 1, borderColor: category.border }}>
+          {category.icon}
+          <Text className="text-[12px] font-bold uppercase tracking-wider" style={{ color: category.text }}>{post.categoria_nombre || 'General'}</Text>
+        </View>
+        <Text className="mb-4 text-[24px] font-black leading-7 text-emerald-950">{post.titulo}</Text>
+        <Text className="mb-6 text-[16px] leading-6 text-slate-700">{stripHtml(post.contenido)}</Text>
+        {postImage ? <RemoteImage uri={postImage} className="mb-4 w-full rounded-2xl" aspectRatio={16 / 9} accessibilityLabel="Imagen de la publicación" /> : null}
+        <View className="mt-2 flex-row items-center gap-5 border-t border-slate-100 pt-3">
+          <LikeButton liked={Boolean(post.liked_by_me)} count={likesCount} pending={likePending} onPress={toggleLike} />
+          <View className="flex-row items-center gap-2"><MessageCircle color="#64748B" size={20} /><Text className="font-bold text-slate-600">{commentsCount}</Text></View>
+        </View>
+      </View>
+      <Text className="px-5 pb-3 pt-6 text-[14px] font-black uppercase tracking-widest text-emerald-900">Comentarios</Text>
+    </>
+  );
+
+  const renderComment = ({ item }) => {
+    const commentAuthor = item.author || {};
+    return (
+      <View className="mx-5 mb-3 flex-row items-start gap-3">
+        <UserAvatar uri={commentAuthor.avatar_url ?? item.avatar_url ?? item.autor_foto} name={commentAuthor.nombre || item.autor_nombre} size={38} />
+        <View className={`min-w-0 flex-1 rounded-2xl px-4 py-3 ${item.contenido_invalido ? 'border border-amber-200 bg-amber-50' : 'bg-white'}`}>
+          <View className="mb-1 flex-row items-center justify-between gap-3">
+            <Text className="flex-1 text-[13px] font-bold text-emerald-950" numberOfLines={1}>{commentAuthor.nombre || item.autor_nombre || 'Usuario'}</Text>
+            <Text className="text-[10px] font-medium text-slate-400">{formatRelativeDate(item.created_at)}</Text>
+          </View>
+          <Text className={`text-[14px] leading-5 ${item.contenido_invalido ? 'text-amber-800' : 'text-slate-700'}`}>{item.contenido}</Text>
+        </View>
+      </View>
+    );
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-emerald-50" edges={['top']}>
+      <StatusBar style="dark" />
+      <LinearGradient colors={['#D1FAE5', '#ECFDF5']} className="absolute inset-0" />
+      <View className="z-20 flex-row items-center border-b border-emerald-100 bg-emerald-50/95 px-5 py-3">
+        <TouchableOpacity onPress={() => navigation.goBack()} className="h-10 w-10 items-center justify-center rounded-full bg-white" accessibilityLabel="Volver">
           <ArrowLeft color="#064E3B" size={20} />
         </TouchableOpacity>
-        <Text className="text-[18px] font-black text-[#064E3B] ml-4 flex-1">Discusión</Text>
+        <Text className="ml-4 flex-1 text-[18px] font-black text-emerald-950">Discusión</Text>
       </View>
-
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
-        {/* Post Content */}
-        <View className="bg-white px-5 py-6 shadow-sm border-b border-[#D1FAE5]">
-          <View className="flex-row items-center justify-between mb-5">
-            <View className="flex-row items-center gap-3">
-              <RemoteImage
-                uri={normalizeMediaUrl(post.avatar_url ?? post.autor_foto, 'perfiles')}
-                fallbackSource={require('../assets/images/logo.png')}
-                className="h-12 w-12 rounded-full border border-gray-200"
-                aspectRatio={1}
-                accessibilityLabel="Avatar del autor"
-              />
-              <View>
-                <Text className="font-bold text-[#064E3B] text-[16px]">{post.autor_nombre}</Text>
-                <Text className="text-gray-500 text-[12px] font-medium mt-0.5">Miembro • {formatDate(post.created_at)}</Text>
-              </View>
-            </View>
-          </View>
-            <View 
-              className="flex-row items-center gap-1.5 px-3 py-1 rounded-full mb-4 self-start bg-[#ECFDF5]"
-              style={{ borderWidth: 1, borderColor: getCatStyle(post.categoria_nombre).border }}
-            >
-              {getCatStyle(post.categoria_nombre).icon}
-              <Text 
-                className="text-[12px] font-bold uppercase tracking-wider"
-                style={{ color: getCatStyle(post.categoria_nombre).text }}
-              >
-                {post.categoria_nombre}
-              </Text>
-            </View>
-
-          <Text className="font-black text-[#022C22] text-[22px] leading-tight mb-4">{post.titulo}</Text>
-          <Text className="text-[#047857] text-[16px] leading-relaxed mb-6">{stripHtml(post.contenido)}</Text>
-
-          {normalizeMediaUrl(post.image_url ?? post.imagen, 'foro') && (
-            <RemoteImage uri={normalizeMediaUrl(post.image_url ?? post.imagen, 'foro')} className="mb-4 h-48 w-full rounded-2xl" accessibilityLabel="Imagen de la publicación" />
-          )}
-
-          <View className="flex-row items-center gap-6 mt-2 pt-4 border-t border-gray-100">
-            <View className="flex-row items-center gap-2">
-              <Heart color="#059669" size={20} />
-              <Text className="font-bold text-[#064E3B]">{post.total_likes}</Text>
-            </View>
-            <View className="flex-row items-center gap-2">
-              <MessageCircle color="#059669" size={20} />
-              <Text className="font-bold text-[#064E3B]">{post.total_respuestas} respuestas</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Replies Section */}
-        <View className="px-5 py-6">
-          <Text className="font-black text-[#064E3B] text-[16px] mb-4 uppercase tracking-widest">Comentarios</Text>
-          
-          {respuestas.length === 0 ? (
-            <View className="items-center py-10">
-              <MessageCircle color="#9CA3AF" size={40} className="mb-3 opacity-30" />
-              <Text className="text-gray-400 font-bold text-center">Aún no hay respuestas</Text>
-              <Text className="text-gray-400 text-xs text-center mt-1">Sé el primero en unirte a la conversación</Text>
-            </View>
-          ) : (
-            respuestas.map((resp, i) => (
-              <View key={resp.id || i} className="bg-white rounded-2xl p-4 mb-3 shadow-sm border border-[#D1FAE5]">
-                <View className="flex-row items-center justify-between mb-2">
-                  <View className="flex-row items-center gap-2">
-                    <RemoteImage
-                      uri={normalizeMediaUrl(resp.avatar_url ?? resp.autor_foto, 'perfiles')}
-                      fallbackSource={require('../assets/images/logo.png')}
-                      className="h-8 w-8 rounded-full"
-                      aspectRatio={1}
-                      accessibilityLabel="Avatar de quien respondió"
-                    />
-                    <Text className="font-bold text-[#064E3B] text-[13px]">{resp.autor_nombre}</Text>
-                  </View>
-                  <Text className="text-[#059669] text-[11px] font-semibold">{getTimeAgo(resp.created_at)}</Text>
-                </View>
-                <Text className="text-[#047857] text-[14px] leading-relaxed ml-10">{resp.contenido}</Text>
-              </View>
-            ))
-          )}
-        </View>
-      </ScrollView>
-
-      {/* Input Area */}
-      <View className="px-5 pt-3 bg-white border-t border-[#D1FAE5] flex-row items-end shadow-[0_-10px_20px_rgba(0,0,0,0.05)]" style={{ paddingBottom: Math.max(insets.bottom, 12) }}>
-        <TextInput
-          value={replyText}
-          onChangeText={setReplyText}
-          placeholder="Escribe una respuesta..."
-          placeholderTextColor="#9CA3AF"
-          multiline
-          className="flex-1 bg-[#F1F5F9] rounded-2xl px-4 py-3 min-h-[44px] max-h-24 text-[14px] text-[#064E3B] font-medium"
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
+        <FlatList
+          ref={listRef}
+          data={comments}
+          keyExtractor={(item, index) => String(item.id ?? index)}
+          renderItem={renderComment}
+          ListHeaderComponent={postHeader}
+          ListEmptyComponent={<View className="items-center px-8 py-10"><MessageCircle color="#94A3B8" size={36} /><Text className="mt-3 text-center font-bold text-slate-500">Aún no hay respuestas</Text><Text className="mt-1 text-center text-xs text-slate-400">Sé la primera persona en unirte a la conversación.</Text></View>}
+          contentContainerStyle={{ paddingBottom: 16 }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+          showsVerticalScrollIndicator={false}
         />
-        <TouchableOpacity 
-          onPress={submitReply}
-          disabled={!replyText.trim() || isSubmitting}
-          className={`ml-3 w-11 h-11 rounded-full items-center justify-center ${replyText.trim() ? 'bg-[#059669]' : 'bg-gray-200'}`}
-        >
-          {isSubmitting ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Send color={replyText.trim() ? '#fff' : '#9CA3AF'} size={18} className="ml-1" />
-          )}
-        </TouchableOpacity>
-      </View>
+        <View className="border-t border-emerald-100 bg-white px-4 pt-2" style={{ paddingBottom: Math.max(insets.bottom, 10) }}>
+          {composerError ? <Text className="mb-2 px-2 text-xs font-bold text-red-600">{composerError}</Text> : null}
+          <View className="flex-row items-end gap-2">
+            <UserAvatar uri={user?.avatar_url ?? user?.foto_perfil} name={user?.nombre} size={36} />
+            <TextInput
+              value={replyText}
+              onChangeText={(value) => { setReplyText(value); if (composerError) setComposerError(''); }}
+              placeholder="Escribe un comentario..."
+              placeholderTextColor="#94A3B8"
+              multiline
+              maxLength={1000}
+              textAlignVertical="top"
+              className="max-h-28 min-h-11 flex-1 rounded-2xl bg-slate-100 px-4 py-3 text-[15px] text-slate-900"
+              accessibilityLabel="Comentario"
+            />
+            <TouchableOpacity
+              onPress={submitReply}
+              disabled={replyText.trim().length <= 10 || submitting}
+              className={`h-11 w-11 items-center justify-center rounded-full ${replyText.trim().length > 10 && !submitting ? 'bg-emerald-600' : 'bg-slate-200'}`}
+              accessibilityLabel="Enviar comentario"
+              accessibilityState={{ disabled: replyText.trim().length <= 10 || submitting, busy: submitting }}
+            >
+              {submitting ? <ActivityIndicator size="small" color="#fff" /> : <Send color={replyText.trim().length > 10 ? '#fff' : '#94A3B8'} size={18} />}
+            </TouchableOpacity>
+          </View>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

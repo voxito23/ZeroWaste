@@ -74,6 +74,12 @@ class BackendMediaContractTests(unittest.TestCase):
                 f"{base}/puntos/acopio.jpg",
                 build("carpeta/antigua/acopio.jpg", "puntos"),
             )
+            avatar = media.build_public_avatar_url
+            self.assertEqual(f"{base}/perfiles/avatar.jpg", avatar("/img/perfiles/avatar.jpg"))
+            self.assertIsNone(avatar(None))
+            self.assertIsNone(avatar(""))
+            self.assertIsNone(avatar("default.png"))
+            self.assertIsNone(avatar("perfil_default.png"))
 
             for unsafe in (
                 "javascript:alert(1)",
@@ -154,7 +160,7 @@ class BackendMediaContractTests(unittest.TestCase):
         self.assertNotIn("u.email", check_script)
         self.assertNotIn("u.password", check_script)
 
-    def test_profile_views_use_canonical_default_avatar(self):
+    def test_profile_views_attempt_real_avatar_before_initial_fallback(self):
         views = [
             ROOT / "laravel_zerowaste/resources/views/layouts/admin.blade.php",
             ROOT / "laravel_zerowaste/resources/views/admin/partials/usuarios_table.blade.php",
@@ -163,7 +169,9 @@ class BackendMediaContractTests(unittest.TestCase):
         ]
         for view in views:
             source = view.read_text(encoding="utf-8")
-            self.assertIn("/media/perfiles/default.png", source)
+            self.assertIn("avatar", source.lower())
+            self.assertIn("onerror", source)
+            self.assertNotIn("/media/perfiles/default.png", source)
             self.assertNotIn("/static/img/perfiles/default.png", source)
 
 

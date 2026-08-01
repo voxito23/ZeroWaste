@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Dimensions, RefreshControl, Share } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import {
   Search,
   Bell,
-  Heart,
   MessageCircle,
   Share2,
   Clock,
@@ -19,7 +18,7 @@ import {
   Folder
 } from 'lucide-react-native';
 import { api } from '../api/axios';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuth } from '../store/useAuth';
 import { ArrowRight } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -28,6 +27,8 @@ import { useScrollContext } from '../context/ScrollContext';
 import { normalizeMediaUrl } from '../utils/media';
 import { formatRelativeDate } from '../utils/date';
 import RemoteImage from '../components/ui/RemoteImage';
+import UserAvatar from '../components/ui/UserAvatar';
+import LikeButton from '../components/forum/LikeButton';
 
 const { width } = Dimensions.get('window');
 
@@ -49,12 +50,10 @@ export default function ForumScreen() {
   const [tabs, setTabs] = useState(['Todo']);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [likePending, setLikePending] = useState({});
+  const pendingLikesRef = useRef(new Set());
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
-
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     setIsLoading(true);
     setError('');
     try {
@@ -82,6 +81,38 @@ export default function ForumScreen() {
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  useFocusEffect(useCallback(() => {
+    void fetchPosts();
+  }, [fetchPosts]));
+
+  const togglePostLike = async (post) => {
+    if (pendingLikesRef.current.has(post.id)) return;
+    pendingLikesRef.current.add(post.id);
+    const previousLiked = Boolean(post.liked_by_me);
+    const previousCount = Math.max(0, Number(post.likes_count ?? post.total_likes) || 0);
+    const nextLiked = !previousLiked;
+    const optimisticCount = Math.max(0, previousCount + (nextLiked ? 1 : -1));
+    const updatePost = (changes) => setPosts((current) => current.map((item) => (
+      item.id === post.id ? { ...item, ...changes } : item
+    )));
+    setLikePending((current) => ({ ...current, [post.id]: true }));
+    setError('');
+    updatePost({ liked_by_me: nextLiked, likes_count: optimisticCount, total_likes: optimisticCount });
+    try {
+      const response = nextLiked
+        ? await api.put(`/foro/posts/${post.id}/like`)
+        : await api.delete(`/foro/posts/${post.id}/like`);
+      const count = Math.max(0, Number(response.data?.likes_count ?? response.data?.total) || 0);
+      updatePost({ liked_by_me: Boolean(response.data?.liked), likes_count: count, total_likes: count });
+    } catch (requestError) {
+      updatePost({ liked_by_me: previousLiked, likes_count: previousCount, total_likes: previousCount });
+      setError(requestError.userMessage || 'No se pudo actualizar el Me gusta.');
+    } finally {
+      pendingLikesRef.current.delete(post.id);
+      setLikePending((current) => ({ ...current, [post.id]: false }));
+    }
   };
 
   const getTimeAgo = formatRelativeDate;
@@ -103,7 +134,7 @@ export default function ForumScreen() {
     message: `${post.titulo}\nhttps://www.zerowaste-qro.com/foro`,
   }).catch(() => {});
 
-  const currentAvatarUrl = normalizeMediaUrl(user?.avatar_url ?? user?.foto_perfil, 'perfiles');
+  const currentAvatarUrl = user?.avatar_url ?? user?.foto_perfil;
 
   return (
     <SafeAreaView className="flex-1 bg-[#ECFDF5]" edges={['top']}>
@@ -150,7 +181,7 @@ export default function ForumScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => navigation.navigate('Profile')} className="w-12 h-12 rounded-full bg-white shadow-sm border border-gray-100 p-0.5">
-              <RemoteImage uri={currentAvatarUrl} fallbackSource={require('../assets/images/logo.png')} className="h-full w-full rounded-full" aspectRatio={1} accessibilityLabel="Avatar del usuario" />
+              <UserAvatar uri={currentAvatarUrl} name={user?.nombre} size={44} accessibilityLabel="Avatar del usuario" />
             </TouchableOpacity>
           </View>
         </View>
@@ -158,7 +189,7 @@ export default function ForumScreen() {
         {/* ─── CREATE POST (Facebook style) ────────────────────── */}
         <View className="px-5 mb-6">
           <View className="bg-white rounded-[24px] p-4 shadow-sm border border-gray-100 flex-row items-center gap-3">
-            <RemoteImage uri={currentAvatarUrl} fallbackSource={require('../assets/images/logo.png')} className="h-10 w-10 rounded-full bg-gray-100" aspectRatio={1} accessibilityLabel="Avatar del usuario" />
+            <UserAvatar uri={currentAvatarUrl} name={user?.nombre} size={40} accessibilityLabel="Avatar del usuario" />
             <TouchableOpacity
               className="flex-1 bg-gray-50 h-10 rounded-full px-4 justify-center"
               onPress={() => navigation.navigate('CreatePost')}
@@ -283,10 +314,7 @@ export default function ForumScreen() {
                         </TouchableOpacity>
 
                         <View className="flex-row items-center gap-5 pr-2">
-                          <View className="flex-row items-center gap-2">
-                            <Heart color="#1F2937" size={24} strokeWidth={2.5} />
-                            <Text className="text-gray-800 text-[16px] font-black">{post.total_likes > 0 ? (post.total_likes > 999 ? '1.2k' : post.total_likes) : 0}</Text>
-                          </View>
+                          <LikeButton liked={Boolean(post.liked_by_me)} count={post.likes_count ?? post.total_likes} pending={Boolean(likePending[post.id])} onPress={() => togglePostLike(post)} size={24} />
                           <TouchableOpacity onPress={() => sharePost(post)} accessibilityLabel="Compartir publicación">
                             <Share2 color="#1F2937" size={24} strokeWidth={2.5} />
                           </TouchableOpacity>
@@ -333,13 +361,7 @@ export default function ForumScreen() {
                           <Text className="text-[13px] font-bold text-gray-800">{post.autor_nombre || 'Usuario'}</Text>
                           <Text className="text-[11px] font-medium text-gray-500 mt-0.5">{getTimeAgo(post.created_at)}</Text>
                         </View>
-                        <RemoteImage
-                          uri={normalizeMediaUrl(post.avatar_url ?? post.autor_foto, 'perfiles')}
-                          fallbackSource={require('../assets/images/logo.png')}
-                          className="h-10 w-10 rounded-full border border-gray-100"
-                          aspectRatio={1}
-                          accessibilityLabel="Avatar del autor"
-                        />
+                        <UserAvatar uri={post.author?.avatar_url ?? post.avatar_url ?? post.autor_foto} name={post.author?.nombre ?? post.autor_nombre} size={40} accessibilityLabel="Avatar del autor" />
                       </View>
                     </View>
 
@@ -364,10 +386,7 @@ export default function ForumScreen() {
                       </TouchableOpacity>
 
                       <View className="flex-row items-center gap-4">
-                        <View className="flex-row items-center gap-1.5">
-                          <Heart color="#EF4444" size={18} fill={post.total_likes > 0 ? "#EF4444" : "transparent"} />
-                          <Text className="text-gray-600 text-[13px] font-bold">{post.total_likes || 0}</Text>
-                        </View>
+                        <LikeButton liked={Boolean(post.liked_by_me)} count={post.likes_count ?? post.total_likes} pending={Boolean(likePending[post.id])} onPress={() => togglePostLike(post)} size={18} />
                         <View className="flex-row items-center gap-1.5">
                           <MessageCircle color="#9CA3AF" size={18} />
                           <Text className="text-gray-600 text-[13px] font-bold">{post.total_respuestas || 0}</Text>

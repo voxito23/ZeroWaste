@@ -7,6 +7,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.data.database import get_db
 from app.models.domain_models import (
@@ -14,10 +15,10 @@ from app.models.domain_models import (
 )
 from app.models.schemas import (
     PostCreate, PostUpdate, PostResponse, PostDetailResponse,
-    RespuestaCreate, RespuestaResponse,
+    ForumAuthor, RespuestaCreate, RespuestaResponse,
     LikeResponse, CategoriaResponse, MessageResponse,
 )
-from app.security.jwt_auth import get_current_user
+from app.security.jwt_auth import get_current_user, get_optional_current_user
 from app.services.media import (
     MAX_IMAGE_BYTES,
     MediaValidationError,
@@ -28,6 +29,66 @@ from app.services.media import (
 from app.services.points import award_points
 
 router = APIRouter(prefix="/foro", tags=["Foro"])
+
+
+def _serialize_post(post: Foro, current_user: Usuario | None = None) -> PostDetailResponse:
+    response = PostDetailResponse(
+        id=post.id,
+        titulo=post.titulo,
+        contenido=post.contenido,
+        categoria_id=post.categoria_id,
+        autor_id=post.autor_id,
+        imagen=post.imagen,
+        created_at=post.created_at,
+        autor_nombre=post.autor_rel.nombre if post.autor_rel else None,
+        autor_foto=post.autor_rel.foto_perfil if post.autor_rel else None,
+        categoria_nombre=post.categoria_rel.nombre if post.categoria_rel else None,
+        total_respuestas=len(post.respuestas),
+        total_likes=len(post.likes),
+        comments_count=len(post.respuestas),
+        likes_count=len(post.likes),
+        liked_by_me=bool(
+            current_user and any(like.usuario_id == current_user.id for like in post.likes)
+        ),
+    )
+    if post.autor_rel:
+        response.author = ForumAuthor(
+            id=post.autor_rel.id,
+            nombre=post.autor_rel.nombre,
+            avatar_url=response.avatar_url,
+        )
+    return response
+
+
+def _serialize_reply(reply: RespuestaForo) -> RespuestaResponse:
+    response = RespuestaResponse(
+        id=reply.id,
+        post_id=reply.post_id,
+        autor_id=reply.autor_id,
+        contenido=reply.contenido,
+        created_at=reply.created_at,
+        autor_nombre=reply.autor_rel.nombre if reply.autor_rel else None,
+        autor_foto=reply.autor_rel.foto_perfil if reply.autor_rel else None,
+    )
+    if reply.autor_rel:
+        response.author = ForumAuthor(
+            id=reply.autor_rel.id,
+            nombre=reply.autor_rel.nombre,
+            avatar_url=response.avatar_url,
+        )
+    return response
+
+
+def _get_post_or_404(db: Session, post_id: int) -> Foro:
+    post = db.query(Foro).filter(Foro.id == post_id, Foro.aprobado.is_(True)).first()
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
+    return post
+
+
+def _like_response(db: Session, post_id: int, liked: bool) -> LikeResponse:
+    total = max(0, db.query(LikeForo).filter(LikeForo.post_id == post_id).count())
+    return LikeResponse(liked=liked, likes_count=total, total=total)
 
 async def _store_post_image(upload: UploadFile) -> str:
     content = await upload.read(MAX_IMAGE_BYTES + 1)
@@ -76,53 +137,22 @@ def list_categorias(db: Session = Depends(get_db)):
 @router.get("/posts", response_model=List[PostDetailResponse], summary="Listar todos los posts")
 def list_posts(
     db: Session = Depends(get_db),
+    current_user: Usuario | None = Depends(get_optional_current_user),
 ):
     """Devuelve todos los posts del foro con información de autor, categoría, respuestas y likes."""
     posts = db.query(Foro).filter(Foro.aprobado.is_(True)).order_by(Foro.created_at.desc()).all()
 
-    resultado = []
-    for post in posts:
-        resultado.append(PostDetailResponse(
-            id=post.id,
-            titulo=post.titulo,
-            contenido=post.contenido,
-            categoria_id=post.categoria_id,
-            autor_id=post.autor_id,
-            imagen=post.imagen,
-            created_at=post.created_at,
-            autor_nombre=post.autor_rel.nombre if post.autor_rel else None,
-            autor_foto=post.autor_rel.foto_perfil if post.autor_rel else None,
-            categoria_nombre=post.categoria_rel.nombre if post.categoria_rel else None,
-            total_respuestas=len(post.respuestas),
-            total_likes=len(post.likes),
-        ))
-    return resultado
+    return [_serialize_post(post, current_user) for post in posts]
 
 
 @router.get("/posts/{post_id}", response_model=PostDetailResponse, summary="Obtener un post por ID")
 def get_post(
     post_id: int,
     db: Session = Depends(get_db),
+    current_user: Usuario | None = Depends(get_optional_current_user),
 ):
     """Devuelve un post específico con detalles completos."""
-    post = db.query(Foro).filter(Foro.id == post_id, Foro.aprobado.is_(True)).first()
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
-
-    return PostDetailResponse(
-        id=post.id,
-        titulo=post.titulo,
-        contenido=post.contenido,
-        categoria_id=post.categoria_id,
-        autor_id=post.autor_id,
-        imagen=post.imagen,
-        created_at=post.created_at,
-        autor_nombre=post.autor_rel.nombre if post.autor_rel else None,
-        autor_foto=post.autor_rel.foto_perfil if post.autor_rel else None,
-        categoria_nombre=post.categoria_rel.nombre if post.categoria_rel else None,
-        total_respuestas=len(post.respuestas),
-        total_likes=len(post.likes),
-    )
+    return _serialize_post(_get_post_or_404(db, post_id), current_user)
 
 
 @router.post(
@@ -273,17 +303,7 @@ def list_respuestas(
         .order_by(RespuestaForo.created_at.asc())
         .all()
     )
-    resultado = []
-    for r in respuestas:
-        resultado.append(RespuestaResponse(
-            id=r.id,
-            post_id=r.post_id,
-            autor_id=r.autor_id,
-            contenido=r.contenido,
-            created_at=r.created_at,
-            autor_nombre=r.autor_rel.nombre if r.autor_rel else None,
-        ))
-    return resultado
+    return [_serialize_reply(reply) for reply in respuestas]
 
 
 @router.post(
@@ -302,12 +322,6 @@ def create_respuesta(
     post = db.query(Foro).filter(Foro.id == post_id).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
-
-    if len(respuesta_in.contenido.strip()) <= 10:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="La respuesta debe tener más de 10 caracteres.",
-        )
 
     nueva_respuesta = RespuestaForo(
         post_id=post_id,
@@ -335,19 +349,54 @@ def create_respuesta(
     db.commit()
     db.refresh(nueva_respuesta)
 
-    return RespuestaResponse(
-        id=nueva_respuesta.id,
-        post_id=nueva_respuesta.post_id,
-        autor_id=nueva_respuesta.autor_id,
-        contenido=nueva_respuesta.contenido,
-        created_at=nueva_respuesta.created_at,
-        autor_nombre=current_user.nombre,
-    )
+    return _serialize_reply(nueva_respuesta)
 
 
 # Sistema de likes
 
-@router.post("/posts/{post_id}/like", summary="Dar/quitar like a un post")
+@router.put("/posts/{post_id}/like", response_model=LikeResponse, summary="Dar like a un post")
+def activate_like(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    """Idempotently activate the authenticated user's like."""
+    post = _get_post_or_404(db, post_id)
+    existing = db.query(LikeForo).filter_by(post_id=post_id, usuario_id=current_user.id).first()
+    if existing:
+        return _like_response(db, post_id, True)
+
+    db.add(LikeForo(post_id=post_id, usuario_id=current_user.id))
+    if post.autor_id != current_user.id:
+        db.add(Notificacion(
+            user_id=post.autor_id,
+            titulo=f"A {current_user.nombre} le gustó tu post",
+            mensaje=f"Tu publicación \"{post.titulo[:50]}\" recibió un like",
+            url="/foro",
+        ))
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+    return _like_response(db, post_id, True)
+
+
+@router.delete("/posts/{post_id}/like", response_model=LikeResponse, summary="Quitar like de un post")
+def deactivate_like(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    """Idempotently remove the authenticated user's like."""
+    _get_post_or_404(db, post_id)
+    db.query(LikeForo).filter_by(post_id=post_id, usuario_id=current_user.id).delete(
+        synchronize_session=False
+    )
+    db.commit()
+    return _like_response(db, post_id, False)
+
+
+@router.post("/posts/{post_id}/like", response_model=LikeResponse, deprecated=True, summary="Alternar like (compatibilidad)")
 def toggle_like(
     post_id: int,
     db: Session = Depends(get_db),
@@ -357,21 +406,17 @@ def toggle_like(
     Toggle de like: si ya existe lo quita, si no existe lo agrega.
     Devuelve la acción realizada y el total actualizado de likes.
     """
-    post = db.query(Foro).filter(Foro.id == post_id).first()
-    if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
+    post = _get_post_or_404(db, post_id)
 
     usuario_id = current_user.id
     like = db.query(LikeForo).filter_by(post_id=post_id, usuario_id=usuario_id).first()
 
     if like:
         db.delete(like)
-        action = "unliked"
         liked = False
     else:
         nuevo_like = LikeForo(post_id=post_id, usuario_id=usuario_id)
         db.add(nuevo_like)
-        action = "liked"
         liked = True
 
         # Notificar al autor del post (si no es el mismo que da like)
@@ -387,6 +432,4 @@ def toggle_like(
             db.add(noti)
 
     db.commit()
-    total_likes = db.query(LikeForo).filter(LikeForo.post_id == post_id).count()
-
-    return {"liked": liked, "total": total_likes}
+    return _like_response(db, post_id, liked)

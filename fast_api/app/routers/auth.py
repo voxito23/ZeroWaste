@@ -18,7 +18,7 @@ from app.security.login_throttle import INVALID_MESSAGE, get_client_ip, get_logi
 from app.services.media import (
     MAX_IMAGE_BYTES,
     MediaValidationError,
-    build_public_media_url,
+    build_public_avatar_url,
     remove_media_file,
     save_media_image,
 )
@@ -112,7 +112,7 @@ def mobile_login(
             "rol": usuario.rol or ("admin" if usuario.is_admin else "usuario"),
             "is_admin": usuario.is_admin,
             "foto_perfil": usuario.foto_perfil,
-            "avatar_url": build_public_media_url(usuario.foto_perfil, "perfiles"),
+            "avatar_url": build_public_avatar_url(usuario.foto_perfil),
             "profile_completed": usuario.profile_completed
         }
     }

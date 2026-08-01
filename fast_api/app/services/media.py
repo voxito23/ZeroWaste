@@ -55,6 +55,8 @@ _IMAGE_FORMATS = {
     "WEBP": ("webp", "image/webp"),
 }
 
+_DEFAULT_AVATAR_FILENAMES = {"default.png", "perfil_default.png"}
+
 
 class MediaValidationError(ValueError):
     """Raised when an uploaded media file is unsafe or unsupported."""
@@ -187,6 +189,18 @@ def build_public_media_url(path: object, category: str | None = None) -> str | N
 
     safe_relative = quote("/".join(relative_parts), safe="@-._~")
     return f"{_public_base()}/{selected_category}/{safe_relative}"
+
+
+def build_public_avatar_url(path: object) -> str | None:
+    """Return a real profile image URL, or ``None`` for legacy placeholders."""
+
+    if path is None:
+        return None
+    value = str(path).strip()
+    filename = value.replace("\\", "/").split("?", 1)[0].rstrip("/").rsplit("/", 1)[-1].lower()
+    if not filename or filename in _DEFAULT_AVATAR_FILENAMES:
+        return None
+    return build_public_media_url(value, "perfiles")
 
 
 def media_directory(category: str) -> Path:

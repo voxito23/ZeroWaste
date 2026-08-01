@@ -64,6 +64,11 @@ class User extends Authenticatable
 
     public function getAvatarUrlAttribute(): ?string
     {
+        $filename = strtolower(basename(parse_url(trim((string) $this->foto_perfil), PHP_URL_PATH) ?: ''));
+        if ($filename === '' || in_array($filename, ['default.png', 'perfil_default.png'], true)) {
+            return null;
+        }
+
         return Media::url($this->foto_perfil, 'perfiles');
     }
 }

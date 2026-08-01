@@ -41,6 +41,7 @@ _LEGACY_PREFIXES = {
     "api/foro/perfiles/": "perfiles",
 }
 _FORMATS = {"JPEG": "jpg", "PNG": "png", "WEBP": "webp"}
+_DEFAULT_AVATAR_FILENAMES = {"default.png", "perfil_default.png"}
 
 
 class MediaValidationError(ValueError):
@@ -156,6 +157,18 @@ def build_public_media_url(path, category=None):
         return None
     safe_relative = quote("/".join(relative_parts), safe="@-._~")
     return f"{_public_base()}/{selected}/{safe_relative}"
+
+
+def build_public_avatar_url(path):
+    """Return the canonical real avatar URL, never a legacy placeholder."""
+
+    if path is None:
+        return None
+    value = str(path).strip()
+    filename = value.replace("\\", "/").split("?", 1)[0].rstrip("/").rsplit("/", 1)[-1].lower()
+    if not filename or filename in _DEFAULT_AVATAR_FILENAMES:
+        return None
+    return build_public_media_url(value, "perfiles")
 
 
 def media_directory(category):

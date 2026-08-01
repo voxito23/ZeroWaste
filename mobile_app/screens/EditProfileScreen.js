@@ -8,6 +8,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { api } from '../api/axios';
 import { useAuth } from '../store/useAuth';
 import { normalizeMediaUrl } from '../utils/media';
+import UserAvatar from '../components/ui/UserAvatar';
 
 export default function EditProfileScreen() {
   const navigation = useNavigation();
@@ -19,11 +20,6 @@ export default function EditProfileScreen() {
   const [saving, setSaving] = useState(false);
 
   const currentAvatar = normalizeMediaUrl(user?.avatar_url ?? user?.foto_perfil, 'perfiles');
-  const avatarSource = selectedImage?.uri
-    ? { uri: selectedImage.uri }
-    : currentAvatar
-      ? { uri: currentAvatar }
-      : require('../assets/images/logo.png');
 
   const pickImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -78,7 +74,11 @@ export default function EditProfileScreen() {
       <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }} keyboardShouldPersistTaps="handled">
         <View className="items-center pb-2">
           <TouchableOpacity onPress={pickImage} className="relative" accessibilityLabel="Cambiar foto de perfil">
-            <Image source={avatarSource} className="h-28 w-28 rounded-full border-4 border-emerald-100 bg-white" resizeMode="cover" />
+            {selectedImage?.uri ? (
+              <Image source={{ uri: selectedImage.uri }} className="h-28 w-28 rounded-full border-4 border-emerald-100 bg-white" resizeMode="cover" />
+            ) : (
+              <UserAvatar uri={currentAvatar} name={user?.nombre} size={112} style={{ borderWidth: 4, borderColor: '#D1FAE5' }} accessibilityLabel="Avatar actual" />
+            )}
             <View className="absolute bottom-0 right-0 h-10 w-10 items-center justify-center rounded-full bg-emerald-700">
               <Camera color="white" size={19} />
             </View>

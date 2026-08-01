@@ -20,11 +20,13 @@ from urllib.parse import urlparse
 
 from media import (
     MediaValidationError,
+    build_public_avatar_url,
     build_public_media_url,
     media_directory,
     remove_media_file,
     save_uploaded_image,
 )
+from forum_content import is_invalid_comment, normalize_comment
 
 REWARD_IMAGES_DIR = str(media_directory('recompensas'))
 
@@ -153,7 +155,11 @@ FASTAPI_INTERNAL_URL = os.environ.get('FASTAPI_INTERNAL_URL', 'http://fast_api:6
 
 @app.context_processor
 def inject_global_vars():
-    return dict(API_URL=PUBLIC_API_URL, media_url=build_public_media_url)
+    return dict(
+        API_URL=PUBLIC_API_URL,
+        avatar_url=build_public_avatar_url,
+        media_url=build_public_media_url,
+    )
 
 db.init_app(app)
 
@@ -1105,7 +1111,7 @@ def actualizar_foto_perfil():
     return jsonify({
         'success': True,
         'foto_perfil': nombre_foto,
-        'avatar_url': build_public_media_url(nombre_foto, 'perfiles'),
+        'avatar_url': build_public_avatar_url(nombre_foto),
     })
 
 
@@ -1140,11 +1146,16 @@ def ver_post(post_id):
         return redirect(url_for('foro'))
         
     respuestas = RespuestaForo.query.filter_by(post_id=post_id).order_by(RespuestaForo.created_at.asc()).all()
+    invalid_response_ids = {r.id for r in respuestas if is_invalid_comment(r.contenido)}
     likes_count = LikeForo.query.filter_by(post_id=post_id).count()
     liked = LikeForo.query.filter_by(post_id=post_id, usuario_id=session['usuario_id']).first() is not None
     relacionados = Foro.query.filter(Foro.categoria_id == post.categoria_id, Foro.id != post.id).order_by(Foro.created_at.desc()).limit(2).all()
         
-    return render_template('post.html', post=post, respuestas=respuestas, likes_count=likes_count, liked=liked, relacionados=relacionados)
+    return render_template(
+        'post.html', post=post, respuestas=respuestas,
+        invalid_response_ids=invalid_response_ids,
+        likes_count=likes_count, liked=liked, relacionados=relacionados,
+    )
 
 @app.route('/foro/nuevo')
 def nuevo_post():
@@ -1205,8 +1216,13 @@ def crear_respuesta(post_id):
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
-    contenido = request.form.get('contenido')
-    if contenido and len(contenido.strip()) > 10:
+    try:
+        contenido = normalize_comment(request.form.get('contenido'))
+    except ValueError:
+        app.logger.warning('Respuesta de foro rechazada por formato inválido.')
+        return redirect(url_for('ver_post', post_id=post_id) + '#respuestas')
+
+    if contenido:
         respuesta = RespuestaForo(post_id=post_id, autor_id=session['usuario_id'], contenido=contenido)
         db.session.add(respuesta)
         actividad = Actividad(

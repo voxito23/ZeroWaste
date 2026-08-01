@@ -6,10 +6,9 @@ import { Award, ChevronRight, Gift, History, LogOut, MapPin, Settings, Shield, U
 import { StatusBar } from 'expo-status-bar';
 
 import { api } from '../api/axios';
-import RemoteImage from '../components/ui/RemoteImage';
+import UserAvatar from '../components/ui/UserAvatar';
 import { useScrollContext } from '../context/ScrollContext';
 import { useAuth } from '../store/useAuth';
-import { normalizeMediaUrl } from '../utils/media';
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -44,10 +43,7 @@ export default function ProfileScreen() {
     ]);
   };
 
-  const avatarValue = profile?.avatar_url ?? profile?.foto_perfil;
-  const avatarUrl = !['perfil_default.png', 'default.png'].includes(avatarValue)
-    ? normalizeMediaUrl(avatarValue, 'perfiles')
-    : null;
+  const avatarUrl = profile?.avatar_url ?? profile?.foto_perfil;
 
   return (
     <SafeAreaView className="flex-1 bg-[#FAFAFA]" edges={['top']}>
@@ -68,7 +64,7 @@ export default function ProfileScreen() {
 
         <View className="mx-6 rounded-[28px] bg-white border border-gray-100 p-6">
           <View className="flex-row items-center">
-            <RemoteImage uri={avatarUrl} fallbackSource={require('../assets/images/logo.png')} className="h-20 w-20 rounded-full bg-emerald-50" aspectRatio={1} accessibilityLabel="Avatar del perfil" />
+            <UserAvatar uri={avatarUrl} name={profile?.nombre} size={80} accessibilityLabel="Avatar del perfil" />
             <View className="ml-4 flex-1">
               <Text className="text-2xl font-black text-gray-900">{profile?.nombre || 'Usuario'}</Text>
               <Text className="text-gray-500 mt-1">{profile?.email || ''}</Text>

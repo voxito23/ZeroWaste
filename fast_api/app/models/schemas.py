@@ -6,9 +6,10 @@ Cubre TODAS las entidades del proyecto ZeroWaste.
 from datetime import datetime
 from typing import Optional, List
 from decimal import Decimal
-from pydantic import BaseModel, EmailStr, Field, model_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
-from app.services.media import build_public_media_url
+from app.services.media import build_public_avatar_url, build_public_media_url
+from app.services.forum_content import safe_comment_for_output, validate_comment
 
 
 # Esquemas de token JWT
@@ -97,7 +98,7 @@ class UsuarioResponse(UsuarioBase):
 
     @model_validator(mode="after")
     def populate_avatar_url(self):
-        self.avatar_url = build_public_media_url(self.foto_perfil, "perfiles")
+        self.avatar_url = build_public_avatar_url(self.foto_perfil)
         return self
 
     model_config = {
@@ -156,6 +157,11 @@ class CategoriaResponse(BaseModel):
 
 
 # Esquemas del foro — publicaciones
+
+class ForumAuthor(BaseModel):
+    id: int
+    nombre: str
+    avatar_url: Optional[str] = None
 
 class PostCreate(BaseModel):
     titulo: str
@@ -237,10 +243,14 @@ class PostDetailResponse(PostResponse):
     categoria_nombre: Optional[str] = None
     total_respuestas: int = 0
     total_likes: int = 0
+    comments_count: int = 0
+    likes_count: int = 0
+    liked_by_me: bool = False
+    author: Optional[ForumAuthor] = None
 
     @model_validator(mode="after")
     def populate_author_avatar_url(self):
-        self.avatar_url = build_public_media_url(self.autor_foto, "perfiles")
+        self.avatar_url = build_public_avatar_url(self.autor_foto)
         return self
 
     model_config = {
@@ -269,7 +279,12 @@ class PostDetailResponse(PostResponse):
 # Esquemas del foro — respuestas
 
 class RespuestaCreate(BaseModel):
-    contenido: str
+    contenido: str = Field(min_length=11, max_length=1000)
+
+    @field_validator("contenido", mode="before")
+    @classmethod
+    def validate_plain_content(cls, value: object) -> str:
+        return validate_comment(value)
 
     model_config = {
         "json_schema_extra": {
@@ -289,6 +304,16 @@ class RespuestaResponse(BaseModel):
     contenido: str
     created_at: Optional[datetime] = None
     autor_nombre: Optional[str] = None
+    autor_foto: Optional[str] = None
+    avatar_url: Optional[str] = None
+    author: Optional[ForumAuthor] = None
+    contenido_invalido: bool = False
+
+    @model_validator(mode="after")
+    def populate_safe_comment_and_avatar(self):
+        self.contenido, self.contenido_invalido = safe_comment_for_output(self.contenido)
+        self.avatar_url = build_public_avatar_url(self.autor_foto)
+        return self
 
     model_config = {
         "from_attributes": True,
@@ -310,9 +335,9 @@ class RespuestaResponse(BaseModel):
 # Esquemas del foro — likes
 
 class LikeResponse(BaseModel):
-    success: bool
-    action: str  # Valores posibles: "liked" o "unliked"
-    total_likes: int
+    liked: bool
+    likes_count: int = Field(ge=0)
+    total: int = Field(ge=0)
 
 
 # Esquemas del mapa — puntos de reciclaje

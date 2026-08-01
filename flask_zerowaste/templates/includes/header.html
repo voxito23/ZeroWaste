@@ -250,12 +250,14 @@
                 <button onclick="toggleProfileDropdown(event)" class="flex items-center gap-3 bg-transparent border-0 outline-none cursor-pointer">
                     <span class="font-bold text-sm text-secondary dark:text-[#D4E7DC] hidden md:block max-w-[120px] truncate" title="{{ session.get('nombre', 'Usuario') }}">{{ session.get('nombre', 'Usuario').split(' ')[0] }}</span>
                     <div class="profile-pic-desktop shadow-[0_2px_10px_rgba(0,0,0,0.1)] bg-gray-100 dark:bg-[#2D6A4F] relative flex items-center justify-center border-2 border-white dark:border-forest-dark transition-transform duration-300 hover:scale-105">
-                        <span class="material-symbols-outlined text-gray-300 dark:text-[#3B6B4F] text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0">person</span>
-                        {% set avatar = session.get('foto_perfil') or session.get('usuario_foto') or 'default.png' %}
-                        {% set avatar = (avatar.split('=')[0] ~ '=s400-c') if 'googleusercontent.com' in avatar else avatar %}
-                        <img alt="User Avatar" class="w-full h-full object-cover relative z-10 rounded-full border-2 border-white dark:border-forest-dark ring-2 ring-white/50"
-                             src="{{ media_url(avatar, 'perfiles') or '/media/perfiles/default.png' }}"
-                             onerror="this.onerror=null;this.src='/media/perfiles/default.png';">
+                        <span class="font-black text-emerald-800 dark:text-emerald-100 relative z-0">{{ session.get('nombre', 'U')[:1]|upper }}</span>
+                        {% set avatar = session.get('foto_perfil') or session.get('usuario_foto') %}
+                        {% set avatar = (avatar.split('=')[0] ~ '=s400-c') if avatar and 'googleusercontent.com' in avatar else avatar %}
+                        {% set avatar_src = avatar_url(avatar) %}
+                        {% if avatar_src %}
+                        <img alt="Avatar de {{ session.get('nombre', 'Usuario') }}" class="absolute inset-0 w-full h-full object-cover z-10 rounded-full border-2 border-white dark:border-forest-dark ring-2 ring-white/50"
+                             src="{{ avatar_src }}" onerror="this.hidden=true;">
+                        {% endif %}
                     </div>
                 </button>
                 
@@ -296,9 +298,13 @@
     {% if session.get('usuario_id') %}
     <!-- User Profile Section -->
     <div class="flex flex-col items-center py-6 px-5 border-b border-gray-200 dark:border-[#3B6B4F]">
-        {% set avatar = session.get('foto_perfil', session.get('usuario_foto', 'default.png')) %}
-        {% set avatar = (avatar.split('=')[0] ~ '=s400-c') if 'googleusercontent.com' in avatar else avatar %}
-        <img alt="User Avatar" class="profile-pic-mobile shadow-md mb-3 rounded-full object-cover" src="{{ media_url(avatar, 'perfiles') or '/media/perfiles/default.png' }}" onerror="this.onerror=null;this.src='/media/perfiles/default.png';"/>
+        {% set avatar = session.get('foto_perfil') or session.get('usuario_foto') %}
+        {% set avatar = (avatar.split('=')[0] ~ '=s400-c') if avatar and 'googleusercontent.com' in avatar else avatar %}
+        {% set avatar_src = avatar_url(avatar) %}
+        <div class="profile-pic-mobile shadow-md mb-3 rounded-full bg-emerald-100 dark:bg-emerald-900 relative flex items-center justify-center overflow-hidden" aria-label="Avatar de {{ session.get('nombre', 'Usuario') }}">
+            <span class="font-black text-emerald-800 dark:text-emerald-100">{{ session.get('nombre', 'U')[:1]|upper }}</span>
+            {% if avatar_src %}<img alt="Avatar de {{ session.get('nombre', 'Usuario') }}" class="absolute inset-0 w-full h-full object-cover" src="{{ avatar_src }}" onerror="this.hidden=true;"/>{% endif %}
+        </div>
         <span class="font-bold text-lg text-secondary dark:text-white">{{ session.get('nombre', 'Usuario') }}</span>
         
         <!-- Modo oscuro toggle dentro del sidebar -->

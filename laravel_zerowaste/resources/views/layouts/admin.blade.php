@@ -421,7 +421,6 @@
                     $uName = $isAuth ? \Illuminate\Support\Facades\Auth::user()->nombre : 'Visitante';
                     $uRole = ($isAuth && \Illuminate\Support\Facades\Auth::user()->is_admin) ? 'Administrador' : 'Usuario';
                     $fotoUrl = $isAuth ? \Illuminate\Support\Facades\Auth::user()->avatar_url : null;
-                    $fotoUrl = $fotoUrl ?: url('/media/perfiles/default.png');
                 @endphp
                 <div class="relative group cursor-pointer">
                     <div class="flex items-center gap-3">
@@ -429,9 +428,13 @@
                             <h3 class="text-sm font-bold text-secondary dark:text-emerald-100">{{ $uName }}</h3>
                             <p class="text-xs text-gray-400 dark:text-emerald-500">{{ $uRole }}</p>
                         </div>
-                        <img src="{{ $fotoUrl }}" alt="Avatar"
-                             class="w-11 h-11 rounded-full border-[3px] border-primary object-cover shadow-lg shadow-primary/20 transition-transform group-hover:scale-105"
-                             onerror="this.onerror=null; this.src='/media/perfiles/default.png';">
+                        <div class="relative w-11 h-11 rounded-full border-[3px] border-primary bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center overflow-hidden shadow-lg shadow-primary/20 transition-transform group-hover:scale-105"
+                             aria-label="Avatar de {{ $uName }}">
+                            <span class="font-black text-emerald-800 dark:text-emerald-100">{{ mb_strtoupper(mb_substr(trim($uName), 0, 1)) }}</span>
+                            @if($fotoUrl)
+                                <img src="{{ $fotoUrl }}" alt="Avatar de {{ $uName }}" class="absolute inset-0 w-full h-full object-cover" onerror="this.hidden=true;">
+                            @endif
+                        </div>
                     </div>
                     
                     <!-- Menú Desplegable -->

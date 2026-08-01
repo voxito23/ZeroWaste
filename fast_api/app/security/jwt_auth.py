@@ -27,6 +27,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
 
 # Esquema OAuth2 para autenticación en Swagger UI
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+optional_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
 
 
 # Funciones auxiliares de autenticación
@@ -105,6 +106,16 @@ def get_current_user(
         raise credentials_exception
 
     return user
+
+
+def get_optional_current_user(
+    token: Optional[str] = Depends(optional_oauth2_scheme),
+    db: Session = Depends(get_db),
+) -> Optional[Usuario]:
+    """Return no user when no bearer token exists; validate any supplied token."""
+    if not token:
+        return None
+    return get_current_user(token=token, db=db)
 
 
 def get_current_admin_user(

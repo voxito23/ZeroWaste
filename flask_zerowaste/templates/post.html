@@ -132,7 +132,11 @@
         <article class="relative z-10 bg-white dark:bg-[#022018] w-full h-full rounded-[1.85rem] p-8 md:p-10 flex flex-col">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                 <div class="flex items-center gap-4">
-                    <img alt="{{ post.autor_rel.nombre }}" class="w-14 h-14 rounded-full border-2 border-emerald-50 object-cover shadow-sm" src="{{ media_url(post.autor_rel.foto_perfil, 'perfiles') or '/media/perfiles/default.png' }}" onerror="this.onerror=null;this.src='/media/perfiles/default.png';"/>
+                    <div class="relative shrink-0 w-14 h-14 rounded-full border-2 border-emerald-50 bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center overflow-hidden shadow-sm" aria-label="Avatar de {{ post.autor_rel.nombre }}">
+                        <span class="font-black text-emerald-800 dark:text-emerald-100">{{ post.autor_rel.nombre[:1]|upper }}</span>
+                        {% set post_avatar = avatar_url(post.autor_rel.foto_perfil) %}
+                        {% if post_avatar %}<img alt="Avatar de {{ post.autor_rel.nombre }}" class="absolute inset-0 w-full h-full object-cover" src="{{ post_avatar }}" onerror="this.hidden=true;"/>{% endif %}
+                    </div>
                     <div>
                         <h3 class="font-bold text-secondary dark:text-white text-lg leading-tight">{{ post.autor_rel.nombre }}</h3>
                         <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
@@ -151,7 +155,7 @@
                 {{ post.titulo }}
             </h1>
             <div class="prose prose-lg prose-emerald dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 mb-8 no-hyphens contenido-post" style="white-space: pre-wrap;">
-            {{ post.contenido | safe }}
+            {{ post.contenido }}
             </div>
 {% set post_image_url = media_url(post.imagen, 'foro') %}
 {% if post_image_url %}
@@ -182,13 +186,21 @@
 {% for r in respuestas %}
 <div class="bg-white dark:bg-white/5 rounded-2xl p-6 shadow-sm border border-emerald-50 dark:border-white/5">
 <div class="flex gap-4 text-left">
-<img alt="{{ r.autor_rel.nombre }}" class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-sm" src="{{ media_url(r.autor_rel.foto_perfil, 'perfiles') or '/media/perfiles/default.png' }}" onerror="this.onerror=null;this.src='/media/perfiles/default.png';"/>
+<div class="relative shrink-0 w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm" aria-label="Avatar de {{ r.autor_rel.nombre }}">
+<span class="font-black text-emerald-800 dark:text-emerald-100">{{ r.autor_rel.nombre[:1]|upper }}</span>
+{% set reply_avatar = avatar_url(r.autor_rel.foto_perfil) %}
+{% if reply_avatar %}<img alt="Avatar de {{ r.autor_rel.nombre }}" class="absolute inset-0 w-full h-full object-cover" src="{{ reply_avatar }}" onerror="this.hidden=true;"/>{% endif %}
+</div>
 <div class="flex-grow">
 <div class="flex justify-between items-start">
 <h4 class="font-bold text-secondary dark:text-emerald-100">{{ r.autor_rel.nombre }}</h4>
 <span class="text-xs text-gray-400">{{ r.created_at | datetime_mx }}</span>
 </div>
-<div class="respuesta-texto mt-2 no-hyphens contenido-post">{{ r.contenido | safe }}</div>
+{% if r.id in invalid_response_ids %}
+<div class="respuesta-texto mt-2 whitespace-pre-wrap text-amber-700 dark:text-amber-300">Contenido retirado por tener un formato inválido.</div>
+{% else %}
+<div class="respuesta-texto mt-2 whitespace-pre-wrap no-hyphens contenido-post">{{ r.contenido }}</div>
+{% endif %}
 </div>
 </div>
 </div>
@@ -317,7 +329,7 @@
     function confirmarReply() {
         const editor = document.getElementById('reply-editor');
         const textarea = document.getElementById('reply-content');
-        textarea.value = editor.innerHTML;
+        textarea.value = editor.innerText.trim();
         document.getElementById('replyForm').submit();
     }
 

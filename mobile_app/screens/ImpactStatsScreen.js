@@ -4,8 +4,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Trophy } from 'lucide-react-native';
 import { api } from '../api/axios';
-import RemoteImage from '../components/ui/RemoteImage';
-import { normalizeMediaUrl } from '../utils/media';
+import UserAvatar from '../components/ui/UserAvatar';
 
 export default function ImpactStatsScreen() {
   const navigation = useNavigation();
@@ -37,10 +36,10 @@ export default function ImpactStatsScreen() {
     {error ? <View className="mx-5 rounded-2xl bg-red-50 p-4"><Text className="text-center font-bold text-red-700">{error}</Text><TouchableOpacity onPress={load}><Text className="mt-2 text-center font-black text-red-700">Reintentar</Text></TouchableOpacity></View> : null}
     {loading && !summary ? <ActivityIndicator className="mt-10" color="#047857" /> : null}
     <FlatList data={ranking} keyExtractor={(item) => String(item.usuario_id)} refreshControl={<RefreshControl refreshing={loading} onRefresh={load} />} contentContainerStyle={{ padding: 20, paddingBottom: 40 }} ListEmptyComponent={!loading && !error ? <Text className="text-center text-gray-500">Todavía no hay movimientos de impacto.</Text> : null} renderItem={({ item }) => {
-      const avatar = normalizeMediaUrl(item.avatar_url ?? item.avatar ?? item.foto_perfil, 'perfiles');
+      const avatar = item.avatar_url ?? item.avatar ?? item.foto_perfil;
       return <View className={`mb-3 flex-row items-center rounded-2xl border p-4 ${item.usuario_id === summary?.usuario_id ? 'border-emerald-400 bg-emerald-50' : 'border-gray-100 bg-white'}`}>
         <View className="h-10 w-10 items-center justify-center rounded-full bg-emerald-100"><Text className="font-black text-emerald-800">#{item.posicion}</Text></View>
-        <RemoteImage uri={avatar} fallbackSource={require('../assets/images/logo.png')} className="ml-3 h-11 w-11 rounded-full" aspectRatio={1} accessibilityLabel={`Avatar de ${item.nombre}`} />
+        <UserAvatar uri={avatar} name={item.nombre} size={44} style={{ marginLeft: 12 }} accessibilityLabel={`Avatar de ${item.nombre}`} />
         <Text className="ml-3 flex-1 font-black text-gray-900">{item.nombre}</Text>
         <View className="flex-row items-center"><Trophy color="#059669" size={16} /><Text className="ml-1 font-black text-emerald-700">{item.impacto_historico}</Text></View>
       </View>;

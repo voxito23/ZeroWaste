@@ -64,9 +64,9 @@
                         </td>
                         <td>
                             <div class="flex items-center gap-2">
-                                <div class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex-shrink-0 border border-gray-300 dark:border-gray-600">
-                                    <img src="{{ $post->autor?->avatar_url ?: '/media/perfiles/default.png' }}"
-                                         alt="Avatar" class="w-full h-full object-cover" onerror="this.src='/media/perfiles/default.png'">
+                                <div class="relative w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-900 overflow-hidden flex-shrink-0 border border-gray-300 dark:border-gray-600 flex items-center justify-center">
+                                    <span class="text-[10px] font-black text-emerald-800 dark:text-emerald-100">{{ mb_strtoupper(mb_substr(trim($post->autor->nombre ?? 'U'), 0, 1)) }}</span>
+                                    @if($post->autor?->avatar_url)<img src="{{ $post->autor->avatar_url }}" alt="Avatar de {{ $post->autor->nombre }}" class="absolute inset-0 w-full h-full object-cover" onerror="this.hidden=true;">@endif
                                 </div>
                                 <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $post->autor->nombre ?? 'Usuario Eliminado' }}</span>
                             </div>
@@ -96,7 +96,7 @@
                                     data-catclass="{{ $catClass }}"
                                     data-date="{{ $post->created_at ? $post->created_at->format('d/m/Y H:i') : '' }}"
                                     data-image="{{ $post->image_url }}"
-                                    data-author-image="{{ $post->autor?->avatar_url ?: '/media/perfiles/default.png' }}"
+                                    data-author-image="{{ $post->autor?->avatar_url }}"
                                     data-comments="{{ base64_encode(json_encode($post->respuestas)) }}"
                                     onclick="viewPostDetail(this)"
                                     class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors" title="Ver Detalles">
@@ -139,6 +139,25 @@
 
 @push('scripts')
 <script>
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    })[char]);
+}
+
+function safeMediaUrl(value) {
+    const candidate = String(value ?? '').trim();
+    if (!candidate) return '';
+    try {
+        const parsed = new URL(candidate, window.location.origin);
+        if (parsed.protocol !== 'https:' || !['www.zerowaste-qro.com', 'zerowaste-qro.com'].includes(parsed.hostname)) return '';
+        if (!parsed.pathname.startsWith('/media/')) return '';
+        return parsed.href;
+    } catch (_) {
+        return '';
+    }
+}
+
 function viewPostDetail(btn) {
     const title = btn.dataset.title;
     const author = btn.dataset.author;
@@ -152,18 +171,19 @@ function viewPostDetail(btn) {
     // Decodificar Base64 a UTF-8 string
     let safeContent = '';
     try {
-        safeContent = decodeURIComponent(escape(window.atob(contentBase64)));
+        safeContent = escapeHtml(decodeURIComponent(escape(window.atob(contentBase64))));
     } catch(e) {
-        safeContent = window.atob(contentBase64);
+        safeContent = escapeHtml(window.atob(contentBase64));
     }
     
     const isDark = document.documentElement.classList.contains('dark');
     
     let imageHtml = '';
-    if (image && image !== 'null' && image !== '') {
+    const safeImage = safeMediaUrl(image);
+    if (safeImage) {
         imageHtml = `
             <div class="mb-5 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 max-h-64 flex items-center justify-center bg-black/5 dark:bg-black/20">
-                <img src="${image}" alt="Imagen del post" class="max-w-full max-h-64 object-contain">
+                <img src="${safeImage}" alt="Imagen del post" class="max-w-full max-h-64 object-contain">
             </div>
         `;
     }
@@ -184,20 +204,28 @@ function viewPostDetail(btn) {
         commentsHtml += '<div class="mt-6 border-t border-gray-100 dark:border-gray-800 pt-4"><h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2"><span class="material-symbols-outlined text-[18px]">forum</span> Comentarios (' + comments.length + ')</h3><div class="space-y-3 max-h-64 overflow-y-auto pr-2" style="scrollbar-width: thin;">';
         
         comments.forEach(c => {
-            const cAuthor = c.autor ? c.autor.nombre : 'Usuario';
-            const cAuthorImg = c.autor && c.autor.avatar_url ? c.autor.avatar_url : '/media/perfiles/default.png';
+            const cAuthor = escapeHtml(c.autor ? c.autor.nombre : 'Usuario');
+            const cAuthorImg = safeMediaUrl(c.autor && c.autor.avatar_url ? c.autor.avatar_url : '');
+            const cInitial = escapeHtml((c.autor && c.autor.nombre ? c.autor.nombre : 'U').trim().charAt(0).toUpperCase());
+            const contaminated = /<\/?(?:div|style|script)\b|--tw-[\w-]+\s*:|class=["'][^"']*(?:flex|grid|text-|bg-)/i.test(String(c.contenido ?? ''));
+            const commentText = contaminated
+                ? 'Contenido retirado por tener un formato inválido.'
+                : escapeHtml(c.contenido);
             const cDate = new Date(c.created_at).toLocaleString('es-MX', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'});
             
             commentsHtml += `
                 <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 border border-gray-100 dark:border-gray-700 relative group">
                     <div class="flex items-start gap-3">
-                        <img src="${cAuthorImg}" alt="Avatar" class="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0" onerror="this.src='/media/perfiles/default.png'">
+                        <div class="relative w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center overflow-hidden border border-gray-200 dark:border-gray-700 shrink-0">
+                            <span class="text-[10px] font-black text-emerald-800 dark:text-emerald-100">${cInitial}</span>
+                            ${cAuthorImg ? `<img src="${cAuthorImg}" alt="Avatar de ${cAuthor}" class="absolute inset-0 w-full h-full object-cover" onerror="this.hidden=true;">` : ''}
+                        </div>
                         <div class="flex-1 min-w-0 pr-8">
                             <div class="flex items-center justify-between">
                                 <p class="text-sm font-bold text-gray-900 dark:text-white truncate">${cAuthor}</p>
                                 <span class="text-[10px] text-gray-400">${cDate}</span>
                             </div>
-                            <p class="text-xs text-gray-700 dark:text-gray-300 mt-1 whitespace-pre-wrap">${c.contenido}</p>
+                            <p class="text-xs ${contaminated ? 'text-amber-700 dark:text-amber-300' : 'text-gray-700 dark:text-gray-300'} mt-1 whitespace-pre-wrap">${commentText}</p>
                         </div>
                     </div>
                     <button onclick="deleteRespuesta(${c.id})" class="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity p-1.5 bg-white dark:bg-gray-900 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg border border-gray-200 dark:border-gray-700" title="Eliminar Comentario">
@@ -229,8 +257,9 @@ function viewPostDetail(btn) {
                 
                 <!-- Autor -->
                 <div class="flex items-center gap-3 mb-6 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
-                    <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center overflow-hidden border border-emerald-200 dark:border-emerald-800/50 shrink-0">
-                        <img src="${authorImage}" alt="Avatar" class="w-full h-full object-cover" onerror="this.src='/media/perfiles/default.png'">
+                    <div class="relative w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center overflow-hidden border border-emerald-200 dark:border-emerald-800/50 shrink-0">
+                        <span class="text-sm font-black text-emerald-800 dark:text-emerald-100">${escapeHtml(String(author || 'U').trim().charAt(0).toUpperCase())}</span>
+                        ${safeMediaUrl(authorImage) ? `<img src="${safeMediaUrl(authorImage)}" alt="Avatar de ${escapeHtml(author)}" class="absolute inset-0 w-full h-full object-cover" onerror="this.hidden=true;">` : ''}
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Publicado por</p>

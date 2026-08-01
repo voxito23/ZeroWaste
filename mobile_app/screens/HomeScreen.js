@@ -22,6 +22,7 @@ import { useScrollContext } from '../context/ScrollContext';
 import { useAuth } from '../store/useAuth';
 import { api } from '../api/axios';
 import RemoteImage from '../components/ui/RemoteImage';
+import UserAvatar from '../components/ui/UserAvatar';
 import { normalizeMediaUrl } from '../utils/media';
 import {
   Search,
@@ -252,7 +253,7 @@ export default function HomeScreen() {
     tendListRef.current?.scrollToIndex({ index: next, animated: true });
   };
 
-  const avatarUrl = normalizeMediaUrl(user?.avatar_url ?? user?.foto_perfil, 'perfiles');
+  const avatarUrl = user?.avatar_url ?? user?.foto_perfil;
 
   return (
     <SafeAreaView className="flex-1 bg-[#FAFAFA]" edges={['top']}>
@@ -283,19 +284,7 @@ export default function HomeScreen() {
               </View>
             </TouchableScale>
             <TouchableScale scaleVal={0.9} onPress={() => navigation.navigate('Profile')}>
-              <View className="w-10 h-10 rounded-full bg-emerald-500 items-center justify-center border-2 border-emerald-100 overflow-hidden">
-                {avatarUrl ? (
-                  <RemoteImage
-                    uri={avatarUrl}
-                    fallbackSource={require('../assets/images/logo.png')}
-                    className="h-full w-full"
-                    aspectRatio={1}
-                    accessibilityLabel="Avatar del usuario"
-                  />
-                ) : (
-                  <Text className="text-white text-[14px] font-black">{user?.nombre?.charAt(0).toUpperCase() || 'V'}</Text>
-                )}
-              </View>
+              <UserAvatar uri={avatarUrl} name={user?.nombre} size={40} accessibilityLabel="Avatar del usuario" />
             </TouchableScale>
           </View>
         </View>
