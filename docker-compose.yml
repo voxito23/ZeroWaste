@@ -135,8 +135,8 @@ services:
       start_period: 15s
     read_only: true
     tmpfs:
-      - /var/cache/nginx:size=128m,uid=101,gid=101,mode=0750
-      - /var/run:size=8m,uid=101,gid=101,mode=0750
+      - /var/cache/nginx:size=128m,mode=0777
+      - /var/run:size=8m,mode=0777
       - /tmp:size=32m,mode=1777
     cap_drop:
       - ALL
@@ -176,8 +176,8 @@ services:
       start_period: 10s
     read_only: true
     tmpfs:
-      - /var/cache/nginx:size=64m,uid=101,gid=101,mode=0750
-      - /var/run:size=8m,uid=101,gid=101,mode=0750
+      - /var/cache/nginx:size=64m,mode=0777
+      - /var/run:size=8m,mode=0777
       - /tmp:size=16m,mode=1777
     cap_drop:
       - ALL
@@ -334,7 +334,6 @@ services:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
       - --storage.tsdb.retention.time=15d
-      - --web.enable-lifecycle=false
     networks:
       - monitoring_network
     depends_on:
