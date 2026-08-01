@@ -96,20 +96,22 @@ return new class extends Migration {
             $table->timestampTz('created_at')->useCurrent();
         });
 
+        $activa = DB::raw('TRUE');
+
         DB::table('reglas_puntos')->insert([
-            ['codigo'=>'RECOLECCION_QR','descripcion'=>'Recolección completada y verificada mediante QR','puntos'=>100,'limite_diario'=>null,'activa'=>true,'created_at'=>now(),'updated_at'=>now()],
-            ['codigo'=>'EVENTO_CONFIRMADO','descripcion'=>'Participación confirmada en campaña o evento','puntos'=>50,'limite_diario'=>null,'activa'=>true,'created_at'=>now(),'updated_at'=>now()],
-            ['codigo'=>'POST_APROBADO','descripcion'=>'Publicación válida y aprobada en el foro','puntos'=>20,'limite_diario'=>null,'activa'=>true,'created_at'=>now(),'updated_at'=>now()],
-            ['codigo'=>'RESPUESTA_VALIDA','descripcion'=>'Respuesta válida en el foro','puntos'=>5,'limite_diario'=>5,'activa'=>true,'created_at'=>now(),'updated_at'=>now()],
-            ['codigo'=>'RESENA_PUNTO','descripcion'=>'Reseña válida de un punto de acopio','puntos'=>10,'limite_diario'=>null,'activa'=>true,'created_at'=>now(),'updated_at'=>now()],
+            ['codigo'=>'RECOLECCION_QR','descripcion'=>'Recolección completada y verificada mediante QR','puntos'=>100,'limite_diario'=>null,'activa'=>$activa,'created_at'=>now(),'updated_at'=>now()],
+            ['codigo'=>'EVENTO_CONFIRMADO','descripcion'=>'Participación confirmada en campaña o evento','puntos'=>50,'limite_diario'=>null,'activa'=>$activa,'created_at'=>now(),'updated_at'=>now()],
+            ['codigo'=>'POST_APROBADO','descripcion'=>'Publicación válida y aprobada en el foro','puntos'=>20,'limite_diario'=>null,'activa'=>$activa,'created_at'=>now(),'updated_at'=>now()],
+            ['codigo'=>'RESPUESTA_VALIDA','descripcion'=>'Respuesta válida en el foro','puntos'=>5,'limite_diario'=>5,'activa'=>$activa,'created_at'=>now(),'updated_at'=>now()],
+            ['codigo'=>'RESENA_PUNTO','descripcion'=>'Reseña válida de un punto de acopio','puntos'=>10,'limite_diario'=>null,'activa'=>$activa,'created_at'=>now(),'updated_at'=>now()],
         ]);
 
         DB::table('recompensas')->insert([
-            ['nombre'=>'Termo reutilizable','descripcion'=>'Termo reutilizable ZeroWaste.','costo_puntos'=>500,'stock'=>0,'imagen'=>'termo_reutilizable.png','activa'=>true,'orden'=>1,'created_at'=>now(),'updated_at'=>now()],
-            ['nombre'=>'Bolsa reutilizable','descripcion'=>'Bolsa reutilizable para compras.','costo_puntos'=>250,'stock'=>0,'imagen'=>'bolsa_reutilizable.png','activa'=>true,'orden'=>2,'created_at'=>now(),'updated_at'=>now()],
-            ['nombre'=>'Kit de botes para separación','descripcion'=>'Kit para separar residuos en casa.','costo_puntos'=>1200,'stock'=>0,'imagen'=>'kit_botes_separacion.png','activa'=>true,'orden'=>3,'created_at'=>now(),'updated_at'=>now()],
-            ['nombre'=>'Kit de cubiertos reutilizables','descripcion'=>'Cubiertos reutilizables portátiles.','costo_puntos'=>350,'stock'=>0,'imagen'=>'kit_cubiertos_reutilizables.png','activa'=>true,'orden'=>4,'created_at'=>now(),'updated_at'=>now()],
-            ['nombre'=>'Compostera doméstica','descripcion'=>'Compostera para residuos orgánicos.','costo_puntos'=>1500,'stock'=>0,'imagen'=>'compostera_domestica.png','activa'=>true,'orden'=>5,'created_at'=>now(),'updated_at'=>now()],
+            ['nombre'=>'Termo reutilizable','descripcion'=>'Termo reutilizable ZeroWaste.','costo_puntos'=>500,'stock'=>0,'imagen'=>'termo_reutilizable.png','activa'=>$activa,'orden'=>1,'created_at'=>now(),'updated_at'=>now()],
+            ['nombre'=>'Bolsa reutilizable','descripcion'=>'Bolsa reutilizable para compras.','costo_puntos'=>250,'stock'=>0,'imagen'=>'bolsa_reutilizable.png','activa'=>$activa,'orden'=>2,'created_at'=>now(),'updated_at'=>now()],
+            ['nombre'=>'Kit de botes para separación','descripcion'=>'Kit para separar residuos en casa.','costo_puntos'=>1200,'stock'=>0,'imagen'=>'kit_botes_separacion.png','activa'=>$activa,'orden'=>3,'created_at'=>now(),'updated_at'=>now()],
+            ['nombre'=>'Kit de cubiertos reutilizables','descripcion'=>'Cubiertos reutilizables portátiles.','costo_puntos'=>350,'stock'=>0,'imagen'=>'kit_cubiertos_reutilizables.png','activa'=>$activa,'orden'=>4,'created_at'=>now(),'updated_at'=>now()],
+            ['nombre'=>'Compostera doméstica','descripcion'=>'Compostera para residuos orgánicos.','costo_puntos'=>1500,'stock'=>0,'imagen'=>'compostera_domestica.png','activa'=>$activa,'orden'=>5,'created_at'=>now(),'updated_at'=>now()],
         ]);
     }
 

@@ -34,6 +34,11 @@ class ImpactRewardsSecurityTests(unittest.TestCase):
         migration = (ROOT / "laravel_zerowaste/database/migrations/2026_07_31_000000_create_impact_and_rewards_tables.php").read_text(encoding="utf-8")
         self.assertIn("uq_movimiento_recompensa", migration)
 
+    def test_postgres_boolean_seeds_use_sql_literals(self):
+        migration = (ROOT / "laravel_zerowaste/database/migrations/2026_07_31_000000_create_impact_and_rewards_tables.php").read_text(encoding="utf-8")
+        self.assertIn("$activa = DB::raw('TRUE');", migration)
+        self.assertEqual(migration.count("'activa'=>$activa"), 10)
+
     def test_forum_upload_restricts_size_type_and_filename(self):
         router = (ROOT / "fast_api/app/routers/foro.py").read_text(encoding="utf-8")
         media = (ROOT / "fast_api/app/services/media.py").read_text(encoding="utf-8")
