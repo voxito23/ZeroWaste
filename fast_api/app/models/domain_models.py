@@ -68,6 +68,10 @@ class PuntoMapa(Base):
     tipo = Column(String(100), nullable=False)
     materiales = Column(Text, nullable=True)
     imagen = Column(String(255), default="default_punto.png")
+    activo = Column(Boolean, nullable=False, default=True)
+    horario = Column(String(255), nullable=True)
+    responsable = Column(String(150), nullable=True)
+    deleted_at = Column(DateTime(timezone=True), nullable=True, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     calificaciones = relationship("CalificacionPunto", back_populates="punto")
@@ -359,6 +363,8 @@ class Recompensa(Base):
     activa = Column(Boolean, nullable=False, default=True)
     limite_por_usuario = Column(Integer, nullable=True)
     orden = Column(Integer, nullable=False, default=0)
+    available_at = Column(DateTime(timezone=True), nullable=True)
+    deleted_at = Column(DateTime(timezone=True), nullable=True, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     __table_args__ = (

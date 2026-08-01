@@ -74,6 +74,13 @@ export default function RewardsStoreScreen() {
         contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 40 }}
         renderItem={({ item }) => {
           const image = rewardImageData(item);
+          const availability = item.activa === false
+            ? { label: 'Inactiva', classes: 'bg-slate-100 text-slate-600' }
+            : Number(item.stock) === 0
+              ? { label: 'Agotado', classes: 'bg-red-50 text-red-700' }
+              : Number(item.stock) <= 3
+                ? { label: 'Últimas unidades', classes: 'bg-amber-50 text-amber-700' }
+                : { label: 'Disponible', classes: 'bg-emerald-50 text-emerald-700' };
           return (
             <TouchableOpacity onPress={() => navigation.navigate('RewardDetail', { reward: item })} className="flex-1 overflow-hidden rounded-3xl border border-gray-100 bg-white">
               <RemoteImage uri={image.uri} fallbackSource={image.fallbackSource} className="h-36 w-full bg-gray-100" resizeMode="contain" accessibilityLabel={`Imagen de ${item.nombre}`} />
@@ -81,6 +88,7 @@ export default function RewardsStoreScreen() {
                 <Text className="font-black text-gray-900" numberOfLines={2}>{item.nombre}</Text>
                 <Text className="mt-2 font-black text-emerald-700">{item.costo_puntos} pts</Text>
                 <Text className="mt-1 text-xs text-gray-500">Stock: {item.stock}</Text>
+                <View className={`mt-3 self-start rounded-full px-2.5 py-1 ${availability.classes}`}><Text className="text-[10px] font-black uppercase tracking-wide">{availability.label}</Text></View>
               </View>
             </TouchableOpacity>
           );

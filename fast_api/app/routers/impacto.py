@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy import func
@@ -82,13 +84,14 @@ def my_movements(db: Session = Depends(get_db), current_user: Usuario = Depends(
 
 @router.get("/recompensas")
 def rewards(db: Session = Depends(get_db)):
-    rows = db.query(Recompensa).filter(Recompensa.activa.is_(True)).order_by(Recompensa.orden, Recompensa.id).all()
+    now = datetime.now(timezone.utc)
+    rows = db.query(Recompensa).filter(Recompensa.activa.is_(True), Recompensa.deleted_at.is_(None), (Recompensa.available_at.is_(None) | (Recompensa.available_at <= now))).order_by(Recompensa.orden, Recompensa.id).all()
     return [_reward_dict(row) for row in rows]
 
 
 @router.get("/recompensas/{recompensa_id}")
 def reward_detail(recompensa_id: int, db: Session = Depends(get_db)):
-    row = db.query(Recompensa).filter(Recompensa.id == recompensa_id, Recompensa.activa.is_(True)).first()
+    row = db.query(Recompensa).filter(Recompensa.id == recompensa_id, Recompensa.activa.is_(True), Recompensa.deleted_at.is_(None)).first()
     if not row:
         raise HTTPException(status_code=404, detail="Recompensa no encontrada.")
     return _reward_dict(row)
@@ -97,7 +100,7 @@ def reward_detail(recompensa_id: int, db: Session = Depends(get_db)):
 @router.post("/canjes", status_code=status.HTTP_201_CREATED)
 def redeem(payload: CanjeCreate, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
     reward = db.query(Recompensa).filter(Recompensa.id == payload.recompensa_id).with_for_update().first()
-    if not reward or not reward.activa:
+    if not reward or not reward.activa or reward.deleted_at is not None or (reward.available_at and reward.available_at.replace(tzinfo=reward.available_at.tzinfo or timezone.utc) > datetime.now(timezone.utc)):
         raise HTTPException(status_code=404, detail="Recompensa no disponible.")
     if reward.stock < payload.cantidad:
         raise HTTPException(status_code=409, detail="No hay stock suficiente.")

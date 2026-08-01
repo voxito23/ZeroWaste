@@ -174,6 +174,9 @@
                 </div>
             </div>
 
+            <div class="grid gap-4 md:grid-cols-2"><label class="block font-bold text-sm text-gray-700 dark:text-emerald-200">Horario *<input name="horario" value="{{ old('horario', $location->horario) }}" maxlength="255" required class="input-premium mt-1.5"></label><label class="block font-bold text-sm text-gray-700 dark:text-emerald-200">Responsable<input name="responsable" value="{{ old('responsable', $location->responsable) }}" maxlength="150" class="input-premium mt-1.5"></label></div>
+            <label class="flex items-center gap-2 font-bold text-sm dark:text-emerald-100"><input type="hidden" name="activo" value="0"><input type="checkbox" name="activo" value="1" @checked(old('activo', $location->activo ?? true))> Punto activo</label>
+
             <div>
                 <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Fotografía del Punto</label>
                 @if($location->imagen && $location->imagen !== 'default_punto.png')

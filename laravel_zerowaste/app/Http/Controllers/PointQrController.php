@@ -6,6 +6,8 @@ use App\Models\Location;
 use App\Services\FastApiQrService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Illuminate\Http\Request;
+use App\Services\AuditLogger;
 
 class PointQrController extends Controller
 {
@@ -22,30 +24,33 @@ class PointQrController extends Controller
         }
     }
 
-    public function generate(Location $location): RedirectResponse
+    public function generate(Request $request, Location $location): RedirectResponse
     {
         try {
             $this->qr->generatePoint($location->id);
+            AuditLogger::record($request, 'point_qr.generated', 'location', $location->id);
             return redirect()->route('mapa.qr.show', $location)->with('success', 'El código QR fue generado correctamente.');
         } catch (\Throwable $error) {
             return back()->with('error', 'No fue posible generar el código QR.');
         }
     }
 
-    public function regenerate(Location $location): RedirectResponse
+    public function regenerate(Request $request, Location $location): RedirectResponse
     {
         try {
             $this->qr->regeneratePoint($location->id);
+            AuditLogger::record($request, 'point_qr.regenerated', 'location', $location->id);
             return redirect()->route('mapa.qr.show', $location)->with('success', 'El código QR fue regenerado correctamente.');
         } catch (\Throwable $error) {
             return back()->with('error', 'No fue posible regenerar el código QR.');
         }
     }
 
-    public function revoke(Location $location): RedirectResponse
+    public function revoke(Request $request, Location $location): RedirectResponse
     {
         try {
             $this->qr->revokePoint($location->id);
+            AuditLogger::record($request, 'point_qr.revoked', 'location', $location->id);
             return redirect()->route('mapa.index')->with('success', 'El código QR fue revocado correctamente.');
         } catch (\Throwable $error) {
             return back()->with('error', 'No fue posible revocar el código QR.');

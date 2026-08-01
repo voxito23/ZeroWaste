@@ -1,0 +1,10 @@
+@php
+    $value = function ($name, $fallback = null) use ($reward) {
+        return old($name, $reward ? ($reward->{$name} ?? $fallback) : $fallback);
+    };
+@endphp
+<div><label class="text-sm font-bold dark:text-emerald-100">Nombre *</label><input class="input-premium mt-1" name="nombre" maxlength="150" value="{{ $value('nombre') }}" required></div>
+<div><label class="text-sm font-bold dark:text-emerald-100">Descripción *</label><textarea class="input-premium mt-1" name="descripcion" maxlength="2000" rows="3" required>{{ $value('descripcion') }}</textarea></div>
+<div class="grid grid-cols-2 gap-3 md:grid-cols-4"><label class="text-xs font-bold">Costo *<input class="input-premium mt-1" type="number" min="1" name="costo_puntos" value="{{ $value('costo_puntos',1) }}" required></label><label class="text-xs font-bold">Stock *<input class="input-premium mt-1" type="number" min="0" name="stock" value="{{ $value('stock',0) }}" required></label><label class="text-xs font-bold">Orden *<input class="input-premium mt-1" type="number" min="0" name="orden" value="{{ $value('orden',0) }}" required></label><label class="text-xs font-bold">Límite<input class="input-premium mt-1" type="number" min="1" name="limite_por_usuario" value="{{ $value('limite_por_usuario') }}"></label></div>
+<div class="grid gap-3 md:grid-cols-2"><label class="text-sm font-bold">Imagen {{ $reward ? '(opcional)' : '*' }}<input class="input-premium mt-1" type="file" accept="image/png,image/jpeg,image/webp" name="imagen_archivo" @required(!$reward)></label><label class="text-sm font-bold">Disponible desde<input class="input-premium mt-1" type="datetime-local" name="available_at" value="{{ $value('available_at') ? \Illuminate\Support\Carbon::parse($value('available_at'))->format('Y-m-d\TH:i') : '' }}"></label></div>
+<label class="flex items-center gap-2 font-bold"><input type="hidden" name="activa" value="0"><input type="checkbox" name="activa" value="1" @checked((bool)$value('activa',true))> Recompensa activa</label>

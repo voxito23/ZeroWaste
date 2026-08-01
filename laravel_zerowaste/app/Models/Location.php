@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Support\Media;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * @property int $id
@@ -26,7 +27,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Location extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
     
     const CREATED_AT = 'created_at';
     const UPDATED_AT = null;
@@ -40,6 +41,7 @@ class Location extends Model
         'tipo',
         'imagen',
         'materiales',
+        'activo', 'horario', 'responsable',
     ];
 
     protected $appends = ['image_url'];

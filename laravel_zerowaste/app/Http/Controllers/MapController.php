@@ -5,14 +5,24 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Location;
 use App\Support\Media;
+use App\Services\AuditLogger;
 
 class MapController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $locations = Location::query()->orderByDesc('created_at')->get();
+        $query = Location::withTrashed();
+        if ($request->filled('q')) $query->where(fn ($q) => $q->where('nombre', 'ilike', '%'.$request->q.'%')->orWhere('direccion', 'ilike', '%'.$request->q.'%'));
+        if ($request->estado === 'activo') $query->where('activo', true)->whereNull('deleted_at');
+        if ($request->estado === 'inactivo') $query->where(fn ($q) => $q->where('activo', false)->orWhereNotNull('deleted_at'));
+        if ($request->filled('material')) $query->where('materiales', 'ilike', '%'.$request->material.'%');
+        if ($request->qr === 'con') $query->whereExists(fn ($q) => $q->selectRaw('1')->from('point_qr_codes')->whereColumn('point_qr_codes.location_id', 'locations.id')->where('active', true));
+        if ($request->qr === 'sin') $query->whereNotExists(fn ($q) => $q->selectRaw('1')->from('point_qr_codes')->whereColumn('point_qr_codes.location_id', 'locations.id')->where('active', true));
+        $sort = in_array($request->sort, ['nombre', 'created_at'], true) ? $request->sort : 'created_at';
+        $locations = $query->orderBy($sort, $sort === 'created_at' ? 'desc' : 'asc')->paginate(12)->withQueryString();
+        $mapLocations = Location::query()->where('activo', true)->get();
         $mapboxToken = trim((string) config('services.mapbox.public_token', ''), " \t\n\r\0\x0B\"'");
-        return view('admin.mapa.index', compact('locations', 'mapboxToken'));
+        return view('admin.mapa.index', compact('locations', 'mapLocations', 'mapboxToken'));
     }
 
     public function create()
@@ -31,6 +41,9 @@ class MapController extends Controller
             'tipo' => 'required|string|max:100',
             'imagen_archivo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'materiales' => 'nullable|string|max:255',
+            'horario' => 'required|string|max:255',
+            'responsable' => 'nullable|string|max:150',
+            'activo' => 'nullable|boolean',
         ];
         $messages = [
             'nombre.required' => 'El nombre del punto es obligatorio.',
@@ -44,7 +57,8 @@ class MapController extends Controller
         ];
         $request->validate($rules, $messages);
 
-        $data = $request->only(['nombre', 'direccion', 'latitud', 'longitud', 'tipo']);
+        $data = $request->only(['nombre', 'direccion', 'latitud', 'longitud', 'tipo', 'horario', 'responsable']);
+        $data['activo'] = $request->boolean('activo');
         $data['materiales'] = $request->input('materiales', 'No especificado (Material General)');
 
         $newImage = null;
@@ -59,6 +73,7 @@ class MapController extends Controller
             Media::discard($newImage, 'puntos');
             throw $error;
         }
+        AuditLogger::record($request, 'point.created', 'location', $location->id, ['nombre' => $location->nombre]);
         if ($request->input('submit_action') === 'save_and_qr') {
             try {
                 app(\App\Services\FastApiQrService::class)->generatePoint($location->id);
@@ -85,6 +100,9 @@ class MapController extends Controller
             'tipo' => 'required|string|max:100',
             'imagen_archivo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
             'materiales' => 'nullable|string|max:255',
+            'horario' => 'required|string|max:255',
+            'responsable' => 'nullable|string|max:150',
+            'activo' => 'nullable|boolean',
         ];
         $messages = [
             'nombre.required' => 'El nombre del punto es obligatorio.',
@@ -98,7 +116,8 @@ class MapController extends Controller
         ];
         $request->validate($rules, $messages);
 
-        $data = $request->only(['nombre', 'direccion', 'latitud', 'longitud', 'tipo']);
+        $data = $request->only(['nombre', 'direccion', 'latitud', 'longitud', 'tipo', 'horario', 'responsable']);
+        $data['activo'] = $request->boolean('activo');
         $data['materiales'] = $request->input('materiales', 'No especificado (Material General)');
 
         $newImage = null;
@@ -113,12 +132,30 @@ class MapController extends Controller
             Media::discard($newImage, 'puntos');
             throw $error;
         }
-        return redirect()->route('mapa.index')->with('success', 'Punto actualizado exitosamente.');
+        AuditLogger::record($request, 'point.updated', 'location', $location->id, ['fields' => array_keys($data)]);
+        return redirect()->route('mapa.index')->with('success', 'Los cambios fueron guardados.');
     }
 
-    public function destroy(Location $location)
+    public function destroy(Request $request, Location $location)
     {
         $location->delete();
-        return redirect()->route('mapa.index')->with('success', 'Punto eliminado exitosamente.');
+        AuditLogger::record($request, 'point.deleted', 'location', $location->id);
+        return redirect()->route('mapa.index')->with('success', 'El punto fue eliminado.');
+    }
+
+    public function deactivate(Request $request, Location $location)
+    {
+        $location->update(['activo' => false]);
+        AuditLogger::record($request, 'point.deactivated', 'location', $location->id);
+        return back()->with('success', 'El punto fue desactivado.');
+    }
+
+    public function reactivate(Request $request, int $id)
+    {
+        $location = Location::withTrashed()->findOrFail($id);
+        if ($location->trashed()) $location->restore();
+        $location->update(['activo' => true]);
+        AuditLogger::record($request, 'point.reactivated', 'location', $location->id);
+        return back()->with('success', 'El punto fue reactivado.');
     }
 }

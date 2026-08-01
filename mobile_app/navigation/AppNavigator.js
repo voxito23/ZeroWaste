@@ -19,6 +19,7 @@ import SearchScreen from '../screens/SearchScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
 import CreateCollectionScreen from '../screens/CreateCollectionScreen';
+import PointDetailScreen from '../screens/PointDetailScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -57,6 +58,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             <Stack.Screen name="CreateCollection" component={CreateCollectionScreen} />
+            <Stack.Screen name="PointDetail" component={PointDetailScreen} />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthNavigator} />

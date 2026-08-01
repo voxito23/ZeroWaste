@@ -101,6 +101,7 @@ class CollectionScheduleContractsTest(unittest.TestCase):
         self.assertGreaterEqual(source.count("with_for_update()"), 2)
         self.assertIn('qr.status = "used"', source)
         self.assertIn('rule_code="RECOLECCION_QR"', source)
+        self.assertIn('"WRONG_COLLECTION"', source)
         migration = (ROOT / "laravel_zerowaste" / "database" / "migrations" / "2026_07_31_000000_create_impact_and_rewards_tables.php").read_text(encoding="utf-8")
         self.assertIn("unique(['usuario_id', 'referencia_tipo', 'referencia_id', 'regla_id']", migration)
 

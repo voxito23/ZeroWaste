@@ -6,6 +6,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use App\Services\AuditLogger;
 
 class CollectionScheduleController extends Controller
 {
@@ -42,6 +43,7 @@ class CollectionScheduleController extends Controller
                 ]);
             }
         });
+        AuditLogger::record($request, 'collection_schedule.updated', 'collection_schedules', null, ['weekdays' => array_keys($validated['days'])]);
         return back()->with('success', 'Los horarios de recolección fueron guardados.');
     }
 
@@ -63,16 +65,18 @@ class CollectionScheduleController extends Controller
             ['exception_date' => $data['exception_date'], 'kind' => $data['kind']],
             $data,
         );
+        AuditLogger::record($request, 'schedule_exception.saved', 'schedule_exception', $data['exception_date'], ['kind' => $data['kind']]);
         return back()->with('success', 'La excepción fue guardada.');
     }
 
-    public function destroyException(int $id): RedirectResponse
+    public function destroyException(Request $request, int $id): RedirectResponse
     {
         DB::table('schedule_exceptions')->where('id', $id)->update(['active' => false, 'updated_at' => now()]);
+        AuditLogger::record($request, 'schedule_exception.removed', 'schedule_exception', $id);
         return back()->with('success', 'La excepción fue retirada.');
     }
 
-    public function restore(): RedirectResponse
+    public function restore(Request $request): RedirectResponse
     {
         DB::transaction(function () {
             foreach (range(1, 7) as $weekday) {
@@ -84,6 +88,7 @@ class CollectionScheduleController extends Controller
                 ]);
             }
         });
+        AuditLogger::record($request, 'collection_schedule.restored', 'collection_schedules', null);
         return back()->with('success', 'Se restauró el horario inicial de lunes, miércoles y viernes.');
     }
 }

@@ -15,12 +15,20 @@ class CollectionQrError(ValueError):
         self.status_code = status_code
 
 
-def complete_collection(db: Session, *, raw_token: str, current_user: Usuario) -> SolicitudRecoleccion:
+def complete_collection(
+    db: Session,
+    *,
+    raw_token: str,
+    current_user: Usuario,
+    expected_collection_id: int | None = None,
+) -> SolicitudRecoleccion:
     if current_user.rol not in {"recolector", "admin"} and not current_user.is_admin:
         raise CollectionQrError("FORBIDDEN", "No tienes permiso para confirmar esta recolección.", 403)
     qr = db.query(TokenQrRecoleccion).filter_by(token_hash=token_hash(raw_token)).with_for_update().first()
     if not qr:
         raise CollectionQrError("QR_TAMPERED", "Este código QR no es válido o fue modificado.")
+    if expected_collection_id is not None and qr.solicitud_id != expected_collection_id:
+        raise CollectionQrError("WRONG_COLLECTION", "Este código no corresponde a la recolección seleccionada.", 409)
     if qr.used_at is not None or qr.status == "used":
         raise CollectionQrError("QR_ALREADY_USED", "Esta recolección ya fue confirmada anteriormente.", 409)
     if qr.status != "active" or qr.invalidated_at is not None:

@@ -350,6 +350,9 @@ class PuntoMapaCreate(BaseModel):
     tipo: str
     materiales: Optional[str] = None
     imagen: Optional[str] = None
+    horario: Optional[str] = None
+    responsable: Optional[str] = None
+    activo: bool = True
 
     model_config = {
         "json_schema_extra": {
@@ -375,6 +378,9 @@ class PuntoMapaUpdate(BaseModel):
     tipo: Optional[str] = None
     materiales: Optional[str] = None
     imagen: Optional[str] = None
+    horario: Optional[str] = None
+    responsable: Optional[str] = None
+    activo: Optional[bool] = None
 
     model_config = {
         "json_schema_extra": {
@@ -403,6 +409,8 @@ class PuntoMapaResponse(BaseModel):
     imagen: Optional[str] = "default_punto.png"
     image_url: Optional[str] = None
     activo: bool = True
+    horario: Optional[str] = None
+    responsable: Optional[str] = None
     promedio: float = 0.0
     total_reviews: int = 0
 

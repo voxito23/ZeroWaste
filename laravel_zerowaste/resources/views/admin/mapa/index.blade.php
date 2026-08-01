@@ -58,7 +58,7 @@
             window.ZeroWasteMapbox.setTheme(map, nowDark);
         }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
-        const fallbackLocations = window.ZeroWasteMapbox.normalizePoints(@json($locations ?? []));
+        const fallbackLocations = window.ZeroWasteMapbox.normalizePoints(@json($mapLocations ?? []));
 
         window.ZeroWasteMapbox.fetchPoints('/api/mapa/puntos')
             .catch(() => fallbackLocations)
@@ -99,13 +99,13 @@
                 <div class="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center" style="background: linear-gradient(135deg, rgba(239,68,68,0.1), rgba(239,68,68,0.2)); border: 2px solid rgba(239,68,68,0.2);">
                     <span class="material-symbols-outlined text-red-500" style="font-size: 36px;">location_off</span>
                 </div>
-                <h3 style="font-size: 1.3rem; font-weight: 900; margin-bottom: 8px;">¿Eliminar punto?</h3>
-                <p style="font-size: 0.875rem; opacity: 0.7;">El punto <b>"${nombre}"</b> será eliminado permanentemente del mapa.</p>
+                <h3 style="font-size: 1.3rem; font-weight: 900; margin-bottom: 8px;">¿Eliminar punto de reciclaje?</h3>
+                <p style="font-size: 0.875rem; opacity: 0.7;">Esta acción retirará el punto de las vistas públicas. Los registros históricos se conservarán.</p>
             </div>`,
             showCancelButton: true,
             confirmButtonColor: '#EF4444',
             cancelButtonColor: isDark ? '#1a3a2d' : '#E5E7EB',
-            confirmButtonText: '<span class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-base">delete</span>Eliminar</span>',
+            confirmButtonText: '<span class="font-bold flex items-center gap-2"><span class="material-symbols-outlined text-base">delete</span>Eliminar punto</span>',
             cancelButtonText: '<span class="font-bold" style="color: ' + (isDark ? '#D1FAE5' : '#1F2937') + ';">Cancelar</span>',
             background: isDark ? '#0F2A20' : '#fff',
             color: isDark ? '#D1FAE5' : '#064E3B',
@@ -141,6 +141,7 @@
                 <span class="material-symbols-outlined text-sm">add</span> Nuevo
             </a>
         </div>
+        <form method="GET" class="grid grid-cols-2 gap-2 border-b border-slate-100 p-3"><input class="input-premium col-span-2" name="q" value="{{ request('q') }}" placeholder="Buscar punto…"><select class="input-premium" name="estado"><option value="">Todos</option><option value="activo" @selected(request('estado')==='activo')>Activos</option><option value="inactivo" @selected(request('estado')==='inactivo')>Inactivos</option></select><select class="input-premium" name="qr"><option value="">Cualquier QR</option><option value="con" @selected(request('qr')==='con')>Con QR</option><option value="sin" @selected(request('qr')==='sin')>Sin QR</option></select><input class="input-premium" name="material" value="{{ request('material') }}" placeholder="Material"><button class="btn-secondary justify-center">Filtrar</button></form>
         <div class="flex-1 overflow-y-auto p-3">
             @forelse ($locations as $loc)
             <div class="mb-4 p-3 rounded-2xl border border-gray-100/60 dark:border-emerald-800/20 bg-white/50 dark:bg-white/[0.02] hover:bg-white dark:hover:bg-white/5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all duration-300 relative group">
@@ -163,7 +164,7 @@
                             
                             {{-- Acciones --}}
                             <div class="flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity duration-200 shrink-0">
-                                <a href="{{ route('mapa.edit', $loc) }}" class="w-6 h-6 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 flex items-center justify-center transition-colors" title="Editar">
+                                @if(!$loc->trashed())<a href="{{ route('mapa.edit', $loc) }}" class="w-6 h-6 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 flex items-center justify-center transition-colors" title="Editar">
                                     <span class="material-symbols-outlined text-[13px]">edit</span>
                                 </a>
                                 <form action="{{ route('mapa.qr.generate', $loc) }}" method="POST">@csrf
@@ -177,6 +178,7 @@
                                         <span class="material-symbols-outlined text-[13px]">delete</span>
                                     </button>
                                 </form>
+                                @else<form action="{{ route('mapa.reactivate', $loc->id) }}" method="POST">@csrf<button class="w-6 h-6 rounded-md bg-emerald-50 text-emerald-700" title="Reactivar"><span class="material-symbols-outlined text-sm">restore</span></button></form>@endif
                             </div>
                         </div>
 
@@ -198,7 +200,7 @@
                 <a href="{{ route('mapa.create') }}" class="inline-block mt-3 text-primary font-bold text-sm hover:underline">+ Agregar primer punto</a>
             </div>
             @endforelse
-        </div>
+        </div><div class="border-t border-slate-100 p-3">{{ $locations->links() }}</div>
     </div>
 
     {{-- Mapa --}}

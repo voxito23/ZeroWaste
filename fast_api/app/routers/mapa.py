@@ -55,6 +55,9 @@ def _serialize_punto(
             else None
         ),
         imagen=getattr(punto, "imagen", None),
+        activo=bool(getattr(punto, "activo", True)),
+        horario=getattr(punto, "horario", None),
+        responsable=getattr(punto, "responsable", None),
         promedio=round(float(promedio or 0), 1),
         total_reviews=int(total or 0),
     )
@@ -74,6 +77,7 @@ def _get_puntos_con_promedio(db: Session) -> List[PuntoMapaResponse]:
             func.count(CalificacionPunto.id).label("total_reviews"),
         )
         .outerjoin(CalificacionPunto, PuntoMapa.id == CalificacionPunto.location_id)
+        .filter(PuntoMapa.activo.is_(True), PuntoMapa.deleted_at.is_(None))
         .group_by(PuntoMapa.id)
         .order_by(func.avg(CalificacionPunto.estrellas).desc().nullslast())
         .all()
@@ -111,6 +115,7 @@ def get_punto(punto_id: int, db: Session = Depends(get_db)):
         )
         .outerjoin(CalificacionPunto, PuntoMapa.id == CalificacionPunto.location_id)
         .filter(PuntoMapa.id == punto_id)
+        .filter(PuntoMapa.activo.is_(True), PuntoMapa.deleted_at.is_(None))
         .group_by(PuntoMapa.id)
         .first()
     )

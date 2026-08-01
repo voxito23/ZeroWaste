@@ -85,7 +85,7 @@ export default function ScannerScreen() {
         setResult({ status: 'success', message: 'Punto de reciclaje verificado.' });
         setTimeout(() => {
           setResult(null);
-          navigation.navigate('LocationDetail', { point: data.point });
+          navigation.navigate('PointDetail', { point: data.point });
         }, reduceMotion ? 0 : 450);
         return;
       }

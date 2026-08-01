@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.data.database import get_db
-from app.models.domain_models import PointQrCode, PuntoMapa, Usuario
+from app.models.domain_models import PointQrCode, PuntoMapa, TokenQrRecoleccion, Usuario
 from app.security.api_key_auth import require_api_key
 from app.security.jwt_auth import get_optional_current_user
 from app.services.qr_tokens import (
@@ -28,6 +28,7 @@ router = APIRouter(prefix="/qr", tags=["Códigos QR"])
 
 class QrValidationRequest(BaseModel):
     contenido: str = Field(min_length=1, max_length=2048)
+    collection_id: int | None = Field(default=None, gt=0)
 
 
 @router.post("/render")
@@ -78,6 +79,8 @@ def _point_payload(point: PuntoMapa) -> dict:
         "longitud": float(point.longitud),
         "materiales": materials,
         "imagen_url": getattr(point, "image_url", None),
+        "horario": point.horario,
+        "activo": point.activo,
     }
 
 
@@ -96,13 +99,19 @@ def validate_qr(
         if current_user is None:
             return _problem(401, "AUTH_REQUIRED", "Inicia sesión para validar esta recolección.")
         try:
-            collection = complete_collection(db, raw_token=parsed.token, current_user=current_user)
+            collection = complete_collection(
+                db,
+                raw_token=parsed.token,
+                current_user=current_user,
+                expected_collection_id=request.collection_id,
+            )
+            qr = db.query(TokenQrRecoleccion).filter_by(solicitud_id=collection.id).first()
             return {
                 "valid": True,
                 "type": "collection",
                 "collection_id": str(collection.id),
                 "status": collection.estado,
-                "expires_at": None,
+                "expires_at": qr.expires_at.isoformat() if qr and qr.expires_at else None,
             }
         except CollectionQrError as error:
             return _problem(error.status_code, error.code, error.detail)
@@ -113,7 +122,7 @@ def validate_qr(
     if not qr.active or qr.revoked_at is not None:
         return _problem(422, "QR_REVOKED", "Este código QR ya no está activo.")
     point = db.query(PuntoMapa).filter(PuntoMapa.id == qr.location_id).first()
-    if not point:
+    if not point or not point.activo or point.deleted_at is not None:
         return _problem(422, "QR_REVOKED", "Este código QR ya no está activo.")
     return {"valid": True, "type": "recycling_point", "point": _point_payload(point)}
 

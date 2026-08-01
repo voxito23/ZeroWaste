@@ -12,11 +12,12 @@ def award_points(db: Session, *, user_id: int, rule_code: str, reference_type: s
     if not rule or rule.puntos <= 0:
         return False
     if rule.limite_diario:
-        today = datetime.now(timezone.utc).date()
+        from zoneinfo import ZoneInfo
+        today = datetime.now(ZoneInfo("America/Mexico_City")).date()
         rewarded_today = db.query(func.count(MovimientoPuntos.id)).filter(
             MovimientoPuntos.usuario_id == user_id,
             MovimientoPuntos.regla_id == rule.id,
-            func.date(MovimientoPuntos.created_at) == today,
+            func.date(func.timezone("America/Mexico_City", MovimientoPuntos.created_at)) == today,
         ).scalar()
         if rewarded_today >= rule.limite_diario:
             return False
