@@ -55,8 +55,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "ZeroWaste necesita acceso a tus fotos para adjuntar imágenes a publicaciones.",
-          "cameraPermission": "ZeroWaste necesita la cámara para tomar imágenes para publicaciones."
+          "photosPermission": "ZeroWaste necesita acceso a tus fotos para actualizar tu perfil y adjuntar imágenes a publicaciones.",
+          "cameraPermission": "ZeroWaste necesita la cámara para actualizar tu perfil y tomar imágenes para publicaciones."
         }
       ],
       "@rnmapbox/maps"
