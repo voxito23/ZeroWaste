@@ -189,6 +189,7 @@
 @push('scripts')
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<script src="/static/js/mapbox-map.js"></script>
 <script>
 window.previewFile = function(input) {
     const previewContainer = document.getElementById('image-preview-container');
@@ -314,13 +315,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     const isDark = document.documentElement.classList.contains('dark');
-    mapboxgl.accessToken = '{{ env('MAPBOX_TOKEN', 'YOUR_MAPBOX_TOKEN_HERE') }}';
-    const map = new mapboxgl.Map({
+    const map = window.ZeroWasteMapbox.createMap({
         container: 'admin-map',
-        style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12',
+        token: @json($mapboxToken ?? ''),
+        dark: isDark,
         center: [-100.389, 20.588],
-        zoom: 13
+        zoom: 13,
+        onError: (message) => showToast(message, 'error'),
     });
+    if (!map) return;
 
     map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 

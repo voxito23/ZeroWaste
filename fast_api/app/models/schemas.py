@@ -377,6 +377,7 @@ class PuntoMapaResponse(BaseModel):
     materiales: Optional[str] = None
     imagen: Optional[str] = "default_punto.png"
     image_url: Optional[str] = None
+    activo: bool = True
     promedio: float = 0.0
     total_reviews: int = 0
 

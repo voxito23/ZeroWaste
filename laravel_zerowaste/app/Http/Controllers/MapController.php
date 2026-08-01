@@ -11,12 +11,14 @@ class MapController extends Controller
     public function index()
     {
         $locations = Location::query()->orderByDesc('created_at')->get();
-        return view('admin.mapa.index', compact('locations'));
+        $mapboxToken = trim((string) config('services.mapbox.public_token', ''), " \t\n\r\0\x0B\"'");
+        return view('admin.mapa.index', compact('locations', 'mapboxToken'));
     }
 
     public function create()
     {
-        return view('admin.mapa.create');
+        $mapboxToken = trim((string) config('services.mapbox.public_token', ''), " \t\n\r\0\x0B\"'");
+        return view('admin.mapa.create', compact('mapboxToken'));
     }
 
     public function store(Request $request)

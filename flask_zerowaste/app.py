@@ -872,7 +872,12 @@ def get_puntos_con_promedio():
 @app.route('/mapa')
 def mapa():
     puntos = get_puntos_con_promedio()
-    return render_template('mapa.html', puntos=puntos)
+    mapbox_token = (
+        os.getenv('MAPBOX_PUBLIC_TOKEN')
+        or os.getenv('MAPBOX_TOKEN')
+        or ''
+    ).strip().strip('"').strip("'")
+    return render_template('mapa.html', puntos=puntos, mapbox_token=mapbox_token)
 
 @app.route('/recomendaciones')
 def recomendaciones():

@@ -27,6 +27,10 @@ return [
         'system_api_key' => env('SYSTEM_API_KEY'),
     ],
 
+    'mapbox' => [
+        'public_token' => env('MAPBOX_PUBLIC_TOKEN', env('MAPBOX_TOKEN')),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

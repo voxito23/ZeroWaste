@@ -6,6 +6,7 @@
 @push('scripts')
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
+<script src="/static/js/mapbox-map.js"></script>
     <style>
     .mapboxgl-popup-content { border-radius: 1rem !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important; transition: background-color 0.3s ease, border-color 0.3s ease; }
     .mapboxgl-popup-close-button { font-size: 24px !important; width: 36px !important; height: 36px !important; line-height: 36px !important; right: 4px !important; top: 4px !important; color: #064E3B !important; font-weight: 900 !important; background: rgba(255,255,255,0.9) !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important; z-index: 50 !important; }
@@ -20,10 +21,15 @@
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             var isDark = document.documentElement.classList.contains('dark');
-            mapboxgl.accessToken = '{{ env('MAPBOX_TOKEN', 'YOUR_MAPBOX_TOKEN_HERE') }}';
-            var map = new mapboxgl.Map({
+            const showMapError = (message) => {
+                document.getElementById('qro-map-error-message').textContent = message;
+                document.getElementById('qro-map-error').classList.remove('hidden');
+                document.getElementById('qro-map-error').classList.add('flex');
+            };
+            var map = window.ZeroWasteMapbox.createMap({
                 container: 'qro-map',
-                style: isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12',
+                token: @json($mapboxToken ?? ''),
+                dark: isDark,
                 center: [-100.3899, 20.5881],
                 zoom: 13,
                 minZoom: 9,
@@ -31,8 +37,13 @@
                     [-100.6, 19.9],
                     [-99.0, 21.7]
                 ],
-                attributionControl: true
+                onError: showMapError,
+                onReady: () => {
+                    document.getElementById('qro-map-error').classList.add('hidden');
+                    document.getElementById('qro-map-error').classList.remove('flex');
+                },
             });
+            if (!map) return;
     
             map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
@@ -44,12 +55,14 @@
         // Cambiar tema del mapa
         new MutationObserver(function() {
             var nowDark = document.documentElement.classList.contains('dark');
-            map.setStyle(nowDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/streets-v12');
+            window.ZeroWasteMapbox.setTheme(map, nowDark);
         }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
-        let locations = {!! json_encode($locations ?? []) !!};
+        const fallbackLocations = window.ZeroWasteMapbox.normalizePoints(@json($locations ?? []));
 
-        locations.forEach(loc => {
+        window.ZeroWasteMapbox.fetchPoints('/api/mapa/puntos')
+            .catch(() => fallbackLocations)
+            .then((locations) => locations.forEach(loc => {
             if(loc.latitud && loc.longitud) {
                 // Marcador del punto
                 const el = document.createElement('div');
@@ -75,7 +88,7 @@
                     .setPopup(popup)
                     .addTo(map);
             }
-        });
+            }));
     });
 
     // Alerta para eliminar punto
@@ -186,6 +199,13 @@
     {{-- Mapa --}}
     <div class="lg:col-span-3 glass-card overflow-hidden relative" style="height:700px;border-radius:1.25rem">
         <div id="qro-map" class="w-full h-full z-0"></div>
+        <div id="qro-map-error" class="hidden absolute inset-0 z-20 bg-white/95 dark:bg-[#062e23]/95 items-center justify-center p-8 text-center">
+            <div>
+                <span class="material-symbols-outlined text-4xl text-emerald-600">map</span>
+                <p id="qro-map-error-message" class="mt-3 font-bold text-[#064E3B] dark:text-white">No fue posible cargar el mapa.</p>
+                <button type="button" onclick="window.location.reload()" class="btn-primary mt-4">Reintentar</button>
+            </div>
+        </div>
     </div>
 </div>
 @endsection

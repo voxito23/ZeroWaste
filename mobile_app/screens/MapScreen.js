@@ -31,17 +31,20 @@ export default function MapScreen() {
   const cameraRef = useRef(null);
   const mapReadyRef = useRef(false);
   const locationRequestRef = useRef(null);
+  const tokenReady = HAS_VALID_MAPBOX_TOKEN;
   
   const [puntos, setPuntos] = useState([]);
-  const [loadingToken] = useState(false);
   const [loadingMap, setLoadingMap] = useState(HAS_VALID_MAPBOX_TOKEN);
-  const [loadingLocations, setLoadingLocations] = useState(true);
+  const [loadingPoints, setLoadingPoints] = useState(true);
+  const [pointsReady, setPointsReady] = useState(false);
+  const [mapMounted, setMapMounted] = useState(false);
   const [mapReady, setMapReady] = useState(false);
   const [mapKey, setMapKey] = useState(0);
   const [mapError, setMapError] = useState(HAS_VALID_MAPBOX_TOKEN ? '' : 'El token público de Mapbox no está configurado correctamente.');
-  const [locationsError, setLocationsError] = useState('');
+  const [pointsError, setPointsError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [permissionState, setPermissionState] = useState('unknown');
+  const [locationPermission, setLocationPermission] = useState('unknown');
+  const [locationError, setLocationError] = useState('');
   
   // Location and Navigation States
   const [userLocation, setUserLocation] = useState(null);
@@ -70,15 +73,21 @@ export default function MapScreen() {
     setMapError('');
   };
 
-  const handleMapLoadingError = () => {
+  const handleMapLoadingError = (event) => {
+    const status = Number(event?.error?.status || event?.status || 0);
     if (typeof __DEV__ !== 'undefined' && __DEV__) {
-      console.warn(`[map] Mapbox reportó un error ${mapReadyRef.current ? 'no fatal después de cargar' : 'recuperable durante la carga'}.`);
+      console.warn(`[map] Mapbox reportó un error de carga${status ? ` (HTTP ${status})` : ''}.`);
+    }
+    if (!mapReadyRef.current) {
+      setLoadingMap(false);
+      setMapError(SAFE_MAP_LOAD_ERROR);
     }
   };
 
   const retryMap = () => {
     if (!HAS_VALID_MAPBOX_TOKEN) return;
     mapReadyRef.current = false;
+    setMapMounted(false);
     setMapReady(false);
     setMapError('');
     setLoadingMap(true);
@@ -88,20 +97,22 @@ export default function MapScreen() {
   const requestLocationPermission = async () => {
     if (locationRequestRef.current) return locationRequestRef.current;
     const request = (async () => {
-      setPermissionState('requesting');
+      setLocationPermission('requesting');
+      setLocationError('');
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          setPermissionState('denied');
+          setLocationPermission('denied');
           return null;
         }
         const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
         const coordinates = [loc.coords.longitude, loc.coords.latitude];
         setUserLocation(coordinates);
-        setPermissionState('granted');
+        setLocationPermission('granted');
         return coordinates;
       } catch {
-        setPermissionState('unavailable');
+        setLocationPermission('unavailable');
+        setLocationError('No fue posible obtener tu ubicación. El mapa seguirá disponible.');
         return null;
       }
     })();
@@ -125,31 +136,38 @@ export default function MapScreen() {
   }, []);
 
   useEffect(() => {
-    if (loadingToken || !HAS_VALID_MAPBOX_TOKEN || mapReadyRef.current) return undefined;
+    if (!tokenReady || mapReadyRef.current) return undefined;
     const timeout = setTimeout(() => {
       if (mapReadyRef.current) return;
       setLoadingMap(false);
       setMapError(SAFE_MAP_LOAD_ERROR);
     }, MAP_LOAD_TIMEOUT_MS);
     return () => clearTimeout(timeout);
-  }, [loadingToken, mapKey]);
+  }, [mapKey, tokenReady]);
 
   const fetchPuntos = async () => {
-    setLoadingLocations(true);
-    setLocationsError('');
+    setLoadingPoints(true);
+    setPointsReady(false);
+    setPointsError('');
     try {
       const response = await api.get('/mapa/puntos');
       const seen = new Set();
       const validPoints = (Array.isArray(response.data) ? response.data : [])
         .map(normalizePoint)
-        .filter((point) => point && !seen.has(String(point.id)) && seen.add(String(point.id)));
+        .filter((point) => point && point.activo !== false && !seen.has(String(point.id)) && seen.add(String(point.id)));
       setPuntos(validPoints);
+      setPointsReady(true);
     } catch (e) {
       setPuntos([]);
-      setLocationsError(e.userMessage || 'No se pudieron cargar los puntos de reciclaje.');
+      setPointsError(e.userMessage || 'No se pudieron cargar los puntos de reciclaje.');
     } finally {
-      setLoadingLocations(false);
+      setLoadingPoints(false);
     }
+  };
+
+  const reviewConnection = () => {
+    retryMap();
+    void fetchPuntos();
   };
 
   const startNavigation = async (punto) => {
@@ -250,13 +268,15 @@ export default function MapScreen() {
   return (
     <View className="flex-1 bg-background relative">
       <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
-      {HAS_VALID_MAPBOX_TOKEN ? <Mapbox.MapView
+      {tokenReady ? <Mapbox.MapView
         key={mapKey}
         style={styles.map}
         styleURL={isNavigating ? Mapbox.StyleURL.TrafficDay : Mapbox.StyleURL.Street}
         logoEnabled={false}
         attributionEnabled={false}
+        onLayout={() => setMapMounted(true)}
         onWillStartLoadingMap={() => { if (!mapReadyRef.current) setLoadingMap(true); }}
+        onDidFinishLoadingStyle={handleMapReady}
         onDidFinishLoadingMap={handleMapReady}
         onMapLoadingError={handleMapLoadingError}
       >
@@ -265,7 +285,7 @@ export default function MapScreen() {
           zoomLevel={isNavigating ? 17 : 13.5}
           pitch={isNavigating ? 70 : 0}
           centerCoordinate={!isNavigating ? [-100.3929, 20.5888] : undefined}
-          followUserLocation={isNavigating && permissionState === 'granted'}
+          followUserLocation={isNavigating && locationPermission === 'granted'}
           followUserMode={isNavigating ? 'course' : 'normal'}
           followZoomLevel={17}
           followPitch={70}
@@ -273,7 +293,7 @@ export default function MapScreen() {
           animationDuration={2000}
         />
 
-        {permissionState === 'granted' ? (
+        {locationPermission === 'granted' ? (
           <Mapbox.LocationPuck puckBearingEnabled puckBearing="heading" />
         ) : null}
         
@@ -305,35 +325,42 @@ export default function MapScreen() {
         )}
       </Mapbox.MapView> : <View style={styles.map} />}
 
-      {!mapReady && (loadingToken || loadingMap || mapError) ? (
+      {!mapReady && (loadingMap || mapError || !mapMounted) ? (
         <View className="absolute inset-0 z-40 items-center justify-center bg-white px-8">
-          <Text className="text-lg font-black text-gray-900 text-center">{mapError || (loadingToken ? 'Validando configuración del mapa…' : 'Cargando mapa…')}</Text>
-          {mapError && HAS_VALID_MAPBOX_TOKEN ? (
-            <TouchableOpacity onPress={retryMap} className="mt-4 rounded-xl bg-emerald-700 px-6 py-3">
-              <Text className="text-white font-black">Reintentar</Text>
-            </TouchableOpacity>
+          <Text className="text-lg font-black text-gray-900 text-center">{mapError || 'Cargando mapa…'}</Text>
+          {mapError && tokenReady ? (
+            <View className="mt-4 flex-row gap-3">
+              <TouchableOpacity onPress={retryMap} className="rounded-xl bg-emerald-700 px-5 py-3">
+                <Text className="text-white font-black">Reintentar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={reviewConnection} className="rounded-xl border border-emerald-700 bg-white px-5 py-3">
+                <Text className="text-emerald-800 font-black">Revisar conexión</Text>
+              </TouchableOpacity>
+            </View>
           ) : !mapError ? <ActivityIndicator className="mt-4" color="#047857" /> : null}
         </View>
       ) : null}
 
-      {locationsError ? (
+      {pointsError ? (
         <View className="absolute left-5 right-5 top-24 rounded-2xl bg-red-50 border border-red-200 p-4 z-30">
-          <Text className="text-red-700 font-bold text-center">{locationsError}</Text>
+          <Text className="text-red-700 font-bold text-center">{pointsError}</Text>
           <TouchableOpacity onPress={fetchPuntos} className="mt-2 self-center"><Text className="text-red-700 font-black">Reintentar</Text></TouchableOpacity>
         </View>
       ) : null}
 
-      {mapReady && !loadingLocations && !locationsError && puntos.length === 0 ? (
+      {mapReady && pointsReady && !loadingPoints && !pointsError && puntos.length === 0 ? (
         <View className="absolute left-5 right-5 top-24 rounded-2xl bg-white border border-gray-200 p-4 z-30">
           <Text className="text-gray-700 font-bold text-center">No hay puntos de reciclaje disponibles.</Text>
           <TouchableOpacity onPress={fetchPuntos} className="mt-2 self-center"><Text className="text-emerald-700 font-black">Actualizar</Text></TouchableOpacity>
         </View>
       ) : null}
 
-      {mapReady && ['denied', 'unavailable'].includes(permissionState) && !locationsError ? (
+      {mapReady && ['denied', 'unavailable'].includes(locationPermission) && !pointsError ? (
         <View className="absolute left-5 right-5 top-24 rounded-2xl bg-amber-50 border border-amber-200 p-4 z-30">
-          <Text className="text-amber-900 font-bold text-center">La ubicación está desactivada. El mapa funciona, pero no puede centrarte ni crear rutas.</Text>
-          <TouchableOpacity onPress={() => Linking.openSettings()} className="mt-2 self-center"><Text className="text-amber-900 font-black">Abrir Ajustes</Text></TouchableOpacity>
+          <Text className="text-amber-900 font-bold text-center">{locationError || 'La ubicación está desactivada. El mapa funciona, pero no puede centrarte ni crear rutas.'}</Text>
+          {locationPermission === 'denied' ? (
+            <TouchableOpacity onPress={() => Linking.openSettings()} className="mt-2 self-center"><Text className="text-amber-900 font-black">Abrir Ajustes</Text></TouchableOpacity>
+          ) : null}
         </View>
       ) : null}
 
