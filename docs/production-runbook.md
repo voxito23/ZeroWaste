@@ -15,6 +15,34 @@
 
 No ejecutar migraciones como parte del arranque de contenedores.
 
+## Activación controlada de impacto y recompensas
+
+La migración `2026_07_31_000000_create_impact_and_rewards_tables` es necesaria
+para el foro moderado, ranking y recompensas. Se ejecuta manualmente una sola
+vez, después del despliegue del código, mediante un script que crea inventario
+y respaldo completo antes de modificar el esquema:
+
+```sh
+cd /opt/ZeroWaste
+git pull --ff-only origin main
+docker compose config --quiet
+docker compose up --build -d
+bash scripts/deploy_impact_schema.sh
+```
+
+El script aplica exclusivamente esa migración mediante `--path`; no ejecuta
+otras migraciones pendientes. Guarda el respaldo, su SHA-256 y los inventarios
+anterior/posterior en `/opt/zerowaste-backups` con permisos restringidos. No
+eliminar esos archivos hasta aceptar formalmente el despliegue.
+
+Si falla antes de imprimir `Migration and verification completed
+successfully`, conservar la salida y los respaldos y no repetir comandos de
+esquema manualmente. Revisar primero:
+
+```sh
+docker compose logs --tail=200 laravel1 fast_api nginx_api
+```
+
 ## Validación previa local o en staging
 
 ```sh
@@ -99,4 +127,3 @@ Dos contenedores Laravel protegen contra una caída de proceso, no contra la
 caída completa del Droplet, Docker, Nginx o Redis. cAdvisor y Node Exporter
 requieren acceso privilegiado/read-only al host y deben permanecer sin puertos
 públicos. Prometheus tampoco se publica; Grafana sólo se accede mediante Caddy.
-
