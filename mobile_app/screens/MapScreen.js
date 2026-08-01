@@ -464,7 +464,14 @@ export default function MapScreen() {
             </TouchableOpacity>
           )}
           <TouchableOpacity 
-            onPress={() => setModalVisible(true)}
+            onPress={async () => {
+              const coordinates = userLocation || await requestLocationPermission();
+              if (!coordinates) {
+                Alert.alert('Ubicación requerida', 'Activa la ubicación para solicitar una recolección.');
+                return;
+              }
+              navigation.navigate('CreateCollection', { coordinates });
+            }}
             className="bg-primary flex-row items-center justify-center px-5 py-3.5 rounded-full shadow-lg elevation-6 border-2 border-surface"
           >
             <Truck color="white" size={20} className="mr-1.5" />

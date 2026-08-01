@@ -21,6 +21,7 @@ from app.services.qr_tokens import (
     public_content,
     token_hash,
 )
+from app.services.collection_qr import CollectionQrError, complete_collection
 
 router = APIRouter(prefix="/qr", tags=["Códigos QR"])
 
@@ -92,8 +93,19 @@ def validate_qr(
         return _problem(400, error.code, error.detail)
 
     if parsed.kind == "collection":
-        # Collection validation/completion is added by the dedicated collection phase.
-        return _problem(422, "QR_TAMPERED", "Este código QR no es válido o fue modificado.")
+        if current_user is None:
+            return _problem(401, "AUTH_REQUIRED", "Inicia sesión para validar esta recolección.")
+        try:
+            collection = complete_collection(db, raw_token=parsed.token, current_user=current_user)
+            return {
+                "valid": True,
+                "type": "collection",
+                "collection_id": str(collection.id),
+                "status": collection.estado,
+                "expires_at": None,
+            }
+        except CollectionQrError as error:
+            return _problem(error.status_code, error.code, error.detail)
 
     qr = db.query(PointQrCode).filter(PointQrCode.token_hash == token_hash(parsed.token)).first()
     if not qr:

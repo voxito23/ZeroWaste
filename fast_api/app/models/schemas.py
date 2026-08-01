@@ -717,10 +717,13 @@ class PasswordResetRequestCreate(BaseModel):
 # Esquemas de Solicitudes de Recolección a Domicilio
 
 class SolicitudRecoleccionCreate(BaseModel):
-    latitud: float
-    longitud: float
-    direccion: str
-    materiales: Optional[str] = None
+    latitud: float = Field(ge=-90, le=90)
+    longitud: float = Field(ge=-180, le=180)
+    direccion: str = Field(min_length=5, max_length=500)
+    materiales: str = Field(min_length=2, max_length=500)
+    cantidad_estimada: str = Field(min_length=1, max_length=100)
+    notas: Optional[str] = Field(default=None, max_length=1000)
+    scheduled_at: datetime
 
 class SolicitudRecoleccionResponse(BaseModel):
     id: int
@@ -729,6 +732,10 @@ class SolicitudRecoleccionResponse(BaseModel):
     longitud: float
     direccion: str
     materiales: Optional[str] = None
+    cantidad_estimada: Optional[str] = None
+    notas: Optional[str] = None
+    scheduled_at: Optional[datetime] = None
+    folio: Optional[str] = None
     estado: str
     recolector_id: Optional[int] = None
     calificacion_recolector: Optional[int] = None

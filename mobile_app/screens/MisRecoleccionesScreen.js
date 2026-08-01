@@ -47,7 +47,7 @@ export default function MisRecoleccionesScreen() {
     setError('');
     try {
       const { data } = await api.post(`/recolecciones/${collection.id}/qr`);
-      setQrData({ collection, token: data.token, expiresIn: data.expires_in });
+      setQrData({ collection, content: data.content, expiresAt: data.expires_at });
       setQrModalVisible(true);
     } catch (requestError) {
       Alert.alert('No se pudo generar el QR', requestError.userMessage);
@@ -203,7 +203,7 @@ export default function MisRecoleccionesScreen() {
             </Text>
             
             <View className="bg-gray-50 p-6 rounded-2xl border border-gray-200 items-center justify-center mb-6 w-full aspect-square">
-              {qrData?.token ? <QRCode value={qrData.token} size={180} color="#064E3B" backgroundColor="#F9FAFB" /> : <ActivityIndicator color="#064E3B" />}
+              {qrData?.content ? <QRCode value={qrData.content} size={180} color="#064E3B" backgroundColor="#F9FAFB" /> : <ActivityIndicator color="#064E3B" />}
             </View>
 
             <View className="bg-emerald-50 px-4 py-2 rounded-xl border border-emerald-100 mb-8 w-full">

@@ -17,6 +17,7 @@ use App\Http\Controllers\RecoleccionController;
 use App\Http\Controllers\ReportesRecoleccionController;
 use App\Http\Controllers\ImpactAdminController;
 use App\Http\Controllers\PointQrController;
+use App\Http\Controllers\CollectionScheduleController;
 
 $adminPrefix = trim((string) env('ADMIN_PATH_PREFIX', 'zw-interno'), '/');
 $adminBase = '/'.$adminPrefix;
@@ -99,6 +100,11 @@ Route::prefix($adminPrefix)->middleware(['auth', 'admin'])->group(function () {
 
     // Recolecciones a Domicilio
     Route::get('/recolecciones', [RecoleccionController::class, 'index'])->name('admin.recolecciones.index');
+    Route::get('/recolecciones/horarios', [CollectionScheduleController::class, 'index'])->name('admin.recolecciones.horarios');
+    Route::put('/recolecciones/horarios', [CollectionScheduleController::class, 'update'])->name('admin.recolecciones.horarios.update');
+    Route::post('/recolecciones/horarios/excepciones', [CollectionScheduleController::class, 'storeException'])->name('admin.recolecciones.horarios.excepciones.store');
+    Route::delete('/recolecciones/horarios/excepciones/{id}', [CollectionScheduleController::class, 'destroyException'])->name('admin.recolecciones.horarios.excepciones.destroy');
+    Route::post('/recolecciones/horarios/restaurar', [CollectionScheduleController::class, 'restore'])->name('admin.recolecciones.horarios.restore');
     Route::post('/recolecciones/recolector', [RecoleccionController::class, 'storeRecolector'])->name('admin.recolecciones.recolector.store');
     Route::post('/recolecciones/{id}/completar', [RecoleccionController::class, 'completarSolicitud'])->name('admin.recolecciones.completar');
     Route::get('/recolecciones/reporte', [ReportesRecoleccionController::class, 'generarPDF'])->name('admin.recolecciones.reporte');

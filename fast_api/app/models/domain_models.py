@@ -6,7 +6,7 @@ NO se ejecuta create_all() — las tablas ya fueron creadas por Flask / Laravel.
 
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import (
-    Column, Integer, String, Text, DateTime, Boolean, Numeric,
+    Column, Integer, String, Text, DateTime, Date, Time, Boolean, Numeric,
     ForeignKey, UniqueConstraint, CheckConstraint,
 )
 from sqlalchemy.orm import relationship, Session
@@ -284,6 +284,10 @@ class SolicitudRecoleccion(Base):
     longitud = Column(Numeric(11, 8), nullable=False)
     direccion = Column(Text, nullable=False)
     materiales = Column(Text, nullable=True)
+    cantidad_estimada = Column(String(100), nullable=True)
+    notas = Column(Text, nullable=True)
+    scheduled_at = Column(DateTime(timezone=True), nullable=True, index=True)
+    folio = Column(String(30), nullable=True, unique=True, index=True)
     estado = Column(String(50), default='pendiente') # pendiente, completada, cancelada
     recolector_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
     calificacion_recolector = Column(Integer, nullable=True)
@@ -381,7 +385,38 @@ class TokenQrRecoleccion(Base):
     id = Column(Integer, primary_key=True)
     solicitud_id = Column(Integer, ForeignKey("solicitudes_recoleccion.id"), nullable=False, unique=True)
     token_hash = Column(String(64), nullable=False, unique=True, index=True)
+    token_ciphertext = Column(Text, nullable=True)
+    version = Column(Integer, nullable=False, default=1)
+    status = Column(String(20), nullable=False, default="active", index=True)
     expires_at = Column(DateTime, nullable=False, index=True)
     used_at = Column(DateTime, nullable=True)
     used_by = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    invalidated_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class CollectionSchedule(Base):
+    __tablename__ = "collection_schedules"
+    id = Column(Integer, primary_key=True)
+    weekday = Column(Integer, nullable=False, unique=True)
+    active = Column(Boolean, nullable=False, default=False)
+    starts_at = Column(Time, nullable=False)
+    ends_at = Column(Time, nullable=False)
+    interval_minutes = Column(Integer, nullable=False, default=60)
+    capacity_per_interval = Column(Integer, nullable=False, default=10)
+    updated_by = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+
+
+class ScheduleException(Base):
+    __tablename__ = "schedule_exceptions"
+    id = Column(Integer, primary_key=True)
+    exception_date = Column(Date, nullable=False, index=True)
+    kind = Column(String(30), nullable=False, default="closed")
+    starts_at = Column(Time, nullable=True)
+    ends_at = Column(Time, nullable=True)
+    capacity_per_interval = Column(Integer, nullable=True)
+    reason = Column(String(255), nullable=False)
+    active = Column(Boolean, nullable=False, default=True)
+    created_by = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

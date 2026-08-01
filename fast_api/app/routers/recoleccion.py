@@ -1,9 +1,8 @@
 from typing import List
-import hashlib
-import secrets
+import uuid
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pydantic import BaseModel
 
 from app.data.database import get_db
@@ -15,12 +14,19 @@ from app.models.schemas import (
     MessageResponse
 )
 from app.security.jwt_auth import get_current_user
-from app.services.points import award_points
+from app.services.collection_schedule import ScheduleValidationError, available_slots, validate_slot
+from app.services.collection_qr import CollectionQrError, complete_collection
+from app.services.qr_tokens import encrypt_token, new_token, public_content, token_hash
 
 router = APIRouter(prefix="/recolecciones", tags=["Recolección a Domicilio"])
 
 class QrTokenRequest(BaseModel):
-    token: str
+    contenido: str
+
+
+@router.get("/disponibilidad", summary="Consultar horarios disponibles")
+def disponibilidad(fecha: date, db: Session = Depends(get_db), _current_user: Usuario = Depends(get_current_user)):
+    return {"date": fecha.isoformat(), "timezone": "America/Mexico_City", "slots": available_slots(db, fecha)}
 
 @router.post("", response_model=SolicitudRecoleccionResponse, status_code=status.HTTP_201_CREATED, summary="Solicitar recolección a domicilio")
 def solicitar_recoleccion(
@@ -29,12 +35,20 @@ def solicitar_recoleccion(
     current_user: Usuario = Depends(get_current_user),
 ):
     """Crea una nueva solicitud de recolección para el usuario actual."""
+    try:
+        scheduled_at = validate_slot(db, solicitud_in.scheduled_at)
+    except ScheduleValidationError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
     nueva_solicitud = SolicitudRecoleccion(
         usuario_id=current_user.id,
         latitud=solicitud_in.latitud,
         longitud=solicitud_in.longitud,
         direccion=solicitud_in.direccion,
         materiales=solicitud_in.materiales,
+        cantidad_estimada=solicitud_in.cantidad_estimada,
+        notas=solicitud_in.notas,
+        scheduled_at=scheduled_at,
+        folio=f"ZW-{datetime.now(timezone.utc):%Y%m%d}-{uuid.uuid4().hex[:8].upper()}",
         estado="pendiente"
     )
     db.add(nueva_solicitud)
@@ -89,15 +103,28 @@ def generar_qr_recoleccion(solicitud_id: int, db: Session = Depends(get_db), cur
         raise HTTPException(status_code=404, detail="Solicitud no encontrada.")
     if solicitud.estado == "completada":
         raise HTTPException(status_code=409, detail="La recolección ya fue completada.")
-    raw_token = secrets.token_urlsafe(32)
-    token_hash = hashlib.sha256(raw_token.encode()).hexdigest()
+    if solicitud.estado == "cancelada":
+        raise HTTPException(status_code=409, detail="La recolección fue cancelada.")
+    raw_token = new_token("collection")
+    scheduled = solicitud.scheduled_at or datetime.now(timezone.utc)
+    if scheduled.tzinfo is None:
+        scheduled = scheduled.replace(tzinfo=timezone.utc)
+    expires_at = max(datetime.now(timezone.utc) + timedelta(minutes=10), scheduled + timedelta(hours=6))
     record = db.query(TokenQrRecoleccion).filter_by(solicitud_id=solicitud_id).first()
     if record:
-        record.token_hash = token_hash; record.expires_at = datetime.now(timezone.utc) + timedelta(minutes=10); record.used_at = None; record.used_by = None
+        record.token_hash = token_hash(raw_token)
+        record.token_ciphertext = encrypt_token(raw_token)
+        record.expires_at = expires_at
+        record.used_at = None
+        record.used_by = None
+        record.invalidated_at = None
+        record.status = "active"
+        record.version = (record.version or 0) + 1
     else:
-        db.add(TokenQrRecoleccion(solicitud_id=solicitud_id, token_hash=token_hash, expires_at=datetime.now(timezone.utc) + timedelta(minutes=10)))
+        record = TokenQrRecoleccion(solicitud_id=solicitud_id, token_hash=token_hash(raw_token), token_ciphertext=encrypt_token(raw_token), status="active", version=1, expires_at=expires_at)
+        db.add(record)
     db.commit()
-    return {"token": raw_token, "expires_in": 600}
+    return {"content": public_content(raw_token), "expires_at": expires_at}
 
 @router.post("/completar-qr", response_model=MessageResponse, summary="Completar recolección con token QR seguro")
 def completar_recoleccion_qr(
@@ -112,21 +139,13 @@ def completar_recoleccion_qr(
     if current_user.rol not in ['recolector', 'admin'] and not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo los recolectores pueden escanear el QR de recolección.")
 
-    token_hash = hashlib.sha256(payload.token.strip().encode()).hexdigest()
-    qr = db.query(TokenQrRecoleccion).filter_by(token_hash=token_hash).with_for_update().first()
-    now = datetime.now(timezone.utc)
-    if not qr or qr.used_at is not None or qr.expires_at.replace(tzinfo=timezone.utc) <= now:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El código QR es inválido, expiró o ya fue utilizado.")
-    solicitud = db.query(SolicitudRecoleccion).filter(SolicitudRecoleccion.id == qr.solicitud_id).with_for_update().first()
-    
-    if solicitud.estado == 'completada':
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Esta recolección ya fue completada anteriormente.")
-    
-    solicitud.estado = "completada"
-    solicitud.recolector_id = current_user.id
-    qr.used_at = now
-    qr.used_by = current_user.id
-    award_points(db, user_id=solicitud.usuario_id, rule_code="RECOLECCION_QR", reference_type="RECOLECCION", reference_id=str(solicitud.id), description="Recolección verificada mediante QR")
-    db.commit()
+    from app.services.qr_tokens import parse_content
+    try:
+        parsed = parse_content(payload.contenido)
+        if parsed.kind != "collection":
+            raise CollectionQrError("COLLECTION_MISMATCH", "Este código no corresponde a la recolección seleccionada.")
+        complete_collection(db, raw_token=parsed.token, current_user=current_user)
+    except CollectionQrError as error:
+        raise HTTPException(status_code=error.status_code, detail=error.detail) from error
 
     return MessageResponse(success=True, message="QR validado. Recolección completada con éxito.")

@@ -18,6 +18,7 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import SearchScreen from '../screens/SearchScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
+import CreateCollectionScreen from '../screens/CreateCollectionScreen';
 
 
 const Stack = createNativeStackNavigator();
@@ -55,6 +56,7 @@ export default function AppNavigator() {
             <Stack.Screen name="Search" component={SearchScreen} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+            <Stack.Screen name="CreateCollection" component={CreateCollectionScreen} />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthNavigator} />
