@@ -21,7 +21,7 @@
             <tr class="user-row" data-user-role="{{ $userRole }}">
                 <td>
                     <div class="flex items-center gap-3">
-                        <img src="{{ $user->avatar_url ?: url('/static/img/perfiles/default.png') }}" alt="{{ $user->nombre }}"
+                        <img src="{{ $user->avatar_url ?: url('/media/perfiles/default.png') }}" alt="{{ $user->nombre }}"
                              class="w-9 h-9 rounded-full border-2 {{ $user->is_admin ? 'border-violet-400' : 'border-emerald-400' }} object-cover"
                              onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><rect fill=%22%2334D399%22 width=%2240%22 height=%2240%22 rx=%2220%22/><text x=%2250%%22 y=%2254%%22 text-anchor=%22middle%22 fill=%22%23064E3B%22 font-size=%2218%22 font-weight=%22bold%22>{{ strtoupper(substr($user->nombre, 0, 1)) }}</text></svg>';">
                         <div>

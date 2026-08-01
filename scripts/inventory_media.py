@@ -31,6 +31,7 @@ LEGACY_ROOTS = (
     ("perfiles", PROJECT_ROOT / "flask_zerowaste" / "static" / "img" / "perfiles"),
     ("perfiles", PROJECT_ROOT / "laravel_zerowaste" / "public" / "img" / "perfiles"),
     ("perfiles", PROJECT_ROOT / "fast_api" / "static" / "perfiles"),
+    ("perfiles", PROJECT_ROOT / "fast_api" / "static" / "img" / "perfiles"),
     ("recompensas", PROJECT_ROOT / "laravel_zerowaste" / "public" / "images" / "recompensas"),
     ("recompensas", PROJECT_ROOT / "mobile_app" / "assets" / "recompensas"),
     ("eventos", PROJECT_ROOT / "flask_zerowaste" / "static" / "img" / "eventos"),

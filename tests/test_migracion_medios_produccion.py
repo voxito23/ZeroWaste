@@ -39,6 +39,7 @@ class MigracionMediosProduccionTests(unittest.TestCase):
         self.assertNotIn("cp -f", self.migracion)
         self.assertNotIn("rm -rf", self.migracion)
         self.assertIn("conflictos-medios", self.migracion)
+        self.assertIn('fast_api/static/img/perfiles', self.migracion)
 
     def test_volumenes_heredados_son_solo_lectura_y_se_respaldan(self):
         self.assertIn("target=/origen,readonly", self.migracion)

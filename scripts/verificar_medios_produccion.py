@@ -65,7 +65,9 @@ def comprobar_url(url: str) -> None:
 
 def main() -> int:
     urls: set[str] = {
-        f"{ORIGEN}/media/recompensas/termo_reutilizable.png"
+        f"{ORIGEN}/media/perfiles/default.png",
+        f"{ORIGEN}/media/perfiles/perfil_default.png",
+        f"{ORIGEN}/media/recompensas/termo_reutilizable.png",
     }
     errores: list[str] = []
     for endpoint in ENDPOINTS:

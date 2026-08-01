@@ -138,6 +138,12 @@ class BackendMediaContractTests(unittest.TestCase):
         self.assertIn("FASTAPI_INTERNAL_URL", services)
         self.assertIn("SYSTEM_API_KEY", services)
 
+        users_router = (ROOT / "fast_api/app/routers/usuarios.py").read_text(encoding="utf-8")
+        profile_update = users_router.split('def actualizar_perfil(', 1)[1].split('@router.put("/perfil/password"', 1)[0]
+        self.assertIn("foto_perfil: Optional[UploadFile] = File(None)", profile_update)
+        self.assertIn('save_media_image(content, "perfiles")', profile_update)
+        self.assertIn("UsuarioResponse.model_validate(current_user)", profile_update)
+
     def test_maintenance_scripts_do_not_embed_or_print_credentials(self):
         create_script = (ROOT / "fast_api/scripts/crear_admin.py").read_text(encoding="utf-8")
         check_script = (ROOT / "fast_api/scripts/check_users.py").read_text(encoding="utf-8")
@@ -147,6 +153,18 @@ class BackendMediaContractTests(unittest.TestCase):
         self.assertNotIn('getenv("ADMIN_EMAIL",', create_script)
         self.assertNotIn("u.email", check_script)
         self.assertNotIn("u.password", check_script)
+
+    def test_profile_views_use_canonical_default_avatar(self):
+        views = [
+            ROOT / "laravel_zerowaste/resources/views/layouts/admin.blade.php",
+            ROOT / "laravel_zerowaste/resources/views/admin/partials/usuarios_table.blade.php",
+            ROOT / "flask_zerowaste/templates/perfil.html",
+            ROOT / "flask_zerowaste/templates/includes/header.html",
+        ]
+        for view in views:
+            source = view.read_text(encoding="utf-8")
+            self.assertIn("/media/perfiles/default.png", source)
+            self.assertNotIn("/static/img/perfiles/default.png", source)
 
 
 if __name__ == "__main__":

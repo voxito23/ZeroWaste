@@ -17,7 +17,7 @@
                 @php
                     $isAuth = \Illuminate\Support\Facades\Auth::check();
                     $fotoUrl = $isAuth ? \Illuminate\Support\Facades\Auth::user()->avatar_url : null;
-                    $fotoUrl = $fotoUrl ?: url('/static/img/perfiles/default.png');
+                    $fotoUrl = $fotoUrl ?: url('/media/perfiles/default.png');
                 @endphp
                 
                 <div class="relative group">

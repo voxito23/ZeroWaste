@@ -6,6 +6,7 @@ import { Mail, Lock, Eye, EyeOff, User, Check } from 'lucide-react-native';
 import CustomInput from '../components/ui/CustomInput';
 import CustomButton from '../components/ui/CustomButton';
 import { api } from '../api/axios';
+import * as ImagePicker from 'expo-image-picker';
 
 const getPasswordStrength = (pass) => {
   let score = 0;
@@ -37,6 +38,23 @@ export default function RegisterScreen({ navigation }) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [termsType, setTermsType] = useState('terms'); // 'terms' or 'privacy'
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const pickProfileImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Permiso requerido', 'Permite el acceso a tus fotografías para elegir una imagen.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85 });
+    if (result.canceled || !result.assets?.[0]) return;
+    const asset = result.assets[0];
+    if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
+      Alert.alert('Imagen demasiado grande', 'La imagen debe pesar como máximo 5 MB.');
+      return;
+    }
+    setSelectedImage(asset);
+  };
 
   const strengthScore = getPasswordStrength(password);
   const strengthConfig = getStrengthConfig(strengthScore);
@@ -70,8 +88,22 @@ export default function RegisterScreen({ navigation }) {
 
     setLoading(true);
     try {
-      const response = await api.post('/auth/mobile/registro', { nombre, email, password });
-      if (response.data.success) {
+      let response;
+      if (selectedImage) {
+        const form = new FormData();
+        form.append('nombre', nombre.trim());
+        form.append('email', email.trim());
+        form.append('password', password);
+        form.append('foto_perfil', {
+          uri: selectedImage.uri,
+          name: selectedImage.fileName || `perfil-${Date.now()}.jpg`,
+          type: selectedImage.mimeType || 'image/jpeg',
+        });
+        response = await api.post('/auth/registro', form);
+      } else {
+        response = await api.post('/auth/mobile/registro', { nombre: nombre.trim(), email: email.trim(), password });
+      }
+      if (response.status >= 200 && response.status < 300) {
         Alert.alert('Registro exitoso', '¡Tu cuenta ha sido creada con éxito! Ahora puedes iniciar sesión.');
         navigation.navigate('Login');
       } else {
@@ -109,11 +141,15 @@ export default function RegisterScreen({ navigation }) {
 
         {/* Profile Avatar Picker */}
         <View className="items-center mb-8">
-          <TouchableOpacity activeOpacity={0.7} className="items-center">
+          <TouchableOpacity activeOpacity={0.7} className="items-center" onPress={pickProfileImage}>
             <View className="bg-[#5C6B89] w-20 h-20 rounded-full items-center justify-center mb-2 overflow-hidden border-4 border-[#E8F5E9]">
-              <User color="white" size={40} />
+              {selectedImage ? (
+                <Image source={{ uri: selectedImage.uri }} className="h-full w-full" resizeMode="cover" />
+              ) : (
+                <User color="white" size={40} />
+              )}
             </View>
-            <Text className="text-gray-500 text-sm font-medium">Añadir foto de perfil</Text>
+            <Text className="text-gray-500 text-sm font-medium">{selectedImage ? 'Cambiar foto de perfil' : 'Añadir foto de perfil'}</Text>
           </TouchableOpacity>
         </View>
 

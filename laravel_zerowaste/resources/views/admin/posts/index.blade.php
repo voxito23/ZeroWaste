@@ -65,8 +65,8 @@
                         <td>
                             <div class="flex items-center gap-2">
                                 <div class="w-6 h-6 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex-shrink-0 border border-gray-300 dark:border-gray-600">
-                                    <img src="{{ $post->autor?->avatar_url ?: '/static/img/perfiles/default.png' }}"
-                                         alt="Avatar" class="w-full h-full object-cover" onerror="this.src='/static/img/perfiles/default.png'">
+                                    <img src="{{ $post->autor?->avatar_url ?: '/media/perfiles/default.png' }}"
+                                         alt="Avatar" class="w-full h-full object-cover" onerror="this.src='/media/perfiles/default.png'">
                                 </div>
                                 <span class="text-sm font-semibold text-gray-800 dark:text-gray-200">{{ $post->autor->nombre ?? 'Usuario Eliminado' }}</span>
                             </div>
@@ -96,7 +96,7 @@
                                     data-catclass="{{ $catClass }}"
                                     data-date="{{ $post->created_at ? $post->created_at->format('d/m/Y H:i') : '' }}"
                                     data-image="{{ $post->image_url }}"
-                                    data-author-image="{{ $post->autor?->avatar_url ?: '/static/img/perfiles/default.png' }}"
+                                    data-author-image="{{ $post->autor?->avatar_url ?: '/media/perfiles/default.png' }}"
                                     data-comments="{{ base64_encode(json_encode($post->respuestas)) }}"
                                     onclick="viewPostDetail(this)"
                                     class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors" title="Ver Detalles">
@@ -185,13 +185,13 @@ function viewPostDetail(btn) {
         
         comments.forEach(c => {
             const cAuthor = c.autor ? c.autor.nombre : 'Usuario';
-            const cAuthorImg = c.autor && c.autor.avatar_url ? c.autor.avatar_url : '/static/img/perfiles/default.png';
+            const cAuthorImg = c.autor && c.autor.avatar_url ? c.autor.avatar_url : '/media/perfiles/default.png';
             const cDate = new Date(c.created_at).toLocaleString('es-MX', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'});
             
             commentsHtml += `
                 <div class="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-3 border border-gray-100 dark:border-gray-700 relative group">
                     <div class="flex items-start gap-3">
-                        <img src="${cAuthorImg}" alt="Avatar" class="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0" onerror="this.src='/static/img/perfiles/default.png'">
+                        <img src="${cAuthorImg}" alt="Avatar" class="w-8 h-8 rounded-full object-cover border border-gray-200 dark:border-gray-700 shrink-0" onerror="this.src='/media/perfiles/default.png'">
                         <div class="flex-1 min-w-0 pr-8">
                             <div class="flex items-center justify-between">
                                 <p class="text-sm font-bold text-gray-900 dark:text-white truncate">${cAuthor}</p>
@@ -230,7 +230,7 @@ function viewPostDetail(btn) {
                 <!-- Autor -->
                 <div class="flex items-center gap-3 mb-6 p-3 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
                     <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center overflow-hidden border border-emerald-200 dark:border-emerald-800/50 shrink-0">
-                        <img src="${authorImage}" alt="Avatar" class="w-full h-full object-cover" onerror="this.src='/static/img/perfiles/default.png'">
+                        <img src="${authorImage}" alt="Avatar" class="w-full h-full object-cover" onerror="this.src='/media/perfiles/default.png'">
                     </div>
                     <div>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mb-0.5">Publicado por</p>

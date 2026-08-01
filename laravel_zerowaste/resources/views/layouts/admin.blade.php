@@ -421,7 +421,7 @@
                     $uName = $isAuth ? \Illuminate\Support\Facades\Auth::user()->nombre : 'Visitante';
                     $uRole = ($isAuth && \Illuminate\Support\Facades\Auth::user()->is_admin) ? 'Administrador' : 'Usuario';
                     $fotoUrl = $isAuth ? \Illuminate\Support\Facades\Auth::user()->avatar_url : null;
-                    $fotoUrl = $fotoUrl ?: url('/static/img/perfiles/default.png');
+                    $fotoUrl = $fotoUrl ?: url('/media/perfiles/default.png');
                 @endphp
                 <div class="relative group cursor-pointer">
                     <div class="flex items-center gap-3">
@@ -431,7 +431,7 @@
                         </div>
                         <img src="{{ $fotoUrl }}" alt="Avatar"
                              class="w-11 h-11 rounded-full border-[3px] border-primary object-cover shadow-lg shadow-primary/20 transition-transform group-hover:scale-105"
-                             onerror="this.onerror=null; this.src='/static/img/perfiles/default.png';">
+                             onerror="this.onerror=null; this.src='/media/perfiles/default.png';">
                     </div>
                     
                     <!-- Menú Desplegable -->
@@ -447,6 +447,7 @@
                         </button></form>
                     </div>
                 </div>
+            </div>
         </header>
 
         <div class="flex-1 fade-in-up">

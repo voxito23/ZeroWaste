@@ -102,32 +102,59 @@ def update_intereses(
 
 
 # Endpoint exacto para recibir la edición pura
-@router.put("/perfil/actualizar", summary="Actualizar datos biográficos del perfil")
+@router.put("/perfil/actualizar", summary="Actualizar datos y foto del perfil")
 def actualizar_perfil(
     nombre: Optional[str] = Form(None),
     ubicacion: Optional[str] = Form(None),
     titulo_perfil: Optional[str] = Form(None),
     biografia: Optional[str] = Form(None),
     intereses: Optional[str] = Form(None),
+    foto_perfil: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    """
-    Recibe la payload desde el frontend mediante Form Data,
-    asigna los nuevos valores verificando que no vengan vacíos
-    """
-    if nombre: current_user.nombre = nombre  # type: ignore
-    if ubicacion: current_user.ubicacion = ubicacion  # type: ignore
-    if titulo_perfil: current_user.titulo_perfil = titulo_perfil  # type: ignore
-    if biografia: current_user.biografia = biografia  # type: ignore
-    if intereses: current_user.intereses = intereses  # type: ignore
+    """Actualiza el perfil completo y conserva una foto nueva sólo si la BD confirma."""
+    if nombre is not None:
+        nombre = nombre.strip()
+        if len(nombre) < 2 or len(nombre) > 50:
+            raise HTTPException(status_code=422, detail="El nombre debe tener entre 2 y 50 caracteres.")
+        current_user.nombre = nombre  # type: ignore
 
-    # 1. Empujar actualización nativa de la fila en BD
-    # 2. Refrescar el objeto local para actualizar su estado
-    db.commit()
-    db.refresh(current_user)
-    
-    return {"message": "Perfíl actualizado exitosamente", "perfil": current_user}
+    text_fields = {
+        "ubicacion": (ubicacion, 50),
+        "titulo_perfil": (titulo_perfil, 100),
+        "biografia": (biografia, 500),
+        "intereses": (intereses, 500),
+    }
+    for field, (value, maximum) in text_fields.items():
+        if value is None:
+            continue
+        clean_value = value.strip()
+        if len(clean_value) > maximum:
+            raise HTTPException(status_code=422, detail=f"{field} excede {maximum} caracteres.")
+        setattr(current_user, field, clean_value)
+
+    new_image = None
+    if foto_perfil is not None and foto_perfil.filename:
+        content = foto_perfil.file.read(MAX_IMAGE_BYTES + 1)
+        try:
+            new_image = save_media_image(content, "perfiles")
+        except MediaValidationError as exc:
+            raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
+        current_user.foto_perfil = new_image  # type: ignore
+
+    try:
+        db.commit()
+        db.refresh(current_user)
+    except Exception:
+        db.rollback()
+        remove_media_file(new_image, "perfiles")
+        raise
+
+    return {
+        "message": "Perfil actualizado exitosamente",
+        "perfil": UsuarioResponse.model_validate(current_user),
+    }
 
 
 @router.put("/perfil/password", summary="Actualizar contraseña del perfil")

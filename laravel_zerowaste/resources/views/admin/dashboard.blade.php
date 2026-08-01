@@ -269,7 +269,7 @@ document.querySelectorAll('.stagger-row').forEach((row,i)=>{row.style.opacity='0
                 <td class="p-3 pl-5">
                     <div class="flex items-center gap-3">
                         @php $uf=$u->foto_perfil??'default.png'; @endphp
-                        <img src="{{$u->avatar_url ?: url('/static/img/perfiles/default.png')}}" alt="{{$u->nombre}}" class="w-9 h-9 rounded-full border-2 {{$u->is_admin?'border-violet-400':'border-emerald-400'}} object-cover" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><rect fill=%22%2334D399%22 width=%2240%22 height=%2240%22 rx=%2220%22/><text x=%2250%%22 y=%2254%%22 text-anchor=%22middle%22 fill=%22%23064E3B%22 font-size=%2218%22 font-weight=%22bold%22>{{strtoupper(substr($u->nombre,0,1))}}</text></svg>'">
+                        <img src="{{$u->avatar_url ?: url('/media/perfiles/default.png')}}" alt="{{$u->nombre}}" class="w-9 h-9 rounded-full border-2 {{$u->is_admin?'border-violet-400':'border-emerald-400'}} object-cover" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22><rect fill=%22%2334D399%22 width=%2240%22 height=%2240%22 rx=%2220%22/><text x=%2250%%22 y=%2254%%22 text-anchor=%22middle%22 fill=%22%23064E3B%22 font-size=%2218%22 font-weight=%22bold%22>{{strtoupper(substr($u->nombre,0,1))}}</text></svg>'">
                         <div>
                             <p class="font-bold text-[#064E3B] dark:text-white text-sm">{{$u->nombre}}</p>
                             <p class="text-[11px] text-gray-400">{{$u->email}}</p>

@@ -110,6 +110,7 @@ copiar_directorio "flask_zerowaste/static/img/posts" foro
 copiar_directorio "flask_zerowaste/static/img/perfiles" perfiles
 copiar_directorio "laravel_zerowaste/public/img/perfiles" perfiles
 copiar_directorio "fast_api/static/perfiles" perfiles
+copiar_directorio "fast_api/static/img/perfiles" perfiles
 
 # El directorio histórico eventos almacenaba tanto campañas como eventos. Se
 # conserva una copia en ambas categorías; el tipo del registro decide la URL.
