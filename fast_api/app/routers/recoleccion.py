@@ -14,7 +14,7 @@ from app.models.schemas import (
     MessageResponse
 )
 from app.security.jwt_auth import get_current_user
-from app.services.collection_schedule import ScheduleValidationError, available_slots, validate_slot
+from app.services.collection_schedule import ScheduleValidationError, available_slots, lock_slot_capacity, validate_slot
 from app.services.collection_qr import CollectionQrError, complete_collection
 from app.services.qr_tokens import encrypt_token, new_token, public_content, token_hash
 
@@ -36,6 +36,7 @@ def solicitar_recoleccion(
 ):
     """Crea una nueva solicitud de recolección para el usuario actual."""
     try:
+        lock_slot_capacity(db, solicitud_in.scheduled_at)
         scheduled_at = validate_slot(db, solicitud_in.scheduled_at)
     except ScheduleValidationError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
@@ -133,8 +134,7 @@ def completar_recoleccion_qr(
     current_user: Usuario = Depends(get_current_user),
 ):
     """
-    Endpoint para que el recolector escanee el QR (que contiene el ID de la solicitud)
-    y la marque como completada al instante.
+    Endpoint heredado para confirmar un token QR opaco de recolección.
     """
     if current_user.rol not in ['recolector', 'admin'] and not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo los recolectores pueden escanear el QR de recolección.")

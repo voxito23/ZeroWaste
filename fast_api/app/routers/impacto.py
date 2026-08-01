@@ -16,6 +16,7 @@ router = APIRouter(prefix="/impacto", tags=["Impacto y recompensas"])
 class CanjeCreate(BaseModel):
     recompensa_id: int
     cantidad: int = Field(default=1, ge=1, le=10)
+    idempotency_key: str | None = Field(default=None, min_length=16, max_length=100)
 
 
 def _reward_dict(recompensa: Recompensa) -> dict:
@@ -105,13 +106,30 @@ def redeem(payload: CanjeCreate, db: Session = Depends(get_db), current_user: Us
     if reward.stock < payload.cantidad:
         raise HTTPException(status_code=409, detail="No hay stock suficiente.")
     balance = db.query(SaldoPuntos).filter_by(usuario_id=current_user.id).with_for_update().first()
+    if payload.idempotency_key:
+        existing = db.query(Canje).filter_by(usuario_id=current_user.id, idempotency_key=payload.idempotency_key).first()
+        if existing:
+            return {"id": existing.id, "estado": existing.estado, "puntos_utilizados": existing.puntos_utilizados, "idempotent": True}
+    redeemed = db.query(func.coalesce(func.sum(Canje.cantidad), 0)).filter(
+        Canje.usuario_id == current_user.id,
+        Canje.recompensa_id == reward.id,
+        Canje.estado != "CANCELADA",
+    ).scalar() or 0
+    if reward.limite_por_usuario and redeemed + payload.cantidad > reward.limite_por_usuario:
+        raise HTTPException(status_code=409, detail="Alcanzaste el límite de canjes para esta recompensa.")
     total = reward.costo_puntos * payload.cantidad
     if not balance or balance.puntos_disponibles < total:
         raise HTTPException(status_code=409, detail="No tienes puntos suficientes.")
     previous = balance.puntos_disponibles
     balance.puntos_disponibles -= total
     reward.stock -= payload.cantidad
-    redemption = Canje(usuario_id=current_user.id, recompensa_id=reward.id, cantidad=payload.cantidad, puntos_utilizados=total)
+    redemption = Canje(
+        usuario_id=current_user.id,
+        recompensa_id=reward.id,
+        cantidad=payload.cantidad,
+        puntos_utilizados=total,
+        idempotency_key=payload.idempotency_key,
+    )
     db.add(redemption)
     db.flush()
     db.add(MovimientoPuntos(
@@ -122,7 +140,7 @@ def redeem(payload: CanjeCreate, db: Session = Depends(get_db), current_user: Us
         descripcion=f"Canje de {reward.nombre}",
     ))
     db.commit()
-    return {"id": redemption.id, "estado": redemption.estado, "puntos_utilizados": total}
+    return {"id": redemption.id, "estado": redemption.estado, "puntos_utilizados": total, "idempotent": False}
 
 
 @router.get("/canjes")

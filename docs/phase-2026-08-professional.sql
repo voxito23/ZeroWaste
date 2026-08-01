@@ -74,6 +74,8 @@ CREATE TABLE email_verification_tokens (
 
 ALTER TABLE recompensas ADD COLUMN available_at timestamptz;
 ALTER TABLE recompensas ADD COLUMN deleted_at timestamptz;
+ALTER TABLE canjes ADD COLUMN idempotency_key varchar(100);
+CREATE UNIQUE INDEX uq_canje_usuario_idempotency ON canjes(usuario_id, idempotency_key);
 CREATE TABLE point_rule_history (
   id bigserial PRIMARY KEY, rule_id bigint NOT NULL REFERENCES reglas_puntos(id) ON DELETE CASCADE,
   before_values jsonb NOT NULL, after_values jsonb NOT NULL,

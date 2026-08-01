@@ -3,7 +3,7 @@
 from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from app.models.domain_models import CollectionSchedule, ScheduleException, SolicitudRecoleccion
@@ -21,6 +21,15 @@ def _local(value: datetime) -> datetime:
     if value.tzinfo is None:
         return value.replace(tzinfo=LOCAL_TZ)
     return value.astimezone(LOCAL_TZ)
+
+
+def lock_slot_capacity(db: Session, scheduled_at: datetime) -> None:
+    """Serialize bookings for one local slot until the current transaction ends."""
+    local = _local(scheduled_at).replace(second=0, microsecond=0)
+    db.execute(
+        text("SELECT pg_advisory_xact_lock(hashtextextended(:slot_key, 0))"),
+        {"slot_key": f"zerowaste:collection-slot:{local.isoformat()}"},
+    )
 
 
 def _exception(db: Session, target: date):

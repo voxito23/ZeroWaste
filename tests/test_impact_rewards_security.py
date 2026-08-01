@@ -13,12 +13,22 @@ ROOT = Path(__file__).resolve().parents[1]
 class ImpactRewardsSecurityTests(unittest.TestCase):
     def test_qr_uses_random_single_use_token_instead_of_numeric_id(self):
         backend = (ROOT / "fast_api/app/routers/recoleccion.py").read_text(encoding="utf-8")
+        qr_tokens = (ROOT / "fast_api/app/services/qr_tokens.py").read_text(encoding="utf-8")
+        collection_qr = (ROOT / "fast_api/app/services/collection_qr.py").read_text(encoding="utf-8")
         mobile = (ROOT / "mobile_app/screens/ScannerScreen.js").read_text(encoding="utf-8")
-        self.assertIn("secrets.token_urlsafe", backend)
-        self.assertIn("hashlib.sha256", backend)
-        self.assertIn("qr.used_at", backend)
-        self.assertIn("/recolecciones/completar-qr", mobile)
+        self.assertIn('new_token("collection")', backend)
+        self.assertIn("secrets.token_urlsafe", qr_tokens)
+        self.assertIn("hashlib.sha256", qr_tokens)
+        self.assertIn("qr.used_at", collection_qr)
+        self.assertIn("/qr/validar", mobile)
         self.assertNotIn("return isNaN(num) ? 1", mobile)
+
+    def test_capacity_and_redemptions_are_serialized_and_idempotent(self):
+        schedule = (ROOT / "fast_api/app/services/collection_schedule.py").read_text(encoding="utf-8")
+        rewards = (ROOT / "fast_api/app/routers/impacto.py").read_text(encoding="utf-8")
+        self.assertIn("pg_advisory_xact_lock", schedule)
+        self.assertIn("idempotency_key", rewards)
+        self.assertIn("limite_por_usuario", rewards)
 
     def test_points_separate_historical_impact_from_available_balance(self):
         model = (ROOT / "fast_api/app/models/domain_models.py").read_text(encoding="utf-8")

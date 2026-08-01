@@ -382,9 +382,11 @@ class Canje(Base):
     puntos_utilizados = Column(Integer, nullable=False)
     estado = Column(String(30), nullable=False, default="SOLICITADA")
     administrador_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True)
+    idempotency_key = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     recompensa = relationship("Recompensa")
+    __table_args__ = (UniqueConstraint("usuario_id", "idempotency_key", name="uq_canje_usuario_idempotency"),)
 
 
 class TokenQrRecoleccion(Base):
