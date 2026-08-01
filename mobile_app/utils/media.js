@@ -69,6 +69,11 @@ const canonicalMediaPath = (value, collection = '') => {
   let path = pathValue.replace(/^\/+/, '').replace(/\/{2,}/g, '/');
   if (!path || hasUnsafePath(path) || INTERNAL_PATH.test(path)) return null;
 
+  const sharedEventPath = /^static\/img\/eventos\//i;
+  if (sharedEventPath.test(path) && ['campanas', 'eventos'].includes(requestedCollection)) {
+    path = path.replace(sharedEventPath, `media/${requestedCollection}/`);
+  }
+
   for (const [pattern, replacement] of LEGACY_PATHS) {
     if (pattern.test(path)) {
       path = path.replace(pattern, replacement);

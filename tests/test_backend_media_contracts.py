@@ -55,6 +55,25 @@ class BackendMediaContractTests(unittest.TestCase):
                 "https://cdn.example.com/image.png",
                 build("https://cdn.example.com/image.png"),
             )
+            self.assertEqual(
+                f"{base}/foro/legacy.jpg",
+                build(
+                    "https://www.zerowaste-qro.com/static/img/posts/legacy.jpg",
+                    "foro",
+                ),
+            )
+            self.assertEqual(
+                f"{base}/campanas/campania.jpg",
+                build("https://zerowaste-qro.com/static/img/eventos/campania.jpg", "campanas"),
+            )
+            self.assertEqual(
+                f"{base}/puntos/punto_123.jpg",
+                build("/static/img/punto_123.jpg", "puntos"),
+            )
+            self.assertEqual(
+                f"{base}/puntos/acopio.jpg",
+                build("carpeta/antigua/acopio.jpg", "puntos"),
+            )
 
             for unsafe in (
                 "javascript:alert(1)",

@@ -15,6 +15,7 @@ readonly INVENTORY_BEFORE="schema-before-impact-${TIMESTAMP}.txt"
 readonly INVENTORY_AFTER="schema-after-impact-${TIMESTAMP}.txt"
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
+SCRIPT_ROOT="$PROJECT_ROOT/scripts"
 
 fail() {
   printf 'ERROR: %s\n' "$*" >&2
@@ -31,16 +32,19 @@ cd "$PROJECT_ROOT"
 [[ -f "laravel_zerowaste/${MIGRATION_PATH}" ]] || fail "reviewed migration file is missing"
 [[ -f "scripts/supabase_schema_inventory.sql" ]] || fail "schema inventory SQL is missing"
 
-command -v docker >/dev/null || fail "docker is not installed"
-command -v curl >/dev/null || fail "curl is not installed"
-command -v sha256sum >/dev/null || fail "sha256sum is not installed"
+command -v docker >/dev/null || fail "docker no está instalado"
+command -v curl >/dev/null || fail "curl no está instalado"
+command -v sha256sum >/dev/null || fail "sha256sum no está instalado"
 
-docker compose config --quiet
+# shellcheck source=funciones_docker.sh
+source "$SCRIPT_ROOT/funciones_docker.sh"
+detectar_compose
+ejecutar_compose config >/dev/null
 
-laravel_container="$(docker compose ps -q laravel1)"
-[[ -n "$laravel_container" ]] || fail "laravel1 container is not running"
+laravel_container="$(ejecutar_compose ps -q laravel1)"
+[[ -n "$laravel_container" ]] || fail "el contenedor laravel1 no está ejecutándose"
 [[ "$(docker inspect -f '{{.State.Running}}' "$laravel_container")" == "true" ]] \
-  || fail "laravel1 container is not running"
+  || fail "el contenedor laravel1 no está ejecutándose"
 
 install -d -m 0700 "$BACKUP_ROOT"
 [[ "$(df -Pk "$BACKUP_ROOT" | awk 'NR==2 {print $4}')" -ge 1048576 ]] \
@@ -67,11 +71,11 @@ else
   export PGSSLMODE="${DB_SSLMODE:-require}"
 fi'
 
-printf 'Creating read-only schema inventory...\n'
+printf 'Creando inventario de esquema de sólo lectura...\n'
 run_postgres_client sh -ceu "${DB_ENV_SETUP}
 psql -X -v ON_ERROR_STOP=1 --file=/work/scripts/supabase_schema_inventory.sql > /work/backups/${INVENTORY_BEFORE}"
 
-printf 'Creating full logical backup...\n'
+printf 'Creando respaldo lógico completo...\n'
 run_postgres_client sh -ceu "${DB_ENV_SETUP}
 pg_dump --format=custom --no-owner --no-privileges --file=/work/backups/${BACKUP_FILE}"
 
@@ -82,15 +86,15 @@ chmod 0600 \
   "${BACKUP_ROOT}/${BACKUP_FILE}.sha256" \
   "${BACKUP_ROOT}/${INVENTORY_BEFORE}"
 
-printf 'Backup: %s\n' "${BACKUP_ROOT}/${BACKUP_FILE}"
-printf 'Applying only %s...\n' "$MIGRATION"
-docker compose exec -T laravel1 \
+printf 'Respaldo: %s\n' "${BACKUP_ROOT}/${BACKUP_FILE}"
+printf 'Aplicando únicamente %s...\n' "$MIGRATION"
+ejecutar_compose exec -T laravel1 \
   php artisan migrate \
   --path="$MIGRATION_PATH" \
   --force \
   --no-interaction
 
-printf 'Verifying schema and seed data...\n'
+printf 'Verificando esquema y datos iniciales...\n'
 schema_result="$(run_postgres_client sh -ceu "${DB_ENV_SETUP}
 psql -X -A -t -v ON_ERROR_STOP=1 -c \"SELECT
   (SELECT count(*) FROM information_schema.columns WHERE table_schema='public' AND table_name='posts' AND column_name IN ('aprobado','aprobado_por','aprobado_at')),
@@ -108,7 +112,7 @@ run_postgres_client sh -ceu "${DB_ENV_SETUP}
 psql -X -v ON_ERROR_STOP=1 --file=/work/scripts/supabase_schema_inventory.sql > /work/backups/${INVENTORY_AFTER}"
 chmod 0600 "${BACKUP_ROOT}/${INVENTORY_AFTER}"
 
-printf 'Checking production endpoints...\n'
+printf 'Comprobando endpoints de producción...\n'
 for endpoint in \
   /api/health \
   /api/ready \
@@ -122,9 +126,9 @@ do
   printf 'OK %s\n' "$endpoint"
 done
 
-docker compose ps
-printf 'Migration and verification completed successfully.\n'
-printf 'Keep these files until the release is formally accepted:\n'
+ejecutar_compose ps
+printf 'Migración y verificación terminadas correctamente.\n'
+printf 'Conserva estos archivos hasta aceptar formalmente el despliegue:\n'
 printf '  %s\n' \
   "${BACKUP_ROOT}/${BACKUP_FILE}" \
   "${BACKUP_ROOT}/${BACKUP_FILE}.sha256" \

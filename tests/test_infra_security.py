@@ -75,6 +75,23 @@ class InfrastructureSecurityTests(unittest.TestCase):
         )
         self.assertTrue(media_mount["read_only"])
         self.assertTrue(self.compose["networks"]["media_network"]["internal"])
+        reward_mounts = [
+            volume
+            for volume in media["volumes"]
+            if isinstance(volume, dict)
+            and volume.get("target") == "/data/media/recompensas"
+        ]
+        self.assertEqual(reward_mounts, [])
+
+    def test_legacy_dynamic_media_routes_redirect_to_canonical_service(self):
+        for route_name in (
+            "legacy_forum",
+            "legacy_profiles",
+            "legacy_events",
+            "legacy_point_direct",
+            "legacy_points",
+        ):
+            self.assertIn(route_name, self.caddy)
 
     def test_laravel_sessions_are_shared_in_redis(self):
         for name in ("laravel1", "laravel2"):

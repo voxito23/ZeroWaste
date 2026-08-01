@@ -45,6 +45,11 @@ class ProductionMigrationScriptTests(unittest.TestCase):
         self.assertIn("/api/foro/posts", self.source)
         self.assertIn("/api/impacto/recompensas", self.source)
 
+    def test_supports_modern_and_legacy_compose(self):
+        self.assertIn("detectar_compose", self.source)
+        self.assertIn("ejecutar_compose", self.source)
+        self.assertNotIn("docker compose config --quiet", self.source)
+
 
 if __name__ == "__main__":
     unittest.main()

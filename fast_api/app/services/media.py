@@ -14,6 +14,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 
 
 DEFAULT_PUBLIC_MEDIA_BASE = "https://www.zerowaste-qro.com/media"
+ZEROWASTE_PUBLIC_HOSTS = {"zerowaste-qro.com", "www.zerowaste-qro.com"}
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 MAX_IMAGE_DIMENSION = 6000
 
@@ -40,6 +41,10 @@ _LEGACY_PREFIXES = {
     "img/perfiles/": "perfiles",
     "static/img/posts/": "foro",
     "static/img/perfiles/": "perfiles",
+    "static/img/campanas/": "campanas",
+    "static/img/puntos/": "puntos",
+    "img/eventos/": "eventos",
+    "img/mapa/": "puntos",
     "api/foro/posts/imagenes/": "foro",
     "api/foro/perfiles/": "perfiles",
 }
@@ -109,8 +114,17 @@ def build_public_media_url(path: object, category: str | None = None) -> str | N
         return None
 
     parsed = urlsplit(value)
+    absolute_fallback: str | None = None
     if parsed.scheme:
-        if parsed.scheme.lower() != "https" or parsed.username or parsed.password:
+        scheme = parsed.scheme.lower()
+        hostname = (parsed.hostname or "").rstrip(".").lower()
+        own_public_url = hostname in ZEROWASTE_PUBLIC_HOSTS
+        if (
+            scheme not in {"http", "https"}
+            or (scheme != "https" and not own_public_url)
+            or parsed.username
+            or parsed.password
+        ):
             return None
         if not _is_public_hostname(parsed.hostname):
             return None
@@ -118,14 +132,17 @@ def build_public_media_url(path: object, category: str | None = None) -> str | N
             port = parsed.port
         except ValueError:
             return None
-        hostname = parsed.hostname or ""
         safe_netloc = f"[{hostname}]" if ":" in hostname else hostname
         if port is not None:
             safe_netloc = f"{safe_netloc}:{port}"
         clean_path = quote(unquote(parsed.path), safe="/%:@-._~!$&'()*+,;=")
         clean_query = quote(unquote(parsed.query), safe="=&%:@-._~!$'()*+,;/?:")
         clean_fragment = quote(unquote(parsed.fragment), safe="%:@-._~!$&'()*+,;=/?")
-        return urlunsplit(("https", safe_netloc, clean_path, clean_query, clean_fragment))
+        safe_absolute = urlunsplit(("https", safe_netloc, clean_path, clean_query, clean_fragment))
+        if not own_public_url:
+            return safe_absolute
+        absolute_fallback = safe_absolute if scheme == "https" else None
+        value = parsed.path
 
     if value.startswith(("//", "\\\\")) or ":\\" in value:
         return None
@@ -160,10 +177,10 @@ def build_public_media_url(path: object, category: str | None = None) -> str | N
             relative_name = decoded[len("static/img/eventos/"):]
             selected_category = selected_category or "eventos"
         elif selected_category:
-            relative_name = decoded
+            relative_name = PurePosixPath(decoded).name
 
     if not selected_category or not relative_name:
-        return None
+        return absolute_fallback
     relative_parts = PurePosixPath(unquote(relative_name)).parts
     if not relative_parts or any(part in {"", ".", ".."} for part in relative_parts):
         return None

@@ -117,6 +117,20 @@ una imagen por orden, fecha aproximada o similitud visual.
 
 ## Migración conservadora desde volúmenes anteriores
 
+En producción, la migración completa y repetible se ejecuta con nombres en
+español. Copia sin sobrescribir publicaciones, perfiles, campañas, eventos,
+puntos y recompensas desde los árboles históricos y desde los volúmenes Docker
+anteriores que todavía existan:
+
+```sh
+cd /opt/ZeroWaste
+bash scripts/migrar_medios_produccion.sh
+```
+
+Los inventarios, respaldos de volúmenes y posibles conflictos quedan en
+`/opt/zerowaste-backups`. Un conflicto conserva el archivo canónico existente
+y registra ambas rutas; nunca decide por fecha o nombre parecido.
+
 Antes de retirar `foro_media` y `perfiles_compartidos`, inventariar los
 volúmenes reales con `docker volume ls` y adaptar sus nombres de proyecto. El
 siguiente patrón copia sin sobrescribir (`cp -an`); debe ejecutarse por separado
@@ -146,4 +160,3 @@ curl -sS -o /dev/null -w '%{http_code}\n' https://www.zerowaste-qro.com/media/fo
 Los archivos existentes deben responder `200`, `Content-Type` correcto,
 `Cache-Control` y `X-Content-Type-Options: nosniff`. Un archivo inexistente o
 una ruta de directorio debe responder `404`, nunca un stack trace.
-

@@ -61,6 +61,15 @@ www.zerowaste-qro.com {
 	@legacy_forum path_regexp legacy_forum ^/static/img/posts/(.+)$
 	redir @legacy_forum /media/foro/{re.legacy_forum.1} 308
 
+	@legacy_events path_regexp legacy_events ^/(?:static/)?img/eventos/(.+)$
+	redir @legacy_events /media/eventos/{re.legacy_events.1} 308
+
+	@legacy_point_direct path_regexp legacy_point_direct ^/static/img/(punto_[A-Za-z0-9._-]+)$
+	redir @legacy_point_direct /media/puntos/{re.legacy_point_direct.1} 308
+
+	@legacy_points path_regexp legacy_points ^/(?:static/)?img/(?:puntos|mapa)/(.+)$
+	redir @legacy_points /media/puntos/{re.legacy_points.1} 308
+
 	handle /media/* {
 		reverse_proxy media_static:8080 {
 			header_up X-Real-IP {remote_host}

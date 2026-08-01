@@ -164,10 +164,6 @@ services:
         source: ${MEDIA_ROOT:-./shared/media}
         target: /data/media
         read_only: true
-      - type: bind
-        source: ./laravel_zerowaste/public/images/recompensas
-        target: /data/media/recompensas
-        read_only: true
     group_add:
       - "${MEDIA_GID:-2000}"
     networks:

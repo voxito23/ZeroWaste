@@ -25,6 +25,10 @@ final class Media
         'img/perfiles/' => 'perfiles',
         'static/img/posts/' => 'foro',
         'static/img/perfiles/' => 'perfiles',
+        'static/img/campanas/' => 'campanas',
+        'static/img/puntos/' => 'puntos',
+        'img/eventos/' => 'eventos',
+        'img/mapa/' => 'puntos',
         'api/foro/posts/imagenes/' => 'foro',
         'api/foro/perfiles/' => 'perfiles',
     ];
@@ -39,9 +43,23 @@ final class Media
             return null;
         }
 
+        $absoluteFallback = null;
         $scheme = parse_url($value, PHP_URL_SCHEME);
         if ($scheme !== null) {
-            return self::safeAbsoluteUrl($value);
+            $parts = parse_url($value);
+            if (! is_array($parts)) {
+                return null;
+            }
+            $host = strtolower(rtrim((string) ($parts['host'] ?? ''), '.'));
+            $ownPublicUrl = in_array($host, ['zerowaste-qro.com', 'www.zerowaste-qro.com'], true);
+            if (! $ownPublicUrl) {
+                return self::safeAbsoluteUrl($value);
+            }
+            if (! in_array(strtolower($scheme), ['http', 'https'], true) || isset($parts['user']) || isset($parts['pass'])) {
+                return null;
+            }
+            $absoluteFallback = strtolower($scheme) === 'https' ? self::safeAbsoluteUrl($value) : null;
+            $value = (string) ($parts['path'] ?? '');
         }
         if (str_starts_with($value, '//') || str_starts_with($value, '\\\\') || preg_match('/^[A-Za-z]:[\\\\\/]/', $value)) {
             return null;
@@ -77,10 +95,10 @@ final class Media
             $relative = substr($decoded, strlen('static/img/eventos/'));
             $selected ??= 'eventos';
         } elseif ($relative === null && $selected !== null) {
-            $relative = $decoded;
+            $relative = basename($decoded);
         }
         if ($selected === null || $relative === null || $relative === '') {
-            return null;
+            return $absoluteFallback;
         }
         $relativeParts = explode('/', rawurldecode($relative));
         if (in_array('', $relativeParts, true) || in_array('.', $relativeParts, true) || in_array('..', $relativeParts, true)) {

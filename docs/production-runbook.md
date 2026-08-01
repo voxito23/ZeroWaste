@@ -25,35 +25,29 @@ y respaldo completo antes de modificar el esquema:
 ```sh
 cd /opt/ZeroWaste
 git pull --ff-only origin main
-docker compose config --quiet
-docker compose up --build -d
-bash scripts/deploy_impact_schema.sh
+bash scripts/desplegar_produccion.sh
 ```
 
-El script aplica exclusivamente esa migración mediante `--path`; no ejecuta
-otras migraciones pendientes. Guarda el respaldo, su SHA-256 y los inventarios
-anterior/posterior en `/opt/zerowaste-backups` con permisos restringidos. No
-eliminar esos archivos hasta aceptar formalmente el despliegue.
+El despliegue detecta automáticamente `docker compose` moderno o
+`docker-compose` clásico. Primero migra conservadoramente los medios históricos
+sin sobrescribir archivos, reconstruye los servicios y después aplica
+exclusivamente la migración mediante `--path`; no ejecuta otras migraciones
+pendientes. Guarda respaldos, su SHA-256 y los inventarios anterior/posterior
+en `/opt/zerowaste-backups` con permisos restringidos. No eliminar esos
+archivos hasta aceptar formalmente el despliegue.
 
-Si falla antes de imprimir `Migration and verification completed
-successfully`, conservar la salida y los respaldos y no repetir comandos de
+Si falla antes de imprimir `Despliegue de producción terminado correctamente`,
+conservar la salida y los respaldos y no repetir comandos de
 esquema manualmente. Revisar primero:
 
 ```sh
-docker compose logs --tail=200 laravel1 fast_api nginx_api
+docker-compose logs --tail=200 laravel1 fast_api nginx_api
 ```
 
 ## Validación previa local o en staging
 
 ```sh
-docker compose config --quiet
-docker compose config --services
-docker compose config --volumes
-docker compose config --networks
-docker compose build
-docker compose up -d
-docker compose ps
-docker compose logs --tail=200
+bash scripts/desplegar_produccion.sh
 ```
 
 El archivo de desarrollo es explícito y no se aplica en producción:
@@ -66,11 +60,8 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 
 ```sh
 cd /opt/ZeroWaste
-git pull origin main
-docker compose config --quiet
-docker compose up --build -d
-docker compose ps
-docker compose logs --tail=200
+git pull --ff-only origin main
+bash scripts/desplegar_produccion.sh
 ```
 
 No usar `docker compose down -v`; eliminaría volúmenes administrados. No

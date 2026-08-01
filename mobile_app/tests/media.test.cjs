@@ -30,6 +30,8 @@ const accepted = [
   ['post.jpg', 'foro', `${origin}/media/foro/post.jpg`],
   ['legacy/path/avatar.png', 'perfiles', `${origin}/media/perfiles/avatar.png`],
   ['https://zerowaste-qro.com/static/img/eventos/evento.jpg', 'eventos', `${origin}/media/eventos/evento.jpg`],
+  ['https://zerowaste-qro.com/static/img/eventos/campania.jpg', 'campanas', `${origin}/media/campanas/campania.jpg`],
+  ['/static/img/punto_69dcb93983ad8.jpg', 'puntos', `${origin}/media/puntos/punto_69dcb93983ad8.jpg`],
   ['https://www.zerowaste-qro.com/data/media/foro/imagen.jpg', 'foro', null],
   ['http://www.zerowaste-qro.com/api/foro/posts/imagenes/post.jpg', 'foro', `${origin}/media/foro/post.jpg`],
   ['https://cdn.example.com/assets/image.jpg', '', 'https://cdn.example.com/assets/image.jpg'],
