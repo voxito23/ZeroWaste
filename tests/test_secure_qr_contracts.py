@@ -46,6 +46,14 @@ class SecureQrContractsTest(unittest.TestCase):
             parse_content(f"https://www.zerowaste-qro.com/q/p/{token}")
         self.assertEqual(context.exception.code, "QR_TAMPERED")
 
+    def test_point_qr_lifecycle_is_serialized_and_has_one_active_constraint(self):
+        router = (ROOT / "fast_api" / "app" / "routers" / "qr.py").read_text(encoding="utf-8")
+        migration = (ROOT / "laravel_zerowaste" / "database" / "migrations" / "2026_08_01_000001_add_secure_point_qr_management.php").read_text(encoding="utf-8")
+        self.assertIn("pg_advisory_xact_lock", router)
+        self.assertGreaterEqual(router.count("_lock_point_qr(db, point_id)"), 3)
+        self.assertIn("uq_point_qr_one_active", migration)
+        self.assertIn("WHERE active = TRUE", migration)
+
 
 if __name__ == "__main__":
     unittest.main()

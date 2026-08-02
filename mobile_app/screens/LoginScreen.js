@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Alert, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Modal, ActivityIndicator, Linking, TextInput } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Alert, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Modal, ActivityIndicator, Linking, TextInput, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Mail, Lock, Eye, EyeOff, Check } from 'lucide-react-native';
@@ -21,6 +21,8 @@ export default function LoginScreen({ navigation }) {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleHandoff, setGoogleHandoff] = useState('');
   const [linkPassword, setLinkPassword] = useState('');
+  const googleBrowserPending = useRef(false);
+  const googleBrowserWasBackgrounded = useRef(false);
   
   const { login } = useAuth();
 
@@ -35,6 +37,8 @@ export default function LoginScreen({ navigation }) {
   useEffect(() => {
     const handleUrl = ({ url }) => {
       if (!url?.startsWith('zerowaste://auth/google')) return;
+      googleBrowserPending.current = false;
+      googleBrowserWasBackgrounded.current = false;
       const code = decodeURIComponent((url.match(/[?&]code=([^&]+)/) || [])[1] || '');
       const oauthError = (url.match(/[?&]error=([^&]+)/) || [])[1];
       if (oauthError || !code) {
@@ -49,7 +53,34 @@ export default function LoginScreen({ navigation }) {
     return () => subscription.remove();
   }, []);
 
+  useEffect(() => {
+    let resumeTimer;
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (!googleBrowserPending.current) return;
+      if (nextState === 'inactive' || nextState === 'background') {
+        googleBrowserWasBackgrounded.current = true;
+        return;
+      }
+      if (nextState === 'active' && googleBrowserWasBackgrounded.current) {
+        clearTimeout(resumeTimer);
+        resumeTimer = setTimeout(() => {
+          if (!googleBrowserPending.current) return;
+          googleBrowserPending.current = false;
+          googleBrowserWasBackgrounded.current = false;
+          setGoogleLoading(false);
+          Alert.alert('Acceso cancelado', 'No se completó el inicio de sesión con Google.');
+        }, 800);
+      }
+    });
+    return () => {
+      clearTimeout(resumeTimer);
+      subscription.remove();
+    };
+  }, []);
+
   const completeGoogle = async (code) => {
+    googleBrowserPending.current = false;
+    googleBrowserWasBackgrounded.current = false;
     setGoogleLoading(true);
     try {
       const { data } = await api.post('/auth/google/complete', { code });
@@ -72,8 +103,12 @@ export default function LoginScreen({ navigation }) {
     try {
       const { data } = await api.post('/auth/google/start');
       if (!data.authorization_url?.startsWith('https://accounts.google.com/')) throw new Error('invalid_auth_url');
+      googleBrowserPending.current = true;
+      googleBrowserWasBackgrounded.current = false;
       await Linking.openURL(data.authorization_url);
     } catch (error) {
+      googleBrowserPending.current = false;
+      googleBrowserWasBackgrounded.current = false;
       setGoogleLoading(false);
       Alert.alert('Google no está disponible', error.response?.data?.detail || 'No fue posible abrir el acceso seguro de Google.');
     }
@@ -97,8 +132,12 @@ export default function LoginScreen({ navigation }) {
   const resendVerification = async () => {
     try {
       await api.post('/auth/email/reenviar', { email });
-      Alert.alert('Correo solicitado', 'Si la cuenta requiere verificación, recibirás un correo en unos minutos.');
+      navigation.navigate('VerifyEmail', { email: email.trim().toLowerCase(), sent: true });
     } catch (error) {
+      if (error.response?.status === 429) {
+        navigation.navigate('VerifyEmail', { email: email.trim().toLowerCase(), sent: true });
+        return;
+      }
       Alert.alert('No fue posible enviar', error.response?.data?.detail || 'Inténtalo nuevamente más tarde.');
     }
   };

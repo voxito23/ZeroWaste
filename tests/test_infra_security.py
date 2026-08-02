@@ -18,8 +18,11 @@ class InfrastructureSecurityTests(unittest.TestCase):
         publishers = {
             name for name, service in self.compose["services"].items() if service.get("ports")
         }
-        self.assertEqual(publishers, {"caddy"})
+        self.assertEqual(publishers, {"caddy", "node_exporter", "cadvisor", "nginx_exporter", "redis_exporter"})
         self.assertEqual(set(self.compose["services"]["caddy"]["ports"]), {"80:80", "443:443"})
+        for name in publishers - {"caddy"}:
+            for binding in self.compose["services"][name]["ports"]:
+                self.assertTrue(binding.startswith("${MONITORING_NODE_ADDRESS:-127.0.0.1}:"), binding)
 
     def test_private_networks_are_internal(self):
         for network in ("app_network", "monitoring_network", "data_network"):
@@ -44,6 +47,15 @@ class InfrastructureSecurityTests(unittest.TestCase):
         self.assertIn("location = /stub_status", self.nginx)
         self.assertIn("stub_status;", self.nginx)
 
+    def test_load_balancer_endpoints_are_public_and_dependency_safe(self):
+        source = (ROOT / "fast_api" / "app" / "main.py").read_text(encoding="utf-8")
+        self.assertIn('@app.get("/load-balancer-health"', source)
+        self.assertIn('@app.get("/load-balancer-ready"', source)
+        self.assertIn('connection.execute(text("SELECT 1"))', source)
+        self.assertNotIn("create_all", source)
+        self.assertIn("location = /load-balancer-health", self.nginx)
+        self.assertIn("location = /load-balancer-ready", self.nginx)
+
     def test_grafana_has_no_literal_password(self):
         password = self.compose["services"]["grafana"]["environment"]["GF_SECURITY_ADMIN_PASSWORD"]
         self.assertIn("GRAFANA_ADMIN_PASSWORD", password)
@@ -51,14 +63,15 @@ class InfrastructureSecurityTests(unittest.TestCase):
     def test_compose_uses_service_dns_and_scalable_names(self):
         for name, service in self.compose["services"].items():
             self.assertNotIn("container_name", service, name)
-        self.assertIn("laravel1", self.compose["services"])
-        self.assertIn("laravel2", self.compose["services"])
+        self.assertIn("laravel", self.compose["services"])
+        self.assertNotIn("laravel1", self.compose["services"])
+        self.assertNotIn("laravel2", self.compose["services"])
         self.assertNotIn("admin", self.compose["services"])
         self.assertNotIn("admin2", self.compose["services"])
 
     def test_production_has_no_source_or_vendor_mounts(self):
         forbidden_targets = {"/app", "/var/www/html", "/var/www/html/vendor"}
-        for name in ("cliente", "fast_api", "laravel1", "laravel2"):
+        for name in ("cliente", "fast_api", "laravel"):
             volumes = self.compose["services"][name].get("volumes", [])
             for volume in volumes:
                 target = volume.get("target") if isinstance(volume, dict) else volume.split(":")[-1]
@@ -94,11 +107,11 @@ class InfrastructureSecurityTests(unittest.TestCase):
             self.assertIn(route_name, self.caddy)
 
     def test_laravel_sessions_are_shared_in_redis(self):
-        for name in ("laravel1", "laravel2"):
+        for name in ("laravel",):
             environment = self.compose["services"][name]["environment"]
             self.assertEqual(environment["SESSION_DRIVER"], "redis")
             self.assertEqual(environment["SESSION_CONNECTION"], "default")
-            self.assertEqual(environment["SESSION_PATH"], "/zw-interno")
+            self.assertEqual(environment["SESSION_PATH"], "${SESSION_PATH:-/}")
 
 
 if __name__ == "__main__":

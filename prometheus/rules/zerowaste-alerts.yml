@@ -1,137 +1,68 @@
 groups:
-  - name: zerowaste-recording
-    interval: 15s
+  - name: zerowaste-two-droplets
     rules:
-      - record: zerowaste:targets_up:count
-        expr: sum(up)
-
-      - record: zerowaste:public_availability:ratio
-        expr: avg(probe_success{job="blackbox-https"})
-
-      - record: zerowaste:laravel_replicas_available:count
-        expr: sum(probe_success{job="blackbox-internal",instance=~"http://laravel[12]/up"})
-
-      - record: zerowaste:dependency_readiness:ratio
-        expr: avg(probe_success{job="blackbox-readiness"})
-
-      - record: zerowaste:http_requests:rate5m
-        expr: sum(rate(http_requests_total[5m]))
-
-      - record: zerowaste:http_5xx:rate5m
-        expr: sum(rate(http_requests_total{status=~"5.."}[5m]))
-
-      - record: zerowaste:http_5xx:ratio5m
-        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 0.001)
-
-      - record: zerowaste:http_latency_p95:seconds5m
-        expr: histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))
-
-      - record: zerowaste:host_cpu_usage:percent
-        expr: 100 - (avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
-
-      - record: zerowaste:host_memory_usage:percent
-        expr: 100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)
-
-      - record: zerowaste:host_root_disk_usage:percent
-        expr: 100 * (1 - node_filesystem_avail_bytes{mountpoint="/",fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{mountpoint="/",fstype!~"tmpfs|overlay"})
-
-      - record: zerowaste:tls_expiry:min_days
-        expr: min((probe_ssl_earliest_cert_expiry - time()) / 86400)
-
-  - name: zerowaste
-    rules:
-      - alert: ServiceDown
-        expr: up == 0
+      - alert: ZeroWastePrimaryDown
+        expr: probe_success{job="blackbox-origins",node_role="primary",probe="health"} == 0 and probe_success{job="blackbox-origins",node_role="secondary",probe="health"} == 1
         for: 2m
-        labels: {severity: critical}
-        annotations: {summary: "ZeroWaste service is down", description: "{{ $labels.job }} / {{ $labels.instance }} has been unreachable for 2 minutes."}
-
-      - alert: PublicEndpointDown
-        expr: probe_success{job="blackbox-https"} == 0
-        for: 2m
-        labels: {severity: critical}
-        annotations: {summary: "Public ZeroWaste endpoint is down", description: "{{ $labels.instance }} has failed HTTPS probes for 2 minutes."}
-
-      - alert: LaravelReplicaDown
-        expr: probe_success{job="blackbox-internal",instance=~"http://laravel[12]/up"} == 0
-        for: 1m
         labels: {severity: warning}
-        annotations: {summary: "A Laravel replica is unavailable", description: "{{ $labels.instance }} is down; traffic is being served by the surviving replica."}
-
-      - alert: InternalServiceDown
-        expr: probe_success{job="blackbox-internal"} == 0
+        annotations: {summary: "Primary unavailable; secondary is ready"}
+      - alert: ZeroWasteSecondaryDown
+        expr: probe_success{job="blackbox-origins",node_role="secondary",probe="health"} == 0
         for: 2m
-        labels: {severity: critical}
-        annotations: {summary: "An internal ZeroWaste service is unavailable", description: "{{ $labels.instance }} has failed its private liveness probe for 2 minutes."}
-
-      - alert: DependencyReadinessFailed
-        expr: probe_success{job="blackbox-readiness"} == 0
-        for: 2m
-        labels: {severity: critical}
-        annotations: {summary: "A backend cannot reach its required dependency", description: "{{ $labels.instance }} is not ready; no migration or write is performed by this probe."}
-
-      - alert: MediaDeliveryRouteBroken
-        expr: probe_success{job="blackbox-media-route"} == 0
-        for: 2m
-        labels: {severity: critical}
-        annotations: {summary: "Canonical HTTPS media delivery is not returning the expected safe 404"}
-
-      - alert: MapEndpointDown
-        expr: probe_success{job="blackbox-https",instance="https://www.zerowaste-qro.com/api/mapa/puntos"} == 0
-        for: 2m
-        labels: {severity: critical}
-        annotations: {summary: "The public map points endpoint is unavailable"}
-
-      - alert: RequiredMetricsTargetMissing
-        expr: absent(up{job="caddy"}) or absent(up{job="nginx-api"}) or absent(up{job="redis"}) or absent(up{job="zerowaste-fastapi"})
-        for: 2m
-        labels: {severity: critical}
-        annotations: {summary: "A required ZeroWaste metrics target disappeared from Prometheus"}
-
-      - alert: ReadinessFailed
-        expr: zerowaste_readiness == 0
-        for: 2m
-        labels: {severity: critical}
-        annotations: {summary: "FastAPI cannot reach its required dependency"}
-
-      - alert: HighHttp5xxRate
-        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 1) > 0.05
-        for: 5m
         labels: {severity: warning}
-        annotations: {summary: "More than 5% HTTP 5xx responses"}
-
-      - alert: HighP95Latency
-        expr: histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m]))) > 2
-        for: 5m
+        annotations: {summary: "Secondary unavailable"}
+      - alert: ZeroWasteBothNodesDown
+        expr: sum(probe_success{job="blackbox-origins",probe="health"}) == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "Both ZeroWaste nodes are unavailable"}
+      - alert: ZeroWasteFailoverActive
+        expr: probe_success{job="blackbox-origins",node_role="primary",probe="health"} == 0 and probe_success{job="blackbox-public",instance=~".*/load-balancer-health"} == 1 and probe_success{job="blackbox-origins",node_role="secondary",probe="health"} == 1
+        for: 2m
         labels: {severity: warning}
-        annotations: {summary: "FastAPI p95 latency exceeds 2 seconds"}
-
-      - alert: HostMemoryHigh
+        annotations: {summary: "Cloudflare failover is probably active"}
+      - alert: ZeroWastePublicEndpointDown
+        expr: probe_success{job="blackbox-public"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "Public endpoint is unavailable"}
+      - alert: ZeroWasteNodeHighMemory
         expr: 100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) > 90
         for: 5m
         labels: {severity: warning}
-        annotations: {summary: "Host memory usage is above 90%"}
-
-      - alert: HostDiskLow
+        annotations: {summary: "Node memory usage exceeds 90%"}
+      - alert: ZeroWasteNodeLowDisk
         expr: 100 * node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} < 15
         for: 5m
         labels: {severity: warning}
-        annotations: {summary: "Host filesystem has less than 15% available"}
-
-      - alert: ContainerRestarting
-        expr: changes(container_start_time_seconds{name!=""}[10m]) > 2
+        annotations: {summary: "Node disk availability is below 15%"}
+      - alert: ZeroWasteExporterTunnelDown
+        expr: up{job="cross-account-exporters",node_role="secondary"} == 0
         for: 2m
         labels: {severity: warning}
-        annotations: {summary: "Container is restarting repeatedly"}
-
-      - alert: TLSCertificateExpiring
-        expr: (probe_ssl_earliest_cert_expiry - time()) < 14 * 24 * 3600
-        for: 10m
-        labels: {severity: warning}
-        annotations: {summary: "TLS certificate expires in less than 14 days"}
-
-      - alert: ElevatedLoginLockouts
-        expr: increase(zerowaste_login_lockouts_total[10m]) > 10
+        annotations: {summary: "Secondary WireGuard exporter path is unavailable"}
+      - alert: ZeroWasteSharedRedisDown
+        expr: redis_up{job="redis-external"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "Shared Redis is unavailable"}
+      - alert: ZeroWasteSupabaseNotReady
+        expr: probe_success{job="blackbox-origins",probe="ready"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "A node cannot reach shared dependencies"}
+      - alert: ZeroWasteMediaStorageDown
+        expr: zerowaste_media_storage_ready == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "Shared media storage is unavailable"}
+      - alert: ZeroWasteHighErrorRate
+        expr: sum(rate(http_requests_total{status=~"5.."}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 1) > 0.05
         for: 5m
         labels: {severity: warning}
-        annotations: {summary: "Elevated number of login lockouts"}
+        annotations: {summary: "HTTP 5xx rate exceeds 5%"}
+      - alert: ZeroWasteHighLatency
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m]))) > 2
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "HTTP p95 latency exceeds two seconds"}

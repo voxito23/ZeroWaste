@@ -6,6 +6,7 @@ from io import BytesIO
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse, Response
 from pydantic import BaseModel, Field
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.data.database import get_db
@@ -136,12 +137,21 @@ def _active_point_qr(db: Session, point_id: int) -> PointQrCode | None:
     )
 
 
+def _lock_point_qr(db: Session, point_id: int) -> None:
+    """Serialize QR lifecycle changes, including the first QR for a point."""
+    db.execute(
+        text("SELECT pg_advisory_xact_lock(:namespace, :point_id)"),
+        {"namespace": 20517, "point_id": point_id},
+    )
+
+
 @router.post("/puntos/{point_id}/generar", status_code=201)
 def generate_point_qr(
     point_id: int,
     db: Session = Depends(get_db),
     _system_key: str = Depends(require_api_key),
 ):
+    _lock_point_qr(db, point_id)
     point = db.query(PuntoMapa).filter(PuntoMapa.id == point_id).first()
     if not point:
         return _problem(404, "POINT_NOT_FOUND", "Punto no encontrado.")
@@ -188,6 +198,7 @@ def revoke_point_qr(
     db: Session = Depends(get_db),
     _system_key: str = Depends(require_api_key),
 ):
+    _lock_point_qr(db, point_id)
     qr = _active_point_qr(db, point_id)
     if not qr:
         return _problem(404, "QR_NOT_FOUND", "El punto todavía no tiene un código QR activo.")
@@ -203,6 +214,7 @@ def regenerate_point_qr(
     db: Session = Depends(get_db),
     _system_key: str = Depends(require_api_key),
 ):
+    _lock_point_qr(db, point_id)
     previous = _active_point_qr(db, point_id)
     now = datetime.now(timezone.utc)
     if previous:

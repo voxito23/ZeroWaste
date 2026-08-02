@@ -9,7 +9,7 @@ from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "fast_api"))
-os.environ.setdefault("DATABASE_URL", "postgresql://test:test@127.0.0.1:5432/test")
+os.environ.setdefault("DATABASE_URL", "postgresql://127.0.0.1:5432/zerowaste_contract_test")
 
 from sqlalchemy.orm import declarative_base
 
@@ -104,6 +104,12 @@ class CollectionScheduleContractsTest(unittest.TestCase):
         self.assertIn('"WRONG_COLLECTION"', source)
         migration = (ROOT / "laravel_zerowaste" / "database" / "migrations" / "2026_07_31_000000_create_impact_and_rewards_tables.php").read_text(encoding="utf-8")
         self.assertIn("unique(['usuario_id', 'referencia_tipo', 'referencia_id', 'regla_id']", migration)
+
+    def test_collection_qr_generation_locks_the_request_row(self):
+        source = (ROOT / "fast_api" / "app" / "routers" / "recoleccion.py").read_text(encoding="utf-8")
+        start = source.index("def generar_qr_recoleccion")
+        end = source.index("def completar_recoleccion_qr")
+        self.assertIn("with_for_update().first()", source[start:end])
 
 
 if __name__ == "__main__":

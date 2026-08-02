@@ -6,6 +6,8 @@ Monitoreo con Prometheus + Firewall WAF integrado.
 
 import logging
 import os
+import urllib.error
+import urllib.request
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -191,6 +193,76 @@ def readiness():
             status_code=503,
             content={"status": "not_ready", "service": "fastapi", "database": "unavailable"},
         )
+
+
+def _local_service_healthy(url: str) -> bool:
+    try:
+        with urllib.request.urlopen(url, timeout=2) as response:
+            return 200 <= response.status < 400
+    except Exception as exc:  # Network errors are deliberately collapsed.
+        logger.warning("Local health dependency unavailable: %s", type(exc).__name__)
+        return False
+
+
+def _node_identity() -> dict[str, str]:
+    return {
+        "instance": os.getenv("INSTANCE_NAME", "unconfigured"),
+        "role": os.getenv("NODE_ROLE", "unconfigured"),
+    }
+
+
+@app.get("/load-balancer-health", tags=["Salud"], include_in_schema=False)
+def load_balancer_health():
+    """Local-only aggregate liveness used by Cloudflare; no shared dependencies."""
+    local_checks = (
+        _local_service_healthy("http://laravel/up"),
+        _local_service_healthy("http://cliente:5000/health"),
+    )
+    if all(local_checks):
+        return {"status": "ok", **_node_identity()}
+    return JSONResponse(status_code=503, content={"status": "unhealthy", **_node_identity()})
+
+
+@app.get("/load-balancer-ready", tags=["Salud"], include_in_schema=False)
+def load_balancer_ready():
+    """Read-only shared-dependency readiness; never creates schema or writes data."""
+    dependencies = {"database": False, "redis": False, "storage": False}
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+        dependencies["database"] = True
+    except SQLAlchemyError as exc:
+        logger.warning("Database dependency unavailable: %s", type(exc).__name__)
+
+    try:
+        import redis
+        client = redis.Redis.from_url(REDIS_URL, socket_connect_timeout=2, socket_timeout=2)
+        dependencies["redis"] = bool(client.ping())
+    except Exception as exc:
+        logger.warning("Redis dependency unavailable: %s", type(exc).__name__)
+
+    media_disk = os.getenv("MEDIA_DISK", "local").lower()
+    if media_disk == "local":
+        dependencies["storage"] = os.path.isdir(os.getenv("MEDIA_ROOT", "/data/media"))
+    elif media_disk == "s3":
+        configured = all(
+            os.getenv(name)
+            for name in ("MEDIA_S3_ENDPOINT", "MEDIA_S3_REGION", "MEDIA_S3_BUCKET", "MEDIA_S3_ACCESS_KEY", "MEDIA_S3_SECRET_KEY")
+        )
+        if configured:
+            endpoint = os.environ["MEDIA_S3_ENDPOINT"].rstrip("/") + "/" + os.environ["MEDIA_S3_BUCKET"]
+            try:
+                with urllib.request.urlopen(urllib.request.Request(endpoint, method="HEAD"), timeout=3) as response:
+                    dependencies["storage"] = response.status < 500
+            except urllib.error.HTTPError as exc:
+                # 401/403 still proves the S3 endpoint is reachable; no object is read.
+                dependencies["storage"] = exc.code < 500
+            except Exception as exc:
+                logger.warning("Media storage dependency unavailable: %s", type(exc).__name__)
+
+    ready = all(dependencies.values())
+    payload = {"status": "ready" if ready else "not_ready", **_node_identity(), "dependencies": {k: "ok" if v else "unavailable" for k, v in dependencies.items()}}
+    return payload if ready else JSONResponse(status_code=503, content=payload)
 
 
 @app.get("/favicon.ico", include_in_schema=False)

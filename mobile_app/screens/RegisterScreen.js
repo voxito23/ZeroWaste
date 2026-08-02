@@ -113,8 +113,7 @@ export default function RegisterScreen({ navigation }) {
             sent = false;
           }
         }
-        Alert.alert('Registro exitoso', sent ? 'Tu cuenta fue creada. Revisa tu correo para verificarla antes de iniciar sesión.' : 'Tu cuenta fue creada, pero el proveedor de correo todavía no está configurado. Solicita un nuevo correo cuando esté disponible.');
-        navigation.navigate('Login');
+        navigation.navigate('VerifyEmail', { email: email.trim().toLowerCase(), sent });
       } else {
         Alert.alert('Error', response.data.error || 'Error en el registro');
       }

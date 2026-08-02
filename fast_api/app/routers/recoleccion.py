@@ -99,7 +99,7 @@ def calificar_recolector(
 
 @router.post("/{solicitud_id}/qr", summary="Generar QR temporal de una recolección")
 def generar_qr_recoleccion(solicitud_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
-    solicitud = db.query(SolicitudRecoleccion).filter_by(id=solicitud_id).first()
+    solicitud = db.query(SolicitudRecoleccion).filter_by(id=solicitud_id).with_for_update().first()
     if not solicitud or (solicitud.usuario_id != current_user.id and not current_user.is_admin):
         raise HTTPException(status_code=404, detail="Solicitud no encontrada.")
     if solicitud.estado == "completada":

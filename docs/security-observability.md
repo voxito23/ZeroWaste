@@ -5,7 +5,7 @@
 Only Caddy publishes host ports: TCP 80 and TCP 443. The request paths are:
 
 - `/api/*` and protected FastAPI documentation: Caddy → Nginx → FastAPI.
-- `/zw-interno*`: Caddy → Nginx → `laravel1` / `laravel2`.
+- `/zw-interno*`: Caddy → Nginx → the node-local `laravel` service.
 - `/grafana/*`: Caddy → Grafana.
 - `/media/*`: Caddy → `media_static`.
 - All remaining paths: Caddy → Flask (`cliente`).

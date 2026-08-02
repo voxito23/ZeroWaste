@@ -11,12 +11,7 @@ services:
     volumes:
       - ./fast_api:/app
 
-  laravel1:
-    volumes:
-      - ./laravel_zerowaste:/var/www/html
-      - laravel_vendor_dev:/var/www/html/vendor
-
-  laravel2:
+  laravel:
     volumes:
       - ./laravel_zerowaste:/var/www/html
       - laravel_vendor_dev:/var/www/html/vendor

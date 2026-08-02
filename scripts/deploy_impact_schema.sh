@@ -41,10 +41,10 @@ source "$SCRIPT_ROOT/funciones_docker.sh"
 detectar_compose
 ejecutar_compose config >/dev/null
 
-laravel_container="$(ejecutar_compose ps -q laravel1)"
-[[ -n "$laravel_container" ]] || fail "el contenedor laravel1 no está ejecutándose"
+laravel_container="$(ejecutar_compose ps -q laravel)"
+[[ -n "$laravel_container" ]] || fail "el contenedor laravel no está ejecutándose"
 [[ "$(docker inspect -f '{{.State.Running}}' "$laravel_container")" == "true" ]] \
-  || fail "el contenedor laravel1 no está ejecutándose"
+  || fail "el contenedor laravel no está ejecutándose"
 
 install -d -m 0700 "$BACKUP_ROOT"
 [[ "$(df -Pk "$BACKUP_ROOT" | awk 'NR==2 {print $4}')" -ge 1048576 ]] \
@@ -88,7 +88,7 @@ chmod 0600 \
 
 printf 'Respaldo: %s\n' "${BACKUP_ROOT}/${BACKUP_FILE}"
 printf 'Aplicando únicamente %s...\n' "$MIGRATION"
-ejecutar_compose exec -T laravel1 \
+ejecutar_compose exec -T laravel \
   php artisan migrate \
   --path="$MIGRATION_PATH" \
   --force \

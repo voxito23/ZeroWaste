@@ -3,7 +3,6 @@ name: zerowaste-local-staging
 services:
   postgres_staging:
     image: postgres:17-alpine
-    container_name: zerowaste_staging_postgres
     restart: "no"
     environment:
       POSTGRES_DB: zerowaste_staging

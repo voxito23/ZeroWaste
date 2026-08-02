@@ -41,7 +41,7 @@ conservar la salida y los respaldos y no repetir comandos de
 esquema manualmente. Revisar primero:
 
 ```sh
-docker-compose logs --tail=200 laravel1 fast_api nginx_api
+docker compose logs --tail=200 laravel fast_api nginx_api
 ```
 
 ## Validación previa local o en staging
@@ -83,12 +83,9 @@ Para failover Laravel, iniciar sesión normalmente, identificar la réplica en
 logs sin registrar cookies, detener una sola réplica y continuar la navegación:
 
 ```sh
-docker compose stop laravel1
-docker compose ps laravel1 laravel2 nginx_api
-docker compose up -d --no-deps laravel1
-docker compose stop laravel2
-docker compose ps laravel1 laravel2 nginx_api
-docker compose up -d --no-deps laravel2
+docker compose stop laravel
+docker compose ps laravel nginx_api
+docker compose up -d --no-deps laravel
 ```
 
 Validar que sesión y CSRF sobreviven; no copiar ni imprimir las cookies.

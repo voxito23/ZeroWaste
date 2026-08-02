@@ -1,6 +1,8 @@
 """Authentication email owner. Sends only through Resend's HTTPS API."""
 
 import html
+import hashlib
+import hmac
 import json
 import os
 import secrets
@@ -13,7 +15,7 @@ from sqlalchemy.orm import Session
 from app.models.domain_models import EmailVerificationToken, Usuario
 from app.services.auth_crypto import digest
 
-VERIFY_TTL_HOURS = 2
+VERIFY_TTL_MINUTES = 10
 
 
 class EmailDeliveryError(RuntimeError):
@@ -21,14 +23,26 @@ class EmailDeliveryError(RuntimeError):
 
 
 def provider_configured() -> bool:
-    return bool(os.getenv("RESEND_API_KEY", "").strip() and os.getenv("MAIL_FROM_ADDRESS", "").strip())
+    return bool(
+        os.getenv("RESEND_API_KEY", "").strip()
+        and os.getenv("MAIL_FROM_ADDRESS", "").strip()
+        and os.getenv("EMAIL_OTP_SECRET", "").strip()
+    )
 
 
-def _template(user: Usuario, verification_url: str) -> str:
+def verification_otp(token_hash: str) -> str:
+    secret = os.getenv("EMAIL_OTP_SECRET", "").strip()
+    if not secret:
+        raise EmailDeliveryError("El proveedor de correo no está configurado.")
+    digest_bytes = hmac.new(secret.encode("utf-8"), f"email-verification:{token_hash}".encode("utf-8"), hashlib.sha256).digest()
+    return f"{int.from_bytes(digest_bytes[:8], 'big') % 1_000_000:06d}"
+
+
+def _template(user: Usuario, verification_url: str, otp: str) -> str:
     name = html.escape(str(user.nombre or "Usuario"))
     url = html.escape(verification_url, quote=True)
     support = html.escape(os.getenv("SUPPORT_EMAIL", "soporte@zerowaste-qro.com"))
-    return f"""<!doctype html><html lang="es"><body style="margin:0;background:#f1f5f4;font-family:Arial,sans-serif;color:#16352b"><table role="presentation" width="100%"><tr><td align="center" style="padding:32px 16px"><table role="presentation" width="100%" style="max-width:560px;background:#fff;border-radius:20px"><tr><td style="padding:36px"><p style="font-weight:800;color:#047857">ZeroWaste</p><h1 style="font-size:26px">Verifica tu correo</h1><p>Hola, {name}.</p><p>Confirma tu dirección para proteger tu cuenta y continuar en ZeroWaste.</p><p style="margin:30px 0"><a href="{url}" style="background:#047857;color:#fff;text-decoration:none;padding:14px 22px;border-radius:12px;font-weight:700">Verificar correo</a></p><p>Este enlace vence en {VERIFY_TTL_HOURS} horas y solo funciona una vez.</p><p style="font-size:13px;color:#64748b">Si no creaste esta cuenta, ignora el mensaje. Enlace alternativo:<br><a href="{url}">{url}</a></p><p style="font-size:13px;color:#64748b">Soporte: {support}</p></td></tr></table></td></tr></table></body></html>"""
+    return f"""<!doctype html><html lang="es"><body style="margin:0;background:#f3f4f6;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#1f2937"><table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr><td align="center" style="padding:24px 12px"><table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:560px;background:#fff;border-radius:18px;overflow:hidden"><tr><td align="center" style="background:#064e3b;padding:34px 24px 28px"><img src="https://www.zerowaste-qro.com/static/img/logo_texture.png" width="64" height="64" alt="ZeroWaste" style="display:block;border-radius:14px;margin:0 auto 16px"><h1 style="color:#fff;margin:0 0 10px;font-size:26px;letter-spacing:2px">ZEROWASTE</h1><div style="width:52px;height:3px;background:#00e096;border-radius:2px;margin:0 auto 14px"></div><p style="color:#a7f3d0;margin:0;font-size:12px;letter-spacing:1.5px;text-transform:uppercase">Verificación de correo</p></td></tr><tr><td style="padding:32px 24px 26px"><p style="font-size:16px;margin:0 0 8px">Hola <strong style="color:#064e3b">{name}</strong>,</p><p style="color:#6b7280;font-size:14px;line-height:1.7;margin:0 0 24px">Usa este código en la aplicación ZeroWaste para confirmar tu correo y activar tu cuenta.</p><table role="presentation" width="100%" style="margin:0 0 24px"><tr><td align="center" style="background:#f0fdf4;border:1px solid #d1fae5;border-radius:12px;padding:24px 16px"><p style="color:#6b7280;font-size:11px;margin:0 0 12px;text-transform:uppercase;letter-spacing:2px;font-weight:700">Tu código de verificación</p><span style="display:inline-block;background:#fff;border:2px solid #10b981;border-radius:10px;padding:14px 22px;color:#064e3b;font-family:'Courier New',monospace;font-size:32px;font-weight:900;letter-spacing:8px">{otp}</span></td></tr></table><table role="presentation" width="100%" style="margin:0 0 24px"><tr><td style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:14px 16px"><p style="color:#92400e;font-size:13px;font-weight:700;margin:0 0 3px">Este código vence en {VERIFY_TTL_MINUTES} minutos.</p><p style="color:#a16207;font-size:12px;margin:0">No lo compartas. ZeroWaste nunca te lo solicitará por llamada o mensaje.</p></td></tr></table><p style="font-size:14px;font-weight:700;margin:0 0 12px">También puedes verificar desde este dispositivo:</p><p style="margin:0 0 24px"><a href="{url}" style="display:inline-block;background:#047857;color:#fff;text-decoration:none;padding:13px 20px;border-radius:10px;font-weight:700">Verificar correo</a></p><p style="color:#9ca3af;font-size:11px;line-height:1.6;margin:0">Si no creaste esta cuenta, ignora este correo. Enlace alternativo:<br><a href="{url}" style="color:#047857;word-break:break-all">{url}</a><br><br>Soporte: {support}</p></td></tr><tr><td align="center" style="background:#022c22;padding:20px 24px"><p style="color:#6ee7b7;font-size:12px;font-weight:700;margin:0">ZeroWaste</p><p style="color:#6ee7b7;font-size:11px;margin:8px 0 0">Clasificar y reciclar para un futuro más verde · © 2026</p></td></tr></table></td></tr></table></body></html>"""
 
 
 def _send_resend(to_email: str, subject: str, html_body: str) -> str:
@@ -63,12 +77,13 @@ def send_verification(db: Session, user: Usuario) -> dict:
         EmailVerificationToken.revoked_at.is_(None),
     ).update({"revoked_at": now}, synchronize_session=False)
     token = "ev1_" + secrets.token_urlsafe(32)
-    record = EmailVerificationToken(usuario_id=user.id, token_hash=digest(token), expires_at=now + timedelta(hours=VERIFY_TTL_HOURS), created_at=now)
+    record = EmailVerificationToken(usuario_id=user.id, token_hash=digest(token), expires_at=now + timedelta(minutes=VERIFY_TTL_MINUTES), created_at=now)
     db.add(record)
     db.flush()
+    otp = verification_otp(record.token_hash)
     verification_url = f"https://www.zerowaste-qro.com/api/auth/email/verificar?token={token}"
     try:
-        message_id = _send_resend(user.email, "Verifica tu correo en ZeroWaste", _template(user, verification_url))
+        message_id = _send_resend(user.email, "Verifica tu correo en ZeroWaste", _template(user, verification_url, otp))
     except EmailDeliveryError:
         db.rollback()
         raise

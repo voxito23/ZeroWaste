@@ -1,0 +1,36 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {"type":"row","title":"FILA 1 — DISPONIBILIDAD","gridPos":{"h":1,"w":24,"x":0,"y":0},"id":1},
+    {"type":"stat","title":"Estado público de www","targets":[{"expr":"min(probe_success{job=\"blackbox-public\"})","legendFormat":"public"}],"gridPos":{"h":5,"w":6,"x":0,"y":1},"id":2},
+    {"type":"stat","title":"Health y readiness por nodo","targets":[{"expr":"probe_success{job=\"blackbox-origins\"}","legendFormat":"{{instance_name}} {{probe}}"}],"gridPos":{"h":5,"w":12,"x":6,"y":1},"id":3},
+    {"type":"stat","title":"Nodos disponibles / failover probable","targets":[{"expr":"sum(probe_success{job=\"blackbox-origins\",probe=\"health\"})","legendFormat":"available"},{"expr":"(probe_success{job=\"blackbox-origins\",node_role=\"primary\",probe=\"health\"} == 0) and probe_success{job=\"blackbox-origins\",node_role=\"secondary\",probe=\"health\"}","legendFormat":"failover"}],"gridPos":{"h":5,"w":6,"x":18,"y":1},"id":4},
+    {"type":"row","title":"FILA 2 — INFRAESTRUCTURA","gridPos":{"h":1,"w":24,"x":0,"y":6},"id":10},
+    {"type":"timeseries","title":"CPU, RAM y load por nodo","targets":[{"expr":"100-(avg by(instance_name)(rate(node_cpu_seconds_total{mode=\"idle\",instance_name=~\"$instance_name\"}[5m]))*100)","legendFormat":"CPU {{instance_name}}"},{"expr":"100*(1-node_memory_MemAvailable_bytes/node_memory_MemTotal_bytes)","legendFormat":"RAM {{instance_name}}"},{"expr":"node_load1","legendFormat":"load {{instance_name}}"}],"gridPos":{"h":7,"w":12,"x":0,"y":7},"id":11},
+    {"type":"timeseries","title":"Disco, red, reinicios y uptime","targets":[{"expr":"100*(1-node_filesystem_avail_bytes{mountpoint=\"/\"}/node_filesystem_size_bytes{mountpoint=\"/\"})","legendFormat":"disk {{instance_name}}"},{"expr":"rate(node_network_receive_bytes_total[5m])","legendFormat":"network {{instance_name}}"},{"expr":"changes(container_start_time_seconds{name!=\"\"}[10m])","legendFormat":"restarts {{name}}"},{"expr":"time()-node_boot_time_seconds","legendFormat":"uptime {{instance_name}}"}],"gridPos":{"h":7,"w":12,"x":12,"y":7},"id":12},
+    {"type":"row","title":"FILA 3 — APLICACIONES","gridPos":{"h":1,"w":24,"x":0,"y":14},"id":20},
+    {"type":"stat","title":"Laravel, FastAPI, Flask, Caddy, Nginx, Redis, Supabase y Storage","targets":[{"expr":"up{service=~\"laravel|fastapi|flask|caddy|nginx|redis\"}","legendFormat":"{{service}} {{instance_name}}"},{"expr":"probe_success{job=\"blackbox-origins\",probe=\"ready\"}","legendFormat":"shared readiness {{instance_name}}"}],"gridPos":{"h":6,"w":24,"x":0,"y":15},"id":21},
+    {"type":"row","title":"FILA 4 — TRÁFICO","gridPos":{"h":1,"w":24,"x":0,"y":21},"id":30},
+    {"type":"timeseries","title":"Peticiones, códigos, latencias y activas por nodo","targets":[{"expr":"sum by(instance_name,status)(rate(http_requests_total[5m]))","legendFormat":"{{instance_name}} {{status}}"},{"expr":"histogram_quantile(0.95,sum by(le,instance_name)(rate(http_request_duration_seconds_bucket[5m])))","legendFormat":"p95 {{instance_name}}"},{"expr":"sum by(instance_name)(http_requests_inprogress)","legendFormat":"active {{instance_name}}"}],"gridPos":{"h":7,"w":24,"x":0,"y":22},"id":31},
+    {"type":"row","title":"FILA 5 — SEGURIDAD","gridPos":{"h":1,"w":24,"x":0,"y":29},"id":40},
+    {"type":"timeseries","title":"Login, OAuth, QR, rate limit, correo y CSRF","targets":[{"expr":"sum by(__name__,instance_name)(rate({__name__=~\"zerowaste_(login_failures|login_lockouts|oauth_errors|qr_invalid|rate_limits|email_failures|csrf_errors)_total\"}[5m]))","legendFormat":"{{__name__}} {{instance_name}}"}],"gridPos":{"h":6,"w":24,"x":0,"y":30},"id":41},
+    {"type":"row","title":"FILA 6 — NEGOCIO","gridPos":{"h":1,"w":24,"x":0,"y":36},"id":50},
+    {"type":"timeseries","title":"Recolecciones, QR, puntos, canjes, comunidad y usuarios","targets":[{"expr":"sum by(__name__)(increase({__name__=~\"zerowaste_(collections|qr_completed|points_awarded|redemptions|posts|comments|active_users)_total\"}[1h]))","legendFormat":"{{__name__}}"}],"gridPos":{"h":7,"w":24,"x":0,"y":37},"id":51}
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["zerowaste", "failover", "two-droplets"],
+  "templating": {"list": [
+    {"name":"instance_name","type":"query","datasource":{"type":"prometheus","uid":"prometheus"},"query":{"query":"label_values(instance_name)","refId":"var-instance"},"includeAll":true,"multi":true},
+    {"name":"node_role","type":"query","datasource":{"type":"prometheus","uid":"prometheus"},"query":{"query":"label_values(node_role)","refId":"var-role"},"includeAll":true,"multi":true},
+    {"name":"service","type":"query","datasource":{"type":"prometheus","uid":"prometheus"},"query":{"query":"label_values(service)","refId":"var-service"},"includeAll":true,"multi":true},
+    {"name":"environment","type":"query","datasource":{"type":"prometheus","uid":"prometheus"},"query":{"query":"label_values(environment)","refId":"var-env"},"includeAll":true,"multi":true}
+  ]},
+  "time": {"from":"now-6h","to":"now"},
+  "timezone": "browser",
+  "title": "ZeroWaste — Two Droplet Failover",
+  "uid": "zerowaste-two-droplets",
+  "version": 1
+}

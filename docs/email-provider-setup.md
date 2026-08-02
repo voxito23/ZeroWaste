@@ -8,6 +8,7 @@ Variables de servidor pendientes:
 - `MAIL_FROM_ADDRESS=noreply@zerowaste-qro.com`
 - `MAIL_FROM_NAME=ZeroWaste`
 - `SUPPORT_EMAIL=soporte@zerowaste-qro.com`
+- `EMAIL_OTP_SECRET` (secreto aleatorio de servidor usado para derivar códigos OTP; nunca se comparte con el móvil)
 
 En Resend se debe agregar y verificar `zerowaste-qro.com`. Después, copia exactamente desde el panel del proveedor los registros SPF y DKIM que genere para la cuenta. Configura DMARC según la política elegida por el propietario del dominio y confirma el Return-Path mostrado por Resend. No se incluyen valores DNS de ejemplo porque serían incorrectos para una cuenta real.
 

@@ -1,0 +1,12 @@
+- targets: ["10.77.0.2:9100"]
+  labels: {cluster: zerowaste, instance_name: zerowaste-app-02, node_role: secondary, service: node}
+- targets: ["10.77.0.2:8080"]
+  labels: {cluster: zerowaste, instance_name: zerowaste-app-02, node_role: secondary, service: cadvisor}
+- targets: ["10.77.0.2:9113"]
+  labels: {cluster: zerowaste, instance_name: zerowaste-app-02, node_role: secondary, service: nginx}
+- targets: ["10.77.0.2:2019"]
+  labels: {cluster: zerowaste, instance_name: zerowaste-app-02, node_role: secondary, service: caddy}
+- targets: ["10.77.0.2:6000"]
+  labels: {cluster: zerowaste, instance_name: zerowaste-app-02, node_role: secondary, service: fastapi}
+- targets: ["10.77.0.2:5000"]
+  labels: {cluster: zerowaste, instance_name: zerowaste-app-02, node_role: secondary, service: flask}

@@ -133,6 +133,7 @@ celerybeat.pid
 *.env
 .env.*
 !.env.example
+!.env.node.example
 flask_zerowaste/.env
 fast_api/.env
 laravel_zerowaste/.env
@@ -202,7 +203,6 @@ node_modules/
 # Scratch / temp files
 scratch/
 CLAUDE.md
-AGENTS.md
 .claude/
 
 # Local PostgreSQL staging runtime (credentials and schema-only dumps)
@@ -214,3 +214,16 @@ AGENTS.md
 /kit_botes_separacion.png
 /kit_cubiertos_reutilizables.png
 /compostera_domestica.png
+/mobile_app/AGENTS.md
+
+# Per-node production configuration and private infrastructure material
+.env.node
+.env.production
+.env.primary
+.env.secondary
+.env.cloudflare
+*.pem
+*.key
+wg0.conf
+prometheus/targets/nodes.yml
+prometheus/targets/origins.yml

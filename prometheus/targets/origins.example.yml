@@ -1,0 +1,8 @@
+- targets: ["http://10.77.0.1/load-balancer-health"]
+  labels: {cluster: zerowaste, instance_name: zerowaste-app-01, node_role: primary, probe: health}
+- targets: ["http://10.77.0.1/load-balancer-ready"]
+  labels: {cluster: zerowaste, instance_name: zerowaste-app-01, node_role: primary, probe: ready}
+- targets: ["http://10.77.0.2/load-balancer-health"]
+  labels: {cluster: zerowaste, instance_name: zerowaste-app-02, node_role: secondary, probe: health}
+- targets: ["http://10.77.0.2/load-balancer-ready"]
+  labels: {cluster: zerowaste, instance_name: zerowaste-app-02, node_role: secondary, probe: ready}

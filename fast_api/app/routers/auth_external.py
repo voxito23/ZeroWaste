@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
 from urllib.request import Request as UrlRequest, urlopen
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
@@ -17,9 +17,10 @@ from sqlalchemy.orm import Session
 from app.data.database import get_db
 from app.models.domain_models import EmailVerificationToken, OauthAccount, OauthLoginState, Usuario
 from app.security.jwt_auth import create_access_token, hash_password, verify_password
+from app.security.login_throttle import get_client_ip, get_login_throttle
 from app.services.auth_crypto import decrypt, digest, encrypt
 from app.services.media import build_public_avatar_url
-from app.services.transactional_email import EmailDeliveryError, send_verification
+from app.services.transactional_email import EmailDeliveryError, send_verification, verification_otp
 
 router = APIRouter(prefix="/auth", tags=["Autenticación externa"])
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
@@ -37,6 +38,11 @@ class LinkGoogleRequest(HandoffRequest):
 
 class ResendVerificationRequest(BaseModel):
     email: EmailStr
+
+
+class VerifyEmailOtpRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(pattern=r"^\d{6}$")
 
 
 def _google_config() -> tuple[str, str, str]:
@@ -165,13 +171,20 @@ def google_complete(payload: HandoffRequest, db: Session = Depends(get_db)):
 
 
 @router.post("/google/link")
-def google_link(payload: LinkGoogleRequest, db: Session = Depends(get_db)):
+def google_link(payload: LinkGoogleRequest, request: Request, db: Session = Depends(get_db)):
     row = _handoff(db, payload.code)
     if row.status != "link_required" or not row.usuario_id or not row.claims_ciphertext:
         raise HTTPException(status_code=409, detail="Esta cuenta no requiere enlace.")
     user = db.query(Usuario).filter_by(id=row.usuario_id).with_for_update().first()
-    if not user or not verify_password(payload.password, str(user.password)):
+    if not user:
         raise HTTPException(status_code=401, detail="La contraseña de ZeroWaste no es correcta.")
+    throttle = get_login_throttle()
+    client_ip = get_client_ip(request)
+    throttle.assert_allowed(user.email, client_ip)
+    if not verify_password(payload.password, str(user.password)):
+        throttle.record_failure(user.email, client_ip)
+        raise HTTPException(status_code=401, detail="La contraseña de ZeroWaste no es correcta.")
+    throttle.clear(user.email, client_ip)
     claims = json.loads(decrypt(row.claims_ciphertext))
     if str(user.email).lower() != str(claims["email"]).lower():
         raise HTTPException(status_code=409, detail="El correo de Google no corresponde a esta cuenta.")
@@ -204,6 +217,47 @@ def verify_email(token: str = Query(min_length=32, max_length=200), db: Session 
     record.used_at = now
     db.commit()
     return _verification_page("Correo verificado", "Tu correo quedó verificado correctamente.", True)
+
+
+@router.post("/email/verificar-otp")
+def verify_email_otp(payload: VerifyEmailOtpRequest, request: Request, db: Session = Depends(get_db)):
+    email = str(payload.email).strip().lower()
+    throttle = get_login_throttle()
+    client_ip = get_client_ip(request)
+    throttle_id = f"email-otp:{email}"
+    throttle_ip = f"email-otp:{client_ip}"
+    throttle.assert_allowed(throttle_id, throttle_ip)
+    user = db.query(Usuario).filter(Usuario.email == email).first()
+    if not user:
+        throttle.record_failure(throttle_id, throttle_ip)
+        raise HTTPException(status_code=422, detail="El código de verificación no es válido.")
+    records = (
+        db.query(EmailVerificationToken)
+        .filter(EmailVerificationToken.usuario_id == user.id)
+        .order_by(EmailVerificationToken.created_at.desc())
+        .with_for_update()
+        .all()
+    )
+    try:
+        matched = next((record for record in records if secrets.compare_digest(verification_otp(record.token_hash), payload.code)), None)
+    except EmailDeliveryError as error:
+        raise HTTPException(status_code=503, detail="La verificación por código todavía no está configurada.") from error
+    if not matched:
+        throttle.record_failure(throttle_id, throttle_ip)
+        raise HTTPException(status_code=422, detail="El código de verificación no es válido.")
+    now = datetime.now(timezone.utc)
+    if matched.used_at is not None or matched.revoked_at is not None:
+        raise HTTPException(status_code=409, detail="Este código ya fue utilizado o reemplazado.")
+    if _utc(matched.expires_at) <= now:
+        raise HTTPException(status_code=410, detail="Este código de verificación venció.")
+    user.email_verified_at = now
+    matched.used_at = now
+    for record in records:
+        if record.id != matched.id and record.used_at is None and record.revoked_at is None:
+            record.revoked_at = now
+    throttle.clear(throttle_id, throttle_ip)
+    db.commit()
+    return {"success": True, "message": "Tu correo fue verificado correctamente."}
 
 
 @router.post("/email/reenviar")
