@@ -32,7 +32,7 @@ class PostController extends Controller
             $lockedPost = DB::table('posts')->where('id', $post->id)->lockForUpdate()->firstOrFail();
             if ($lockedPost->aprobado) return;
             DB::table('posts')->where('id', $post->id)->update(['aprobado'=>true, 'aprobado_por'=>$request->user()->id, 'aprobado_at'=>now()]);
-            $rule = DB::table('reglas_puntos')->where('codigo', 'POST_APROBADO')->where('activa', true)->first();
+            $rule = DB::table('reglas_puntos')->where('codigo', 'POST_APROBADO')->whereRaw('activa = TRUE')->first();
             if (!$rule || DB::table('movimientos_puntos')->where(['usuario_id'=>$lockedPost->autor_id, 'referencia_tipo'=>'POST_FORO', 'referencia_id'=>(string)$lockedPost->id, 'regla_id'=>$rule->id])->exists()) return;
             $balance = DB::table('saldos_puntos')->where('usuario_id', $lockedPost->autor_id)->lockForUpdate()->first();
             if (!$balance) { DB::table('saldos_puntos')->insert(['usuario_id'=>$lockedPost->autor_id,'puntos_disponibles'=>0,'impacto_historico'=>0,'updated_at'=>now()]); $balance = DB::table('saldos_puntos')->where('usuario_id', $lockedPost->autor_id)->lockForUpdate()->first(); }

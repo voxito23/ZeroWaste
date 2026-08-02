@@ -205,6 +205,9 @@ CLAUDE.md
 AGENTS.md
 .claude/
 
+# Local PostgreSQL staging runtime (credentials and schema-only dumps)
+/.local-staging/
+
 # Original reward image drop-zone files (tracked copies live in app public/assets folders)
 /termo_reutilizable.png
 /bolsa_reutilizable.png

@@ -1,0 +1,44 @@
+name: zerowaste-local-staging
+
+services:
+  postgres_staging:
+    image: postgres:17-alpine
+    container_name: zerowaste_staging_postgres
+    restart: "no"
+    environment:
+      POSTGRES_DB: zerowaste_staging
+      POSTGRES_USER: zerowaste_staging
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets:
+      - postgres_password
+    ports:
+      - "127.0.0.1:${STAGING_DB_PORT:-55432}:5432"
+    volumes:
+      - staging_postgres_data:/var/lib/postgresql/data
+      - ./.local-staging:/staging:ro
+    networks:
+      - staging_database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zerowaste_staging -d zerowaste_staging"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1.0
+
+secrets:
+  postgres_password:
+    file: ./.local-staging/postgres_password.txt
+
+volumes:
+  staging_postgres_data:
+    name: zerowaste_staging_postgres_data
+
+networks:
+  staging_database:
+    name: zerowaste_staging_database
+    internal: true

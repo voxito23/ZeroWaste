@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Location;
 use App\Support\Media;
 use App\Services\AuditLogger;
+use Illuminate\Support\Facades\DB;
 
 class MapController extends Controller
 {
@@ -13,14 +14,14 @@ class MapController extends Controller
     {
         $query = Location::withTrashed();
         if ($request->filled('q')) $query->where(fn ($q) => $q->where('nombre', 'ilike', '%'.$request->q.'%')->orWhere('direccion', 'ilike', '%'.$request->q.'%'));
-        if ($request->estado === 'activo') $query->where('activo', true)->whereNull('deleted_at');
-        if ($request->estado === 'inactivo') $query->where(fn ($q) => $q->where('activo', false)->orWhereNotNull('deleted_at'));
+        if ($request->estado === 'activo') $query->whereRaw('activo = TRUE')->whereNull('deleted_at');
+        if ($request->estado === 'inactivo') $query->where(fn ($q) => $q->whereRaw('activo = FALSE')->orWhereNotNull('deleted_at'));
         if ($request->filled('material')) $query->where('materiales', 'ilike', '%'.$request->material.'%');
-        if ($request->qr === 'con') $query->whereExists(fn ($q) => $q->selectRaw('1')->from('point_qr_codes')->whereColumn('point_qr_codes.location_id', 'locations.id')->where('active', true));
-        if ($request->qr === 'sin') $query->whereNotExists(fn ($q) => $q->selectRaw('1')->from('point_qr_codes')->whereColumn('point_qr_codes.location_id', 'locations.id')->where('active', true));
+        if ($request->qr === 'con') $query->whereExists(fn ($q) => $q->selectRaw('1')->from('point_qr_codes')->whereColumn('point_qr_codes.location_id', 'locations.id')->whereRaw('point_qr_codes.active = TRUE'));
+        if ($request->qr === 'sin') $query->whereNotExists(fn ($q) => $q->selectRaw('1')->from('point_qr_codes')->whereColumn('point_qr_codes.location_id', 'locations.id')->whereRaw('point_qr_codes.active = TRUE'));
         $sort = in_array($request->sort, ['nombre', 'created_at'], true) ? $request->sort : 'created_at';
         $locations = $query->orderBy($sort, $sort === 'created_at' ? 'desc' : 'asc')->paginate(12)->withQueryString();
-        $mapLocations = Location::query()->where('activo', true)->get();
+        $mapLocations = Location::query()->whereRaw('activo = TRUE')->get();
         $mapboxToken = trim((string) config('services.mapbox.public_token', ''), " \t\n\r\0\x0B\"'");
         return view('admin.mapa.index', compact('locations', 'mapLocations', 'mapboxToken'));
     }
@@ -58,7 +59,7 @@ class MapController extends Controller
         $request->validate($rules, $messages);
 
         $data = $request->only(['nombre', 'direccion', 'latitud', 'longitud', 'tipo', 'horario', 'responsable']);
-        $data['activo'] = $request->boolean('activo');
+        $data['activo'] = DB::raw($request->boolean('activo') ? 'TRUE' : 'FALSE');
         $data['materiales'] = $request->input('materiales', 'No especificado (Material General)');
 
         $newImage = null;
@@ -117,7 +118,7 @@ class MapController extends Controller
         $request->validate($rules, $messages);
 
         $data = $request->only(['nombre', 'direccion', 'latitud', 'longitud', 'tipo', 'horario', 'responsable']);
-        $data['activo'] = $request->boolean('activo');
+        $data['activo'] = DB::raw($request->boolean('activo') ? 'TRUE' : 'FALSE');
         $data['materiales'] = $request->input('materiales', 'No especificado (Material General)');
 
         $newImage = null;
@@ -145,7 +146,7 @@ class MapController extends Controller
 
     public function deactivate(Request $request, Location $location)
     {
-        $location->update(['activo' => false]);
+        $location->update(['activo' => DB::raw('FALSE')]);
         AuditLogger::record($request, 'point.deactivated', 'location', $location->id);
         return back()->with('success', 'El punto fue desactivado.');
     }
@@ -154,7 +155,7 @@ class MapController extends Controller
     {
         $location = Location::withTrashed()->findOrFail($id);
         if ($location->trashed()) $location->restore();
-        $location->update(['activo' => true]);
+        $location->update(['activo' => DB::raw('TRUE')]);
         AuditLogger::record($request, 'point.reactivated', 'location', $location->id);
         return back()->with('success', 'El punto fue reactivado.');
     }

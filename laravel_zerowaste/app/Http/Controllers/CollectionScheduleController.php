@@ -15,7 +15,7 @@ class CollectionScheduleController extends Controller
     public function index(): View
     {
         $schedules = DB::table('collection_schedules')->orderBy('weekday')->get()->keyBy('weekday');
-        $exceptions = DB::table('schedule_exceptions')->where('active', true)->orderBy('exception_date')->paginate(12);
+        $exceptions = DB::table('schedule_exceptions')->whereRaw('active = TRUE')->orderBy('exception_date')->paginate(12);
         return view('admin.recolecciones.horarios', ['schedules' => $schedules, 'exceptions' => $exceptions, 'days' => self::DAYS]);
     }
 
@@ -33,7 +33,7 @@ class CollectionScheduleController extends Controller
         DB::transaction(function () use ($validated) {
             foreach ($validated['days'] as $weekday => $day) {
                 DB::table('collection_schedules')->where('weekday', (int) $weekday)->update([
-                    'active' => (bool) ($day['active'] ?? false),
+                    'active' => DB::raw(($day['active'] ?? false) ? 'TRUE' : 'FALSE'),
                     'starts_at' => $day['starts_at'],
                     'ends_at' => $day['ends_at'],
                     'interval_minutes' => $day['interval_minutes'],
@@ -57,7 +57,7 @@ class CollectionScheduleController extends Controller
             'capacity_per_interval' => ['nullable', 'integer', 'min:1', 'max:500'],
             'reason' => ['required', 'string', 'max:255'],
         ]);
-        $data['active'] = true;
+        $data['active'] = DB::raw('TRUE');
         $data['created_by'] = auth()->id();
         $data['created_at'] = now();
         $data['updated_at'] = now();
@@ -71,7 +71,7 @@ class CollectionScheduleController extends Controller
 
     public function destroyException(Request $request, int $id): RedirectResponse
     {
-        DB::table('schedule_exceptions')->where('id', $id)->update(['active' => false, 'updated_at' => now()]);
+        DB::table('schedule_exceptions')->where('id', $id)->update(['active' => DB::raw('FALSE'), 'updated_at' => now()]);
         AuditLogger::record($request, 'schedule_exception.removed', 'schedule_exception', $id);
         return back()->with('success', 'La excepción fue retirada.');
     }
@@ -81,7 +81,7 @@ class CollectionScheduleController extends Controller
         DB::transaction(function () {
             foreach (range(1, 7) as $weekday) {
                 DB::table('collection_schedules')->where('weekday', $weekday)->update([
-                    'active' => in_array($weekday, [1, 3, 5], true),
+                    'active' => DB::raw(in_array($weekday, [1, 3, 5], true) ? 'TRUE' : 'FALSE'),
                     'starts_at' => '10:00', 'ends_at' => '14:00',
                     'interval_minutes' => 60, 'capacity_per_interval' => 10,
                     'updated_by' => auth()->id(), 'updated_at' => now(),

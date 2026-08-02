@@ -21,8 +21,8 @@ class ImpactAdminController extends Controller
     {
         $query = DB::table('recompensas')->whereNull('deleted_at');
         if ($request->filled('q')) $query->where(fn ($q) => $q->where('nombre', 'ilike', '%'.$request->q.'%')->orWhere('descripcion', 'ilike', '%'.$request->q.'%'));
-        if ($request->estado === 'activa') $query->where('activa', true);
-        if ($request->estado === 'inactiva') $query->where('activa', false);
+        if ($request->estado === 'activa') $query->whereRaw('activa = TRUE');
+        if ($request->estado === 'inactiva') $query->whereRaw('activa = FALSE');
         if ($request->stock === 'con') $query->where('stock', '>', 0);
         if ($request->stock === 'sin') $query->where('stock', 0);
         $sort = in_array($request->sort, ['nombre', 'costo_puntos', 'stock', 'orden'], true) ? $request->sort : 'orden';
@@ -34,7 +34,7 @@ class ImpactAdminController extends Controller
     {
         $data = $this->validateReward($request, true);
         if ($request->hasFile('imagen_archivo')) $data['imagen'] = Media::store($request->file('imagen_archivo'), 'recompensas');
-        $data['activa'] = $request->boolean('activa');
+        $data['activa'] = DB::raw($request->boolean('activa') ? 'TRUE' : 'FALSE');
         $data['created_at'] = now(); $data['updated_at'] = now();
         $id = DB::table('recompensas')->insertGetId($data);
         AuditLogger::record($request, 'reward.created', 'recompensa', $id, ['nombre' => $data['nombre']]);
@@ -46,7 +46,7 @@ class ImpactAdminController extends Controller
         $data = $this->validateReward($request);
         $old = DB::table('recompensas')->where('id', $id)->whereNull('deleted_at')->firstOrFail();
         if ($request->hasFile('imagen_archivo')) $data['imagen'] = Media::store($request->file('imagen_archivo'), 'recompensas');
-        $data['activa'] = $request->boolean('activa');
+        $data['activa'] = DB::raw($request->boolean('activa') ? 'TRUE' : 'FALSE');
         $data['updated_at'] = now();
         DB::table('recompensas')->where('id', $id)->update($data);
         AuditLogger::record($request, 'reward.updated', 'recompensa', $id, ['fields' => array_keys($data)]);
@@ -55,7 +55,7 @@ class ImpactAdminController extends Controller
 
     public function destroyReward(Request $request, int $id)
     {
-        DB::table('recompensas')->where('id', $id)->whereNull('deleted_at')->update(['activa' => false, 'deleted_at' => now(), 'updated_at' => now()]);
+        DB::table('recompensas')->where('id', $id)->whereNull('deleted_at')->update(['activa' => DB::raw('FALSE'), 'deleted_at' => now(), 'updated_at' => now()]);
         AuditLogger::record($request, 'reward.retired', 'recompensa', $id);
         return back()->with('success', 'La recompensa fue retirada.');
     }
@@ -111,8 +111,8 @@ class ImpactAdminController extends Controller
     {
         $query = DB::table('reglas_puntos');
         if ($request->filled('q')) $query->where(fn ($q) => $q->where('codigo', 'ilike', '%'.$request->q.'%')->orWhere('descripcion', 'ilike', '%'.$request->q.'%'));
-        if ($request->estado === 'activa') $query->where('activa', true);
-        if ($request->estado === 'inactiva') $query->where('activa', false);
+        if ($request->estado === 'activa') $query->whereRaw('activa = TRUE');
+        if ($request->estado === 'inactiva') $query->whereRaw('activa = FALSE');
         $rows = $query->orderBy('id')->paginate(20)->withQueryString();
         $history = DB::table('point_rule_history')->leftJoin('usuarios', 'usuarios.id', '=', 'point_rule_history.administrator_id')->select('point_rule_history.*', 'usuarios.nombre as administrator')->orderByDesc('point_rule_history.created_at')->limit(20)->get();
         return view('admin.impacto.reglas', compact('rows', 'history'));
@@ -121,7 +121,7 @@ class ImpactAdminController extends Controller
     public function storeRule(Request $request)
     {
         $data = $request->validate(['codigo'=>['required','string','max:60','regex:/^[A-Z0-9_]+$/','unique:reglas_puntos,codigo'], 'puntos'=>'required|integer|min:0|max:100000', 'limite_diario'=>'nullable|integer|min:1|max:1000', 'descripcion'=>'required|string|max:255', 'activa'=>'nullable|boolean']);
-        $data['activa'] = $request->boolean('activa'); $data['updated_by'] = $request->user()->id; $data['created_at'] = now(); $data['updated_at'] = now();
+        $data['activa'] = DB::raw($request->boolean('activa') ? 'TRUE' : 'FALSE'); $data['updated_by'] = $request->user()->id; $data['created_at'] = now(); $data['updated_at'] = now();
         $id = DB::table('reglas_puntos')->insertGetId($data);
         AuditLogger::record($request, 'point_rule.created', 'regla_puntos', $id, ['codigo' => $data['codigo']]);
         return back()->with('success', 'La regla fue creada correctamente.');
@@ -131,10 +131,12 @@ class ImpactAdminController extends Controller
     {
         $data = $request->validate(['puntos'=>'required|integer|min:0|max:100000', 'limite_diario'=>'nullable|integer|min:1|max:1000', 'descripcion'=>'required|string|max:255', 'activa'=>'nullable|boolean']);
         $before = DB::table('reglas_puntos')->where('id', $id)->firstOrFail();
-        $data['activa'] = $request->boolean('activa'); $data['updated_by'] = $request->user()->id; $data['updated_at'] = now();
-        DB::transaction(function () use ($data, $before, $id, $request) {
+        $active = $request->boolean('activa');
+        $data['activa'] = DB::raw($active ? 'TRUE' : 'FALSE'); $data['updated_by'] = $request->user()->id; $data['updated_at'] = now();
+        $historyData = array_merge($data, ['activa' => $active]);
+        DB::transaction(function () use ($data, $historyData, $before, $id, $request) {
             DB::table('reglas_puntos')->where('id', $id)->update($data);
-            DB::table('point_rule_history')->insert(['rule_id'=>$id, 'before_values'=>json_encode($before), 'after_values'=>json_encode($data), 'administrator_id'=>$request->user()->id, 'created_at'=>now()]);
+            DB::table('point_rule_history')->insert(['rule_id'=>$id, 'before_values'=>json_encode($before), 'after_values'=>json_encode($historyData), 'administrator_id'=>$request->user()->id, 'created_at'=>now()]);
         });
         AuditLogger::record($request, 'point_rule.updated', 'regla_puntos', $id, ['codigo' => $before->codigo]);
         return back()->with('success', 'Los cambios fueron guardados.');

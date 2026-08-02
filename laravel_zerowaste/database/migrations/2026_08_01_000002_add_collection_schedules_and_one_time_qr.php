@@ -51,7 +51,7 @@ return new class extends Migration {
         foreach (range(1, 7) as $weekday) {
             DB::table('collection_schedules')->insert([
                 'weekday' => $weekday,
-                'active' => in_array($weekday, [1, 3, 5], true),
+                'active' => DB::raw(in_array($weekday, [1, 3, 5], true) ? 'TRUE' : 'FALSE'),
                 'starts_at' => '10:00:00',
                 'ends_at' => '14:00:00',
                 'interval_minutes' => 60,
