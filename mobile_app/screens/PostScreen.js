@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Text,
@@ -20,6 +21,7 @@ import {
   MessageCircle,
   Recycle,
   Send,
+  ChevronDown,
 } from 'lucide-react-native';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
@@ -32,12 +34,9 @@ import UserAvatar from '../components/ui/UserAvatar';
 import { useAuth } from '../store/useAuth';
 import { formatRelativeDate } from '../utils/date';
 import { normalizeMediaUrl } from '../utils/media';
+import { htmlToPlainText } from '../utils/text';
+import { resolveAvatar, resolveDisplayName } from '../utils/user';
 
-
-const stripHtml = (value) => {
-  if (typeof value !== 'string') return '';
-  return value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-};
 
 const categoryStyle = (category) => {
   const fallback = { text: '#4B5563', border: '#E5E7EB', icon: <Folder size={12} color="#4B5563" /> };
@@ -70,6 +69,13 @@ export default function PostScreen() {
   const [replyText, setReplyText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [likePending, setLikePending] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+  React.useEffect(() => {
+    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
+    return () => { show.remove(); hide.remove(); };
+  }, []);
 
   const fetchPostDetail = useCallback(async () => {
     if (!postId) return;
@@ -151,6 +157,7 @@ export default function PostScreen() {
         return { ...current, comments_count: count, total_respuestas: count };
       });
       setReplyText('');
+      Keyboard.dismiss();
       requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
     } catch (error) {
       setComposerError(error.userMessage || 'No se pudo enviar la respuesta. Tu texto se conservó.');
@@ -176,7 +183,7 @@ export default function PostScreen() {
 
   const category = categoryStyle(post.categoria_nombre);
   const author = post.author || {};
-  const postAvatar = author.avatar_url ?? post.avatar_url ?? post.autor_foto;
+  const postAvatar = resolveAvatar(post);
   const postImage = normalizeMediaUrl(post.image_url ?? post.imagen, 'foro');
   const likesCount = post.likes_count ?? post.total_likes ?? 0;
   const commentsCount = post.comments_count ?? post.total_respuestas ?? comments.length;
@@ -201,7 +208,7 @@ export default function PostScreen() {
           <Text className="text-[12px] font-bold uppercase tracking-wider" style={{ color: category.text }}>{post.categoria_nombre || 'General'}</Text>
         </View>
         <Text className="mb-4 text-[24px] font-black leading-7 text-emerald-950">{post.titulo}</Text>
-        <Text className="mb-6 text-[16px] leading-6 text-slate-700">{stripHtml(post.contenido)}</Text>
+        <Text className="mb-6 text-[16px] leading-6 text-slate-700">{htmlToPlainText(post.contenido)}</Text>
         {postImage ? <RemoteImage uri={postImage} className="mb-4 w-full rounded-2xl" aspectRatio={16 / 9} accessibilityLabel="Imagen de la publicación" /> : null}
         <View className="mt-2 flex-row items-center gap-5 border-t border-slate-100 pt-3">
           <LikeButton liked={Boolean(post.liked_by_me)} count={likesCount} pending={likePending} onPress={toggleLike} />
@@ -216,13 +223,13 @@ export default function PostScreen() {
     const commentAuthor = item.author || {};
     return (
       <View className="mx-5 mb-3 flex-row items-start gap-3">
-        <UserAvatar uri={commentAuthor.avatar_url ?? item.avatar_url ?? item.autor_foto} name={commentAuthor.nombre || item.autor_nombre} size={38} />
+        <UserAvatar uri={resolveAvatar(item)} name={resolveDisplayName(item)} size={38} />
         <View className={`min-w-0 flex-1 rounded-2xl px-4 py-3 ${item.contenido_invalido ? 'border border-amber-200 bg-amber-50' : 'bg-white'}`}>
           <View className="mb-1 flex-row items-center justify-between gap-3">
-            <Text className="flex-1 text-[13px] font-bold text-emerald-950" numberOfLines={1}>{commentAuthor.nombre || item.autor_nombre || 'Usuario'}</Text>
+            <Text className="flex-1 text-[13px] font-bold text-emerald-950" numberOfLines={1}>{resolveDisplayName(item)}</Text>
             <Text className="text-[10px] font-medium text-slate-400">{formatRelativeDate(item.created_at)}</Text>
           </View>
-          <Text className={`text-[14px] leading-5 ${item.contenido_invalido ? 'text-amber-800' : 'text-slate-700'}`}>{item.contenido}</Text>
+          <Text className={`text-[14px] leading-5 ${item.contenido_invalido ? 'text-amber-800' : 'text-slate-700'}`}>{htmlToPlainText(item.contenido)}</Text>
         </View>
       </View>
     );
@@ -249,13 +256,14 @@ export default function PostScreen() {
           contentContainerStyle={{ paddingBottom: 16 }}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
+          onScrollBeginDrag={Keyboard.dismiss}
           automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
           showsVerticalScrollIndicator={false}
         />
         <View className="border-t border-emerald-100 bg-white px-4 pt-2" style={{ paddingBottom: Math.max(insets.bottom, 10) }}>
           {composerError ? <Text className="mb-2 px-2 text-xs font-bold text-red-600">{composerError}</Text> : null}
           <View className="flex-row items-end gap-2">
-            <UserAvatar uri={user?.avatar_url ?? user?.foto_perfil} name={user?.nombre} size={36} />
+            <UserAvatar uri={resolveAvatar(user)} name={resolveDisplayName(user)} size={36} />
             <TextInput
               value={replyText}
               onChangeText={(value) => { setReplyText(value); if (composerError) setComposerError(''); }}
@@ -266,7 +274,9 @@ export default function PostScreen() {
               textAlignVertical="top"
               className="max-h-28 min-h-11 flex-1 rounded-2xl bg-slate-100 px-4 py-3 text-[15px] text-slate-900"
               accessibilityLabel="Comentario"
+              blurOnSubmit={false}
             />
+            {keyboardVisible ? <TouchableOpacity onPress={Keyboard.dismiss} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100" accessibilityLabel="Ocultar teclado"><ChevronDown color="#475569" size={20} /></TouchableOpacity> : null}
             <TouchableOpacity
               onPress={submitReply}
               disabled={replyText.trim().length <= 10 || submitting}

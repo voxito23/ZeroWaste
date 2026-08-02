@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Alert, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Modal, ActivityIndicator, Linking, TextInput, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Mail, Lock, Eye, EyeOff, Check } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, Check, ShieldCheck } from 'lucide-react-native';
 import CustomInput from '../components/ui/CustomInput';
 import CustomButton from '../components/ui/CustomButton';
 import { api } from '../api/axios';
@@ -19,6 +19,8 @@ export default function LoginScreen({ navigation }) {
   const [googleConfirmVisible, setGoogleConfirmVisible] = useState(false);
   const [googleLinkVisible, setGoogleLinkVisible] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [resetVisible, setResetVisible] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [googleHandoff, setGoogleHandoff] = useState('');
   const [linkPassword, setLinkPassword] = useState('');
   const googleBrowserPending = useRef(false);
@@ -185,6 +187,24 @@ export default function LoginScreen({ navigation }) {
     }
   };
 
+  const requestPasswordReset = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) || resetLoading) {
+      Alert.alert('Correo requerido', 'Escribe un correo válido para continuar.');
+      return;
+    }
+    setResetLoading(true);
+    try {
+      await api.post('/formularios/forgot-password', { email: normalizedEmail });
+      setResetVisible(false);
+      Alert.alert('Revisa tu correo', 'Si existe una cuenta con ese correo, recibirás un enlace seguro para recuperar tu contraseña.');
+    } catch (error) {
+      Alert.alert('No fue posible enviar', error.userMessage || 'Revisa tu conexión e inténtalo nuevamente.');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }}>
       <StatusBar style="dark" />
@@ -213,11 +233,6 @@ export default function LoginScreen({ navigation }) {
           <Text className="text-[28px] font-extrabold text-primary mb-2 text-center">Bienvenido de nuevo</Text>
           <Text className="text-gray-500 text-base text-center">Ingresa tus credenciales para continuar</Text>
         </View>
-
-        <TouchableOpacity disabled={googleLoading} onPress={() => setGoogleConfirmVisible(true)} accessibilityRole="button" accessibilityLabel="Continuar con Google" className="h-14 flex-row items-center justify-center rounded-xl border border-gray-200 bg-white disabled:opacity-60">
-          {googleLoading ? <ActivityIndicator color="#374151" /> : <><GoogleMark /><Text className="ml-3 text-base font-bold text-gray-800">Continuar con Google</Text></>}
-        </TouchableOpacity>
-        <View className="my-6 flex-row items-center"><View className="h-px flex-1 bg-gray-200" /><Text className="mx-4 text-sm font-medium text-gray-400">o continúa con tu correo</Text><View className="h-px flex-1 bg-gray-200" /></View>
 
         {/* Inputs */}
         <View className="mb-2">
@@ -254,7 +269,7 @@ export default function LoginScreen({ navigation }) {
             </View>
             <Text className="text-gray-600 font-medium">Recordarme</Text>
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => setResetVisible(true)} accessibilityRole="button">
             <Text className="text-primary font-bold">¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
         </View>
@@ -267,6 +282,11 @@ export default function LoginScreen({ navigation }) {
           disabled={loading || retryAfter > 0}
           className="rounded-xl py-4"
         />
+
+        <View className="my-6 flex-row items-center"><View className="h-px flex-1 bg-gray-200" /><Text className="mx-4 text-sm font-medium text-gray-400">o continúa con</Text><View className="h-px flex-1 bg-gray-200" /></View>
+        <TouchableOpacity disabled={googleLoading} onPress={() => setGoogleConfirmVisible(true)} accessibilityRole="button" accessibilityLabel="Continuar con Google" className="h-14 flex-row items-center justify-center rounded-xl border border-gray-200 bg-white disabled:opacity-60">
+          {googleLoading ? <ActivityIndicator color="#374151" /> : <><GoogleMark /><Text className="ml-3 text-base font-bold text-gray-800">Continuar con Google</Text></>}
+        </TouchableOpacity>
 
         {/* Footer */}
         <View className="flex-row justify-center mt-auto mb-4">
@@ -284,6 +304,7 @@ export default function LoginScreen({ navigation }) {
       <Modal visible={googleConfirmVisible} transparent animationType="slide" onRequestClose={() => setGoogleConfirmVisible(false)}><View className="flex-1 justify-end bg-black/40"><View className="rounded-t-3xl bg-white px-6 pb-8 pt-6"><View className="items-center"><GoogleMark size={34} /><Text className="mt-4 text-xl font-black text-gray-900">Inicia sesión con tu cuenta de Google.</Text><Text className="mt-2 text-center leading-6 text-gray-500">Abriremos el selector seguro de Google en el navegador del sistema. ZeroWaste nunca verá tu contraseña de Google.</Text></View><TouchableOpacity onPress={startGoogle} className="mt-7 h-14 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">Continuar con Google</Text></TouchableOpacity><TouchableOpacity onPress={() => setGoogleConfirmVisible(false)} className="mt-3 h-12 items-center justify-center"><Text className="font-bold text-gray-600">Cancelar</Text></TouchableOpacity></View></View></Modal>
 
       <Modal visible={googleLinkVisible} transparent animationType="slide" onRequestClose={() => setGoogleLinkVisible(false)}><View className="flex-1 justify-end bg-black/40"><View className="rounded-t-3xl bg-white px-6 pb-8 pt-6"><Text className="text-xl font-black text-gray-900">Enlazar cuenta existente</Text><Text className="mt-2 leading-6 text-gray-500">Ya existe una cuenta ZeroWaste con este correo. Confirma tu contraseña de ZeroWaste; no escribas aquí tu contraseña de Google.</Text><TextInput value={linkPassword} onChangeText={setLinkPassword} secureTextEntry placeholder="Contraseña de ZeroWaste" className="mt-5 h-14 rounded-xl border border-gray-200 px-4 text-gray-900" /><TouchableOpacity disabled={!linkPassword || googleLoading} onPress={linkGoogle} className="mt-5 h-14 items-center justify-center rounded-xl bg-emerald-700 disabled:opacity-50">{googleLoading ? <ActivityIndicator color="white" /> : <Text className="font-black text-white">Confirmar y enlazar</Text>}</TouchableOpacity><TouchableOpacity onPress={() => { setGoogleLinkVisible(false); setLinkPassword(''); }} className="mt-3 h-12 items-center justify-center"><Text className="font-bold text-gray-600">Cancelar</Text></TouchableOpacity></View></View></Modal>
+      <Modal visible={resetVisible} transparent animationType="slide" onRequestClose={() => setResetVisible(false)}><TouchableWithoutFeedback onPress={Keyboard.dismiss}><View className="flex-1 justify-end bg-black/40"><View className="rounded-t-3xl bg-white px-6 pb-8 pt-6"><View className="h-12 w-12 items-center justify-center rounded-full bg-emerald-50"><ShieldCheck color="#047857" size={24} /></View><Text className="mt-4 text-2xl font-black text-gray-900">Recupera tu acceso</Text><Text className="mt-2 leading-6 text-gray-500">Te enviaremos un enlace seguro con el diseño de ZeroWaste. Por seguridad, no confirmaremos si la cuenta existe.</Text><TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="correo@ejemplo.com" className="mt-5 h-14 rounded-xl border border-gray-200 px-4 text-gray-900" /><TouchableOpacity disabled={resetLoading} onPress={requestPasswordReset} className="mt-5 h-14 items-center justify-center rounded-xl bg-emerald-700 disabled:opacity-50">{resetLoading ? <ActivityIndicator color="white" /> : <Text className="font-black text-white">Enviar enlace</Text>}</TouchableOpacity><TouchableOpacity onPress={() => setResetVisible(false)} className="mt-3 h-12 items-center justify-center"><Text className="font-bold text-gray-600">Cancelar</Text></TouchableOpacity></View></View></TouchableWithoutFeedback></Modal>
     </SafeAreaView>
   );
 }

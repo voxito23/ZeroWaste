@@ -1,27 +1,22 @@
 import React from 'react';
-import { Alert, Linking, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { ArrowLeft, Clock3, MapPin, Navigation, Recycle, Star } from 'lucide-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import RemoteImage from '../components/ui/RemoteImage';
 import { normalizeMediaUrl } from '../utils/media';
+import { openDirections as openNativeDirections } from '../utils/directions';
 
 export default function PointDetailScreen() {
   const navigation = useNavigation();
   const point = useRoute().params?.point;
 
   const openDirections = async () => {
-    const latitude = Number(point?.latitud);
-    const longitude = Number(point?.longitud);
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-      Alert.alert('Ubicación no disponible', 'Este punto no tiene coordenadas válidas.');
-      return;
-    }
     try {
-      await Linking.openURL(`https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`);
-    } catch {
-      Alert.alert('No fue posible abrir el mapa', 'Revisa que tengas una aplicación de navegación disponible.');
+      await openNativeDirections(point);
+    } catch (error) {
+      Alert.alert('No fue posible abrir el mapa', error.message || 'Revisa que tengas una aplicación de navegación disponible.');
     }
   };
 

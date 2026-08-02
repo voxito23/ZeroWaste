@@ -31,12 +31,19 @@ export default function ArticleDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const articleId = route.params?.articleId;
+  const bundledArticle = route.params?.article;
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const entrance = useRef(new Animated.Value(0)).current;
 
   const loadArticle = useCallback(async () => {
+    if (bundledArticle) {
+      setArticle(bundledArticle);
+      setLoading(false);
+      setError('');
+      return;
+    }
     if (!articleId) {
       setError('No se indicó el artículo que deseas consultar.');
       setLoading(false);
@@ -53,7 +60,7 @@ export default function ArticleDetailScreen() {
     } finally {
       setLoading(false);
     }
-  }, [articleId]);
+  }, [articleId, bundledArticle]);
 
   useEffect(() => {
     void loadArticle();

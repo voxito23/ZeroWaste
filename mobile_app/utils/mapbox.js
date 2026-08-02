@@ -9,6 +9,8 @@ export const HAS_VALID_MAPBOX_TOKEN = (
 
 let initializationPromise = null;
 
+if (HAS_VALID_MAPBOX_TOKEN) Mapbox.setAccessToken(MAPBOX_PUBLIC_TOKEN);
+
 export const initializeMapbox = () => {
   if (!HAS_VALID_MAPBOX_TOKEN) {
     return Promise.reject(new Error('El token público de Mapbox no está configurado correctamente.'));

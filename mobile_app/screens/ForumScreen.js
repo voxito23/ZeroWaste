@@ -29,16 +29,15 @@ import { formatRelativeDate } from '../utils/date';
 import RemoteImage from '../components/ui/RemoteImage';
 import UserAvatar from '../components/ui/UserAvatar';
 import LikeButton from '../components/forum/LikeButton';
+import { htmlToPlainText } from '../utils/text';
+import { resolveAvatar, resolveDisplayName } from '../utils/user';
 
 const { width } = Dimensions.get('window');
 
 // ─── TYPES ─────────────────────────────────────────────────────────
 
 // Strip HTML tags from content
-const stripHtml = (html) => {
-  if (!html || typeof html !== 'string') return '';
-  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-};
+const stripHtml = htmlToPlainText;
 
 export default function ForumScreen() {
   const navigation = useNavigation();
@@ -134,7 +133,7 @@ export default function ForumScreen() {
     message: `${post.titulo}\nhttps://www.zerowaste-qro.com/foro`,
   }).catch(() => {});
 
-  const currentAvatarUrl = user?.avatar_url ?? user?.foto_perfil;
+  const currentAvatarUrl = resolveAvatar(user);
 
   return (
     <SafeAreaView className="flex-1 bg-[#ECFDF5]" edges={['top']}>
@@ -361,7 +360,7 @@ export default function ForumScreen() {
                           <Text className="text-[13px] font-bold text-gray-800">{post.autor_nombre || 'Usuario'}</Text>
                           <Text className="text-[11px] font-medium text-gray-500 mt-0.5">{getTimeAgo(post.created_at)}</Text>
                         </View>
-                        <UserAvatar uri={post.author?.avatar_url ?? post.avatar_url ?? post.autor_foto} name={post.author?.nombre ?? post.autor_nombre} size={40} accessibilityLabel="Avatar del autor" />
+                        <UserAvatar uri={resolveAvatar(post)} name={resolveDisplayName(post)} size={40} accessibilityLabel="Avatar del autor" />
                       </View>
                     </View>
 

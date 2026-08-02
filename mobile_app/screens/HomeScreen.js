@@ -25,6 +25,7 @@ import RemoteImage from '../components/ui/RemoteImage';
 import UserAvatar from '../components/ui/UserAvatar';
 import { motion } from '../theme/tokens';
 import { normalizeMediaUrl } from '../utils/media';
+import { resolveAvatar } from '../utils/user';
 import {
   Search,
   Users,
@@ -59,6 +60,13 @@ const ARTICLE_FALLBACKS = {
   'compostaje-urbano': require('../assets/images/composta.png'),
   'queretaro-recicla': require('../assets/images/qrocapita.jpg'),
 };
+
+const EDITORIAL_TRENDS = [
+  { id: 'reciclar-plastico', title: 'Reciclar plástico: 10 consejos para reducir hoy', excerpt: 'Pequeños cambios diarios que generan un impacto real en nuestro planeta.', category: 'Reciclaje', read_time: '5 min', local: true, blocks: [{ type: 'text', heading: 'Empieza con hábitos simples', text: 'Separa, limpia y compacta tus envases. Consulta en el mapa qué materiales recibe cada punto ZeroWaste antes de llevarlos.' }] },
+  { id: 'ahorro-agua', title: 'Ahorro de agua: técnicas para el futuro', excerpt: 'Métodos simples de recolección y reutilización responsable.', category: 'Consumo responsable', read_time: '8 min', local: true, blocks: [{ type: 'text', heading: 'Cada litro cuenta', text: 'Detecta fugas, reutiliza agua cuando sea seguro y elige equipos eficientes para reducir el consumo diario.' }] },
+  { id: 'energia-solar', title: 'Energía solar: fuentes limpias para renovar', excerpt: 'La transición a energías limpias también puede comenzar en casa.', category: 'Energía limpia', read_time: '6 min', local: true, blocks: [{ type: 'text', heading: 'Evalúa antes de instalar', text: 'Revisa orientación, consumo y proveedores certificados para tomar una decisión informada.' }] },
+  { id: 'compostaje-urbano', title: 'Compostaje urbano: nutrientes para circular', excerpt: 'Transforma residuos orgánicos en nueva vida con una guía práctica.', category: 'Compostaje', read_time: '7 min', local: true, blocks: [{ type: 'text', heading: 'Equilibra tu composta', text: 'Combina materiales húmedos y secos, conserva ventilación y evita residuos de origen animal.' }] },
+];
 
 /* ─── ANIMATED PRIMITIVES ─────────────────────────────────────────── */
 const TouchableScale = ({ children, style, onPress, scaleVal = 0.97 }) => {
@@ -129,11 +137,12 @@ export default function HomeScreen() {
     try {
       const { data } = await api.get('/articles');
       const rows = Array.isArray(data) ? data.filter((article) => article?.id && article?.title) : [];
-      setArticles(rows.filter((article) => article.id !== 'queretaro-recicla'));
-      if (!rows.length) setArticlesError('No hay artículos disponibles por el momento.');
+      const available = rows.filter((article) => article.id !== 'queretaro-recicla');
+      setArticles(available.length ? available : EDITORIAL_TRENDS);
+      if (!available.length) setArticlesError('');
     } catch (requestError) {
-      setArticles([]);
-      setArticlesError(requestError.userMessage || 'No fue posible cargar las tendencias.');
+      setArticles(EDITORIAL_TRENDS);
+      setArticlesError('');
     } finally {
       setArticlesLoading(false);
     }
@@ -251,7 +260,7 @@ export default function HomeScreen() {
     tendListRef.current?.scrollToIndex({ index: next, animated: true });
   };
 
-  const avatarUrl = user?.avatar_url ?? user?.foto_perfil;
+  const avatarUrl = resolveAvatar(user);
 
   return (
     <SafeAreaView className="flex-1 bg-[#FAFAFA]" edges={['top']}>
@@ -333,6 +342,10 @@ export default function HomeScreen() {
               <Text className="text-[12px] text-gray-400 font-bold mt-0.5">Artículos destacados</Text>
             </View>
             <View className="flex-row gap-1.5">
+              <TouchableOpacity onPress={() => goTendencia(-1)} disabled={articles.length < 2} className="mr-2 h-9 w-9 items-center justify-center rounded-full bg-white" accessibilityLabel="Tendencia anterior"><ArrowLeft color="#047857" size={17} /></TouchableOpacity>
+              <TouchableOpacity onPress={() => goTendencia(1)} disabled={articles.length < 2} className="h-9 w-9 items-center justify-center rounded-full bg-emerald-700" accessibilityLabel="Siguiente tendencia"><ArrowRight color="white" size={17} /></TouchableOpacity>
+            </View>
+            <View className="ml-3 flex-row gap-1.5">
               {articles.map((_, idx) => (
                 <View key={idx} className={`h-1.5 rounded-full ${idx === tendIndex ? 'w-5 bg-emerald-600' : 'w-1.5 bg-gray-200'}`} />
               ))}
@@ -350,12 +363,12 @@ export default function HomeScreen() {
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
-            keyExtractor={item => item.id}
+            keyExtractor={item => String(item.id)}
             onScrollToIndexFailed={() => {}}
             onMomentumScrollEnd={(event) => setTendIndex(Math.round(event.nativeEvent.contentOffset.x / width))}
             renderItem={({ item }) => (
               <View style={{ width: width, paddingHorizontal: 20 }}>
-                <TouchableScale scaleVal={0.98} onPress={() => navigation.navigate('ArticleDetail', { articleId: item.id })}>
+                <TouchableScale scaleVal={0.98} onPress={() => navigation.navigate('ArticleDetail', { articleId: item.id, article: item.local ? item : undefined })}>
                   <View
                     className="rounded-[32px] overflow-hidden bg-[#111827] mb-2"
                     style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.25, shadowRadius: 28, elevation: 14 }}
