@@ -73,20 +73,26 @@ class ForumSourceContractsTests(unittest.TestCase):
 
     def test_mobile_composer_keyboard_and_optimistic_like_contract(self):
         post_screen = (ROOT / "mobile_app/screens/PostScreen.js").read_text(encoding="utf-8")
+        comments_modal = (ROOT / "mobile_app/components/forum/CommentsModal.js").read_text(encoding="utf-8")
         forum_screen = (ROOT / "mobile_app/screens/ForumScreen.js").read_text(encoding="utf-8")
         for expected in (
             "KeyboardAvoidingView",
             "FlatList",
-            "useSafeAreaInsets",
+            "SafeAreaView",
             "multiline",
             "maxLength={1000}",
+            "submittingRef.current",
+        ):
+            self.assertIn(expected, comments_modal)
+        for expected in (
             "api.put(`/foro/posts/${postId}/like`)",
             "api.delete(`/foro/posts/${postId}/like`)",
             "likePending",
         ):
             self.assertIn(expected, post_screen)
-        self.assertIn("setComments((current) => [...current", post_screen)
-        self.assertIn("commentRequestRef.current", post_screen)
+        self.assertIn("CommentsModal", post_screen)
+        self.assertNotIn("<FlatList", post_screen)
+        self.assertNotIn("/respuestas`)", post_screen)
         self.assertIn("likeRequestRef.current", post_screen)
         self.assertIn("pendingLikesRef", forum_screen)
         self.assertIn("api.put(`/foro/posts/${post.id}/like`)", forum_screen)

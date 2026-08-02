@@ -19,31 +19,21 @@ import { api } from '../api/axios';
 import RemoteImage from '../components/ui/RemoteImage';
 import { colors, motion } from '../theme/tokens';
 import { normalizeMediaUrl } from '../utils/media';
+import { mobileShareUrl } from '../navigation/linking';
+import { EDITORIAL_IMAGES, findEditorialContent } from '../data/editorialContent';
 
-
-const webArticleUrl = (id) => (
-  id === 'queretaro-recicla'
-    ? 'https://www.zerowaste-qro.com/noticia-queretaro'
-    : `https://www.zerowaste-qro.com/tema/${id}`
-);
 
 export default function ArticleDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const articleId = route.params?.articleId;
-  const bundledArticle = route.params?.article;
+  const isNews = route.name === 'NewsDetail' || route.params?.contentType === 'news';
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const entrance = useRef(new Animated.Value(0)).current;
 
   const loadArticle = useCallback(async () => {
-    if (bundledArticle) {
-      setArticle(bundledArticle);
-      setLoading(false);
-      setError('');
-      return;
-    }
     if (!articleId) {
       setError('No se indicó el artículo que deseas consultar.');
       setLoading(false);
@@ -52,15 +42,16 @@ export default function ArticleDetailScreen() {
     setLoading(true);
     setError('');
     try {
-      const { data } = await api.get(`/articles/${encodeURIComponent(articleId)}`);
+      const { data } = await api.get(`/${isNews ? 'news' : 'articles'}/${encodeURIComponent(articleId)}`);
       setArticle(data);
     } catch (requestError) {
-      setArticle(null);
-      setError(requestError.userMessage || 'No fue posible cargar el artículo.');
+      const cachedArticle = findEditorialContent(articleId, isNews ? 'news' : 'article');
+      setArticle(cachedArticle);
+      setError(cachedArticle ? '' : (requestError.userMessage || 'No fue posible cargar el artículo.'));
     } finally {
       setLoading(false);
     }
-  }, [articleId, bundledArticle]);
+  }, [articleId, isNews]);
 
   useEffect(() => {
     void loadArticle();
@@ -85,7 +76,7 @@ export default function ArticleDetailScreen() {
     if (!article) return;
     void Share.share({
       title: article.title,
-      message: `${article.title}\n${webArticleUrl(article.id)}`,
+      message: `Te comparto este contenido de ZeroWaste: ${article.title}\n${mobileShareUrl(isNews || article.category === 'Noticia local' ? 'news' : 'articles', article.id)}`,
     });
   };
 
@@ -101,7 +92,7 @@ export default function ArticleDetailScreen() {
         <TouchableOpacity onPress={() => navigation.goBack()} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100" accessibilityLabel="Volver">
           <ArrowLeft color={colors.text} size={21} />
         </TouchableOpacity>
-        <Text className="ml-4 flex-1 text-lg font-black text-slate-900" numberOfLines={1}>Artículo</Text>
+        <Text className="ml-4 flex-1 text-lg font-black text-slate-900" numberOfLines={1}>{isNews ? 'Noticia' : 'Artículo'}</Text>
         <TouchableOpacity onPress={shareArticle} disabled={!article} className="h-11 w-11 items-center justify-center rounded-full bg-emerald-50" accessibilityLabel="Compartir artículo">
           <Share2 color={article ? colors.green : '#94A3B8'} size={20} />
         </TouchableOpacity>
@@ -123,7 +114,7 @@ export default function ArticleDetailScreen() {
       ) : (
         <Animated.View className="flex-1" style={{ opacity: entrance, transform: [{ translateY: entrance.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) }] }}>
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 32 }}>
-            <RemoteImage uri={imageUrl} aspectRatio={16 / 10} className="w-full" accessibilityLabel={`Imagen de ${article.title}`} />
+            <RemoteImage uri={imageUrl} fallbackSource={EDITORIAL_IMAGES[article.id]} aspectRatio={16 / 10} className="w-full" accessibilityLabel={`Imagen de ${article.title}`} />
             <View className="px-5 pb-4 pt-6">
               <Text className="self-start rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-emerald-700">{article.category}</Text>
               <Text className="mt-4 text-[30px] font-black leading-[35px] tracking-tight text-slate-950">{article.title}</Text>
@@ -137,7 +128,7 @@ export default function ArticleDetailScreen() {
               {(article.blocks || []).map((block, index) => (
                 <View key={`${block.type}-${index}`} className="mt-7">
                   {block.heading ? <Text className="mb-3 text-[22px] font-black leading-7 text-emerald-950">{block.heading}</Text> : null}
-                  {block.text ? <Text className="text-[16px] leading-7 text-slate-700">{block.text}</Text> : null}
+                  {block.text ? <Text className="text-[16px] leading-7 text-slate-700" style={{ textAlign: 'justify' }} android_hyphenationFrequency="normal" textBreakStrategy="balanced">{block.text}</Text> : null}
                   {block.items?.map((item, itemIndex) => (
                     <View key={`${index}-${itemIndex}`} className="mt-3 flex-row items-start pr-2">
                       <View className="mr-3 mt-2.5 h-2 w-2 rounded-full bg-emerald-500" />

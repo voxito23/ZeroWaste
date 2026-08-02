@@ -1,12 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, CalendarDays, CheckCircle2, Clock3, MapPin } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { api } from '../api/axios';
+import KeyboardAwareScreen from '../components/ui/KeyboardAwareScreen';
 
-const SCHEDULE_MESSAGE = 'Las recolecciones se realizan lunes, miércoles y viernes de 10:00 a. m. a 2:00 p. m.';
+const SCHEDULE_MESSAGE = 'La disponibilidad se confirma con el horario vigente del backend en America/Mexico_City.';
 
 const isoDate = (date) => {
   const year = date.getFullYear();
@@ -22,7 +23,7 @@ export default function CreateCollectionScreen({ navigation, route }) {
     value.setHours(12, 0, 0, 0);
     value.setDate(value.getDate() + index);
     return value;
-  }).filter((date) => [1, 3, 5].includes(date.getDay())), []);
+  }), []);
   const [form, setForm] = useState({ direccion: '', materiales: '', cantidad_estimada: '', notas: '' });
   const [date, setDate] = useState(dates[0] ? isoDate(dates[0]) : '');
   const [slots, setSlots] = useState([]);
@@ -31,19 +32,21 @@ export default function CreateCollectionScreen({ navigation, route }) {
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState(null);
   const [error, setError] = useState('');
+  const [slotsError, setSlotsError] = useState('');
+  const [slotsRequestKey, setSlotsRequestKey] = useState(0);
 
   useEffect(() => {
     if (!date) return;
     let active = true;
     setLoadingSlots(true);
     setSlot(null);
-    setError('');
+    setSlotsError('');
     api.get('/recolecciones/disponibilidad', { params: { fecha: date } })
       .then(({ data }) => { if (active) setSlots(data?.slots || []); })
-      .catch((requestError) => { if (active) { setSlots([]); setError(requestError.userMessage || 'No fue posible consultar la disponibilidad.'); } })
+      .catch((requestError) => { if (active) { setSlots([]); setSlotsError(requestError.userMessage || 'No fue posible consultar la disponibilidad.'); } })
       .finally(() => { if (active) setLoadingSlots(false); });
     return () => { active = false; };
-  }, [date]);
+  }, [date, slotsRequestKey]);
 
   const update = (key) => (value) => setForm((current) => ({ ...current, [key]: value }));
   const submit = async () => {
@@ -79,17 +82,19 @@ export default function CreateCollectionScreen({ navigation, route }) {
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}><StatusBar style="dark" />
       <View className="flex-row items-center border-b border-slate-100 bg-white px-4 py-3"><TouchableOpacity onPress={() => navigation.goBack()} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100"><ArrowLeft color="#0F172A" size={21} /></TouchableOpacity><View className="ml-4"><Text className="text-lg font-black text-slate-900">Solicitar recolección</Text><Text className="text-xs text-slate-500">America/Mexico_City</Text></View></View>
-      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 20, paddingBottom: 40 }}>
+      <KeyboardAwareScreen
+        contentContainerStyle={{ padding: 20, paddingBottom: 28 }}
+        footer={<View className="border-t border-slate-100 bg-white px-5 py-3"><TouchableOpacity disabled={submitting || !slot} onPress={submit} className="items-center rounded-2xl bg-emerald-700 py-4 disabled:opacity-50">{submitting ? <ActivityIndicator color="white" /> : <Text className="text-base font-black text-white">Confirmar solicitud</Text>}</TouchableOpacity></View>}
+      >
         <View className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4"><Text className="font-bold leading-5 text-emerald-900">{SCHEDULE_MESSAGE}</Text></View>
         {error ? <View className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4"><Text accessibilityLiveRegion="polite" className="font-bold text-red-700">{error}</Text></View> : null}
         <Field icon={<MapPin color="#059669" size={18} />} label="Dirección"><TextInput value={form.direccion} onChangeText={update('direccion')} placeholder="Calle, número, colonia y C.P." className="mt-2 rounded-xl border border-slate-200 bg-white p-4 text-slate-900" /></Field>
         <Field label="Material"><TextInput value={form.materiales} onChangeText={update('materiales')} placeholder="PET, cartón, vidrio…" className="mt-2 rounded-xl border border-slate-200 bg-white p-4 text-slate-900" /></Field>
         <Field label="Cantidad estimada"><TextInput value={form.cantidad_estimada} onChangeText={update('cantidad_estimada')} placeholder="Ej. 2 bolsas, 5 kg" className="mt-2 rounded-xl border border-slate-200 bg-white p-4 text-slate-900" /></Field>
         <Field icon={<CalendarDays color="#059669" size={18} />} label="Fecha"><ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">{dates.map((item) => { const value = isoDate(item); return <TouchableOpacity key={value} onPress={() => setDate(value)} className={`mr-2 rounded-2xl border px-4 py-3 ${date === value ? 'border-emerald-700 bg-emerald-700' : 'border-slate-200 bg-white'}`}><Text className={`text-xs font-bold ${date === value ? 'text-white' : 'text-slate-500'}`}>{item.toLocaleDateString('es-MX', { weekday: 'short' })}</Text><Text className={`mt-1 font-black ${date === value ? 'text-white' : 'text-slate-900'}`}>{item.getDate()} {item.toLocaleDateString('es-MX', { month: 'short' })}</Text></TouchableOpacity>; })}</ScrollView></Field>
-        <Field icon={<Clock3 color="#059669" size={18} />} label="Horario">{loadingSlots ? <ActivityIndicator className="mt-4" color="#059669" /> : slots.length ? <View className="mt-3 flex-row flex-wrap">{slots.map((item) => <TouchableOpacity key={item.value} onPress={() => setSlot(item)} className={`mb-2 mr-2 rounded-xl border px-4 py-3 ${slot?.value === item.value ? 'border-emerald-700 bg-emerald-700' : 'border-slate-200 bg-white'}`}><Text className={`font-black ${slot?.value === item.value ? 'text-white' : 'text-slate-800'}`}>{item.label}</Text></TouchableOpacity>)}</View> : <Text className="mt-3 font-bold text-amber-700">No hay horarios disponibles para esta fecha.</Text>}</Field>
+        <Field icon={<Clock3 color="#059669" size={18} />} label="Horario">{loadingSlots ? <ActivityIndicator className="mt-4" color="#059669" /> : slotsError ? <View className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3"><Text className="font-bold text-red-700">{slotsError}</Text><TouchableOpacity onPress={() => setSlotsRequestKey((value) => value + 1)}><Text className="mt-2 font-black text-red-700">Reintentar horarios</Text></TouchableOpacity></View> : slots.length ? <View className="mt-3 flex-row flex-wrap">{slots.map((item) => <TouchableOpacity key={item.value} onPress={() => setSlot(item)} className={`mb-2 mr-2 rounded-xl border px-4 py-3 ${slot?.value === item.value ? 'border-emerald-700 bg-emerald-700' : 'border-slate-200 bg-white'}`}><Text className={`font-black ${slot?.value === item.value ? 'text-white' : 'text-slate-800'}`}>{item.label}</Text></TouchableOpacity>)}</View> : <Text className="mt-3 font-bold text-amber-700">No hay horarios disponibles para esta fecha.</Text>}</Field>
         <Field label="Notas"><TextInput value={form.notas} onChangeText={update('notas')} placeholder="Indicaciones opcionales" multiline className="mt-2 min-h-[96px] rounded-xl border border-slate-200 bg-white p-4 text-slate-900" textAlignVertical="top" /></Field>
-        <TouchableOpacity disabled={submitting || !slot} onPress={submit} className="mt-7 items-center rounded-2xl bg-emerald-700 py-4 disabled:opacity-50">{submitting ? <ActivityIndicator color="white" /> : <Text className="text-base font-black text-white">Confirmar solicitud</Text>}</TouchableOpacity>
-      </ScrollView>
+      </KeyboardAwareScreen>
     </SafeAreaView>
   );
 }

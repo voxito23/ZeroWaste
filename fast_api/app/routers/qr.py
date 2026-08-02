@@ -22,7 +22,7 @@ from app.services.qr_tokens import (
     public_content,
     token_hash,
 )
-from app.services.collection_qr import CollectionQrError, complete_collection
+from app.services.collection_qr import CollectionQrError, complete_collection, inspect_collection_qr
 
 router = APIRouter(prefix="/qr", tags=["Códigos QR"])
 
@@ -100,19 +100,19 @@ def validate_qr(
         if current_user is None:
             return _problem(401, "AUTH_REQUIRED", "Inicia sesión para validar esta recolección.")
         try:
-            collection = complete_collection(
-                db,
-                raw_token=parsed.token,
-                current_user=current_user,
-                expected_collection_id=request.collection_id,
-            )
-            qr = db.query(TokenQrRecoleccion).filter_by(solicitud_id=collection.id).first()
+            qr, collection = inspect_collection_qr(db, raw_token=parsed.token)
+            if request.collection_id is not None and collection.id != request.collection_id:
+                raise CollectionQrError("COLLECTION_MISMATCH", "Este código no corresponde a la recolección seleccionada.", 409)
+            authorized = current_user.rol in {"recolector", "admin"} or bool(current_user.is_admin)
             return {
                 "valid": True,
                 "type": "collection",
                 "collection_id": str(collection.id),
                 "status": collection.estado,
                 "expires_at": qr.expires_at.isoformat() if qr and qr.expires_at else None,
+                "authorized": authorized,
+                "code": None if authorized else "COLLECTOR_REQUIRED",
+                "detail": None if authorized else "Este código corresponde a una recolección y solo puede ser confirmado por un recolector autorizado.",
             }
         except CollectionQrError as error:
             return _problem(error.status_code, error.code, error.detail)
@@ -126,6 +126,26 @@ def validate_qr(
     if not point or not point.activo or point.deleted_at is not None:
         return _problem(422, "QR_REVOKED", "Este código QR ya no está activo.")
     return {"valid": True, "type": "recycling_point", "point": _point_payload(point)}
+
+
+@router.post("/confirmar")
+def confirm_collection_qr(
+    request: QrValidationRequest,
+    db: Session = Depends(get_db),
+    current_user: Usuario | None = Depends(get_optional_current_user),
+):
+    if current_user is None:
+        return _problem(401, "AUTH_REQUIRED", "Inicia sesión para confirmar esta recolección.")
+    try:
+        parsed = parse_content(request.contenido)
+        if parsed.kind != "collection":
+            raise CollectionQrError("COLLECTION_MISMATCH", "Este código no corresponde a una recolección.", 409)
+        collection = complete_collection(db, raw_token=parsed.token, current_user=current_user, expected_collection_id=request.collection_id)
+        return {"valid": True, "type": "collection", "collection_id": str(collection.id), "status": collection.estado}
+    except QrContentError as error:
+        return _problem(400, error.code, error.detail)
+    except CollectionQrError as error:
+        return _problem(error.status_code, error.code, error.detail)
 
 
 def _active_point_qr(db: Session, point_id: int) -> PointQrCode | None:

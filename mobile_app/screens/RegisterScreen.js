@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Alert, Image, TouchableOpacity, Modal, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Image, TouchableOpacity, Modal, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Mail, Lock, Eye, EyeOff, User, Check } from 'lucide-react-native';
@@ -7,6 +7,7 @@ import CustomInput from '../components/ui/CustomInput';
 import CustomButton from '../components/ui/CustomButton';
 import { api } from '../api/axios';
 import * as ImagePicker from 'expo-image-picker';
+import { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
 
 const getPasswordStrength = (pass) => {
   let score = 0;
@@ -30,6 +31,7 @@ const getStrengthConfig = (score) => {
 };
 
 export default function RegisterScreen({ navigation }) {
+  const { showDialog } = useZeroWasteDialog();
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,14 +45,14 @@ export default function RegisterScreen({ navigation }) {
   const pickProfileImage = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Permiso requerido', 'Permite el acceso a tus fotografías para elegir una imagen.');
+      showDialog({ type: 'permission', title: 'Permiso requerido', message: 'Permite el acceso a tus fotografías para elegir una imagen.' });
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85 });
     if (result.canceled || !result.assets?.[0]) return;
     const asset = result.assets[0];
     if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
-      Alert.alert('Imagen demasiado grande', 'La imagen debe pesar como máximo 5 MB.');
+      showDialog({ type: 'warning', title: 'Imagen demasiado grande', message: 'La imagen debe pesar como máximo 5 MB.' });
       return;
     }
     setSelectedImage(asset);
@@ -66,23 +68,23 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = async () => {
     if (!nombre || !email || !password) {
-      Alert.alert('Error', 'Completa todos los campos');
+      showDialog({ type: 'warning', title: 'Campos incompletos', message: 'Completa todos los campos.' });
       return;
     }
     
     if (strengthScore < 4) {
-      Alert.alert('Contraseña débil', 'La contraseña debe cumplir con todos los requisitos de seguridad (8+ caracteres, número, mayúscula, minúscula y carácter especial).');
+      showDialog({ type: 'warning', title: 'Contraseña débil', message: 'La contraseña debe cumplir con todos los requisitos de seguridad: 8 o más caracteres, número, mayúscula, minúscula y carácter especial.' });
       return;
     }
     
     if (!acceptTerms) {
-      Alert.alert('Aviso', 'Debes aceptar los Términos y Condiciones para registrarte.');
+      showDialog({ type: 'warning', title: 'Aceptación requerida', message: 'Debes aceptar los Términos y Condiciones para registrarte.' });
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Ingresa un correo electrónico válido');
+      showDialog({ type: 'warning', title: 'Correo no válido', message: 'Ingresa un correo electrónico válido.' });
       return;
     }
 
@@ -115,11 +117,11 @@ export default function RegisterScreen({ navigation }) {
         }
         navigation.navigate('VerifyEmail', { email: email.trim().toLowerCase(), sent });
       } else {
-        Alert.alert('Error', response.data.error || 'Error en el registro');
+        showDialog({ type: 'error', title: 'No pudimos crear tu cuenta', message: response.data.error || 'Ocurrió un error durante el registro.' });
       }
     } catch (error) {
       const msg = error.userMessage || error.response?.data?.detail || 'Error de conexión. Verifica tu internet o el estado del servidor.';
-      Alert.alert('Error', msg);
+      showDialog({ type: 'error', title: 'No pudimos crear tu cuenta', message: msg });
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, Image, Text, TouchableOpacity, View } from 'react-native';
+import { Image, Text, TouchableOpacity, View } from 'react-native';
 import { ImageOff } from 'lucide-react-native';
+import Skeleton from './Skeleton';
 
 const isDevelopment = typeof __DEV__ !== 'undefined' && __DEV__;
 
@@ -108,9 +109,7 @@ export default function RemoteImage({
         onLoadEnd={() => setLoading(false)}
       />
       {loading ? (
-        <View className="absolute inset-0 items-center justify-center bg-gray-100">
-          <ActivityIndicator color="#047857" />
-        </View>
+        <Skeleton className="absolute inset-0" />
       ) : null}
     </View>
   );

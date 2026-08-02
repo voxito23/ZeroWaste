@@ -27,20 +27,23 @@ class MapboxContractTests(unittest.TestCase):
             "tokenReady",
             "mapMounted",
             "mapReady",
-            "mapboxConfigured",
-            "loadingMap",
-            "loadingPoints",
+            "styleLoading",
+            "pointsLoading",
             "pointsReady",
             "mapError",
             "pointsError",
-            "locationPermission",
+            "permissionState",
             "locationError",
+            "searching",
+            "selectedResult",
         ):
             self.assertIn(state, source)
         self.assertIn("onDidFinishLoadingStyle={handleMapReady}", source)
         self.assertIn("onMapLoadingError={handleMapLoadingError}", source)
         self.assertIn("initializeMapbox()", source)
-        self.assertIn("tokenReady && mapboxConfigured", source)
+        self.assertIn("{tokenReady ? (", source)
+        self.assertNotIn("tokenReady && mapboxConfigured", source)
+        self.assertIn("pointerEvents={mapError ? 'auto' : 'none'}", source)
 
         config = (ROOT / "mobile_app/utils/mapbox.js").read_text(encoding="utf-8")
         self.assertIn("Promise.resolve(Mapbox.setAccessToken(MAPBOX_PUBLIC_TOKEN))", config)

@@ -1,8 +1,168 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { ActivityIndicator, FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Bell } from 'lucide-react-native';
+import { ArrowLeft, Bell, CheckCheck, Gift, Heart, Leaf, MessageCircle, Newspaper, Recycle, Reply, RotateCcw } from 'lucide-react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import { api } from '../api/axios';
 
-export default function NotificationsScreen(){const navigation=useNavigation();const[rows,setRows]=useState([]);const[loading,setLoading]=useState(true);const[error,setError]=useState('');const load=useCallback(async()=>{setLoading(true);setError('');try{setRows((await api.get('/usuarios/me/notificaciones')).data||[]);}catch(e){setError(e.userMessage);}finally{setLoading(false);}},[]);useFocusEffect(useCallback(()=>{load();},[load]));const open=async(item)=>{if(!item.leida){await api.put(`/usuarios/me/notificaciones/${item.id}/leida`);setRows(current=>current.map(row=>row.id===item.id?{...row,leida:true}:row));}if(item.url?.includes('/foro'))navigation.navigate('Main',{screen:'Forum'});};return <SafeAreaView className="flex-1 bg-gray-50"><View className="flex-row items-center bg-white px-5 py-4"><TouchableOpacity onPress={()=>navigation.goBack()} className="h-10 w-10 items-center justify-center rounded-full bg-gray-100"><ArrowLeft color="#111827" size={20}/></TouchableOpacity><Text className="ml-4 text-xl font-black">Notificaciones</Text></View>{loading?<ActivityIndicator className="mt-8" color="#047857"/>:null}{error?<TouchableOpacity onPress={load} className="m-5 rounded-2xl bg-red-50 p-4"><Text className="text-center font-bold text-red-700">{error}{'\n'}Reintentar</Text></TouchableOpacity>:null}<FlatList data={rows} keyExtractor={x=>String(x.id)} refreshControl={<RefreshControl refreshing={loading} onRefresh={load}/>} contentContainerStyle={{padding:20,gap:10}} ListEmptyComponent={!loading&&!error?<View className="items-center pt-16"><Bell color="#9CA3AF" size={40}/><Text className="mt-3 text-gray-500">No tienes notificaciones.</Text></View>:null} renderItem={({item})=><TouchableOpacity onPress={()=>open(item)} className={`rounded-2xl border p-4 ${item.leida?'border-gray-100 bg-white':'border-emerald-200 bg-emerald-50'}`}><Text className="font-black text-gray-900">{item.titulo}</Text><Text className="mt-1 text-gray-600">{item.mensaje}</Text><Text className="mt-2 text-xs text-gray-400">{new Date(item.created_at).toLocaleString('es-MX')}</Text></TouchableOpacity>}/></SafeAreaView>;}
+import { api } from '../api/axios';
+import UserAvatar from '../components/ui/UserAvatar';
+import Skeleton from '../components/ui/Skeleton';
+import { notificationTarget } from '../services/mobileNotifications';
+import { formatRelativeDate } from '../utils/date';
+
+const PAGE_SIZE = 30;
+
+const legacyNotificationData = (row) => {
+  const url = String(row?.url || '');
+  const postMatch = url.match(/(?:zerowaste:\/\/posts\/|\/posts\/|\/foro\/)(\d+)/i);
+  if (postMatch) return { type: 'post_comment', postId: postMatch[1], entityId: postMatch[1], openComments: true };
+  const articleMatch = url.match(/(?:zerowaste:\/\/articles\/|\/articles\/)([a-z0-9-]+)/i);
+  if (articleMatch) return { type: 'article_published', entityId: articleMatch[1] };
+  const newsMatch = url.match(/(?:zerowaste:\/\/news\/|\/news\/)([a-z0-9-]+)/i);
+  if (newsMatch) return { type: 'news_published', entityId: newsMatch[1] };
+  return { type: 'system_notice' };
+};
+
+const normalizeLegacyNotification = (row) => {
+  const data = legacyNotificationData(row);
+  return {
+    id: row.id,
+    type: data.type,
+    title: row.titulo || 'Notificación de ZeroWaste',
+    body: row.mensaje || '',
+    data,
+    read: Boolean(row.leida),
+    created_at: row.created_at,
+  };
+};
+
+const dateGroup = (value) => {
+  const date = new Date(value);
+  const now = new Date();
+  if (date.toDateString() === now.toDateString()) return 'Hoy';
+  const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return 'Ayer';
+  return date.toLocaleDateString('es-MX', { day: 'numeric', month: 'long' });
+};
+
+const iconFor = (type) => ({
+  post_comment: MessageCircle,
+  comment_reply: Reply,
+  post_like: Heart,
+  article_published: Leaf,
+  news_published: Newspaper,
+  reward_status: Gift,
+  points_earned: Recycle,
+}[type] || Bell);
+
+export default function NotificationsScreen() {
+  const navigation = useNavigation();
+  const requestRef = useRef(0);
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [error, setError] = useState('');
+  const [legacyMode, setLegacyMode] = useState(false);
+
+  const load = useCallback(async ({ refresh = false, more = false } = {}) => {
+    const requestId = ++requestRef.current;
+    if (refresh) setRefreshing(true); else if (more) setLoadingMore(true); else setLoading(true);
+    setError('');
+    const offset = more ? rows.length : 0;
+    try {
+      let data;
+      let usingLegacy = legacyMode;
+      if (usingLegacy) {
+        const response = await api.get('/usuarios/me/notificaciones');
+        data = { items: (Array.isArray(response.data) ? response.data : []).map(normalizeLegacyNotification), has_more: false };
+      } else {
+        try {
+          const response = await api.get('/notifications', { params: { limit: PAGE_SIZE, offset } });
+          data = response.data;
+        } catch {
+          const response = await api.get('/usuarios/me/notificaciones');
+          data = { items: (Array.isArray(response.data) ? response.data : []).map(normalizeLegacyNotification), has_more: false };
+          usingLegacy = true;
+        }
+      }
+      if (requestId !== requestRef.current) return;
+      const items = Array.isArray(data?.items) ? data.items : [];
+      setRows((current) => more ? [...current, ...items.filter((item) => !current.some((existing) => existing.id === item.id))] : items);
+      setHasMore(Boolean(data?.has_more));
+      setLegacyMode(usingLegacy);
+    } catch (requestError) {
+      if (requestId === requestRef.current) setError(requestError.userMessage || 'No fue posible cargar tus notificaciones.');
+    } finally {
+      if (requestId === requestRef.current) { setLoading(false); setRefreshing(false); setLoadingMore(false); }
+    }
+  }, [legacyMode, rows.length]);
+
+  useFocusEffect(useCallback(() => {
+    void load();
+    return () => { requestRef.current += 1; };
+  }, []));
+
+  const open = async (item) => {
+    if (!item.read) {
+      setRows((current) => current.map((row) => row.id === item.id ? { ...row, read: true } : row));
+      const markRequest = legacyMode
+        ? api.put(`/usuarios/me/notificaciones/${item.id}/leida`)
+        : api.patch(`/notifications/${item.id}/read`).catch(() => api.put(`/usuarios/me/notificaciones/${item.id}/leida`));
+      void markRequest.catch(() => setRows((current) => current.map((row) => row.id === item.id ? { ...row, read: false } : row)));
+    }
+    const target = notificationTarget(item.data);
+    if (target) navigation.navigate(target.name, target.params);
+  };
+
+  const markAll = async () => {
+    const previous = rows;
+    setRows((current) => current.map((item) => ({ ...item, read: true })));
+    try {
+      if (legacyMode) {
+        await Promise.all(previous.filter((item) => !item.read).map((item) => api.put(`/usuarios/me/notificaciones/${item.id}/leida`)));
+      } else {
+        await api.post('/notifications/read-all');
+      }
+    } catch { setRows(previous); }
+  };
+
+  const data = rows.flatMap((item, index) => {
+    const group = dateGroup(item.created_at);
+    const previousGroup = index ? dateGroup(rows[index - 1].created_at) : null;
+    return previousGroup === group ? [item] : [{ id: `header:${group}`, header: group }, item];
+  });
+
+  return (
+    <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}>
+      <View className="flex-row items-center border-b border-slate-100 bg-white px-5 py-4">
+        <TouchableOpacity onPress={() => navigation.goBack()} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100" accessibilityLabel="Volver"><ArrowLeft color="#111827" size={20} /></TouchableOpacity>
+        <View className="ml-4 flex-1"><Text className="text-xl font-black text-slate-950">Notificaciones</Text><Text className="text-xs font-semibold text-slate-500">Actividad de tu cuenta</Text></View>
+        {rows.some((item) => !item.read) ? <TouchableOpacity onPress={markAll} className="h-11 w-11 items-center justify-center rounded-full bg-emerald-50" accessibilityLabel="Marcar todas como leídas"><CheckCheck color="#047857" size={20} /></TouchableOpacity> : null}
+      </View>
+      {loading && !rows.length ? <View className="px-4 pt-5">{[0, 1, 2, 3].map((item) => <View key={item} className="mb-3 flex-row rounded-2xl bg-white p-4"><Skeleton className="h-11 w-11 rounded-full" /><View className="ml-3 flex-1"><Skeleton className="h-4 w-3/4 rounded" /><Skeleton className="mt-3 h-4 w-full rounded" /><Skeleton className="mt-3 h-3 w-20 rounded" /></View></View>)}</View> : (
+        <FlatList
+          data={data}
+          keyExtractor={(item) => String(item.id)}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => load({ refresh: true })} tintColor="#047857" />}
+          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+          onEndReached={() => { if (hasMore && !loadingMore) void load({ more: true }); }}
+          onEndReachedThreshold={0.35}
+          ListEmptyComponent={!error ? <View className="items-center px-8 pt-20"><View className="h-20 w-20 items-center justify-center rounded-full bg-emerald-50"><Bell color="#059669" size={34} /></View><Text className="mt-5 text-lg font-black text-slate-900">Todo está al día</Text><Text className="mt-2 text-center leading-5 text-slate-500">Aquí aparecerán comentarios, respuestas, puntos y novedades relevantes.</Text></View> : null}
+          ListHeaderComponent={error ? <TouchableOpacity onPress={() => load({ refresh: true })} className="mb-4 flex-row items-center rounded-2xl border border-red-200 bg-red-50 p-4"><RotateCcw color="#B91C1C" size={18} /><Text className="ml-3 flex-1 font-bold text-red-700">{error} Toca para reintentar.</Text></TouchableOpacity> : null}
+          ListFooterComponent={loadingMore ? <ActivityIndicator className="my-5" color="#047857" /> : null}
+          renderItem={({ item }) => {
+            if (item.header) return <Text className="mb-2 mt-4 px-1 text-xs font-black uppercase tracking-widest text-slate-500">{item.header}</Text>;
+            const Icon = iconFor(item.type);
+            const avatar = item.data?.actorAvatarUrl;
+            return <TouchableOpacity onPress={() => open(item)} className={`mb-2 min-h-[82px] flex-row items-start rounded-2xl border p-4 ${item.read ? 'border-slate-100 bg-white' : 'border-emerald-200 bg-emerald-50'}`} accessibilityState={{ selected: !item.read }}>
+              {avatar ? <UserAvatar uri={avatar} name={item.data?.actorName} size={44} /> : <View className="h-11 w-11 items-center justify-center rounded-full bg-white"><Icon color="#047857" size={20} /></View>}
+              <View className="ml-3 flex-1"><View className="flex-row items-start"><Text className="flex-1 font-black leading-5 text-slate-950">{item.title}</Text>{!item.read ? <View className="ml-2 mt-1 h-2.5 w-2.5 rounded-full bg-emerald-500" /> : null}</View><Text className="mt-1 text-sm leading-5 text-slate-600" numberOfLines={2}>{item.body}</Text><Text className="mt-2 text-xs font-semibold text-slate-400">{formatRelativeDate(item.created_at)}</Text></View>
+            </TouchableOpacity>;
+          }}
+        />
+      )}
+    </SafeAreaView>
+  );
+}

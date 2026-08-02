@@ -31,8 +31,10 @@ class MobileApiSecurityTests(unittest.TestCase):
 
     def test_collection_request_sends_coordinates(self):
         map_source = (ROOT / "mobile_app" / "screens" / "MapScreen.js").read_text(encoding="utf-8")
-        self.assertIn("longitud: currentLocation[0]", map_source)
-        self.assertIn("latitud: currentLocation[1]", map_source)
+        collection_source = (ROOT / "mobile_app" / "screens" / "CreateCollectionScreen.js").read_text(encoding="utf-8")
+        self.assertIn("navigation.navigate('CreateCollection', { coordinates })", map_source)
+        self.assertIn("longitud: Number(coordinates[0])", collection_source)
+        self.assertIn("latitud: Number(coordinates[1])", collection_source)
 
 
 if __name__ == "__main__":

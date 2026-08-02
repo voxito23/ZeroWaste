@@ -15,6 +15,27 @@ class CollectionQrError(ValueError):
         self.status_code = status_code
 
 
+def inspect_collection_qr(db: Session, *, raw_token: str):
+    """Validate a collection QR without mutating it or awarding points."""
+    qr = db.query(TokenQrRecoleccion).filter_by(token_hash=token_hash(raw_token)).first()
+    if not qr:
+        raise CollectionQrError("QR_TAMPERED", "Este código QR no es válido o fue modificado.")
+    if qr.used_at is not None or qr.status == "used":
+        raise CollectionQrError("QR_ALREADY_USED", "Esta recolección ya fue confirmada anteriormente.", 409)
+    if qr.status != "active" or qr.invalidated_at is not None:
+        raise CollectionQrError("QR_REVOKED", "Este código QR ya no está activo.")
+    now = datetime.now(timezone.utc)
+    expires_at = qr.expires_at.replace(tzinfo=qr.expires_at.tzinfo or timezone.utc)
+    if expires_at <= now:
+        raise CollectionQrError("QR_EXPIRED", "Este código QR ha vencido.", 409)
+    collection = db.query(SolicitudRecoleccion).filter_by(id=qr.solicitud_id).first()
+    if not collection or collection.estado == "cancelada":
+        raise CollectionQrError("QR_REVOKED", "Este código QR ya no está activo.")
+    if collection.estado == "completada":
+        raise CollectionQrError("QR_ALREADY_USED", "Esta recolección ya fue confirmada anteriormente.", 409)
+    return qr, collection
+
+
 def complete_collection(
     db: Session,
     *,

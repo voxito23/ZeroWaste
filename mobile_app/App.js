@@ -7,6 +7,7 @@ import * as NavigationBar from 'expo-navigation-bar';
 import AnimatedSplashScreen from './screens/AnimatedSplashScreen';
 import { useFonts, Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, Outfit_700Bold } from '@expo-google-fonts/outfit';
 import { HAS_VALID_MAPBOX_TOKEN, initializeMapbox } from './utils/mapbox';
+import { ZeroWasteDialogProvider } from './components/ui/ZeroWasteDialog';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -35,12 +36,14 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      {showSplash ? (
-        <AnimatedSplashScreen onFinish={() => setShowSplash(false)} />
-      ) : (
-        <AppNavigator />
-      )}
-      <StatusBar style="auto" />
+      <ZeroWasteDialogProvider>
+        {showSplash ? (
+          <AnimatedSplashScreen onFinish={() => setShowSplash(false)} />
+        ) : (
+          <AppNavigator />
+        )}
+        <StatusBar style="auto" />
+      </ZeroWasteDialogProvider>
     </SafeAreaProvider>
   );
 }

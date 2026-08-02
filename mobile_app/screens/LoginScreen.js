@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Alert, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Modal, ActivityIndicator, Linking, TextInput, AppState } from 'react-native';
+import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Modal, ActivityIndicator, Linking, TextInput, AppState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Mail, Lock, Eye, EyeOff, Check, ShieldCheck } from 'lucide-react-native';
@@ -8,6 +8,7 @@ import CustomButton from '../components/ui/CustomButton';
 import { api } from '../api/axios';
 import { useAuth } from '../store/useAuth';
 import Svg, { Path } from 'react-native-svg';
+import { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -27,6 +28,7 @@ export default function LoginScreen({ navigation }) {
   const googleBrowserWasBackgrounded = useRef(false);
   
   const { login } = useAuth();
+  const { showDialog } = useZeroWasteDialog();
 
   useEffect(() => {
     if (retryAfter <= 0) return undefined;
@@ -45,7 +47,7 @@ export default function LoginScreen({ navigation }) {
       const oauthError = (url.match(/[?&]error=([^&]+)/) || [])[1];
       if (oauthError || !code) {
         setGoogleLoading(false);
-        Alert.alert('Acceso cancelado', 'No se completó el inicio de sesión con Google.');
+        showDialog({ type: 'info', title: 'Acceso cancelado', message: 'No se completó el inicio de sesión con Google.' });
         return;
       }
       void completeGoogle(code);
@@ -70,7 +72,7 @@ export default function LoginScreen({ navigation }) {
           googleBrowserPending.current = false;
           googleBrowserWasBackgrounded.current = false;
           setGoogleLoading(false);
-          Alert.alert('Acceso cancelado', 'No se completó el inicio de sesión con Google.');
+          showDialog({ type: 'info', title: 'Acceso cancelado', message: 'No se completó el inicio de sesión con Google.' });
         }, 800);
       }
     });
@@ -93,7 +95,7 @@ export default function LoginScreen({ navigation }) {
       }
       if (data.success && data.access_token) await login(data.user, data.access_token);
     } catch (error) {
-      Alert.alert('No fue posible continuar', error.response?.data?.detail || 'Revisa tu conexión e inténtalo nuevamente.');
+      showDialog({ type: 'error', title: 'No fue posible continuar', message: error.response?.data?.detail || 'Revisa tu conexión e inténtalo nuevamente.' });
     } finally {
       setGoogleLoading(false);
     }
@@ -112,7 +114,7 @@ export default function LoginScreen({ navigation }) {
       googleBrowserPending.current = false;
       googleBrowserWasBackgrounded.current = false;
       setGoogleLoading(false);
-      Alert.alert('Google no está disponible', error.response?.data?.detail || 'No fue posible abrir el acceso seguro de Google.');
+      showDialog({ type: 'error', title: 'Google no está disponible', message: error.response?.data?.detail || 'No fue posible abrir el acceso seguro de Google.' });
     }
   };
 
@@ -125,7 +127,7 @@ export default function LoginScreen({ navigation }) {
       setLinkPassword('');
       if (data.success && data.access_token) await login(data.user, data.access_token);
     } catch (error) {
-      Alert.alert('No fue posible enlazar', error.response?.data?.detail || 'Revisa la contraseña de tu cuenta ZeroWaste.');
+      showDialog({ type: 'error', title: 'No fue posible enlazar', message: error.response?.data?.detail || 'Revisa la contraseña de tu cuenta ZeroWaste.' });
     } finally {
       setGoogleLoading(false);
     }
@@ -140,21 +142,21 @@ export default function LoginScreen({ navigation }) {
         navigation.navigate('VerifyEmail', { email: email.trim().toLowerCase(), sent: true });
         return;
       }
-      Alert.alert('No fue posible enviar', error.response?.data?.detail || 'Inténtalo nuevamente más tarde.');
+      showDialog({ type: 'error', title: 'No fue posible enviar', message: error.response?.data?.detail || 'Inténtalo nuevamente más tarde.' });
     }
   };
 
   const handleLogin = async () => {
     if (loading || retryAfter > 0) return;
     if (!email || !password) {
-      Alert.alert('Error', 'Completa todos los campos');
+      showDialog({ type: 'warning', title: 'Campos incompletos', message: 'Completa todos los campos.' });
       return;
     }
 
     // Validación básica de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Ingresa un correo electrónico válido');
+      showDialog({ type: 'warning', title: 'Correo no válido', message: 'Ingresa un correo electrónico válido.' });
       return;
     }
     
@@ -164,7 +166,7 @@ export default function LoginScreen({ navigation }) {
       if (response.data.success && response.data.access_token) {
         await login(response.data.user, response.data.access_token);
       } else {
-        Alert.alert('Error', response.data.error || 'Credenciales inválidas');
+        showDialog({ type: 'error', title: 'No pudimos iniciar sesión', message: response.data.error || 'Credenciales inválidas.' });
       }
     } catch (error) {
       setPassword('');
@@ -173,15 +175,15 @@ export default function LoginScreen({ navigation }) {
         const headerRetry = Number(error.response?.headers?.['retry-after']);
         const seconds = Math.max(bodyRetry || headerRetry || 60, 1);
         setRetryAfter(seconds);
-        Alert.alert('Espera un momento', 'Demasiados intentos. Espera un minuto antes de volver a intentarlo.');
+        showDialog({ type: 'warning', title: 'Espera un momento', message: 'Demasiados intentos. Espera un minuto antes de volver a intentarlo.' });
         return;
       }
       if (error.response?.status === 403 && String(error.response?.data?.detail || '').includes('Verifica tu correo')) {
-        Alert.alert('Verificación requerida', 'Verifica tu correo antes de iniciar sesión.', [{ text: 'Cancelar', style: 'cancel' }, { text: 'Enviar un nuevo correo', onPress: resendVerification }]);
+        showDialog({ type: 'warning', title: 'Verificación requerida', message: 'Verifica tu correo antes de iniciar sesión.', primaryLabel: 'Enviar un nuevo correo', onPrimary: resendVerification, secondaryLabel: 'Cancelar' });
         return;
       }
       const msg = error.userMessage || error.response?.data?.detail || 'Error de conexión. Verifica tu internet o el estado del servidor.';
-      Alert.alert('Error', msg);
+      showDialog({ type: 'error', title: 'No pudimos iniciar sesión', message: msg });
     } finally {
       setLoading(false);
     }
@@ -190,16 +192,16 @@ export default function LoginScreen({ navigation }) {
   const requestPasswordReset = async () => {
     const normalizedEmail = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) || resetLoading) {
-      Alert.alert('Correo requerido', 'Escribe un correo válido para continuar.');
+      showDialog({ type: 'warning', title: 'Correo requerido', message: 'Escribe un correo válido para continuar.' });
       return;
     }
     setResetLoading(true);
     try {
       await api.post('/formularios/forgot-password', { email: normalizedEmail });
       setResetVisible(false);
-      Alert.alert('Revisa tu correo', 'Si existe una cuenta con ese correo, recibirás un enlace seguro para recuperar tu contraseña.');
+      showDialog({ type: 'success', title: 'Revisa tu correo', message: 'Si existe una cuenta con ese correo, recibirás un enlace seguro para recuperar tu contraseña.' });
     } catch (error) {
-      Alert.alert('No fue posible enviar', error.userMessage || 'Revisa tu conexión e inténtalo nuevamente.');
+      showDialog({ type: 'error', title: 'No fue posible enviar', message: error.userMessage || 'Revisa tu conexión e inténtalo nuevamente.' });
     } finally {
       setResetLoading(false);
     }

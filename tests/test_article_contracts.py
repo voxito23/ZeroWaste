@@ -42,7 +42,8 @@ class ArticleContractsTests(unittest.TestCase):
 
     def test_list_has_summaries_and_unknown_detail_is_404(self):
         summaries = self.module.list_articles()
-        self.assertEqual(5, len(summaries))
+        self.assertEqual(4, len(summaries))
+        self.assertNotIn("queretaro-recicla", {item.id for item in summaries})
         self.assertFalse(hasattr(summaries[0], "blocks"))
         with self.assertRaises(self.module.HTTPException) as raised:
             self.module.get_article("does-not-exist")
@@ -54,12 +55,22 @@ class ArticleContractsTests(unittest.TestCase):
         detail = (ROOT / "mobile_app/screens/ArticleDetailScreen.js").read_text(encoding="utf-8")
         main = (ROOT / "fast_api/app/main.py").read_text(encoding="utf-8")
         self.assertIn("app.include_router(articles.router)", main)
-        self.assertIn("api.get('/articles')", home)
+        self.assertIn("api.get('/articles'", home)
         self.assertIn("navigation.navigate('ArticleDetail'", home)
         self.assertNotIn("Linking.openURL(item.url)", home)
         self.assertIn('name="ArticleDetail"', navigator)
-        self.assertIn("api.get(`/articles/${encodeURIComponent(articleId)}`)", detail)
+        self.assertIn("isNews ? 'news' : 'articles'", detail)
         self.assertNotIn("WebView", detail)
+
+    def test_news_has_an_independent_native_contract(self):
+        news = (ROOT / "fast_api/app/routers/news.py").read_text(encoding="utf-8")
+        home = (ROOT / "mobile_app/screens/HomeScreen.js").read_text(encoding="utf-8")
+        navigator = (ROOT / "mobile_app/navigation/AppNavigator.js").read_text(encoding="utf-8")
+        self.assertIn('prefix="/news"', news)
+        self.assertIn("api.get('/news'", home)
+        self.assertIn("navigation.navigate('NewsDetail'", home)
+        self.assertIn('name="NewsDetail"', navigator)
+        self.assertNotIn("Querétaro recicla{' '}", home)
 
     def test_article_blocks_reject_unknown_types(self):
         with self.assertRaises(ValidationError):

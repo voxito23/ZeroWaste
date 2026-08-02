@@ -41,6 +41,17 @@ def validate_comment(value: object) -> str:
     return content
 
 
+def validate_forum_text(value: object, *, field_name: str, minimum: int, maximum: int) -> str:
+    content = clean_plain_text(value)
+    if len(content) < minimum:
+        raise ValueError(f"{field_name} debe tener al menos {minimum} caracteres.")
+    if len(content) > maximum:
+        raise ValueError(f"{field_name} no puede superar {maximum} caracteres.")
+    if is_contaminated_comment(content):
+        raise ValueError(f"{field_name} debe enviarse como texto plano, sin HTML ni CSS.")
+    return content
+
+
 def safe_comment_for_output(value: object) -> tuple[str, bool]:
     try:
         content = clean_plain_text(value)

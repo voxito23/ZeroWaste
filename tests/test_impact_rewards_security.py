@@ -21,6 +21,12 @@ class ImpactRewardsSecurityTests(unittest.TestCase):
         self.assertIn("hashlib.sha256", qr_tokens)
         self.assertIn("qr.used_at", collection_qr)
         self.assertIn("/qr/validar", mobile)
+        self.assertIn("/qr/confirmar", mobile)
+        qr_router = (ROOT / "fast_api/app/routers/qr.py").read_text(encoding="utf-8")
+        validation_block = qr_router.split('@router.post("/confirmar")', 1)[0]
+        self.assertIn("inspect_collection_qr", validation_block)
+        self.assertNotIn("complete_collection(\n                db", validation_block)
+        self.assertIn('"authorized": authorized', qr_router)
         self.assertNotIn("return isNaN(num) ? 1", mobile)
 
     def test_capacity_and_redemptions_are_serialized_and_idempotent(self):

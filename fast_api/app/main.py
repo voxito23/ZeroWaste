@@ -19,7 +19,7 @@ from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.routers import articles, auth, auth_external, usuarios, foro, mapa, eventos, analisis, formularios, docs_auth, campanas, recoleccion, firewall_monitor, impacto, qr
+from app.routers import articles, auth, auth_external, usuarios, foro, mapa, eventos, analisis, formularios, docs_auth, campanas, recoleccion, firewall_monitor, impacto, qr, notifications, news, mobile_links
 from app.security.firewall import FirewallMiddleware
 from app.data.database import engine
 from app.observability import READINESS
@@ -100,7 +100,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "X-API-Key"],
 )
 
@@ -153,6 +153,9 @@ app.openapi = custom_openapi
 app.include_router(auth.router)
 app.include_router(auth_external.router)
 app.include_router(articles.router)
+app.include_router(news.router)
+app.include_router(mobile_links.router)
+app.include_router(notifications.router)
 app.include_router(usuarios.router)
 app.include_router(foro.router)
 app.include_router(impacto.router)

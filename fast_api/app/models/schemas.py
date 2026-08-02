@@ -4,12 +4,12 @@ Cubre TODAS las entidades del proyecto ZeroWaste.
 """
 
 from datetime import datetime
-from typing import Optional, List
+from typing import Literal, Optional, List
 from decimal import Decimal
 from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 from app.services.media import build_public_avatar_url, build_public_media_url
-from app.services.forum_content import safe_comment_for_output, validate_comment
+from app.services.forum_content import safe_comment_for_output, validate_comment, validate_forum_text
 
 
 # Esquemas de token JWT
@@ -163,11 +163,26 @@ class ForumAuthor(BaseModel):
     nombre: str
     avatar_url: Optional[str] = None
 
+    @model_validator(mode="after")
+    def populate_public_avatar_url(self):
+        self.avatar_url = build_public_avatar_url(self.avatar_url)
+        return self
+
 class PostCreate(BaseModel):
-    titulo: str
-    contenido: str
+    titulo: str = Field(min_length=3, max_length=200)
+    contenido: str = Field(min_length=3, max_length=5000)
     categoria_id: int
     imagen: Optional[str] = None
+
+    @field_validator("titulo", mode="before")
+    @classmethod
+    def validate_title(cls, value: object) -> str:
+        return validate_forum_text(value, field_name="El título", minimum=3, maximum=200)
+
+    @field_validator("contenido", mode="before")
+    @classmethod
+    def validate_body(cls, value: object) -> str:
+        return validate_forum_text(value, field_name="El contenido", minimum=3, maximum=5000)
 
     model_config = {
         "json_schema_extra": {
@@ -184,10 +199,20 @@ class PostCreate(BaseModel):
 
 
 class PostUpdate(BaseModel):
-    titulo: Optional[str] = None
-    contenido: Optional[str] = None
+    titulo: Optional[str] = Field(default=None, min_length=3, max_length=200)
+    contenido: Optional[str] = Field(default=None, min_length=3, max_length=5000)
     categoria_id: Optional[int] = None
     imagen: Optional[str] = None
+
+    @field_validator("titulo", mode="before")
+    @classmethod
+    def validate_optional_title(cls, value: object):
+        return None if value is None else validate_forum_text(value, field_name="El título", minimum=3, maximum=200)
+
+    @field_validator("contenido", mode="before")
+    @classmethod
+    def validate_optional_body(cls, value: object):
+        return None if value is None else validate_forum_text(value, field_name="El contenido", minimum=3, maximum=5000)
 
     model_config = {
         "json_schema_extra": {
@@ -205,11 +230,13 @@ class PostUpdate(BaseModel):
 
 class PostResponse(BaseModel):
     id: int
+    type: Literal["forum_post"] = "forum_post"
     titulo: str
     contenido: str
     categoria_id: int
     autor_id: int
     imagen: Optional[str] = None
+
     image_url: Optional[str] = None
     created_at: Optional[datetime] = None
 
@@ -280,6 +307,7 @@ class PostDetailResponse(PostResponse):
 
 class RespuestaCreate(BaseModel):
     contenido: str = Field(min_length=11, max_length=1000)
+    parent_comment_id: Optional[int] = Field(default=None, ge=1)
 
     @field_validator("contenido", mode="before")
     @classmethod
@@ -301,6 +329,7 @@ class RespuestaResponse(BaseModel):
     id: int
     post_id: int
     autor_id: int
+    parent_comment_id: Optional[int] = None
     contenido: str
     created_at: Optional[datetime] = None
     autor_nombre: Optional[str] = None

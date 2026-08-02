@@ -7,7 +7,7 @@ NO se ejecuta create_all() — las tablas ya fueron creadas por Flask / Laravel.
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import (
     Column, Integer, String, Text, DateTime, Date, Time, Boolean, Numeric,
-    ForeignKey, UniqueConstraint, CheckConstraint,
+    ForeignKey, UniqueConstraint, CheckConstraint, JSON,
 )
 from sqlalchemy.orm import relationship, Session
 from app.data.database import Base
@@ -145,6 +145,7 @@ class RespuestaForo(Base):
     id = Column(Integer, primary_key=True, index=True)
     post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
     autor_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    parent_comment_id = Column(Integer, ForeignKey("respuestas.id", ondelete="CASCADE"), nullable=True, index=True)
     contenido = Column(Text, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
@@ -233,8 +234,50 @@ class Notificacion(Base):
     titulo = Column(String(255), nullable=False)
     mensaje = Column(Text, nullable=False)
     url = Column(String(255), nullable=True)
+    type = Column(String(50), nullable=False, default="system_notice", index=True)
+    entity_id = Column(String(100), nullable=True)
+    post_id = Column(Integer, ForeignKey("posts.id", ondelete="CASCADE"), nullable=True, index=True)
+    comment_id = Column(Integer, ForeignKey("respuestas.id", ondelete="CASCADE"), nullable=True, index=True)
+    route = Column(String(255), nullable=True)
+    payload = Column(JSON, nullable=False, default=dict)
     leida = Column(Boolean, default=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class DevicePushToken(Base):
+    __tablename__ = "device_push_tokens"
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), nullable=False, index=True)
+    expo_push_token = Column(String(255), nullable=False, unique=True)
+    device_id = Column(String(255), nullable=False)
+    platform = Column(String(20), nullable=False)
+    active = Column(Boolean, nullable=False, default=True, index=True)
+    last_seen_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    disabled_at = Column(DateTime(timezone=True), nullable=True)
+    last_error = Column(String(100), nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc))
+    __table_args__ = (
+        UniqueConstraint("user_id", "device_id", name="uq_push_token_user_device"),
+        CheckConstraint("platform IN ('android', 'ios')", name="ck_push_token_platform"),
+    )
+
+
+class NotificationPreference(Base):
+    __tablename__ = "notification_preferences"
+    user_id = Column(Integer, ForeignKey("usuarios.id", ondelete="CASCADE"), primary_key=True)
+    push_enabled = Column(Boolean, nullable=False, default=True)
+    in_app_enabled = Column(Boolean, nullable=False, default=True)
+    comments = Column(Boolean, nullable=False, default=True)
+    replies = Column(Boolean, nullable=False, default=True)
+    likes = Column(Boolean, nullable=False, default=True)
+    news = Column(Boolean, nullable=False, default=True)
+    articles = Column(Boolean, nullable=False, default=True)
+    campaigns = Column(Boolean, nullable=False, default=True)
+    collections = Column(Boolean, nullable=False, default=True)
+    points = Column(Boolean, nullable=False, default=True)
+    rewards = Column(Boolean, nullable=False, default=True)
+    system = Column(Boolean, nullable=False, default=True)
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
 
 # TAREA 2: MODELOS DE CONTACTO Y RECUPERACIÓN (Migrados desde Flask)

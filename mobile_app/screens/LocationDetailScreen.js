@@ -1,21 +1,13 @@
 import React from 'react';
-import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { ArrowLeft, MapPin, Navigation, Recycle } from 'lucide-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import RemoteImage from '../components/ui/RemoteImage';
 import { normalizeMediaUrl } from '../utils/media';
-import { openDirections } from '../utils/directions';
 
 
-export const openPointDirections = async (point) => {
-  try {
-    await openDirections(point);
-  } catch (error) {
-    Alert.alert('No fue posible abrir el mapa', error.message || 'Revisa que tengas una aplicación de navegación disponible.');
-  }
-};
 
 export default function LocationDetailScreen() {
   const navigation = useNavigation();
@@ -53,7 +45,7 @@ export default function LocationDetailScreen() {
             <View className="ml-3 flex-1"><Text className="text-xs font-black uppercase tracking-wider text-slate-400">Materiales</Text><Text className="mt-1 text-[15px] leading-6 text-slate-700">{point.materiales || 'Consulta los materiales aceptados al llegar.'}</Text></View>
           </View>
           <View className="mt-3 rounded-2xl bg-white p-4"><Text className="text-xs font-black uppercase tracking-wider text-slate-400">Horario</Text><Text className="mt-1 text-[15px] leading-6 text-slate-700">{point.horario || 'Consulta el horario antes de acudir.'}</Text></View>
-          <TouchableOpacity onPress={() => openPointDirections(point)} className="mt-6 flex-row items-center justify-center rounded-2xl bg-emerald-700 py-4" accessibilityRole="button" accessibilityLabel="Abrir navegación externa">
+          <TouchableOpacity onPress={() => navigation.navigate('RouteNavigation', { point })} className="mt-6 flex-row items-center justify-center rounded-2xl bg-emerald-700 py-4" accessibilityRole="button" accessibilityLabel="Abrir ruta dentro de ZeroWaste">
             <Navigation color="#fff" size={20} />
             <Text className="ml-2 text-base font-black text-white">Ir ahora</Text>
           </TouchableOpacity>

@@ -1,10 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { Alert, Animated, Pressable, View } from 'react-native';
+import { Animated, Pressable, View } from 'react-native';
 import { Camera, Home, Map as MapIcon, MessageSquare, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useScrollContext } from '../../context/ScrollContext';
-import { useAuth } from '../../store/useAuth';
 import { colors, motion } from '../../theme/tokens';
 
 
@@ -38,7 +37,6 @@ function AnimatedTabButton({ children, disabled, onLongPress, onPress, accessibi
 
 export default function FloatingTabBar({ state, descriptors, navigation }) {
   const insets = useSafeAreaInsets();
-  const { user } = useAuth();
   const { tabY, showTabBar, isTabVisible, reduceMotion } = useScrollContext();
   const activeRoute = state.routes[state.index]?.name;
   const totalHeight = TAB_BAR_VISUAL_HEIGHT + Math.max(insets.bottom, 8) + TAB_BAR_MARGIN;
@@ -90,7 +88,6 @@ export default function FloatingTabBar({ state, descriptors, navigation }) {
           const onLongPress = () => navigation.emit({ type: 'tabLongPress', target: route.key });
 
           if (routeName === 'scanner') {
-            const canScan = user?.rol === 'recolector' || user?.rol === 'admin' || user?.is_admin;
             return (
               <AnimatedTabButton
                 key={route.key}
@@ -98,11 +95,11 @@ export default function FloatingTabBar({ state, descriptors, navigation }) {
                 selected={isFocused}
                 reduceMotion={reduceMotion}
                 onLongPress={onLongPress}
-                onPress={canScan ? onPress : () => Alert.alert('Acceso restringido', 'El escáner está disponible para recolectores autorizados.')}
+                onPress={onPress}
                 style={{ flex: 1, height: TAB_BAR_VISUAL_HEIGHT, alignItems: 'center', justifyContent: 'center' }}
               >
                 <View
-                  className={`h-16 w-16 items-center justify-center rounded-full border-4 border-white ${canScan ? 'bg-emerald-600' : 'bg-slate-400'}`}
+                  className="h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-emerald-600"
                   style={{ marginTop: -26, shadowColor: colors.forest, shadowOpacity: 0.24, shadowRadius: 10, elevation: 9 }}
                 >
                   <IconComponent color={colors.white} size={28} strokeWidth={2.5} />

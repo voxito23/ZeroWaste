@@ -6,7 +6,7 @@ Router de usuarios — CRUD protegido por JWT.
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status, Form, File, UploadFile
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, load_only
 
 import os
 import json
@@ -41,7 +41,14 @@ def read_current_user(current_user: Usuario = Depends(get_current_user)):
 
 @router.get("/me/notificaciones", summary="Listar mis notificaciones")
 def read_notifications(db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
-    rows = db.query(Notificacion).filter_by(user_id=current_user.id).order_by(Notificacion.created_at.desc()).limit(100).all()
+    rows = (
+        db.query(Notificacion)
+        .options(load_only(Notificacion.id, Notificacion.titulo, Notificacion.mensaje, Notificacion.url, Notificacion.leida, Notificacion.created_at))
+        .filter_by(user_id=current_user.id)
+        .order_by(Notificacion.created_at.desc())
+        .limit(100)
+        .all()
+    )
     return [{"id": row.id, "titulo": row.titulo, "mensaje": row.mensaje, "url": row.url, "leida": row.leida, "created_at": row.created_at} for row in rows]
 
 
@@ -52,7 +59,12 @@ def unread_notifications(db: Session = Depends(get_db), current_user: Usuario = 
 
 @router.put("/me/notificaciones/{notification_id}/leida", summary="Marcar notificación como leída")
 def mark_notification_read(notification_id: int, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
-    row = db.query(Notificacion).filter_by(id=notification_id, user_id=current_user.id).first()
+    row = (
+        db.query(Notificacion)
+        .options(load_only(Notificacion.id, Notificacion.leida))
+        .filter_by(id=notification_id, user_id=current_user.id)
+        .first()
+    )
     if not row:
         raise HTTPException(status_code=404, detail="Notificación no encontrada.")
     row.leida = True

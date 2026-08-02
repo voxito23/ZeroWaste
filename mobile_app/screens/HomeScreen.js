@@ -26,6 +26,8 @@ import UserAvatar from '../components/ui/UserAvatar';
 import { motion } from '../theme/tokens';
 import { normalizeMediaUrl } from '../utils/media';
 import { resolveAvatar } from '../utils/user';
+import Skeleton from '../components/ui/Skeleton';
+import { EDITORIAL_IMAGES, MOBILE_ARTICLES, MOBILE_NEWS } from '../data/editorialContent';
 import {
   Search,
   Users,
@@ -51,22 +53,6 @@ import {
 } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
-
-/* ─── DATA ────────────────────────────────────────────────────────── */
-const ARTICLE_FALLBACKS = {
-  'reciclar-plastico': require('../assets/images/plasticos.png'),
-  'ahorro-agua': require('../assets/images/aguah.png'),
-  'energia-solar': require('../assets/images/solar.png'),
-  'compostaje-urbano': require('../assets/images/composta.png'),
-  'queretaro-recicla': require('../assets/images/qrocapita.jpg'),
-};
-
-const EDITORIAL_TRENDS = [
-  { id: 'reciclar-plastico', title: 'Reciclar plástico: 10 consejos para reducir hoy', excerpt: 'Pequeños cambios diarios que generan un impacto real en nuestro planeta.', category: 'Reciclaje', read_time: '5 min', local: true, blocks: [{ type: 'text', heading: 'Empieza con hábitos simples', text: 'Separa, limpia y compacta tus envases. Consulta en el mapa qué materiales recibe cada punto ZeroWaste antes de llevarlos.' }] },
-  { id: 'ahorro-agua', title: 'Ahorro de agua: técnicas para el futuro', excerpt: 'Métodos simples de recolección y reutilización responsable.', category: 'Consumo responsable', read_time: '8 min', local: true, blocks: [{ type: 'text', heading: 'Cada litro cuenta', text: 'Detecta fugas, reutiliza agua cuando sea seguro y elige equipos eficientes para reducir el consumo diario.' }] },
-  { id: 'energia-solar', title: 'Energía solar: fuentes limpias para renovar', excerpt: 'La transición a energías limpias también puede comenzar en casa.', category: 'Energía limpia', read_time: '6 min', local: true, blocks: [{ type: 'text', heading: 'Evalúa antes de instalar', text: 'Revisa orientación, consumo y proveedores certificados para tomar una decisión informada.' }] },
-  { id: 'compostaje-urbano', title: 'Compostaje urbano: nutrientes para circular', excerpt: 'Transforma residuos orgánicos en nueva vida con una guía práctica.', category: 'Compostaje', read_time: '7 min', local: true, blocks: [{ type: 'text', heading: 'Equilibra tu composta', text: 'Combina materiales húmedos y secos, conserva ventilación y evita residuos de origen animal.' }] },
-];
 
 /* ─── ANIMATED PRIMITIVES ─────────────────────────────────────────── */
 const TouchableScale = ({ children, style, onPress, scaleVal = 0.97 }) => {
@@ -117,12 +103,21 @@ export default function HomeScreen() {
   const ringPulse = useRef(new Animated.Value(1)).current;
 
   const tendListRef = useRef(null);
+  const articlesRequestRef = useRef(0);
+  const articlesAbortRef = useRef(null);
+  const newsRequestRef = useRef(0);
+  const newsAbortRef = useRef(null);
   const { user } = useAuth();
   const { handleScroll, reduceMotion } = useScrollContext();
   const [tendIndex, setTendIndex] = useState(0);
   const [articles, setArticles] = useState([]);
   const [articlesLoading, setArticlesLoading] = useState(true);
+  const [articlesRefreshing, setArticlesRefreshing] = useState(false);
+  const [articlesEmpty, setArticlesEmpty] = useState(false);
   const [articlesError, setArticlesError] = useState('');
+  const [localNews, setLocalNews] = useState(null);
+  const [newsLoading, setNewsLoading] = useState(true);
+  const [newsError, setNewsError] = useState('');
   const [campaignsList, setCampaignsList] = useState([]);
   const [contentError, setContentError] = useState('');
   const [contentLoading, setContentLoading] = useState(true);
@@ -131,25 +126,68 @@ export default function HomeScreen() {
   const [impactLoading, setImpactLoading] = useState(true);
   const [impactError, setImpactError] = useState(false);
 
-  const fetchArticles = useCallback(async () => {
-    setArticlesLoading(true);
+  const fetchArticles = useCallback(async ({ manualRefresh = false } = {}) => {
+    const requestId = ++articlesRequestRef.current;
+    articlesAbortRef.current?.abort();
+    const controller = new AbortController();
+    articlesAbortRef.current = controller;
+    if (manualRefresh) setArticlesRefreshing(true);
+    else setArticlesLoading(true);
     setArticlesError('');
-    try {
-      const { data } = await api.get('/articles');
-      const rows = Array.isArray(data) ? data.filter((article) => article?.id && article?.title) : [];
-      const available = rows.filter((article) => article.id !== 'queretaro-recicla');
-      setArticles(available.length ? available : EDITORIAL_TRENDS);
-      if (!available.length) setArticlesError('');
-    } catch (requestError) {
-      setArticles(EDITORIAL_TRENDS);
-      setArticlesError('');
-    } finally {
+    let lastError;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        if (attempt) await new Promise((resolve) => setTimeout(resolve, 650));
+        const { data } = await api.get('/articles', { signal: controller.signal });
+        if (requestId !== articlesRequestRef.current) return;
+        const rows = Array.isArray(data) ? data.filter((article) => article?.id && article?.title) : [];
+        const available = rows.filter((article) => article.id !== 'queretaro-recicla');
+        const resolvedArticles = available.length ? available : MOBILE_ARTICLES;
+        setArticles(resolvedArticles);
+        setArticlesEmpty(resolvedArticles.length === 0);
+        setArticlesError('');
+        lastError = null;
+        break;
+      } catch (requestError) {
+        if (controller.signal.aborted || requestId !== articlesRequestRef.current) return;
+        lastError = requestError;
+      }
+    }
+    if (requestId === articlesRequestRef.current) {
+      if (lastError) {
+        setArticles(MOBILE_ARTICLES);
+        setArticlesEmpty(MOBILE_ARTICLES.length === 0);
+        setArticlesError('');
+      }
       setArticlesLoading(false);
+      setArticlesRefreshing(false);
+    }
+  }, []);
+
+  const fetchNews = useCallback(async () => {
+    const requestId = ++newsRequestRef.current;
+    newsAbortRef.current?.abort();
+    const controller = new AbortController();
+    newsAbortRef.current = controller;
+    setNewsLoading(true);
+    setNewsError('');
+    try {
+      const { data } = await api.get('/news', { signal: controller.signal });
+      if (requestId !== newsRequestRef.current) return;
+      const first = Array.isArray(data) ? data.find((item) => item?.id && item?.title) : null;
+      setLocalNews(first || MOBILE_NEWS[0] || null);
+    } catch (requestError) {
+      if (controller.signal.aborted || requestId !== newsRequestRef.current) return;
+      setLocalNews(MOBILE_NEWS[0] || null);
+      setNewsError('');
+    } finally {
+      if (requestId === newsRequestRef.current) setNewsLoading(false);
     }
   }, []);
 
   useEffect(() => {
     void fetchArticles();
+    void fetchNews();
     api.get('/usuarios/me/notificaciones/no-leidas').then(({ data }) => setUnreadNotifications(Number(data?.total) || 0)).catch(() => setUnreadNotifications(0));
     api.get('/impacto/me')
       .then(({ data }) => {
@@ -200,7 +238,13 @@ export default function HomeScreen() {
       }
     };
     fetchActiveCampaignsAndEvents();
-  }, [fetchArticles]);
+    return () => {
+      articlesRequestRef.current += 1;
+      articlesAbortRef.current?.abort();
+      newsRequestRef.current += 1;
+      newsAbortRef.current?.abort();
+    };
+  }, [fetchArticles, fetchNews]);
 
   useEffect(() => {
     if (reduceMotion) {
@@ -352,12 +396,14 @@ export default function HomeScreen() {
             </View>
           </View>
           
-          {articlesLoading ? <ActivityIndicator className="my-12" color="#047857" /> : articlesError ? (
+          {articlesLoading && articles.length === 0 ? <View className="mx-5 overflow-hidden rounded-[30px] bg-white"><Skeleton style={{ aspectRatio: 16 / 10 }} /><View className="p-5"><Skeleton className="h-5 w-28 rounded-full" /><Skeleton className="mt-4 h-7 w-full rounded-full" /><Skeleton className="mt-3 h-4 w-4/5 rounded-full" /><Skeleton className="mt-5 h-12 w-full rounded-2xl" /></View></View> : articles.length === 0 && articlesError ? (
             <View className="mx-5 items-center rounded-3xl border border-red-100 bg-red-50 p-6">
               <Text className="text-center font-bold text-red-700">{articlesError}</Text>
-              <TouchableOpacity onPress={fetchArticles} className="mt-4 rounded-full bg-emerald-700 px-6 py-3"><Text className="font-black text-white">Reintentar</Text></TouchableOpacity>
+              <TouchableOpacity onPress={() => fetchArticles({ manualRefresh: true })} className="mt-4 rounded-full bg-emerald-700 px-6 py-3"><Text className="font-black text-white">Reintentar</Text></TouchableOpacity>
             </View>
-          ) : <FlatList
+          ) : articles.length === 0 && articlesEmpty ? (
+            <View className="mx-5 items-center rounded-3xl border border-slate-100 bg-white p-6"><Text className="text-center font-bold text-slate-600">No hay artículos publicados por el momento.</Text><TouchableOpacity onPress={() => fetchArticles({ manualRefresh: true })} className="mt-4 rounded-full border border-emerald-700 px-6 py-3"><Text className="font-black text-emerald-800">Actualizar</Text></TouchableOpacity></View>
+          ) : <><FlatList
             ref={tendListRef}
             data={articles}
             horizontal
@@ -368,14 +414,14 @@ export default function HomeScreen() {
             onMomentumScrollEnd={(event) => setTendIndex(Math.round(event.nativeEvent.contentOffset.x / width))}
             renderItem={({ item }) => (
               <View style={{ width: width, paddingHorizontal: 20 }}>
-                <TouchableScale scaleVal={0.98} onPress={() => navigation.navigate('ArticleDetail', { articleId: item.id, article: item.local ? item : undefined })}>
+                <TouchableScale scaleVal={0.98} onPress={() => navigation.navigate('ArticleDetail', { articleId: item.id })}>
                   <View
                     className="rounded-[32px] overflow-hidden bg-[#111827] mb-2"
                     style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.25, shadowRadius: 28, elevation: 14 }}
                   >
                     {/* Image Section */}
-                    <View className="relative h-[240px] bg-gray-100">
-                      <RemoteImage uri={normalizeMediaUrl(item.image_url)} fallbackSource={ARTICLE_FALLBACKS[item.id]} className="h-full w-full" aspectRatio={16 / 10} accessibilityLabel={`Imagen de ${item.title}`} />
+                    <View className="relative bg-gray-100" style={{ aspectRatio: 16 / 10 }}>
+                      <RemoteImage uri={normalizeMediaUrl(item.image_url)} fallbackSource={EDITORIAL_IMAGES[item.id]} className="h-full w-full" aspectRatio={16 / 10} accessibilityLabel={`Imagen de ${item.title}`} />
                       
                       {/* Dark fade at bottom — smooth blend */}
                       <LinearGradient
@@ -393,30 +439,25 @@ export default function HomeScreen() {
                       {/* Floating Category Chip Top Left */}
                       <View className="absolute top-4 left-4 bg-emerald-500/90 border border-emerald-300/50 px-3.5 py-1.5 rounded-full shadow-sm z-10 flex-row items-center gap-1.5">
                         <View className="w-2 h-2 rounded-full bg-white" />
-                        <Text className="text-white text-[10px] font-black uppercase tracking-wider">{item.category}</Text>
+                        <Text className="shrink text-[10px] font-black uppercase tracking-wider text-white" numberOfLines={1} ellipsizeMode="tail">{item.category}</Text>
                       </View>
 
                     </View>
 
                     {/* Content Section */}
-                    <View className="px-6 pb-6 pt-5 relative z-10">
+                    <View className="relative z-10 px-5 pb-5 pt-4">
 
-                      <Text className="text-white text-[24px] font-black leading-[28px] tracking-tight mb-2">
+                      <Text className="mb-2 text-[22px] font-black leading-[27px] tracking-tight text-white" numberOfLines={3} ellipsizeMode="tail">
                         {item.title}
                       </Text>
 
-                      <Text className="text-gray-400 text-[13px] font-medium leading-relaxed mb-5 pr-4 line-clamp-2" numberOfLines={2}>
+                      <Text className="mb-4 pr-2 text-[13px] font-medium leading-5 text-gray-300" numberOfLines={3} ellipsizeMode="tail">
                         {item.excerpt}
                       </Text>
 
-                      {/* Progress bar */}
-                      <View className="bg-white/10 rounded-full h-1.5 mb-4 overflow-hidden">
-                        <View className="bg-[#059669] h-full rounded-full" style={{ width: '35%' }} />
-                      </View>
-
                       {/* Action Row */}
-                      <View className="flex-row items-center justify-between pt-4 border-t border-white/8">
-                        <View className="flex-row items-center gap-2.5 bg-emerald-500 px-5 py-3 rounded-2xl">
+                      <View className="flex-row items-center justify-between border-t border-white/10 pt-4">
+                        <View className="min-h-11 flex-row items-center gap-2.5 rounded-2xl bg-emerald-500 px-5 py-3">
                           <Text className="text-white font-black text-[14px]">Leer artículo</Text>
                           <ArrowRight color="#fff" size={16} strokeWidth={3} />
                         </View>
@@ -426,7 +467,10 @@ export default function HomeScreen() {
                 </TouchableScale>
               </View>
             )}
-          />}
+          />
+          {articlesRefreshing ? <Text className="mt-2 text-center text-xs font-bold text-emerald-700">Actualizando tendencias…</Text> : null}
+          {articlesError ? <View className="mx-5 mt-3 flex-row items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 p-3"><Text className="mr-3 flex-1 text-xs font-bold text-amber-900">No se pudo actualizar; se conservan los artículos visibles.</Text><TouchableOpacity onPress={() => fetchArticles({ manualRefresh: true })}><Text className="font-black text-amber-900">Reintentar</Text></TouchableOpacity></View> : null}
+          </>}
         </Animated.View>
 
         {/* ═══ 5. CAMPAÑAS ACTIVAS ════════════════════════════ */}
@@ -494,66 +538,34 @@ export default function HomeScreen() {
           <View className="mb-4">
             <Text className="text-[24px] font-black text-gray-900 tracking-tight">Noticia <Text className="text-emerald-600">Local</Text></Text>
           </View>
-          <TouchableScale scaleVal={0.98} onPress={() => navigation.navigate('ArticleDetail', { articleId: 'queretaro-recicla' })}>
-            <View
-              className="rounded-[28px] overflow-hidden bg-[#111827]"
-              style={{ shadowColor: '#064E3B', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.15, shadowRadius: 28, elevation: 14 }}
-            >
-              {/* Full-bleed image */}
-              <View className="relative h-[260px]">
-                <Image source={require('../assets/images/qrocapita.jpg')} className="w-full h-full" resizeMode="cover" />
-                
-                {/* Dark fade at bottom — multi-stop LinearGradient */}
-                <LinearGradient
-                  colors={[
-                    'transparent',
-                    'rgba(17,24,39,0.3)',
-                    'rgba(17,24,39,0.6)',
-                    'rgba(17,24,39,0.9)',
-                    'rgba(17,24,39,1)',
-                  ]}
-                  locations={[0, 0.4, 0.6, 0.8, 1]}
-                  style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 140 }}
-                  pointerEvents="none"
-                />
-
-                {/* Content over the blur */}
-                <View className="absolute top-4 left-4 flex-row items-center gap-2 z-20">
-                  {/* Floating badge */}
-                  <View className="flex-row items-center gap-2 bg-emerald-500/90 px-3.5 py-1.5 rounded-full border border-emerald-300/50">
-                    <Animated.View style={{ opacity: glow }}>
-                      <View className="w-2 h-2 rounded-full bg-white" />
-                    </Animated.View>
-                    <Text className="text-white text-[10px] font-black uppercase tracking-wider">Noticia Local</Text>
-                  </View>
-
-                  <View className="flex-row items-center gap-1.5 bg-black/40 px-2.5 py-1.5 rounded-full">
-                    <Clock color="#fff" size={10} />
-                    <Text className="text-white text-[10px] font-bold">5 min de lectura</Text>
-                  </View>
-                </View>
-              </View>
-
-              {/* Content on dark */}
-              <View className="p-5 pt-4">
-                <Text className="text-white text-[24px] font-black leading-[28px] tracking-tight mb-3">
-                  Querétaro recicla{' '}
-                  <Text className="text-emerald-400">2.4 kg per cápita</Text>{' '}
-                  al día
-                </Text>
-                <Text className="text-gray-400 text-[14px] leading-relaxed font-medium mb-5">
-                  Se ha incrementado el porcentaje de reciclaje de residuos hasta llegar al 30% de los 2.4 kilos per cápita generados diariamente.
-                </Text>
-
-                <View className="flex-row items-center justify-between pt-4 border-t border-white/8">
-                  <View className="flex-row items-center gap-2.5 bg-emerald-500 px-5 py-3 rounded-2xl">
-                    <Text className="text-white font-black text-[14px]">Leer artículo</Text>
-                    <ArrowRight color="#fff" size={16} strokeWidth={3} />
-                  </View>
-                </View>
-              </View>
+          {newsLoading && !localNews ? (
+            <Skeleton className="h-[390px] rounded-[28px]" />
+          ) : newsError && !localNews ? (
+            <View className="rounded-[28px] border border-red-100 bg-white p-6">
+              <Text className="font-bold leading-6 text-red-700">{newsError}</Text>
+              <TouchableOpacity onPress={fetchNews} className="mt-4 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">Reintentar noticias</Text></TouchableOpacity>
             </View>
-          </TouchableScale>
+          ) : localNews ? (
+            <TouchableScale scaleVal={0.98} onPress={() => navigation.navigate('NewsDetail', { articleId: localNews.id })}>
+              <View className="overflow-hidden rounded-[28px] bg-[#111827]" style={{ shadowColor: '#064E3B', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.15, shadowRadius: 28, elevation: 14 }}>
+                <View className="relative h-[260px]">
+                  <RemoteImage uri={normalizeMediaUrl(localNews.image_url)} fallbackSource={EDITORIAL_IMAGES[localNews.id]} className="h-full w-full" aspectRatio={16 / 10} accessibilityLabel={`Imagen de ${localNews.title}`} />
+                  <LinearGradient colors={['transparent', 'rgba(17,24,39,0.3)', 'rgba(17,24,39,0.7)', 'rgba(17,24,39,1)']} locations={[0, 0.45, 0.72, 1]} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 145 }} pointerEvents="none" />
+                  <View className="absolute left-4 top-4 z-20 flex-row items-center gap-2">
+                    <View className="flex-row items-center gap-2 rounded-full border border-emerald-300/50 bg-emerald-500/90 px-3.5 py-1.5"><Animated.View style={{ opacity: glow }}><View className="h-2 w-2 rounded-full bg-white" /></Animated.View><Text className="text-[10px] font-black uppercase tracking-wider text-white">Noticia local</Text></View>
+                    {localNews.read_time ? <View className="flex-row items-center gap-1.5 rounded-full bg-black/40 px-2.5 py-1.5"><Clock color="#fff" size={10} /><Text className="text-[10px] font-bold text-white">{localNews.read_time}</Text></View> : null}
+                  </View>
+                </View>
+                <View className="p-5 pt-4">
+                  <Text className="mb-3 text-[24px] font-black leading-[29px] tracking-tight text-white">{localNews.title}</Text>
+                  <Text className="mb-5 text-[14px] font-medium leading-6 text-gray-400" numberOfLines={3}>{localNews.excerpt}</Text>
+                  <View className="flex-row items-center justify-between border-t border-white/10 pt-4"><View className="flex-row items-center gap-2.5 rounded-2xl bg-emerald-500 px-5 py-3"><Text className="text-[14px] font-black text-white">Leer noticia</Text><ArrowRight color="#fff" size={16} strokeWidth={3} /></View></View>
+                </View>
+              </View>
+            </TouchableScale>
+          ) : (
+            <View className="rounded-[28px] border border-slate-100 bg-white p-6"><Text className="font-bold text-slate-600">Aún no hay noticias locales publicadas.</Text></View>
+          )}
         </Animated.View>
 
       </ScrollView>

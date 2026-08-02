@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Award, ChevronRight, Gift, History, LogOut, MapPin, Settings, Shield, UserRoundPen } from 'lucide-react-native';
@@ -9,6 +9,7 @@ import { api } from '../api/axios';
 import UserAvatar from '../components/ui/UserAvatar';
 import { useScrollContext } from '../context/ScrollContext';
 import { useAuth } from '../store/useAuth';
+import ZeroWasteDialog from '../components/ui/ZeroWasteDialog';
 
 export default function ProfileScreen() {
   const navigation = useNavigation();
@@ -17,13 +18,15 @@ export default function ProfileScreen() {
   const [profile, setProfile] = useState(user);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [logoutVisible, setLogoutVisible] = useState(false);
+  const [impact, setImpact] = useState(null);
 
   const fetchProfile = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const { data } = await api.get('/usuarios/me');
-      setProfile(data);
+      const [{ data }, impactResult] = await Promise.all([api.get('/usuarios/me'), api.get('/impacto/me').catch(() => ({ data: null }))]);
+      setProfile(data); setImpact(impactResult.data);
       await updateUser(data);
     } catch (requestError) {
       setError(requestError.userMessage || 'No se pudo actualizar tu perfil.');
@@ -35,13 +38,6 @@ export default function ProfileScreen() {
   useFocusEffect(useCallback(() => {
     fetchProfile();
   }, [fetchProfile]));
-
-  const confirmLogout = () => {
-    Alert.alert('Cerrar sesión', '¿Deseas cerrar tu sesión?', [
-      { text: 'Cancelar', style: 'cancel' },
-      { text: 'Salir', style: 'destructive', onPress: logout },
-    ]);
-  };
 
   const avatarUrl = profile?.avatar_url ?? profile?.foto_perfil;
 
@@ -74,6 +70,10 @@ export default function ProfileScreen() {
               </View>
             </View>
           </View>
+          {profile?.titulo_perfil ? <Text className="mt-5 text-base font-black text-emerald-900">{profile.titulo_perfil}</Text> : null}
+          {profile?.biografia ? <Text className="mt-2 text-[15px] leading-6 text-slate-600">{profile.biografia}</Text> : null}
+          {profile?.ubicacion ? <View className="mt-4 flex-row items-center"><MapPin color="#059669" size={16} /><Text className="ml-2 font-semibold text-slate-600">{profile.ubicacion}</Text></View> : null}
+          {impact ? <View className="mt-5 flex-row rounded-2xl bg-emerald-50 p-4"><ProfileStat label="Impacto" value={impact.impacto_historico} /><ProfileStat label="Disponibles" value={impact.puntos_disponibles} /><ProfileStat label="Posición" value={impact.posicion ? `#${impact.posicion}` : '—'} /></View> : null}
           <View className="mt-5 border-t border-gray-100 pt-4">
             <Text className="text-gray-500 text-xs font-bold uppercase">Fecha de registro</Text>
             <Text className="text-gray-900 font-bold mt-1">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString('es-MX') : 'No disponible'}</Text>
@@ -110,11 +110,14 @@ export default function ProfileScreen() {
 
         <View className="px-6 mt-6">
           <Text className="text-gray-500 text-sm leading-5">Las estadísticas de impacto y el saldo de puntos aparecerán cuando exista un historial verificable en FastAPI. No se muestran valores simulados.</Text>
-          <TouchableOpacity onPress={confirmLogout} className="mt-6 items-center rounded-2xl border border-red-100 bg-red-50 py-4">
+          <TouchableOpacity onPress={() => setLogoutVisible(true)} className="mt-6 items-center rounded-2xl border border-red-100 bg-red-50 py-4">
             <View className="flex-row items-center"><LogOut color="#EF4444" size={20} /><Text className="ml-2 text-red-600 font-black">Cerrar sesión</Text></View>
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <ZeroWasteDialog visible={logoutVisible} type="warning" title="Cerrar sesión" message="Tu información permanecerá segura y podrás volver a iniciar sesión cuando quieras." primaryLabel="Cerrar sesión" onPrimary={() => { setLogoutVisible(false); void logout(); }} secondaryLabel="Cancelar" onSecondary={() => setLogoutVisible(false)} />
     </SafeAreaView>
   );
 }
+
+function ProfileStat({ label, value }) { return <View className="flex-1 items-center"><Text className="text-lg font-black text-emerald-900">{typeof value === 'number' ? value.toLocaleString('es-MX') : value ?? '—'}</Text><Text className="mt-1 text-[10px] font-black uppercase text-emerald-700">{label}</Text></View>; }

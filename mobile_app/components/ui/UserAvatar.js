@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Text, View } from 'react-native';
+import { Animated, Text, View } from 'react-native';
 
 import { normalizeMediaUrl } from '../../utils/media';
+import Skeleton from './Skeleton';
 
 
 const initialFor = (name) => {
@@ -64,9 +65,7 @@ export default function UserAvatar({
             }}
           />
           {loading ? (
-            <View className="absolute inset-0 items-center justify-center bg-emerald-50">
-              <ActivityIndicator size="small" color="#059669" />
-            </View>
+            <Skeleton className="absolute inset-0 rounded-full" />
           ) : null}
         </>
       )}

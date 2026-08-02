@@ -141,12 +141,12 @@ ARTICLE_BY_ID = {article.id: article for article in ARTICLES}
 
 @router.get("", response_model=list[ArticleSummary], summary="Listar contenido editorial móvil")
 def list_articles():
-    return [ArticleSummary(**article.model_dump()) for article in ARTICLES]
+    return [ArticleSummary(**article.model_dump()) for article in ARTICLES if article.category != "Noticia local"]
 
 
 @router.get("/{article_id}", response_model=ArticleDetail, summary="Obtener artículo estructurado")
 def get_article(article_id: str):
     article = ARTICLE_BY_ID.get(article_id)
-    if not article:
+    if not article or article.category == "Noticia local":
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artículo no encontrado.")
     return article

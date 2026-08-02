@@ -1,12 +1,9 @@
 import React, { useCallback, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  FlatList,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
+  ScrollView,
+  Share,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -20,22 +17,22 @@ import {
   Leaf,
   MessageCircle,
   Recycle,
-  Send,
-  ChevronDown,
+  Share2,
 } from 'lucide-react-native';
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { api } from '../api/axios';
 import LikeButton from '../components/forum/LikeButton';
 import RemoteImage from '../components/ui/RemoteImage';
 import UserAvatar from '../components/ui/UserAvatar';
-import { useAuth } from '../store/useAuth';
 import { formatRelativeDate } from '../utils/date';
 import { normalizeMediaUrl } from '../utils/media';
 import { htmlToPlainText } from '../utils/text';
-import { resolveAvatar, resolveDisplayName } from '../utils/user';
+import { resolveAvatar } from '../utils/user';
+import { mobileShareUrl } from '../navigation/linking';
+import CommentsModal from '../components/forum/CommentsModal';
 
 
 const categoryStyle = (category) => {
@@ -54,50 +51,45 @@ export default function PostScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const postId = route.params?.id;
-  const insets = useSafeAreaInsets();
-  const { user } = useAuth();
-  const listRef = useRef(null);
   const likeRequestRef = useRef(false);
-  const commentRequestRef = useRef(false);
+  const detailRequestRef = useRef(0);
+  const hasLoadedRef = useRef(false);
 
   const [post, setPost] = useState(null);
-  const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const [composerError, setComposerError] = useState('');
   const [actionError, setActionError] = useState('');
-  const [replyText, setReplyText] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   const [likePending, setLikePending] = useState(false);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-
-  React.useEffect(() => {
-    const show = Keyboard.addListener('keyboardDidShow', () => setKeyboardVisible(true));
-    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardVisible(false));
-    return () => { show.remove(); hide.remove(); };
-  }, []);
+  const [commentsModalVisible, setCommentsModalVisible] = useState(false);
 
   const fetchPostDetail = useCallback(async () => {
     if (!postId) return;
-    setLoading(true);
+    const requestId = ++detailRequestRef.current;
+    if (!hasLoadedRef.current) setLoading(true);
     setLoadError('');
     try {
-      const [postResponse, commentsResponse] = await Promise.all([
-        api.get(`/foro/posts/${postId}`),
-        api.get(`/foro/posts/${postId}/respuestas`),
-      ]);
+      const postResponse = await api.get(`/foro/posts/${postId}`);
+      if (requestId !== detailRequestRef.current) return;
       setPost(postResponse.data || null);
-      setComments(Array.isArray(commentsResponse.data) ? commentsResponse.data : []);
     } catch (error) {
+      if (requestId !== detailRequestRef.current) return;
       setLoadError(error.userMessage || 'No se pudo cargar la publicación.');
     } finally {
-      setLoading(false);
+      if (requestId === detailRequestRef.current) {
+        hasLoadedRef.current = true;
+        setLoading(false);
+      }
     }
   }, [postId]);
 
   useFocusEffect(useCallback(() => {
-    void fetchPostDetail();
+    if (!hasLoadedRef.current) void fetchPostDetail();
+    return () => { detailRequestRef.current += 1; };
   }, [fetchPostDetail]));
+
+  React.useEffect(() => {
+    if (post && route.params?.focusComments) setCommentsModalVisible(true);
+  }, [post, route.params?.focusComments]);
 
   const toggleLike = async () => {
     if (!post || likeRequestRef.current) return;
@@ -139,34 +131,6 @@ export default function PostScreen() {
     }
   };
 
-  const submitReply = async () => {
-    const content = replyText.trim();
-    if (content.length <= 10) {
-      setComposerError('Escribe al menos 11 caracteres.');
-      return;
-    }
-    if (commentRequestRef.current) return;
-    commentRequestRef.current = true;
-    setSubmitting(true);
-    setComposerError('');
-    try {
-      const { data } = await api.post(`/foro/posts/${postId}/respuestas`, { contenido: content });
-      setComments((current) => [...current, data]);
-      setPost((current) => {
-        const count = Math.max(0, Number(current?.comments_count ?? current?.total_respuestas) || 0) + 1;
-        return { ...current, comments_count: count, total_respuestas: count };
-      });
-      setReplyText('');
-      Keyboard.dismiss();
-      requestAnimationFrame(() => listRef.current?.scrollToEnd({ animated: true }));
-    } catch (error) {
-      setComposerError(error.userMessage || 'No se pudo enviar la respuesta. Tu texto se conservó.');
-    } finally {
-      commentRequestRef.current = false;
-      setSubmitting(false);
-    }
-  };
-
   if (loading && !post) {
     return <View className="flex-1 items-center justify-center bg-emerald-50"><ActivityIndicator size="large" color="#059669" /></View>;
   }
@@ -186,7 +150,11 @@ export default function PostScreen() {
   const postAvatar = resolveAvatar(post);
   const postImage = normalizeMediaUrl(post.image_url ?? post.imagen, 'foro');
   const likesCount = post.likes_count ?? post.total_likes ?? 0;
-  const commentsCount = post.comments_count ?? post.total_respuestas ?? comments.length;
+  const commentsCount = post.comments_count ?? post.total_respuestas ?? 0;
+  const sharePost = () => Share.share({
+    title: post.titulo,
+    message: `Te comparto esta publicación de ZeroWaste: ${post.titulo}\n${mobileShareUrl('posts', post.id)}`,
+  }).catch(() => setActionError('No se pudo abrir el menú para compartir.'));
 
   const postHeader = (
     <>
@@ -212,28 +180,14 @@ export default function PostScreen() {
         {postImage ? <RemoteImage uri={postImage} className="mb-4 w-full rounded-2xl" aspectRatio={16 / 9} accessibilityLabel="Imagen de la publicación" /> : null}
         <View className="mt-2 flex-row items-center gap-5 border-t border-slate-100 pt-3">
           <LikeButton liked={Boolean(post.liked_by_me)} count={likesCount} pending={likePending} onPress={toggleLike} />
-          <View className="flex-row items-center gap-2"><MessageCircle color="#64748B" size={20} /><Text className="font-bold text-slate-600">{commentsCount}</Text></View>
+          <TouchableOpacity onPress={() => setCommentsModalVisible(true)} className="min-h-11 flex-row items-center gap-2 px-2" accessibilityLabel={`Abrir ${commentsCount} comentarios`}>
+            <MessageCircle color="#64748B" size={20} /><Text className="font-bold text-slate-600">{commentsCount} Comentarios</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={sharePost} className="min-h-11 flex-row items-center gap-2 px-2" accessibilityLabel="Compartir publicación"><Share2 color="#64748B" size={19} /><Text className="font-bold text-slate-600">Compartir</Text></TouchableOpacity>
         </View>
       </View>
-      <Text className="px-5 pb-3 pt-6 text-[14px] font-black uppercase tracking-widest text-emerald-900">Comentarios</Text>
     </>
   );
-
-  const renderComment = ({ item }) => {
-    const commentAuthor = item.author || {};
-    return (
-      <View className="mx-5 mb-3 flex-row items-start gap-3">
-        <UserAvatar uri={resolveAvatar(item)} name={resolveDisplayName(item)} size={38} />
-        <View className={`min-w-0 flex-1 rounded-2xl px-4 py-3 ${item.contenido_invalido ? 'border border-amber-200 bg-amber-50' : 'bg-white'}`}>
-          <View className="mb-1 flex-row items-center justify-between gap-3">
-            <Text className="flex-1 text-[13px] font-bold text-emerald-950" numberOfLines={1}>{resolveDisplayName(item)}</Text>
-            <Text className="text-[10px] font-medium text-slate-400">{formatRelativeDate(item.created_at)}</Text>
-          </View>
-          <Text className={`text-[14px] leading-5 ${item.contenido_invalido ? 'text-amber-800' : 'text-slate-700'}`}>{htmlToPlainText(item.contenido)}</Text>
-        </View>
-      </View>
-    );
-  };
 
   return (
     <SafeAreaView className="flex-1 bg-emerald-50" edges={['top']}>
@@ -245,50 +199,24 @@ export default function PostScreen() {
         </TouchableOpacity>
         <Text className="ml-4 flex-1 text-[18px] font-black text-emerald-950">Discusión</Text>
       </View>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
-        <FlatList
-          ref={listRef}
-          data={comments}
-          keyExtractor={(item, index) => String(item.id ?? index)}
-          renderItem={renderComment}
-          ListHeaderComponent={postHeader}
-          ListEmptyComponent={<View className="items-center px-8 py-10"><MessageCircle color="#94A3B8" size={36} /><Text className="mt-3 text-center font-bold text-slate-500">Aún no hay respuestas</Text><Text className="mt-1 text-center text-xs text-slate-400">Sé la primera persona en unirte a la conversación.</Text></View>}
-          contentContainerStyle={{ paddingBottom: 16 }}
+      <ScrollView
+          contentContainerStyle={{ paddingBottom: 32 }}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
-          onScrollBeginDrag={Keyboard.dismiss}
-          automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
           showsVerticalScrollIndicator={false}
-        />
-        <View className="border-t border-emerald-100 bg-white px-4 pt-2" style={{ paddingBottom: Math.max(insets.bottom, 10) }}>
-          {composerError ? <Text className="mb-2 px-2 text-xs font-bold text-red-600">{composerError}</Text> : null}
-          <View className="flex-row items-end gap-2">
-            <UserAvatar uri={resolveAvatar(user)} name={resolveDisplayName(user)} size={36} />
-            <TextInput
-              value={replyText}
-              onChangeText={(value) => { setReplyText(value); if (composerError) setComposerError(''); }}
-              placeholder="Escribe un comentario..."
-              placeholderTextColor="#94A3B8"
-              multiline
-              maxLength={1000}
-              textAlignVertical="top"
-              className="max-h-28 min-h-11 flex-1 rounded-2xl bg-slate-100 px-4 py-3 text-[15px] text-slate-900"
-              accessibilityLabel="Comentario"
-              blurOnSubmit={false}
-            />
-            {keyboardVisible ? <TouchableOpacity onPress={Keyboard.dismiss} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100" accessibilityLabel="Ocultar teclado"><ChevronDown color="#475569" size={20} /></TouchableOpacity> : null}
-            <TouchableOpacity
-              onPress={submitReply}
-              disabled={replyText.trim().length <= 10 || submitting}
-              className={`h-11 w-11 items-center justify-center rounded-full ${replyText.trim().length > 10 && !submitting ? 'bg-emerald-600' : 'bg-slate-200'}`}
-              accessibilityLabel="Enviar comentario"
-              accessibilityState={{ disabled: replyText.trim().length <= 10 || submitting, busy: submitting }}
-            >
-              {submitting ? <ActivityIndicator size="small" color="#fff" /> : <Send color={replyText.trim().length > 10 ? '#fff' : '#94A3B8'} size={18} />}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </KeyboardAvoidingView>
+        >
+        {postHeader}
+      </ScrollView>
+      <CommentsModal
+        visible={commentsModalVisible}
+        post={post}
+        highlightCommentId={route.params?.highlightCommentId}
+        onClose={() => {
+          setCommentsModalVisible(false);
+          navigation.setParams({ focusComments: false, highlightCommentId: undefined });
+        }}
+        onCountChange={(count) => setPost((current) => ({ ...current, total_respuestas: count, comments_count: count }))}
+      />
     </SafeAreaView>
   );
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, ActivityIndicator } from 'react-native';
 import { useAuth } from '../store/useAuth';
 import { api } from '../api/axios';
 import { useNavigation } from '@react-navigation/native';
@@ -8,10 +8,12 @@ import CustomButton from '../components/ui/CustomButton';
 import { ArrowLeft, Star } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 import QRCode from 'react-native-qrcode-svg';
+import { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
 
 export default function MisRecoleccionesScreen() {
   const { user } = useAuth();
   const navigation = useNavigation();
+  const { showDialog } = useZeroWasteDialog();
   const [recolecciones, setRecolecciones] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -50,7 +52,7 @@ export default function MisRecoleccionesScreen() {
       setQrData({ collection, content: data.content, expiresAt: data.expires_at });
       setQrModalVisible(true);
     } catch (requestError) {
-      Alert.alert('No se pudo generar el QR', requestError.userMessage);
+      showDialog({ type: 'error', title: 'No se pudo generar el QR', message: requestError.userMessage || 'Revisa tu conexión e inténtalo nuevamente.' });
     } finally {
       setQrLoading(false);
     }
@@ -63,11 +65,9 @@ export default function MisRecoleccionesScreen() {
         calificacion,
         comentario
       });
-      Alert.alert('Éxito', '¡Gracias por calificar a tu recolector!');
-      setCalificacionModalVisible(false);
-      fetchRecolecciones();
+      showDialog({ type: 'success', title: 'Calificación enviada', message: 'Gracias por calificar a tu recolector.', onPrimary: () => { setCalificacionModalVisible(false); void fetchRecolecciones(); } });
     } catch (error) {
-      Alert.alert('Error', 'No se pudo enviar la calificación');
+      showDialog({ type: 'error', title: 'No se pudo enviar', message: 'No fue posible enviar la calificación.' });
     }
   };
 

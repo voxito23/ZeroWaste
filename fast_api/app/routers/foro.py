@@ -5,7 +5,7 @@ Router del foro — CRUD completo: posts, respuestas y likes.
 import os
 from typing import List
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -22,11 +22,14 @@ from app.security.jwt_auth import get_current_user, get_optional_current_user
 from app.services.media import (
     MAX_IMAGE_BYTES,
     MediaValidationError,
+    build_public_avatar_url,
     media_directory,
     remove_media_file,
     save_media_image,
 )
 from app.services.points import award_points
+from app.services.forum_content import validate_forum_text
+from app.services.push_notifications import active_tokens, in_app_allowed, push_allowed, send_expo_push
 
 router = APIRouter(prefix="/foro", tags=["Foro"])
 
@@ -65,6 +68,7 @@ def _serialize_reply(reply: RespuestaForo) -> RespuestaResponse:
         id=reply.id,
         post_id=reply.post_id,
         autor_id=reply.autor_id,
+        parent_comment_id=reply.parent_comment_id,
         contenido=reply.contenido,
         created_at=reply.created_at,
         autor_nombre=reply.autor_rel.nombre if reply.autor_rel else None,
@@ -205,12 +209,14 @@ def create_post(
 )
 async def create_post_with_image(
     titulo: str = Form(..., min_length=3, max_length=200),
-    contenido: str = Form(..., min_length=3),
+    contenido: str = Form(..., min_length=3, max_length=5000),
     categoria_id: int = Form(...),
     imagen: UploadFile | None = File(None),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user),
 ):
+    titulo = validate_forum_text(titulo, field_name="El título", minimum=3, maximum=200)
+    contenido = validate_forum_text(contenido, field_name="El contenido", minimum=3, maximum=5000)
     categoria = db.query(Categoria).filter(Categoria.id == categoria_id).first()
     if not categoria:
         raise HTTPException(status_code=422, detail="La categoría seleccionada no existe.")
@@ -294,6 +300,8 @@ def delete_post(
 )
 def list_respuestas(
     post_id: int,
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
     db: Session = Depends(get_db),
 ):
     """Devuelve todas las respuestas de un post, ordenadas cronológicamente."""
@@ -301,6 +309,8 @@ def list_respuestas(
         db.query(RespuestaForo)
         .filter(RespuestaForo.post_id == post_id)
         .order_by(RespuestaForo.created_at.asc())
+        .offset(offset)
+        .limit(limit)
         .all()
     )
     return [_serialize_reply(reply) for reply in respuestas]
@@ -315,6 +325,7 @@ def list_respuestas(
 def create_respuesta(
     post_id: int,
     respuesta_in: RespuestaCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user),
 ):
@@ -323,9 +334,16 @@ def create_respuesta(
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
 
+    parent = None
+    if respuesta_in.parent_comment_id:
+        parent = db.query(RespuestaForo).filter_by(id=respuesta_in.parent_comment_id, post_id=post_id).first()
+        if not parent:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="El comentario al que intentas responder no pertenece a esta publicación.")
+
     nueva_respuesta = RespuestaForo(
         post_id=post_id,
         autor_id=current_user.id,
+        parent_comment_id=parent.id if parent else None,
         contenido=respuesta_in.contenido,
     )
     db.add(nueva_respuesta)
@@ -336,18 +354,51 @@ def create_respuesta(
         description="Respuesta válida en el foro",
     )
 
-    # Notificar al autor del post (si no es el mismo que responde)
-    if post.autor_id != current_user.id:
-        noti = Notificacion(
-            user_id=post.autor_id,
-            titulo=f"{current_user.nombre} respondió a tu post",
-            mensaje=respuesta_in.contenido[:100],
-            url=f"/foro",
-        )
-        db.add(noti)
+    recipient_id = parent.autor_id if parent else post.autor_id
+    notification_type = "comment_reply" if parent else "post_comment"
+    notification = None
+    push_message = None
+    if recipient_id != current_user.id:
+        route = f"/posts/{post_id}"
+        payload = {
+            "type": notification_type,
+            "entityId": str(nueva_respuesta.id),
+            "postId": str(post_id),
+            "route": route,
+            "openComments": True,
+            "highlightCommentId": str(nueva_respuesta.id),
+            "actorName": current_user.nombre,
+            "actorAvatarUrl": build_public_avatar_url(current_user.foto_perfil),
+        }
+        title = f"{current_user.nombre} respondió tu comentario" if parent else f"{current_user.nombre} comentó tu publicación"
+        body = respuesta_in.contenido[:100]
+        push_message = {"title": title, "body": body, "data": payload}
+        if in_app_allowed(db, recipient_id, notification_type):
+            noti = Notificacion(
+                user_id=recipient_id,
+                titulo=title,
+                mensaje=body,
+                url=f"zerowaste://posts/{post_id}",
+                type=notification_type,
+                entity_id=str(nueva_respuesta.id),
+                post_id=post_id,
+                comment_id=nueva_respuesta.id,
+                route=route,
+                payload=payload,
+            )
+            db.add(noti)
+            db.flush()
+            noti.payload = {**payload, "notificationId": str(noti.id)}
+            push_message["data"] = noti.payload
+            notification = noti
 
     db.commit()
     db.refresh(nueva_respuesta)
+
+    if push_message and push_allowed(db, recipient_id, notification_type):
+        tokens = active_tokens(db, recipient_id)
+        if tokens:
+            background_tasks.add_task(send_expo_push, tokens, **push_message)
 
     return _serialize_reply(nueva_respuesta)
 
@@ -357,6 +408,7 @@ def create_respuesta(
 @router.put("/posts/{post_id}/like", response_model=LikeResponse, summary="Dar like a un post")
 def activate_like(
     post_id: int,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user),
 ):
@@ -367,17 +419,43 @@ def activate_like(
         return _like_response(db, post_id, True)
 
     db.add(LikeForo(post_id=post_id, usuario_id=current_user.id))
+    notification = None
+    push_message = None
     if post.autor_id != current_user.id:
-        db.add(Notificacion(
-            user_id=post.autor_id,
-            titulo=f"A {current_user.nombre} le gustó tu post",
-            mensaje=f"Tu publicación \"{post.titulo[:50]}\" recibió un like",
-            url="/foro",
-        ))
+        payload = {
+            "type": "post_like", "entityId": str(post_id), "postId": str(post_id),
+            "route": f"/posts/{post_id}", "actorName": current_user.nombre,
+            "actorAvatarUrl": build_public_avatar_url(current_user.foto_perfil),
+        }
+        title = f"A {current_user.nombre} le gustó tu post"
+        body = f"Tu publicación \"{post.titulo[:50]}\" recibió un like"
+        push_message = {"title": title, "body": body, "data": payload}
+        if in_app_allowed(db, post.autor_id, "post_like"):
+            notification = Notificacion(
+                user_id=post.autor_id,
+                titulo=title,
+                mensaje=body,
+                url=f"zerowaste://posts/{post_id}",
+                type="post_like",
+                entity_id=str(post_id),
+                post_id=post_id,
+                route=f"/posts/{post_id}",
+                payload=payload,
+            )
+            db.add(notification)
+            db.flush()
+            notification.payload = {**payload, "notificationId": str(notification.id)}
+            push_message["data"] = notification.payload
+    committed = False
     try:
         db.commit()
+        committed = True
     except IntegrityError:
         db.rollback()
+    if committed and push_message and push_allowed(db, post.autor_id, "post_like"):
+        tokens = active_tokens(db, post.autor_id)
+        if tokens:
+            background_tasks.add_task(send_expo_push, tokens, **push_message)
     return _like_response(db, post_id, True)
 
 

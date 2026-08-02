@@ -1,113 +1,257 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, ScrollView, Modal, TextInput, Alert, TouchableOpacity, KeyboardAvoidingView, Platform, Linking } from 'react-native';
-import { api } from '../api/axios';
-import CustomButton from '../components/ui/CustomButton';
-import { Truck, Navigation, X, MapPin, QrCode, Leaf } from 'lucide-react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  AccessibilityInfo,
+  ActivityIndicator,
+  FlatList,
+  Linking,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Compass, Layers3, LocateFixed, MapPin, Navigation, QrCode, Search, Truck, X } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
-import { useAuth } from '../store/useAuth';
-import { openPointDirections } from './LocationDetailScreen';
-import { HAS_VALID_MAPBOX_TOKEN, initializeMapbox, Mapbox } from '../utils/mapbox';
 
-const MAP_LOAD_TIMEOUT_MS = 15000;
+import { api } from '../api/axios';
+import RemoteImage from '../components/ui/RemoteImage';
+import { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
+import useMapAppearance from '../hooks/useMapAppearance';
+import { useAuth } from '../store/useAuth';
+import {
+  HAS_VALID_MAPBOX_TOKEN,
+  initializeMapbox,
+  MAP_DEFAULT_CAMERA,
+  MAP_FALLBACK_STYLE_URL,
+  MAP_STYLE_URL,
+  Mapbox,
+} from '../utils/mapbox';
+import { normalizeMediaUrl } from '../utils/media';
+import { isValidCoordinate as validCoordinate } from '../utils/coordinates';
+
+const MAP_LOAD_TIMEOUT_MS = 15_000;
+const SEARCH_DEBOUNCE_MS = 300;
+const CARD_WIDTH = 304;
+const CARD_SNAP = CARD_WIDTH + 12;
 const SAFE_MAP_LOAD_ERROR = 'No fue posible cargar el mapa. Revisa tu conexión e inténtalo nuevamente.';
 
 const normalizePoint = (point) => {
-  const latitude = Number(point?.latitud);
-  const longitude = Number(point?.longitud);
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
-  if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return null;
-  return { ...point, latitud: latitude, longitud: longitude };
+  const latitude = Number(point?.latitud ?? point?.latitude);
+  const longitude = Number(point?.longitud ?? point?.longitude);
+  if (!validCoordinate([longitude, latitude])) return null;
+  return {
+    ...point,
+    id: String(point.id),
+    latitud: latitude,
+    longitud: longitude,
+  };
 };
+
+const searchableText = (point) => [
+  point.nombre,
+  point.direccion,
+  point.colonia,
+  point.municipio,
+  point.materiales,
+  point.etiquetas,
+  point.horario,
+  point.tipo,
+].flatMap((value) => (Array.isArray(value) ? value : [value]))
+  .filter(Boolean)
+  .join(' ')
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLocaleLowerCase('es-MX');
+
+const distanceMeters = (origin, destination) => {
+  if (!validCoordinate(origin) || !validCoordinate(destination)) return null;
+  const [longitude1, latitude1] = origin.map((value) => Number(value) * Math.PI / 180);
+  const [longitude2, latitude2] = destination.map((value) => Number(value) * Math.PI / 180);
+  const deltaLatitude = latitude2 - latitude1;
+  const deltaLongitude = longitude2 - longitude1;
+  const a = Math.sin(deltaLatitude / 2) ** 2
+    + Math.cos(latitude1) * Math.cos(latitude2) * Math.sin(deltaLongitude / 2) ** 2;
+  return 6_371_000 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+const formatDistance = (meters) => {
+  if (!Number.isFinite(meters)) return '';
+  if (meters < 1000) return `${Math.max(1, Math.round(meters / 10) * 10)} m`;
+  return `${(meters / 1000).toFixed(meters < 10_000 ? 1 : 0)} km`;
+};
+
+const pointCollection = (points) => ({
+  type: 'FeatureCollection',
+  features: points.map((point) => ({
+    type: 'Feature',
+    id: point.id,
+    properties: { id: point.id, nombre: point.nombre || 'Punto ZeroWaste' },
+    geometry: { type: 'Point', coordinates: [point.longitud, point.latitud] },
+  })),
+});
 
 export default function MapScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
+  const { showDialog } = useZeroWasteDialog();
+  const { lightPreset } = useMapAppearance();
   const cameraRef = useRef(null);
+  const pointSourceRef = useRef(null);
+  const cardListRef = useRef(null);
   const mapReadyRef = useRef(false);
   const locationRequestRef = useRef(null);
+  const searchTimerRef = useRef(null);
+  const searchGenerationRef = useRef(0);
+
   const tokenReady = HAS_VALID_MAPBOX_TOKEN;
-  
-  const [puntos, setPuntos] = useState([]);
-  const [loadingMap, setLoadingMap] = useState(HAS_VALID_MAPBOX_TOKEN);
-  const [loadingPoints, setLoadingPoints] = useState(true);
-  const [pointsReady, setPointsReady] = useState(false);
   const [mapMounted, setMapMounted] = useState(false);
+  const [styleLoading, setStyleLoading] = useState(tokenReady);
   const [mapReady, setMapReady] = useState(false);
-  const [mapboxConfigured, setMapboxConfigured] = useState(false);
   const [mapKey, setMapKey] = useState(0);
-  const [mapError, setMapError] = useState(HAS_VALID_MAPBOX_TOKEN ? '' : 'El token público de Mapbox no está configurado correctamente.');
+  const [usingFallbackStyle, setUsingFallbackStyle] = useState(false);
+  const [mapError, setMapError] = useState(tokenReady ? '' : 'El token público de Mapbox no está configurado correctamente.');
+  const [points, setPoints] = useState([]);
+  const [pointsLoading, setPointsLoading] = useState(true);
+  const [pointsReady, setPointsReady] = useState(false);
   const [pointsError, setPointsError] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [locationPermission, setLocationPermission] = useState('unknown');
+  const [permissionState, setPermissionState] = useState('unknown');
   const [locationError, setLocationError] = useState('');
-  
-  // Current location used to center the map and submit collection requests.
   const [userLocation, setUserLocation] = useState(null);
+  const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [searching, setSearching] = useState(false);
+  const [results, setResults] = useState([]);
+  const [selectedResult, setSelectedResult] = useState(null);
+  const [searchError, setSearchError] = useState('');
+  const [emptySearch, setEmptySearch] = useState(false);
+  const [threeDimensional, setThreeDimensional] = useState(true);
+  const [reduceMotion, setReduceMotion] = useState(false);
 
-  // Modal recoleccion a domicilio
-  const [modalVisible, setModalVisible] = useState(false);
-  const [direccion, setDireccion] = useState('');
-  const [materiales, setMateriales] = useState('');
-  const [submitting, setSubmitting] = useState(false);
+  const isCollector = user?.rol === 'recolector' || user?.is_admin;
+  const mapPoints = debouncedQuery ? results : points;
+  const geojson = useMemo(() => pointCollection(mapPoints), [mapPoints]);
+  const pointById = useMemo(() => new Map(points.map((point) => [String(point.id), point])), [points]);
+  const selectedFeature = useMemo(
+    () => selectedResult ? pointCollection([selectedResult]) : pointCollection([]),
+    [selectedResult],
+  );
 
-  const isRecolector = user?.rol === 'recolector' || user?.is_admin;
-  const visiblePoints = puntos.filter((point) => {
-    const needle = searchQuery.trim().toLocaleLowerCase('es');
-    return !needle || `${point.nombre || ''} ${point.direccion || ''} ${point.materiales || ''}`.toLocaleLowerCase('es').includes(needle);
-  });
+  const animationDuration = reduceMotion ? 0 : 700;
+  const mapStyleConfig = useMemo(() => ({
+    lightPreset,
+    show3dBuildings: true,
+    show3dObjects: true,
+    show3dFacades: true,
+    show3dLandmarks: true,
+    show3dTrees: true,
+    showPointOfInterestLabels: true,
+    showTransitLabels: true,
+    showPlaceLabels: true,
+    showRoadLabels: true,
+    showPedestrianRoads: true,
+  }), [lightPreset]);
 
-  const handleMapReady = () => {
-    if (mapReadyRef.current) return;
+  const fitPoints = useCallback((items) => {
+    const coordinates = items.map((point) => [point.longitud, point.latitud]).filter(validCoordinate);
+    if (!coordinates.length) return;
+    if (coordinates.length === 1) {
+      cameraRef.current?.setCamera({
+        centerCoordinate: coordinates[0],
+        zoomLevel: 15.5,
+        pitch: threeDimensional ? 45 : 0,
+        animationDuration,
+      });
+      return;
+    }
+    const longitudes = coordinates.map(([longitude]) => longitude);
+    const latitudes = coordinates.map(([, latitude]) => latitude);
+    const northEast = [Math.max(...longitudes), Math.max(...latitudes)];
+    const southWest = [Math.min(...longitudes), Math.min(...latitudes)];
+    if (!validCoordinate(northEast) || !validCoordinate(southWest)) return;
+    cameraRef.current?.fitBounds(northEast, southWest, [150, 48, 270, 48], animationDuration);
+  }, [animationDuration, threeDimensional]);
+
+  const selectPoint = useCallback((point, { moveCamera = true, scrollCard = true } = {}) => {
+    if (!point) return;
+    setSelectedResult(point);
+    if (moveCamera) fitPoints([point]);
+    if (scrollCard) {
+      const index = mapPoints.findIndex((candidate) => candidate.id === point.id);
+      if (index >= 0) cardListRef.current?.scrollToIndex({ index, animated: !reduceMotion, viewPosition: 0.5 });
+    }
+  }, [fitPoints, mapPoints, reduceMotion]);
+
+  const handleMapReady = useCallback(() => {
     mapReadyRef.current = true;
     setMapReady(true);
-    setLoadingMap(false);
+    setStyleLoading(false);
     setMapError('');
-  };
+  }, []);
 
-  const handleMapLoadingError = (event) => {
+  const handleMapLoadingError = useCallback((event) => {
     const status = Number(event?.error?.status || event?.status || 0);
     if (typeof __DEV__ !== 'undefined' && __DEV__) {
       console.warn(`[map] Mapbox reportó un error de carga${status ? ` (HTTP ${status})` : ''}.`);
     }
-    if (!mapReadyRef.current) {
-      setLoadingMap(false);
-      setMapError(SAFE_MAP_LOAD_ERROR);
-    }
-  };
+    setStyleLoading(false);
+    setMapError(SAFE_MAP_LOAD_ERROR);
+  }, []);
 
-  const retryMap = () => {
-    if (!HAS_VALID_MAPBOX_TOKEN) return;
+  const retryMap = useCallback(() => {
+    if (!tokenReady) return;
+    setUsingFallbackStyle(true);
     mapReadyRef.current = false;
     setMapMounted(false);
     setMapReady(false);
     setMapError('');
-    setLoadingMap(true);
+    setStyleLoading(true);
     setMapKey((value) => value + 1);
-  };
+  }, [tokenReady]);
 
-  const requestLocationPermission = async () => {
+  const fetchPoints = useCallback(async ({ preserve = false } = {}) => {
+    setPointsLoading(true);
+    setPointsError('');
+    try {
+      const response = await api.get('/mapa/puntos');
+      const seen = new Set();
+      const validPoints = (Array.isArray(response.data) ? response.data : [])
+        .map(normalizePoint)
+        .filter((point) => point && point.activo !== false && !seen.has(point.id) && seen.add(point.id));
+      setPoints(validPoints);
+      setPointsReady(true);
+      setSelectedResult((current) => validPoints.find((point) => point.id === current?.id) || validPoints[0] || null);
+    } catch (error) {
+      if (!preserve) setPoints([]);
+      setPointsError(error.userMessage || 'No se pudieron cargar los puntos de reciclaje.');
+    } finally {
+      setPointsLoading(false);
+    }
+  }, []);
+
+  const requestLocation = useCallback(async () => {
     if (locationRequestRef.current) return locationRequestRef.current;
     const request = (async () => {
-      setLocationPermission('requesting');
+      setPermissionState('requesting');
       setLocationError('');
       try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setLocationPermission('denied');
+        const permission = await Location.requestForegroundPermissionsAsync();
+        if (permission.status !== 'granted') {
+          setPermissionState('denied');
           return null;
         }
-        const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-        const coordinates = [loc.coords.longitude, loc.coords.latitude];
+        const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        const coordinates = [location.coords.longitude, location.coords.latitude];
+        if (!validCoordinate(coordinates)) throw new Error('invalid-location');
         setUserLocation(coordinates);
-        setLocationPermission('granted');
+        setPermissionState('granted');
         return coordinates;
       } catch {
-        setLocationPermission('unavailable');
-        setLocationError('No fue posible obtener tu ubicación. El mapa seguirá disponible.');
+        setPermissionState('unavailable');
+        setLocationError('No fue posible obtener tu ubicación. El mapa y los puntos siguen disponibles.');
         return null;
       }
     })();
@@ -117,333 +261,333 @@ export default function MapScreen() {
     } finally {
       locationRequestRef.current = null;
     }
-  };
+  }, []);
 
-  const centerUser = async () => {
-    const coordinates = userLocation || await requestLocationPermission();
+  const centerUser = useCallback(async () => {
+    const coordinates = userLocation || await requestLocation();
     if (!coordinates) return;
-    cameraRef.current?.setCamera({ centerCoordinate: coordinates, zoomLevel: 15, animationDuration: 900 });
-  };
+    cameraRef.current?.setCamera({
+      centerCoordinate: coordinates,
+      zoomLevel: 15.5,
+      pitch: threeDimensional ? 45 : 0,
+      heading: 0,
+      animationDuration,
+    });
+  }, [animationDuration, requestLocation, threeDimensional, userLocation]);
+
+  const togglePerspective = useCallback(() => {
+    setThreeDimensional((current) => {
+      const next = !current;
+      cameraRef.current?.setCamera({ pitch: next ? 42 : 0, heading: 0, animationDuration });
+      return next;
+    });
+  }, [animationDuration]);
+
+  const clearSearch = useCallback(() => {
+    searchGenerationRef.current += 1;
+    clearTimeout(searchTimerRef.current);
+    setQuery('');
+    setDebouncedQuery('');
+    setSearching(false);
+    setSearchError('');
+    setEmptySearch(false);
+    setResults([]);
+    setSelectedResult(points[0] || null);
+    if (points.length) fitPoints(points);
+  }, [fitPoints, points]);
 
   useEffect(() => {
-    void fetchPuntos();
-    void requestLocationPermission();
+    void fetchPoints();
+    void requestLocation();
   }, []);
 
   useEffect(() => {
-    if (!tokenReady) return undefined;
     let active = true;
-    setLoadingMap(true);
-    initializeMapbox()
-      .then(() => {
-        if (!active) return;
-        setMapboxConfigured(true);
-        setMapError('');
-      })
-      .catch(() => {
-        if (!active) return;
-        setMapboxConfigured(false);
-        setLoadingMap(false);
-        setMapError('No fue posible configurar Mapbox. Instala una compilación de desarrollo nueva e inténtalo nuevamente.');
+    if (tokenReady) {
+      initializeMapbox().catch(() => {
+        if (active) {
+          setStyleLoading(false);
+          setMapError('No fue posible inicializar Mapbox en esta compilación.');
+        }
       });
+    }
     return () => { active = false; };
   }, [mapKey, tokenReady]);
 
   useEffect(() => {
-    if (!mapboxConfigured || mapReadyRef.current) return undefined;
+    if (!tokenReady || mapReadyRef.current) return undefined;
     const timeout = setTimeout(() => {
-      if (mapReadyRef.current) return;
-      setLoadingMap(false);
-      setMapError(SAFE_MAP_LOAD_ERROR);
+      if (!mapReadyRef.current) {
+        setStyleLoading(false);
+        setMapError(SAFE_MAP_LOAD_ERROR);
+      }
     }, MAP_LOAD_TIMEOUT_MS);
     return () => clearTimeout(timeout);
-  }, [mapKey, mapboxConfigured]);
+  }, [mapKey, tokenReady]);
 
-  const fetchPuntos = async () => {
-    setLoadingPoints(true);
-    setPointsReady(false);
-    setPointsError('');
-    try {
-      const response = await api.get('/mapa/puntos');
-      const seen = new Set();
-      const validPoints = (Array.isArray(response.data) ? response.data : [])
-        .map(normalizePoint)
-        .filter((point) => point && point.activo !== false && !seen.has(String(point.id)) && seen.add(String(point.id)));
-      setPuntos(validPoints);
-      setPointsReady(true);
-    } catch (e) {
-      setPuntos([]);
-      setPointsError(e.userMessage || 'No se pudieron cargar los puntos de reciclaje.');
-    } finally {
-      setLoadingPoints(false);
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => subscription.remove();
+  }, []);
+
+  useEffect(() => {
+    const generation = searchGenerationRef.current + 1;
+    searchGenerationRef.current = generation;
+    clearTimeout(searchTimerRef.current);
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setDebouncedQuery('');
+      setResults([]);
+      setSearching(false);
+      setSearchError('');
+      setEmptySearch(false);
+      return undefined;
     }
-  };
+    setSearching(true);
+    setSearchError('');
+    searchTimerRef.current = setTimeout(() => {
+      if (generation !== searchGenerationRef.current) return;
+      try {
+        const needle = trimmed.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es-MX');
+        const nextResults = points.filter((point) => searchableText(point).includes(needle));
+        setDebouncedQuery(trimmed);
+        setResults(nextResults);
+        setEmptySearch(nextResults.length === 0);
+        setSelectedResult(nextResults[0] || null);
+        if (nextResults.length) fitPoints(nextResults);
+      } catch {
+        setSearchError('No fue posible completar la búsqueda.');
+      } finally {
+        setSearching(false);
+      }
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(searchTimerRef.current);
+  }, [fitPoints, points, query]);
 
-  const reviewConnection = () => {
-    retryMap();
-    void fetchPuntos();
-  };
+  useEffect(() => () => {
+    searchGenerationRef.current += 1;
+    clearTimeout(searchTimerRef.current);
+  }, []);
 
-  const handleSolicitar = async () => {
-    if (!direccion.trim() || !materiales.trim()) {
-      Alert.alert('Error', 'Por favor ingresa la dirección y los materiales.');
+  const handleSourcePress = useCallback(async (event) => {
+    const feature = event?.features?.[0];
+    if (!feature) return;
+    const coordinates = feature.geometry?.coordinates;
+    if (feature.properties?.cluster) {
+      try {
+        const zoomLevel = await pointSourceRef.current?.getClusterExpansionZoom(feature);
+        if (validCoordinate(coordinates)) cameraRef.current?.setCamera({ centerCoordinate: coordinates, zoomLevel: Math.min(Number(zoomLevel) || 16, 18), pitch: threeDimensional ? 40 : 0, animationDuration });
+      } catch {
+        if (validCoordinate(coordinates)) cameraRef.current?.setCamera({ centerCoordinate: coordinates, zoomLevel: 16, animationDuration });
+      }
       return;
     }
-    setSubmitting(true);
-    try {
-      const currentLocation = userLocation || await requestLocationPermission();
-      if (!currentLocation) {
-        Alert.alert('Ubicación requerida', 'Activa la ubicación para enviar las coordenadas de la solicitud.');
-        return;
-      }
-      await api.post('/recolecciones', {
-        direccion,
-        materiales,
-        longitud: currentLocation[0],
-        latitud: currentLocation[1],
-      });
-      Alert.alert('Éxito', 'Tu solicitud ha sido enviada. Un recolector la atenderá pronto.');
-      setModalVisible(false);
-      setDireccion('');
-      setMateriales('');
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo enviar la solicitud de recolección.');
-    } finally {
-      setSubmitting(false);
-    }
-  };
+    const point = pointById.get(String(feature.properties?.id ?? feature.id));
+    if (point) selectPoint(point);
+  }, [animationDuration, pointById, selectPoint, threeDimensional]);
 
-  const topSafeArea = Math.max(insets.top + 16, 48);
+  const topSafeArea = Math.max(insets.top + 14, 44);
   const bottomSafeArea = Math.max(insets.bottom + 14, 24);
+  const showPermissionNotice = mapReady && ['denied', 'unavailable'].includes(permissionState) && !pointsError;
 
   return (
-    <View className="flex-1 bg-background relative">
-      <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
-      {tokenReady && mapboxConfigured ? <Mapbox.MapView
-        key={mapKey}
-        style={styles.map}
-        styleURL={Mapbox.StyleURL.Street}
-        onLayout={() => setMapMounted(true)}
-        onWillStartLoadingMap={() => { if (!mapReadyRef.current) setLoadingMap(true); }}
-        onDidFinishLoadingStyle={handleMapReady}
-        onDidFinishLoadingMap={handleMapReady}
-        onMapLoadingError={handleMapLoadingError}
-      >
-        <Mapbox.Camera
-          ref={cameraRef}
-          zoomLevel={13.5}
-          pitch={0}
-          centerCoordinate={[-100.3929, 20.5888]}
-          animationMode="flyTo"
-          animationDuration={2000}
-        />
-
-        {locationPermission === 'granted' ? (
-          <Mapbox.LocationPuck puckBearingEnabled puckBearing="heading" />
-        ) : null}
-        
-        {visiblePoints.map((p) => (
-          <Mapbox.PointAnnotation
-            key={p.id}
-            id={`punto-${p.id}`}
-            coordinate={[p.longitud, p.latitud]}
-            onSelected={() => navigation.navigate('LocationDetail', { point: p })}
-          >
-            {/* Marcador idéntico a la imagen (hoja verde sobre círculo verde oscuro con borde verde neón) */}
-            <View className="w-12 h-12 bg-[#064E3B] border-[3px] border-[#34D399] rounded-full items-center justify-center shadow-xl elevation-6">
-              <Leaf color="#34D399" fill="#34D399" size={22} />
-            </View>
-          </Mapbox.PointAnnotation>
-        ))}
-      </Mapbox.MapView> : <View style={styles.map} />}
-
-      {!mapReady && (loadingMap || mapError || !mapMounted) ? (
-        <View className="absolute inset-0 z-40 items-center justify-center bg-white px-8">
-          <Text className="text-lg font-black text-gray-900 text-center">{mapError || 'Cargando mapa…'}</Text>
-          {mapError && tokenReady ? (
-            <View className="mt-4 flex-row gap-3">
-              <TouchableOpacity onPress={retryMap} className="rounded-xl bg-emerald-700 px-5 py-3">
-                <Text className="text-white font-black">Reintentar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={reviewConnection} className="rounded-xl border border-emerald-700 bg-white px-5 py-3">
-                <Text className="text-emerald-800 font-black">Revisar conexión</Text>
-              </TouchableOpacity>
-            </View>
-          ) : !mapError ? <ActivityIndicator className="mt-4" color="#047857" /> : null}
-        </View>
-      ) : null}
-
-      {pointsError ? (
-        <View className="absolute left-5 right-5 top-24 rounded-2xl bg-red-50 border border-red-200 p-4 z-30">
-          <Text className="text-red-700 font-bold text-center">{pointsError}</Text>
-          <TouchableOpacity onPress={fetchPuntos} className="mt-2 self-center"><Text className="text-red-700 font-black">Reintentar</Text></TouchableOpacity>
-        </View>
-      ) : null}
-
-      {mapReady && pointsReady && !loadingPoints && !pointsError && puntos.length === 0 ? (
-        <View className="absolute left-5 right-5 top-24 rounded-2xl bg-white border border-gray-200 p-4 z-30">
-          <Text className="text-gray-700 font-bold text-center">No hay puntos de reciclaje disponibles.</Text>
-          <TouchableOpacity onPress={fetchPuntos} className="mt-2 self-center"><Text className="text-emerald-700 font-black">Actualizar</Text></TouchableOpacity>
-        </View>
-      ) : null}
-
-      {mapReady && ['denied', 'unavailable'].includes(locationPermission) && !pointsError ? (
-        <View className="absolute left-5 right-5 top-24 rounded-2xl bg-amber-50 border border-amber-200 p-4 z-30">
-          <Text className="text-amber-900 font-bold text-center">{locationError || 'La ubicación está desactivada. El mapa funciona, pero no puede centrarte ni crear rutas.'}</Text>
-          {locationPermission === 'denied' ? (
-            <TouchableOpacity onPress={() => Linking.openSettings()} className="mt-2 self-center"><Text className="text-amber-900 font-black">Abrir Ajustes</Text></TouchableOpacity>
-          ) : null}
-        </View>
-      ) : null}
-
-      {/* Barra superior con Safe Area Superior */}
-      <View className="absolute left-6 right-6 z-10 flex-row gap-2" style={{ top: topSafeArea }}>
-          <View className="flex-1 bg-surface rounded-full px-6 shadow-lg shadow-black/10 elevation-5 border border-gray-100 flex-row items-center">
-            <TextInput value={searchQuery} onChangeText={setSearchQuery} placeholder="Buscar punto de acopio..." className="h-14 flex-1 text-base font-semibold text-gray-800" placeholderTextColor="#6B7280" />
-          </View>
-          <TouchableOpacity 
-            onPress={centerUser}
-            accessibilityLabel="Centrar mi ubicación"
-            className="bg-primary w-14 h-14 rounded-full shadow-lg items-center justify-center elevation-5 border-2 border-surface"
-          >
-            <MapPin color="white" size={24} />
-          </TouchableOpacity>
-      </View>
-
-      {/* Carrusel de puntos respetando la barra flotante. */}
-      <View className="absolute left-0 right-0 z-10" style={{ bottom: bottomSafeArea + 75 }}>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingHorizontal: 24 }}
-            snapToInterval={296}
-            decelerationRate="fast"
-          >
-            {visiblePoints.map(p => (
-              <TouchableOpacity
-                key={p.id}
-                onPress={() => navigation.navigate('LocationDetail', { point: p })}
-                accessibilityRole="button"
-                accessibilityLabel={`Ver detalles de ${p.nombre || 'punto de reciclaje'}`}
-                className="bg-surface rounded-3xl p-4 w-[280px] mr-4 shadow-xl shadow-black/10 elevation-5 border border-gray-100"
-              >
-                <View className="flex-row items-center">
-                  <View className="w-14 h-14 bg-[#064E3B] border-2 border-[#34D399] rounded-2xl items-center justify-center mr-3 shadow-md">
-                    <Leaf color="#34D399" fill="#34D399" size={26} />
-                  </View>
-                  <View className="flex-1">
-                    <Text className="font-bold text-text text-base" numberOfLines={1}>{p.nombre}</Text>
-                    <Text className="text-subtext text-xs mt-0.5" numberOfLines={1}>{p.materiales || 'Materiales reciclables'}</Text>
-                    <View className="flex-row items-center mt-1">
-                      <Text className="text-amber-500 text-xs font-bold mr-1">★ {p.promedio || '5.0'}</Text>
-                      <Text className="text-subtext text-xs">({p.total_reviews || 0} reseñas)</Text>
-                    </View>
-                  </View>
-                </View>
-                <TouchableOpacity 
-                  onPress={(event) => {
-                    event.stopPropagation();
-                    void openPointDirections(p);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Abrir ruta hacia ${p.nombre || 'el punto de reciclaje'}`}
-                  className="mt-3 bg-emerald-600 rounded-xl py-2 flex-row justify-center items-center gap-2"
-                >
-                  <Navigation color="white" size={16} />
-                  <Text className="text-white font-bold text-sm">Ir ahora</Text>
-                </TouchableOpacity>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-      </View>
-
-      {/* Botón Flotante de Recolección O Modo Recolector sobre el Carrusel (bottomSafeArea + 230) */}
-      <View className="absolute right-6 z-20 flex-row gap-2" style={{ bottom: bottomSafeArea + 230 }}>
-          {isRecolector && (
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('Scanner')}
-              className="bg-emerald-700 flex-row items-center justify-center px-4 py-3.5 rounded-full shadow-lg elevation-6 border-2 border-surface"
-            >
-              <QrCode color="white" size={20} className="mr-1.5" />
-              <Text className="text-white font-black text-xs">QR Recolector</Text>
-            </TouchableOpacity>
-          )}
-          <TouchableOpacity 
-            onPress={async () => {
-              const coordinates = userLocation || await requestLocationPermission();
-              if (!coordinates) {
-                Alert.alert('Ubicación requerida', 'Activa la ubicación para solicitar una recolección.');
-                return;
-              }
-              navigation.navigate('CreateCollection', { coordinates });
-            }}
-            className="bg-primary flex-row items-center justify-center px-5 py-3.5 rounded-full shadow-lg elevation-6 border-2 border-surface"
-          >
-            <Truck color="white" size={20} className="mr-1.5" />
-            <Text className="text-white font-black text-xs">Recolección</Text>
-          </TouchableOpacity>
-      </View>
-
-      {/* Modal para Solicitar Recoleccion */}
-      <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          className="flex-1 justify-end bg-black/40"
+    <View className="flex-1 bg-emerald-50">
+      <StatusBar style={lightPreset === 'night' ? 'light' : 'dark'} translucent backgroundColor="transparent" />
+      {tokenReady ? (
+        <Mapbox.MapView
+          key={mapKey}
+          style={styles.map}
+          styleURL={usingFallbackStyle ? MAP_FALLBACK_STYLE_URL : MAP_STYLE_URL}
+          compassEnabled={false}
+          scaleBarEnabled={false}
+          onLayout={() => setMapMounted(true)}
+          onWillStartLoadingMap={() => setStyleLoading(true)}
+          onDidFinishLoadingStyle={handleMapReady}
+          onDidFinishLoadingMap={handleMapReady}
+          onMapLoadingError={handleMapLoadingError}
         >
-          <ScrollView 
-            contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}
-            keyboardShouldPersistTaps="handled"
+          {!usingFallbackStyle ? <Mapbox.StyleImport id="basemap" existing config={mapStyleConfig} /> : null}
+          <Mapbox.Camera ref={cameraRef} defaultSettings={MAP_DEFAULT_CAMERA} />
+          {permissionState === 'granted' ? <Mapbox.LocationPuck puckBearingEnabled puckBearing="heading" /> : null}
+          <Mapbox.ShapeSource
+            ref={pointSourceRef}
+            id="zerowaste-points"
+            shape={geojson}
+            cluster
+            clusterRadius={48}
+            clusterMaxZoomLevel={14}
+            onPress={handleSourcePress}
           >
-            <View className="bg-white rounded-t-3xl p-6 pt-4 shadow-2xl" style={{ paddingBottom: Math.max(insets.bottom + 20, 24) }}>
-              <View className="flex-row justify-between items-center mb-6">
-                <View>
-                  <Text className="text-2xl font-black text-text mb-1">Recolección a Domicilio</Text>
-                  <Text className="text-subtext text-sm">Un recolector pasará por los materiales.</Text>
-                </View>
-                <TouchableOpacity onPress={() => setModalVisible(false)} className="p-2 bg-gray-100 rounded-full">
-                  <X color="#374151" size={20} />
-                </TouchableOpacity>
-              </View>
-              
-              <View className="mb-4">
-                <Text className="font-bold text-text mb-2 text-sm">Dirección de Recolección</Text>
-                <TextInput
-                  placeholder="Ej. Calle Primavera 123, Col. Centro"
-                  value={direccion}
-                  onChangeText={setDireccion}
-                  className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-text text-base"
-                  placeholderTextColor="#9CA3AF"
-                />
-              </View>
+            <Mapbox.CircleLayer
+              id="zerowaste-clusters"
+              slot={usingFallbackStyle ? undefined : 'top'}
+              filter={['has', 'point_count']}
+              style={{ circleColor: '#047857', circleRadius: ['step', ['get', 'point_count'], 19, 10, 23, 40, 28], circleStrokeColor: '#ECFDF5', circleStrokeWidth: 4, circleOpacity: 0.96 }}
+            />
+            <Mapbox.SymbolLayer
+              id="zerowaste-cluster-count"
+              slot={usingFallbackStyle ? undefined : 'top'}
+              filter={['has', 'point_count']}
+              style={{ textField: ['get', 'point_count_abbreviated'], textColor: '#FFFFFF', textSize: 13, textFont: ['DIN Offc Pro Bold', 'Arial Unicode MS Bold'] }}
+            />
+            <Mapbox.CircleLayer
+              id="zerowaste-point-halo"
+              slot={usingFallbackStyle ? undefined : 'top'}
+              filter={['!', ['has', 'point_count']]}
+              style={{ circleColor: 'rgba(52,211,153,0.22)', circleRadius: 17, circleStrokeWidth: 0 }}
+            />
+            <Mapbox.CircleLayer
+              id="zerowaste-points-visible"
+              slot={usingFallbackStyle ? undefined : 'top'}
+              filter={['!', ['has', 'point_count']]}
+              style={{ circleColor: '#065F46', circleRadius: 10, circleStrokeColor: lightPreset === 'night' ? '#D1FAE5' : '#FFFFFF', circleStrokeWidth: 3 }}
+            />
+            <Mapbox.SymbolLayer
+              id="zerowaste-point-symbol"
+              slot={usingFallbackStyle ? undefined : 'top'}
+              filter={['!', ['has', 'point_count']]}
+              style={{ textField: '♻', textColor: '#FFFFFF', textSize: 11, textAllowOverlap: true }}
+            />
+          </Mapbox.ShapeSource>
+          <Mapbox.ShapeSource id="zerowaste-selected-point" shape={selectedFeature}>
+            <Mapbox.CircleLayer id="zerowaste-selected-halo" slot={usingFallbackStyle ? undefined : 'top'} style={{ circleColor: 'rgba(16,185,129,0.28)', circleRadius: 24 }} />
+            <Mapbox.CircleLayer id="zerowaste-selected-dot" slot={usingFallbackStyle ? undefined : 'top'} style={{ circleColor: '#10B981', circleRadius: 12, circleStrokeColor: '#FFFFFF', circleStrokeWidth: 4 }} />
+            <Mapbox.SymbolLayer id="zerowaste-selected-symbol" slot={usingFallbackStyle ? undefined : 'top'} style={{ textField: '♻', textColor: '#064E3B', textSize: 13, textAllowOverlap: true }} />
+          </Mapbox.ShapeSource>
+        </Mapbox.MapView>
+      ) : <View style={styles.map} />}
 
-              <View className="mb-6">
-                <Text className="font-bold text-text mb-2 text-sm">¿Qué materiales entregarás?</Text>
-                <TextInput
-                  placeholder="Ej. 2kg PET, Cartón, Electrónicos"
-                  value={materiales}
-                  onChangeText={setMateriales}
-                  className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-text text-base min-h-[100px]"
-                  multiline
-                  textAlignVertical="top"
-                  placeholderTextColor="#9CA3AF"
-                />
-              </View>
+      {(!mapReady && (styleLoading || !mapMounted)) || mapError ? (
+        <View
+          pointerEvents={mapError ? 'auto' : 'none'}
+          className={`absolute left-5 right-5 z-30 rounded-2xl border px-5 py-4 ${mapError ? 'border-red-200 bg-red-50' : 'border-emerald-100 bg-white/90'}`}
+          style={{ top: topSafeArea + 68 }}
+        >
+          <View className="flex-row items-center justify-center">
+            {!mapError ? <ActivityIndicator color="#047857" /> : null}
+            <Text className={`text-center font-black ${mapError ? 'text-red-800' : 'ml-3 text-slate-800'}`}>{mapError || 'Preparando mapa 3D…'}</Text>
+          </View>
+          {mapError && tokenReady ? <TouchableOpacity onPress={retryMap} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">{usingFallbackStyle ? 'Reintentar mapa' : 'Usar mapa compatible'}</Text></TouchableOpacity> : null}
+        </View>
+      ) : null}
 
-              <CustomButton 
-                title={submitting ? "Enviando Solicitud..." : "Solicitar Recolección"} 
-                onPress={handleSolicitar} 
-                disabled={submitting}
-              />
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </Modal>
+      <View className="absolute left-4 right-4 z-20" style={{ top: topSafeArea }}>
+        <View className="h-14 flex-row items-center rounded-full border border-white/70 bg-white px-4 shadow-lg shadow-black/10 elevation-5">
+          <Search color="#047857" size={20} />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Nombre, dirección o material"
+            placeholderTextColor="#64748B"
+            className="ml-3 h-14 flex-1 text-base font-semibold text-slate-900"
+            returnKeyType="search"
+            accessibilityLabel="Buscar puntos ZeroWaste"
+          />
+          {searching ? <ActivityIndicator color="#047857" size="small" /> : query ? <TouchableOpacity onPress={clearSearch} className="h-10 w-10 items-center justify-center" accessibilityLabel="Limpiar búsqueda"><X color="#475569" size={19} /></TouchableOpacity> : null}
+        </View>
+        {debouncedQuery && !emptySearch && !searchError ? <View pointerEvents="none" className="mt-2 self-start rounded-full bg-emerald-950/90 px-4 py-2"><Text className="text-xs font-black text-white">{results.length} {results.length === 1 ? 'punto' : 'puntos'}</Text></View> : null}
+      </View>
+
+      <View className="absolute right-4 z-20 gap-2" style={{ top: topSafeArea + 70 }}>
+        <TouchableOpacity onPress={centerUser} className="h-12 w-12 items-center justify-center rounded-full border border-white bg-emerald-800 shadow-md elevation-4" accessibilityLabel="Recentrar en mi ubicación"><LocateFixed color="white" size={21} /></TouchableOpacity>
+        <TouchableOpacity onPress={togglePerspective} className="h-12 w-12 items-center justify-center rounded-full border border-white bg-white shadow-md elevation-4" accessibilityLabel={threeDimensional ? 'Cambiar a vista superior' : 'Cambiar a vista 3D'}>{threeDimensional ? <Compass color="#047857" size={21} /> : <Layers3 color="#047857" size={21} />}</TouchableOpacity>
+      </View>
+
+      {pointsError ? <Notice tone="error" top={topSafeArea + 132} message={pointsError} action="Reintentar" onPress={() => fetchPoints({ preserve: points.length > 0 })} /> : null}
+      {!pointsError && showPermissionNotice ? <Notice tone="warning" top={topSafeArea + 132} message={locationError || 'La ubicación está desactivada. Puedes explorar todos los puntos.'} action={permissionState === 'denied' ? 'Abrir ajustes' : 'Reintentar'} onPress={permissionState === 'denied' ? Linking.openSettings : requestLocation} /> : null}
+      {searchError ? <Notice tone="error" top={topSafeArea + 132} message={searchError} action="Limpiar" onPress={clearSearch} /> : null}
+
+      {emptySearch ? (
+        <View className="absolute left-4 right-4 z-20 rounded-3xl border border-slate-200 bg-white p-5 shadow-lg" style={{ bottom: bottomSafeArea + 86 }}>
+          <Text className="text-lg font-black text-slate-950">No encontramos puntos con esa búsqueda.</Text>
+          <Text className="mt-1 text-sm leading-5 text-slate-500">Prueba con un material, colonia o nombre diferente.</Text>
+          <View className="mt-4 flex-row gap-2"><TouchableOpacity onPress={clearSearch} className="min-h-11 flex-1 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">Limpiar búsqueda</Text></TouchableOpacity><TouchableOpacity onPress={clearSearch} className="min-h-11 flex-1 items-center justify-center rounded-xl border border-emerald-700"><Text className="font-black text-emerald-800">Ver todos</Text></TouchableOpacity></View>
+        </View>
+      ) : mapPoints.length ? (
+        <FlatList
+          ref={cardListRef}
+          data={mapPoints}
+          horizontal
+          keyExtractor={(item) => String(item.id)}
+          showsHorizontalScrollIndicator={false}
+          snapToInterval={CARD_SNAP}
+          decelerationRate="fast"
+          contentContainerStyle={{ paddingHorizontal: 16 }}
+          style={[styles.cards, { bottom: bottomSafeArea + 72 }]}
+          getItemLayout={(_, index) => ({ length: CARD_SNAP, offset: CARD_SNAP * index, index })}
+          onMomentumScrollEnd={(event) => {
+            const index = Math.max(0, Math.min(mapPoints.length - 1, Math.round(event.nativeEvent.contentOffset.x / CARD_SNAP)));
+            selectPoint(mapPoints[index], { moveCamera: true, scrollCard: false });
+          }}
+          onScrollToIndexFailed={({ index }) => setTimeout(() => cardListRef.current?.scrollToOffset({ offset: index * CARD_SNAP, animated: false }), 50)}
+          renderItem={({ item }) => (
+            <PointCard
+              point={item}
+              selected={selectedResult?.id === item.id}
+              distance={formatDistance(distanceMeters(userLocation, [item.longitud, item.latitud]))}
+              onSelect={() => selectPoint(item, { moveCamera: true, scrollCard: false })}
+              onDetail={() => navigation.navigate('PointDetail', { point: item })}
+              onRoute={() => navigation.navigate('RouteNavigation', { point: item })}
+            />
+          )}
+        />
+      ) : pointsReady && !pointsLoading && !pointsError ? <Notice tone="neutral" top={topSafeArea + 132} message="No hay puntos de reciclaje disponibles." action="Actualizar" onPress={() => fetchPoints()} /> : null}
+
+      <View className="absolute right-4 z-20 flex-row gap-2" style={{ bottom: bottomSafeArea + (mapPoints.length && !emptySearch ? 266 : 90) }}>
+        {isCollector ? <TouchableOpacity onPress={() => navigation.navigate('Scanner')} className="h-12 flex-row items-center rounded-full border-2 border-white bg-emerald-800 px-4 shadow-lg elevation-5" accessibilityLabel="Abrir QR de recolector"><QrCode color="white" size={19} /><Text className="ml-2 text-xs font-black text-white">QR recolector</Text></TouchableOpacity> : null}
+        <TouchableOpacity
+          onPress={async () => {
+            const coordinates = userLocation || await requestLocation();
+            if (!coordinates) {
+              showDialog({ type: 'permission', title: 'Ubicación requerida', message: 'Activa la ubicación para solicitar una recolección.' });
+              return;
+            }
+            navigation.navigate('CreateCollection', { coordinates });
+          }}
+          className="h-12 flex-row items-center rounded-full border-2 border-white bg-emerald-700 px-4 shadow-lg elevation-5"
+        >
+          <Truck color="white" size={19} /><Text className="ml-2 text-xs font-black text-white">Recolección</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
 
+function Notice({ tone, top, message, action, onPress }) {
+  const classes = tone === 'error' ? 'border-red-200 bg-red-50 text-red-800' : tone === 'warning' ? 'border-amber-200 bg-amber-50 text-amber-950' : 'border-slate-200 bg-white text-slate-800';
+  return <View className={`absolute left-4 right-20 z-20 rounded-2xl border p-4 ${classes}`} style={{ top }}><Text className={`font-bold leading-5 ${classes.split(' ').at(-1)}`}>{message}</Text>{action ? <TouchableOpacity onPress={onPress} className="mt-2 self-start"><Text className={`font-black ${classes.split(' ').at(-1)}`}>{action}</Text></TouchableOpacity> : null}</View>;
+}
+
+function PointCard({ point, selected, distance, onSelect, onDetail, onRoute }) {
+  const image = normalizeMediaUrl(point.image_url ?? point.imagen_url ?? point.imagen, 'puntos');
+  const materials = Array.isArray(point.materiales) ? point.materiales.join(', ') : point.materiales;
+  const rating = Number(point.promedio ?? point.valoracion);
+  return (
+    <TouchableOpacity
+      activeOpacity={0.94}
+      onPress={onSelect}
+      className={`mr-3 overflow-hidden rounded-[26px] border bg-white shadow-xl elevation-6 ${selected ? 'border-emerald-500' : 'border-slate-100'}`}
+      style={{ width: CARD_WIDTH }}
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      accessibilityLabel={`Punto ${point.nombre || 'ZeroWaste'}${distance ? `, a ${distance}` : ''}`}
+    >
+      <View className="flex-row p-3">
+        <RemoteImage uri={image} className="h-[82px] w-[88px] rounded-2xl" aspectRatio={1.07} accessibilityLabel={`Imagen de ${point.nombre || 'punto ZeroWaste'}`} />
+        <View className="ml-3 flex-1">
+          <Text className="text-base font-black text-slate-950" numberOfLines={1}>{point.nombre || 'Punto ZeroWaste'}</Text>
+          <Text className="mt-1 text-xs font-semibold text-emerald-700" numberOfLines={1}>{materials || 'Materiales por consultar'}</Text>
+          <View className="mt-2 flex-row items-center"><MapPin color="#64748B" size={13} /><Text className="ml-1 flex-1 text-xs text-slate-500" numberOfLines={1}>{point.direccion || 'Dirección no especificada'}</Text></View>
+          <View className="mt-1 flex-row items-center">{distance ? <Text className="text-xs font-black text-slate-700">{distance}</Text> : null}{Number.isFinite(rating) && rating > 0 ? <Text className="ml-2 text-xs font-black text-amber-600">★ {rating.toFixed(1)}</Text> : null}{point.horario ? <Text className="ml-2 flex-1 text-xs text-slate-500" numberOfLines={1}>{point.horario}</Text> : null}</View>
+        </View>
+      </View>
+      <View className="flex-row gap-2 px-3 pb-3"><TouchableOpacity onPress={onDetail} className="min-h-11 flex-1 items-center justify-center rounded-xl border border-emerald-700"><Text className="font-black text-emerald-800">Ver detalle</Text></TouchableOpacity><TouchableOpacity onPress={onRoute} className="min-h-11 flex-1 flex-row items-center justify-center rounded-xl bg-emerald-700"><Navigation color="white" size={16} /><Text className="ml-2 font-black text-white">Ir ahora</Text></TouchableOpacity></View>
+    </TouchableOpacity>
+  );
+}
+
 const styles = StyleSheet.create({
-  map: {
-    ...StyleSheet.absoluteFillObject,
-  },
+  map: { ...StyleSheet.absoluteFillObject },
+  cards: { position: 'absolute', left: 0, right: 0, zIndex: 15, flexGrow: 0 },
 });
