@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, ScrollView, Modal, TextInput, Alert, TouchableOpacity, KeyboardAvoidingView, Platform, Linking } from 'react-native';
-import Mapbox from '@rnmapbox/maps';
 import { api } from '../api/axios';
 import CustomButton from '../components/ui/CustomButton';
 import { Truck, Navigation, X, MapPin, QrCode, Leaf } from 'lucide-react-native';
@@ -9,12 +8,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../store/useAuth';
+import { openPointDirections } from './LocationDetailScreen';
+import { HAS_VALID_MAPBOX_TOKEN, initializeMapbox, Mapbox } from '../utils/mapbox';
 
-const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN?.trim() || '';
-const HAS_VALID_MAPBOX_TOKEN = MAPBOX_TOKEN.startsWith('pk.') && !MAPBOX_TOKEN.includes('YOUR_');
 const MAP_LOAD_TIMEOUT_MS = 15000;
 const SAFE_MAP_LOAD_ERROR = 'No fue posible cargar el mapa. Revisa tu conexión e inténtalo nuevamente.';
-if (HAS_VALID_MAPBOX_TOKEN) Mapbox.setAccessToken(MAPBOX_TOKEN);
 
 const normalizePoint = (point) => {
   const latitude = Number(point?.latitud);
@@ -39,6 +37,7 @@ export default function MapScreen() {
   const [pointsReady, setPointsReady] = useState(false);
   const [mapMounted, setMapMounted] = useState(false);
   const [mapReady, setMapReady] = useState(false);
+  const [mapboxConfigured, setMapboxConfigured] = useState(false);
   const [mapKey, setMapKey] = useState(0);
   const [mapError, setMapError] = useState(HAS_VALID_MAPBOX_TOKEN ? '' : 'El token público de Mapbox no está configurado correctamente.');
   const [pointsError, setPointsError] = useState('');
@@ -46,12 +45,8 @@ export default function MapScreen() {
   const [locationPermission, setLocationPermission] = useState('unknown');
   const [locationError, setLocationError] = useState('');
   
-  // Location and Navigation States
+  // Current location used to center the map and submit collection requests.
   const [userLocation, setUserLocation] = useState(null);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [routeData, setRouteData] = useState(null);
-  const [etaInfo, setEtaInfo] = useState(null); // { duration: "15 min", distance: "4 km", trafficStatus, trafficColor, badgeBg }
-  const [routeLoading, setRouteLoading] = useState(false);
 
   // Modal recoleccion a domicilio
   const [modalVisible, setModalVisible] = useState(false);
@@ -136,14 +131,33 @@ export default function MapScreen() {
   }, []);
 
   useEffect(() => {
-    if (!tokenReady || mapReadyRef.current) return undefined;
+    if (!tokenReady) return undefined;
+    let active = true;
+    setLoadingMap(true);
+    initializeMapbox()
+      .then(() => {
+        if (!active) return;
+        setMapboxConfigured(true);
+        setMapError('');
+      })
+      .catch(() => {
+        if (!active) return;
+        setMapboxConfigured(false);
+        setLoadingMap(false);
+        setMapError('No fue posible configurar Mapbox. Instala una compilación de desarrollo nueva e inténtalo nuevamente.');
+      });
+    return () => { active = false; };
+  }, [mapKey, tokenReady]);
+
+  useEffect(() => {
+    if (!mapboxConfigured || mapReadyRef.current) return undefined;
     const timeout = setTimeout(() => {
       if (mapReadyRef.current) return;
       setLoadingMap(false);
       setMapError(SAFE_MAP_LOAD_ERROR);
     }, MAP_LOAD_TIMEOUT_MS);
     return () => clearTimeout(timeout);
-  }, [mapKey, tokenReady]);
+  }, [mapKey, mapboxConfigured]);
 
   const fetchPuntos = async () => {
     setLoadingPoints(true);
@@ -168,69 +182,6 @@ export default function MapScreen() {
   const reviewConnection = () => {
     retryMap();
     void fetchPuntos();
-  };
-
-  const startNavigation = async (punto) => {
-    const currentLocation = userLocation || await requestLocationPermission();
-    if (!currentLocation) {
-      Alert.alert('Error', 'No se ha detectado tu ubicación actual.');
-      return;
-    }
-    
-    setRouteLoading(true);
-    try {
-      const destCoords = [punto.longitud, punto.latitud];
-      // Using Mapbox driving-traffic profile for real-time traffic aware navigation
-      const url = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${currentLocation[0]},${currentLocation[1]};${destCoords[0]},${destCoords[1]}?geometries=geojson&annotations=congestion,duration,distance&access_token=${MAPBOX_TOKEN}`;
-      
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`Mapbox Directions HTTP ${response.status}`);
-      const data = await response.json();
-      
-      if (data.routes && data.routes.length > 0) {
-        const route = data.routes[0];
-        setRouteData(route.geometry);
-        
-        const durationMin = Math.round(route.duration / 60);
-        const distKm = (route.distance / 1000).toFixed(1);
-
-        // Compute traffic status from typical duration or congestion
-        let trafficStatus = 'Fluido';
-        let trafficColor = 'bg-emerald-500';
-        let badgeBg = 'bg-emerald-50 border-emerald-200 text-emerald-800';
-        if (route.duration_typical && route.duration > route.duration_typical * 1.25) {
-          trafficStatus = 'Alto';
-          trafficColor = 'bg-red-500';
-          badgeBg = 'bg-red-50 border-red-200 text-red-800';
-        } else if (route.duration_typical && route.duration > route.duration_typical * 1.1) {
-          trafficStatus = 'Moderado';
-          trafficColor = 'bg-amber-500';
-          badgeBg = 'bg-amber-50 border-amber-200 text-amber-800';
-        }
-
-        setEtaInfo({ 
-          duration: `${durationMin} min`, 
-          distance: `${distKm} km`, 
-          destination: punto.nombre,
-          trafficStatus,
-          trafficColor,
-          badgeBg,
-        });
-        setIsNavigating(true);
-      } else {
-        Alert.alert('Error', 'No se pudo encontrar una ruta al destino.');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Ocurrió un problema trazando la ruta de navegación.');
-    } finally {
-      setRouteLoading(false);
-    }
-  };
-
-  const stopNavigation = () => {
-    setIsNavigating(false);
-    setRouteData(null);
-    setEtaInfo(null);
   };
 
   const handleSolicitar = async () => {
@@ -268,12 +219,10 @@ export default function MapScreen() {
   return (
     <View className="flex-1 bg-background relative">
       <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
-      {tokenReady ? <Mapbox.MapView
+      {tokenReady && mapboxConfigured ? <Mapbox.MapView
         key={mapKey}
         style={styles.map}
-        styleURL={isNavigating ? Mapbox.StyleURL.TrafficDay : Mapbox.StyleURL.Street}
-        logoEnabled={false}
-        attributionEnabled={false}
+        styleURL={Mapbox.StyleURL.Street}
         onLayout={() => setMapMounted(true)}
         onWillStartLoadingMap={() => { if (!mapReadyRef.current) setLoadingMap(true); }}
         onDidFinishLoadingStyle={handleMapReady}
@@ -282,13 +231,9 @@ export default function MapScreen() {
       >
         <Mapbox.Camera
           ref={cameraRef}
-          zoomLevel={isNavigating ? 17 : 13.5}
-          pitch={isNavigating ? 70 : 0}
-          centerCoordinate={!isNavigating ? [-100.3929, 20.5888] : undefined}
-          followUserLocation={isNavigating && locationPermission === 'granted'}
-          followUserMode={isNavigating ? 'course' : 'normal'}
-          followZoomLevel={17}
-          followPitch={70}
+          zoomLevel={13.5}
+          pitch={0}
+          centerCoordinate={[-100.3929, 20.5888]}
           animationMode="flyTo"
           animationDuration={2000}
         />
@@ -302,6 +247,7 @@ export default function MapScreen() {
             key={p.id}
             id={`punto-${p.id}`}
             coordinate={[p.longitud, p.latitud]}
+            onSelected={() => navigation.navigate('LocationDetail', { point: p })}
           >
             {/* Marcador idéntico a la imagen (hoja verde sobre círculo verde oscuro con borde verde neón) */}
             <View className="w-12 h-12 bg-[#064E3B] border-[3px] border-[#34D399] rounded-full items-center justify-center shadow-xl elevation-6">
@@ -309,20 +255,6 @@ export default function MapScreen() {
             </View>
           </Mapbox.PointAnnotation>
         ))}
-
-        {routeData && (
-          <Mapbox.ShapeSource id="routeSource" shape={routeData}>
-            <Mapbox.LineLayer
-              id="routeFill"
-              style={{
-                lineColor: '#10B981', // emerald-500
-                lineWidth: 6,
-                lineCap: 'round',
-                lineJoin: 'round',
-              }}
-            />
-          </Mapbox.ShapeSource>
-        )}
       </Mapbox.MapView> : <View style={styles.map} />}
 
       {!mapReady && (loadingMap || mapError || !mapMounted) ? (
@@ -364,9 +296,8 @@ export default function MapScreen() {
         </View>
       ) : null}
 
-      {/* Barra superior normal con Safe Area Superior */}
-      {!isNavigating && (
-        <View className="absolute left-6 right-6 z-10 flex-row gap-2" style={{ top: topSafeArea }}>
+      {/* Barra superior con Safe Area Superior */}
+      <View className="absolute left-6 right-6 z-10 flex-row gap-2" style={{ top: topSafeArea }}>
           <View className="flex-1 bg-surface rounded-full px-6 shadow-lg shadow-black/10 elevation-5 border border-gray-100 flex-row items-center">
             <TextInput value={searchQuery} onChangeText={setSearchQuery} placeholder="Buscar punto de acopio..." className="h-14 flex-1 text-base font-semibold text-gray-800" placeholderTextColor="#6B7280" />
           </View>
@@ -377,42 +308,10 @@ export default function MapScreen() {
           >
             <MapPin color="white" size={24} />
           </TouchableOpacity>
-        </View>
-      )}
+      </View>
 
-      {/* Panel Superior de Navegación ETA + Tráfico en Zona */}
-      {isNavigating && etaInfo && (
-        <View className="absolute left-4 right-4 z-10 bg-white rounded-3xl p-5 shadow-2xl elevation-8" style={{ top: topSafeArea }}>
-          <View className="flex-row items-center justify-between">
-            <View>
-              <Text className="text-emerald-700 font-black text-3xl tracking-tight">{etaInfo.duration}</Text>
-              <View className="flex-row items-center gap-2 mt-1">
-                <Text className="text-gray-500 font-bold">{etaInfo.distance}</Text>
-                <View className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                <Text className="text-gray-400 font-medium" numberOfLines={1} style={{ maxWidth: 150 }}>{etaInfo.destination}</Text>
-              </View>
-            </View>
-            <TouchableOpacity 
-              onPress={stopNavigation}
-              className="w-12 h-12 bg-red-100 rounded-full items-center justify-center border border-red-200"
-            >
-              <X color="#EF4444" size={24} />
-            </TouchableOpacity>
-          </View>
-
-          {/* Indicador de Tráfico de Mapbox */}
-          <View className={`flex-row items-center gap-2 mt-3 px-3 py-1.5 rounded-xl border self-start ${etaInfo.badgeBg || 'bg-emerald-50 border-emerald-200'}`}>
-            <View className={`w-2.5 h-2.5 rounded-full ${etaInfo.trafficColor || 'bg-emerald-500'}`} />
-            <Text className="text-xs font-bold text-gray-800">
-              Tráfico en la zona: <Text className="font-extrabold">{etaInfo.trafficStatus || 'Fluido'}</Text>
-            </Text>
-          </View>
-        </View>
-      )}
-
-      {/* Carrusel de Puntos (Solo cuando NO navegamos) respetando FloatingTabBar (bottomSafeArea + 75) */}
-      {!isNavigating && (
-        <View className="absolute left-0 right-0 z-10" style={{ bottom: bottomSafeArea + 75 }}>
+      {/* Carrusel de puntos respetando la barra flotante. */}
+      <View className="absolute left-0 right-0 z-10" style={{ bottom: bottomSafeArea + 75 }}>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
@@ -421,8 +320,11 @@ export default function MapScreen() {
             decelerationRate="fast"
           >
             {visiblePoints.map(p => (
-              <View 
+              <TouchableOpacity
                 key={p.id}
+                onPress={() => navigation.navigate('LocationDetail', { point: p })}
+                accessibilityRole="button"
+                accessibilityLabel={`Ver detalles de ${p.nombre || 'punto de reciclaje'}`}
                 className="bg-surface rounded-3xl p-4 w-[280px] mr-4 shadow-xl shadow-black/10 elevation-5 border border-gray-100"
               >
                 <View className="flex-row items-center">
@@ -439,21 +341,24 @@ export default function MapScreen() {
                   </View>
                 </View>
                 <TouchableOpacity 
-                  onPress={() => startNavigation(p)}
+                  onPress={(event) => {
+                    event.stopPropagation();
+                    void openPointDirections(p);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Abrir ruta hacia ${p.nombre || 'el punto de reciclaje'}`}
                   className="mt-3 bg-emerald-600 rounded-xl py-2 flex-row justify-center items-center gap-2"
                 >
                   <Navigation color="white" size={16} />
                   <Text className="text-white font-bold text-sm">Ir ahora</Text>
                 </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             ))}
           </ScrollView>
-        </View>
-      )}
+      </View>
 
       {/* Botón Flotante de Recolección O Modo Recolector sobre el Carrusel (bottomSafeArea + 230) */}
-      {!isNavigating && (
-        <View className="absolute right-6 z-20 flex-row gap-2" style={{ bottom: bottomSafeArea + 230 }}>
+      <View className="absolute right-6 z-20 flex-row gap-2" style={{ bottom: bottomSafeArea + 230 }}>
           {isRecolector && (
             <TouchableOpacity 
               onPress={() => navigation.navigate('Scanner')}
@@ -477,16 +382,7 @@ export default function MapScreen() {
             <Truck color="white" size={20} className="mr-1.5" />
             <Text className="text-white font-black text-xs">Recolección</Text>
           </TouchableOpacity>
-        </View>
-      )}
-
-      {routeLoading && (
-        <View className="absolute inset-0 items-center justify-center bg-black/20 z-50">
-          <View className="bg-white p-4 rounded-2xl shadow-xl">
-            <ActivityIndicator size="large" color="#064E3B" />
-          </View>
-        </View>
-      )}
+      </View>
 
       {/* Modal para Solicitar Recoleccion */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>

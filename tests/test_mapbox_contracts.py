@@ -27,6 +27,7 @@ class MapboxContractTests(unittest.TestCase):
             "tokenReady",
             "mapMounted",
             "mapReady",
+            "mapboxConfigured",
             "loadingMap",
             "loadingPoints",
             "pointsReady",
@@ -38,6 +39,12 @@ class MapboxContractTests(unittest.TestCase):
             self.assertIn(state, source)
         self.assertIn("onDidFinishLoadingStyle={handleMapReady}", source)
         self.assertIn("onMapLoadingError={handleMapLoadingError}", source)
+        self.assertIn("initializeMapbox()", source)
+        self.assertIn("tokenReady && mapboxConfigured", source)
+
+        config = (ROOT / "mobile_app/utils/mapbox.js").read_text(encoding="utf-8")
+        self.assertIn("Promise.resolve(Mapbox.setAccessToken(MAPBOX_PUBLIC_TOKEN))", config)
+        self.assertNotIn("Mapbox.setAccessToken(MAPBOX_TOKEN);", source)
 
     def test_points_contract_is_numeric_and_explicitly_active(self):
         schemas = (ROOT / "fast_api/app/models/schemas.py").read_text(encoding="utf-8")

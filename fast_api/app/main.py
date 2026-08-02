@@ -17,7 +17,7 @@ from slowapi.errors import RateLimitExceeded
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.routers import auth, auth_external, usuarios, foro, mapa, eventos, analisis, formularios, docs_auth, campanas, recoleccion, firewall_monitor, impacto, qr
+from app.routers import articles, auth, auth_external, usuarios, foro, mapa, eventos, analisis, formularios, docs_auth, campanas, recoleccion, firewall_monitor, impacto, qr
 from app.security.firewall import FirewallMiddleware
 from app.data.database import engine
 from app.observability import READINESS
@@ -150,6 +150,7 @@ app.openapi = custom_openapi
 # ==========================================================================
 app.include_router(auth.router)
 app.include_router(auth_external.router)
+app.include_router(articles.router)
 app.include_router(usuarios.router)
 app.include_router(foro.router)
 app.include_router(impacto.router)

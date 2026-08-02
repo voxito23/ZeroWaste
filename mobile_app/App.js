@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import * as NavigationBar from 'expo-navigation-bar';
 import AnimatedSplashScreen from './screens/AnimatedSplashScreen';
 import { useFonts, Outfit_400Regular, Outfit_500Medium, Outfit_600SemiBold, Outfit_700Bold } from '@expo-google-fonts/outfit';
+import { HAS_VALID_MAPBOX_TOKEN, initializeMapbox } from './utils/mapbox';
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -19,6 +20,13 @@ export default function App() {
 
   useEffect(() => {
     NavigationBar.setStyle('dark');
+    if (HAS_VALID_MAPBOX_TOKEN) {
+      void initializeMapbox().catch(() => {
+        if (typeof __DEV__ !== 'undefined' && __DEV__) {
+          console.warn('[map] No fue posible inicializar el SDK de Mapbox.');
+        }
+      });
+    }
   }, []);
 
   if (!fontsLoaded) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -23,6 +23,7 @@ import { useAuth } from '../store/useAuth';
 import { api } from '../api/axios';
 import RemoteImage from '../components/ui/RemoteImage';
 import UserAvatar from '../components/ui/UserAvatar';
+import { motion } from '../theme/tokens';
 import { normalizeMediaUrl } from '../utils/media';
 import {
   Search,
@@ -33,9 +34,7 @@ import {
   MapPin,
   ArrowRight,
   ArrowLeft,
-  Leaf,
   ChevronRight,
-  Recycle,
   Heart,
   Bell,
   Zap,
@@ -48,68 +47,28 @@ import {
   MessageCircle,
   Sparkles,
   BarChart3,
-  Droplets,
-  Sun,
 } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
 /* ─── DATA ────────────────────────────────────────────────────────── */
-const tendencias = [
-  {
-    id: '1',
-    title: 'Reciclar plástico:\n10 consejos para reducir hoy.',
-    desc: 'Pequeños cambios diarios que generan un impacto global masivo en nuestro planeta.',
-    tag: 'TENDENCIA',
-    img: require('../assets/images/plasticos.png'),
-    url: 'https://www.zerowaste-qro.com/tema/reciclar-plastico',
-    time: '5 min',
-    comments: 24,
-    icon: Recycle,
-  },
-  {
-    id: '2',
-    title: 'Ahorro de agua:\nNuevas técnicas para el futuro.',
-    desc: 'El agua es un recurso vital y finito. Aprende métodos simples de recolección y reutilización.',
-    tag: 'TENDENCIA',
-    img: require('../assets/images/aguah.png'),
-    url: 'https://www.zerowaste-qro.com/tema/ahorro-agua',
-    time: '8 min',
-    comments: 18,
-    icon: Droplets,
-  },
-  {
-    id: '3',
-    title: 'Energía solar:\nFuentes limpias para renovar.',
-    desc: 'La transición a energías limpias comienza en casa. Conoce los beneficios de los paneles solares.',
-    tag: 'TENDENCIA',
-    img: require('../assets/images/solar.png'),
-    url: 'https://www.zerowaste-qro.com/tema/energia-solar',
-    time: '6 min',
-    comments: 31,
-    icon: Sun,
-  },
-  {
-    id: '4',
-    title: 'Compostaje urbano:\nNutrientes vivos para circular.',
-    desc: 'Transforma tus desechos orgánicos en nueva vida. Guía práctica para iniciar tu compostera.',
-    tag: 'TENDENCIA',
-    img: require('../assets/images/composta.png'),
-    url: 'https://www.zerowaste-qro.com/tema/compostaje-urbano',
-    time: '7 min',
-    comments: 42,
-    icon: Leaf,
-  }
-];
+const ARTICLE_FALLBACKS = {
+  'reciclar-plastico': require('../assets/images/plasticos.png'),
+  'ahorro-agua': require('../assets/images/aguah.png'),
+  'energia-solar': require('../assets/images/solar.png'),
+  'compostaje-urbano': require('../assets/images/composta.png'),
+  'queretaro-recicla': require('../assets/images/qrocapita.jpg'),
+};
 
 /* ─── ANIMATED PRIMITIVES ─────────────────────────────────────────── */
 const TouchableScale = ({ children, style, onPress, scaleVal = 0.97 }) => {
   const scale = useRef(new Animated.Value(1)).current;
+  const { reduceMotion } = useScrollContext();
   if (!onPress) return <View style={style}>{children}</View>;
   return (
     <Pressable
-      onPressIn={() => Animated.spring(scale, { toValue: scaleVal, useNativeDriver: true, speed: 30, bounciness: 6 }).start()}
-      onPressOut={() => Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 6 }).start()}
+      onPressIn={() => { if (!reduceMotion) Animated.timing(scale, { toValue: scaleVal, duration: motion.press, useNativeDriver: true }).start(); }}
+      onPressOut={() => { if (!reduceMotion) Animated.timing(scale, { toValue: 1, duration: motion.press, useNativeDriver: true }).start(); }}
       onPress={onPress}
     >
       <Animated.View style={[{ transform: [{ scale }] }, style]}>{children}</Animated.View>
@@ -151,8 +110,11 @@ export default function HomeScreen() {
 
   const tendListRef = useRef(null);
   const { user } = useAuth();
-  const { handleScroll } = useScrollContext();
+  const { handleScroll, reduceMotion } = useScrollContext();
   const [tendIndex, setTendIndex] = useState(0);
+  const [articles, setArticles] = useState([]);
+  const [articlesLoading, setArticlesLoading] = useState(true);
+  const [articlesError, setArticlesError] = useState('');
   const [campaignsList, setCampaignsList] = useState([]);
   const [contentError, setContentError] = useState('');
   const [contentLoading, setContentLoading] = useState(true);
@@ -161,7 +123,24 @@ export default function HomeScreen() {
   const [impactLoading, setImpactLoading] = useState(true);
   const [impactError, setImpactError] = useState(false);
 
+  const fetchArticles = useCallback(async () => {
+    setArticlesLoading(true);
+    setArticlesError('');
+    try {
+      const { data } = await api.get('/articles');
+      const rows = Array.isArray(data) ? data.filter((article) => article?.id && article?.title) : [];
+      setArticles(rows.filter((article) => article.id !== 'queretaro-recicla'));
+      if (!rows.length) setArticlesError('No hay artículos disponibles por el momento.');
+    } catch (requestError) {
+      setArticles([]);
+      setArticlesError(requestError.userMessage || 'No fue posible cargar las tendencias.');
+    } finally {
+      setArticlesLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
+    void fetchArticles();
     api.get('/usuarios/me/notificaciones/no-leidas').then(({ data }) => setUnreadNotifications(Number(data?.total) || 0)).catch(() => setUnreadNotifications(0));
     api.get('/impacto/me')
       .then(({ data }) => {
@@ -212,43 +191,62 @@ export default function HomeScreen() {
       }
     };
     fetchActiveCampaignsAndEvents();
-  }, []);
+  }, [fetchArticles]);
 
   useEffect(() => {
-    Animated.stagger(100,
+    if (reduceMotion) {
+      anims.forEach((value) => value.setValue(1));
+      slides.forEach((value) => value.setValue(0));
+      glow.setValue(1);
+      ringPulse.setValue(1);
+      return undefined;
+    }
+    const entranceAnimation = Animated.stagger(45,
       anims.map((a, i) =>
         Animated.parallel([
-          Animated.timing(a, { toValue: 1, duration: 600, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
-          Animated.timing(slides[i], { toValue: 0, duration: 600, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          Animated.timing(a, { toValue: 1, duration: motion.navigation, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+          Animated.timing(slides[i], { toValue: 0, duration: motion.navigation, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
         ])
       )
-    ).start();
+    );
+    entranceAnimation.start();
 
-    Animated.loop(Animated.sequence([
+    const glowAnimation = Animated.loop(Animated.sequence([
       Animated.timing(glow, { toValue: 1, duration: 1800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       Animated.timing(glow, { toValue: 0.4, duration: 1800, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-    ])).start();
+    ]));
+    glowAnimation.start();
 
-    Animated.loop(Animated.sequence([
+    const ringAnimation = Animated.loop(Animated.sequence([
       Animated.timing(ringPulse, { toValue: 1.08, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
       Animated.timing(ringPulse, { toValue: 1, duration: 2000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-    ])).start();
+    ]));
+    ringAnimation.start();
 
+    return () => {
+      entranceAnimation.stop();
+      glowAnimation.stop();
+      ringAnimation.stop();
+    };
+  }, [reduceMotion]);
+
+  useEffect(() => {
+    if (articles.length < 2) return undefined;
     const tendTimer = setInterval(() => {
       setTendIndex(prev => {
-        const next = (prev + 1) % tendencias.length;
+        const next = (prev + 1) % articles.length;
         tendListRef.current?.scrollToIndex({ index: next, animated: true });
         return next;
       });
     }, 5000);
-
     return () => clearInterval(tendTimer);
-  }, []);
+  }, [articles.length]);
 
   const anim = (i) => ({ opacity: anims[i], transform: [{ translateY: slides[i] }] });
 
   const goTendencia = (dir) => {
-    const next = (tendIndex + dir + tendencias.length) % tendencias.length;
+    if (!articles.length) return;
+    const next = (tendIndex + dir + articles.length) % articles.length;
     setTendIndex(next);
     tendListRef.current?.scrollToIndex({ index: next, animated: true });
   };
@@ -335,30 +333,36 @@ export default function HomeScreen() {
               <Text className="text-[12px] text-gray-400 font-bold mt-0.5">Artículos destacados</Text>
             </View>
             <View className="flex-row gap-1.5">
-              {tendencias.map((_, idx) => (
+              {articles.map((_, idx) => (
                 <View key={idx} className={`h-1.5 rounded-full ${idx === tendIndex ? 'w-5 bg-emerald-600' : 'w-1.5 bg-gray-200'}`} />
               ))}
             </View>
           </View>
           
-          <FlatList
+          {articlesLoading ? <ActivityIndicator className="my-12" color="#047857" /> : articlesError ? (
+            <View className="mx-5 items-center rounded-3xl border border-red-100 bg-red-50 p-6">
+              <Text className="text-center font-bold text-red-700">{articlesError}</Text>
+              <TouchableOpacity onPress={fetchArticles} className="mt-4 rounded-full bg-emerald-700 px-6 py-3"><Text className="font-black text-white">Reintentar</Text></TouchableOpacity>
+            </View>
+          ) : <FlatList
             ref={tendListRef}
-            data={tendencias}
+            data={articles}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
             keyExtractor={item => item.id}
             onScrollToIndexFailed={() => {}}
+            onMomentumScrollEnd={(event) => setTendIndex(Math.round(event.nativeEvent.contentOffset.x / width))}
             renderItem={({ item }) => (
               <View style={{ width: width, paddingHorizontal: 20 }}>
-                <TouchableScale scaleVal={0.98} onPress={() => Linking.openURL(item.url)}>
+                <TouchableScale scaleVal={0.98} onPress={() => navigation.navigate('ArticleDetail', { articleId: item.id })}>
                   <View
                     className="rounded-[32px] overflow-hidden bg-[#111827] mb-2"
                     style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.25, shadowRadius: 28, elevation: 14 }}
                   >
                     {/* Image Section */}
                     <View className="relative h-[240px] bg-gray-100">
-                      <Image source={item.img} className="w-full h-full" resizeMode="cover" />
+                      <RemoteImage uri={normalizeMediaUrl(item.image_url)} fallbackSource={ARTICLE_FALLBACKS[item.id]} className="h-full w-full" aspectRatio={16 / 10} accessibilityLabel={`Imagen de ${item.title}`} />
                       
                       {/* Dark fade at bottom — smooth blend */}
                       <LinearGradient
@@ -376,7 +380,7 @@ export default function HomeScreen() {
                       {/* Floating Category Chip Top Left */}
                       <View className="absolute top-4 left-4 bg-emerald-500/90 border border-emerald-300/50 px-3.5 py-1.5 rounded-full shadow-sm z-10 flex-row items-center gap-1.5">
                         <View className="w-2 h-2 rounded-full bg-white" />
-                        <Text className="text-white text-[10px] font-black uppercase tracking-wider">{item.tag}</Text>
+                        <Text className="text-white text-[10px] font-black uppercase tracking-wider">{item.category}</Text>
                       </View>
 
                     </View>
@@ -389,7 +393,7 @@ export default function HomeScreen() {
                       </Text>
 
                       <Text className="text-gray-400 text-[13px] font-medium leading-relaxed mb-5 pr-4 line-clamp-2" numberOfLines={2}>
-                        {item.desc}
+                        {item.excerpt}
                       </Text>
 
                       {/* Progress bar */}
@@ -409,7 +413,7 @@ export default function HomeScreen() {
                 </TouchableScale>
               </View>
             )}
-          />
+          />}
         </Animated.View>
 
         {/* ═══ 5. CAMPAÑAS ACTIVAS ════════════════════════════ */}
@@ -477,7 +481,7 @@ export default function HomeScreen() {
           <View className="mb-4">
             <Text className="text-[24px] font-black text-gray-900 tracking-tight">Noticia <Text className="text-emerald-600">Local</Text></Text>
           </View>
-          <TouchableScale scaleVal={0.98} onPress={() => Linking.openURL('https://www.zerowaste-qro.com/noticia-queretaro')}>
+          <TouchableScale scaleVal={0.98} onPress={() => navigation.navigate('ArticleDetail', { articleId: 'queretaro-recicla' })}>
             <View
               className="rounded-[28px] overflow-hidden bg-[#111827]"
               style={{ shadowColor: '#064E3B', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.15, shadowRadius: 28, elevation: 14 }}

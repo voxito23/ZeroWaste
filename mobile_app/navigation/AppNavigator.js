@@ -18,6 +18,8 @@ import NotificationsScreen from '../screens/NotificationsScreen';
 import SearchScreen from '../screens/SearchScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import EditProfileScreen from '../screens/EditProfileScreen';
+import ArticleDetailScreen from '../screens/ArticleDetailScreen';
+import LocationDetailScreen from '../screens/LocationDetailScreen';
 import CreateCollectionScreen from '../screens/CreateCollectionScreen';
 import PointDetailScreen from '../screens/PointDetailScreen';
 
@@ -41,7 +43,7 @@ export default function AppNavigator() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade_from_bottom', animationDuration: 220 }}>
         {token ? (
           <>
             <Stack.Screen name="Main" component={MainTabNavigator} />
@@ -57,6 +59,8 @@ export default function AppNavigator() {
             <Stack.Screen name="Search" component={SearchScreen} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+            <Stack.Screen name="ArticleDetail" component={ArticleDetailScreen} />
+            <Stack.Screen name="LocationDetail" component={LocationDetailScreen} />
             <Stack.Screen name="CreateCollection" component={CreateCollectionScreen} />
             <Stack.Screen name="PointDetail" component={PointDetailScreen} />
           </>

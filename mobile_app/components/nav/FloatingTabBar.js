@@ -1,91 +1,134 @@
-import React from 'react';
-import { Alert, TouchableOpacity, View } from 'react-native';
-import { Home, MessageSquare, Map as MapIcon, User, Camera } from 'lucide-react-native';
+import React, { useEffect, useRef } from 'react';
+import { Alert, Animated, Pressable, View } from 'react-native';
+import { Camera, Home, Map as MapIcon, MessageSquare, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useScrollContext } from '../../context/ScrollContext';
 import { useAuth } from '../../store/useAuth';
+import { colors, motion } from '../../theme/tokens';
+
 
 export const TAB_BAR_VISUAL_HEIGHT = 68;
+const TAB_BAR_MARGIN = 12;
+
+function AnimatedTabButton({ children, disabled, onLongPress, onPress, accessibilityLabel, selected, reduceMotion, style }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const animate = (toValue) => Animated.timing(scale, {
+    toValue,
+    duration: reduceMotion ? 0 : motion.press,
+    useNativeDriver: true,
+  }).start();
+
+  return (
+    <Pressable
+      accessibilityLabel={accessibilityLabel}
+      accessibilityRole="button"
+      accessibilityState={{ disabled: Boolean(disabled), selected }}
+      disabled={disabled}
+      onLongPress={onLongPress}
+      onPress={onPress}
+      onPressIn={() => animate(0.9)}
+      onPressOut={() => animate(1)}
+      style={style}
+    >
+      <Animated.View style={{ transform: [{ scale }] }}>{children}</Animated.View>
+    </Pressable>
+  );
+}
 
 export default function FloatingTabBar({ state, descriptors, navigation }) {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
+  const { tabY, showTabBar, isTabVisible, reduceMotion } = useScrollContext();
+  const activeRoute = state.routes[state.index]?.name;
+  const totalHeight = TAB_BAR_VISUAL_HEIGHT + Math.max(insets.bottom, 8) + TAB_BAR_MARGIN;
+
+  useEffect(() => {
+    showTabBar();
+  }, [activeRoute, showTabBar]);
 
   return (
-    <View
-      className="bg-white border-t border-gray-200"
-      style={{ height: TAB_BAR_VISUAL_HEIGHT + insets.bottom, paddingBottom: insets.bottom }}
+    <Animated.View
+      pointerEvents={isTabVisible ? 'box-none' : 'none'}
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: totalHeight,
+        paddingBottom: Math.max(insets.bottom, 8),
+        paddingHorizontal: 16,
+        justifyContent: 'flex-end',
+        opacity: tabY.interpolate({ inputRange: [0, 1], outputRange: [1, 0.15] }),
+        transform: [{ translateY: tabY.interpolate({ inputRange: [0, 1], outputRange: [0, totalHeight + 12] }) }],
+      }}
     >
-      <View className="flex-1 flex-row items-center justify-around px-2">
+      <View
+        className="flex-row items-center rounded-full border border-slate-100 bg-white px-2"
+        style={{
+          height: TAB_BAR_VISUAL_HEIGHT,
+          shadowColor: colors.forestDeep,
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.14,
+          shadowRadius: 18,
+          elevation: 12,
+        }}
+      >
         {state.routes.map((route, index) => {
-        const { options } = descriptors[route.key];
-        if (options.href === null) return null;
+          const { options } = descriptors[route.key];
+          if (options.href === null) return null;
+          const isFocused = state.index === index;
+          const routeName = route.name.toLowerCase();
+          const icons = { home: Home, forum: MessageSquare, scanner: Camera, map: MapIcon, profile: User };
+          const IconComponent = icons[routeName] || Home;
+          const color = isFocused ? colors.green : '#94A3B8';
 
-        const isFocused = state.index === index;
+          const onPress = () => {
+            const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+            if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
+          };
+          const onLongPress = () => navigation.emit({ type: 'tabLongPress', target: route.key });
 
-        const onPress = () => {
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
-
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name, route.params);
+          if (routeName === 'scanner') {
+            const canScan = user?.rol === 'recolector' || user?.rol === 'admin' || user?.is_admin;
+            return (
+              <AnimatedTabButton
+                key={route.key}
+                accessibilityLabel="Abrir escáner QR"
+                selected={isFocused}
+                reduceMotion={reduceMotion}
+                onLongPress={onLongPress}
+                onPress={canScan ? onPress : () => Alert.alert('Acceso restringido', 'El escáner está disponible para recolectores autorizados.')}
+                style={{ flex: 1, height: TAB_BAR_VISUAL_HEIGHT, alignItems: 'center', justifyContent: 'center' }}
+              >
+                <View
+                  className={`h-16 w-16 items-center justify-center rounded-full border-4 border-white ${canScan ? 'bg-emerald-600' : 'bg-slate-400'}`}
+                  style={{ marginTop: -26, shadowColor: colors.forest, shadowOpacity: 0.24, shadowRadius: 10, elevation: 9 }}
+                >
+                  <IconComponent color={colors.white} size={28} strokeWidth={2.5} />
+                </View>
+              </AnimatedTabButton>
+            );
           }
-        };
 
-        const onLongPress = () => {
-          navigation.emit({
-            type: 'tabLongPress',
-            target: route.key,
-          });
-        };
-
-        const routeName = route.name.toLowerCase();
-        let IconComponent = Home;
-        if (routeName === 'forum') IconComponent = MessageSquare;
-        if (routeName === 'scanner') IconComponent = Camera;
-        if (routeName === 'map') IconComponent = MapIcon;
-        if (routeName === 'profile') IconComponent = User;
-
-        const color = isFocused ? '#064E3B' : '#9CA3AF'; // primary or gray-400
-
-        // Central elevated button
-        if (routeName === 'scanner') {
-          const canScan = user?.rol === 'recolector' || user?.rol === 'admin' || user?.is_admin;
           return (
-            <TouchableOpacity
+            <AnimatedTabButton
               key={route.key}
-              onPress={canScan ? onPress : () => Alert.alert('Acceso restringido', 'El escáner de validación está disponible para recolectores autorizados.')}
+              accessibilityLabel={options.tabBarAccessibilityLabel || route.name}
+              selected={isFocused}
+              reduceMotion={reduceMotion}
               onLongPress={onLongPress}
-              activeOpacity={0.8}
-              accessibilityRole="button"
-              accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel="Abrir escáner QR"
-              className={`${canScan ? 'bg-primary' : 'bg-gray-400'} h-16 w-16 rounded-full items-center justify-center -mt-7 border-4 border-white shadow-xl elevation-8`}
+              onPress={onPress}
+              style={{ flex: 1, height: TAB_BAR_VISUAL_HEIGHT, alignItems: 'center', justifyContent: 'center' }}
             >
-              <IconComponent color="#ffffff" size={28} />
-            </TouchableOpacity>
+              <View className="h-12 w-12 items-center justify-center rounded-full">
+                <IconComponent color={color} size={24} strokeWidth={isFocused ? 2.6 : 2.1} />
+                {isFocused ? <View className="absolute bottom-0 h-1.5 w-1.5 rounded-full bg-emerald-600" /> : null}
+              </View>
+            </AnimatedTabButton>
           );
-        }
-
-        return (
-          <TouchableOpacity
-            key={route.key}
-            accessibilityRole="button"
-            accessibilityState={isFocused ? { selected: true } : {}}
-            accessibilityLabel={options.tabBarAccessibilityLabel}
-            testID={options.tabBarTestID}
-            onPress={onPress}
-            onLongPress={onLongPress}
-            className="flex-1 h-full items-center justify-center"
-          >
-            {isFocused ? <View className="absolute top-0 h-1 w-8 rounded-b-full bg-emerald-700" /> : null}
-            <IconComponent color={color} size={24} />
-          </TouchableOpacity>
-        );
         })}
       </View>
-    </View>
+    </Animated.View>
   );
 }

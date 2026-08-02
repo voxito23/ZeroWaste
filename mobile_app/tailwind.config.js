@@ -1,16 +1,20 @@
 /** @type {import('tailwindcss').Config} */
+const { colors } = require('./theme/tokens');
+
 module.exports = {
   content: ["./App.{js,jsx,ts,tsx}", "./screens/**/*.{js,jsx,ts,tsx}", "./components/**/*.{js,jsx,ts,tsx}", "./navigation/**/*.{js,jsx,ts,tsx}"],
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
       colors: {
-        primary: '#064E3B',
-        secondary: '#00E096',
-        background: '#f3f4f6',
-        surface: '#ffffff',
-        text: '#1f2937',
-        subtext: '#6b7280',
+        primary: colors.forest,
+        secondary: colors.greenBright,
+        background: colors.surface,
+        surface: colors.white,
+        text: colors.text,
+        subtext: colors.textSecondary,
+        mint: colors.mint,
+        error: colors.error,
       },
       fontFamily: {
         sans: ['Outfit_400Regular'],
