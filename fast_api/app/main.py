@@ -213,7 +213,7 @@ def _node_identity() -> dict[str, str]:
 
 @app.get("/load-balancer-health", tags=["Salud"], include_in_schema=False)
 def load_balancer_health():
-    """Local-only aggregate liveness used by Cloudflare; no shared dependencies."""
+    """Local aggregate liveness for an authorized external health monitor."""
     local_checks = (
         _local_service_healthy("http://laravel/up"),
         _local_service_healthy("http://cliente:5000/health"),

@@ -41,8 +41,6 @@ services:
       NODE_ROLE: ${NODE_ROLE:-secondary}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ${CLOUDFLARE_ORIGIN_CERT_PATH:-./secrets/cloudflare-origin.pem}:/run/secrets/cloudflare-origin.pem:ro
-      - ${CLOUDFLARE_ORIGIN_KEY_PATH:-./secrets/cloudflare-origin.key}:/run/secrets/cloudflare-origin.key:ro
       - caddy_data:/data
       - caddy_config:/config
     networks: [edge_network, app_network, monitoring_network, media_network]

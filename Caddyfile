@@ -16,12 +16,10 @@
 }
 
 zerowaste-qro.com {
-	tls /run/secrets/cloudflare-origin.pem /run/secrets/cloudflare-origin.key
 	redir https://www.zerowaste-qro.com{uri} 308
 }
 
-www.zerowaste-qro.com, respaldo.zerowaste-qro.com {
-	tls /run/secrets/cloudflare-origin.pem /run/secrets/cloudflare-origin.key
+www.zerowaste-qro.com {
 	encode zstd gzip
 
 	log {
@@ -36,9 +34,6 @@ www.zerowaste-qro.com, respaldo.zerowaste-qro.com {
 		Referrer-Policy "strict-origin-when-cross-origin"
 		-Server
 	}
-
-	@backup host respaldo.zerowaste-qro.com
-	header @backup X-Robots-Tag "noindex, nofollow"
 
 	@private path /metrics /metrics/* /api/metrics /api/metrics/* /grafana/metrics /grafana/metrics/* /prometheus /prometheus/* /stub_status /nginx-health
 	respond @private 404
