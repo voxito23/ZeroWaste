@@ -112,42 +112,7 @@ limiter = Limiter(
     storage_uri="memory://",
 )
 
-# ===== Configuración de Email (Resend HTTP API — sin SMTP) =====
-# DigitalOcean bloquea puertos SMTP (25, 465, 587).
-# Resend usa HTTP/HTTPS, así que funciona sin problemas.
-RESEND_API_KEY = os.environ.get('RESEND_API_KEY', '')
-MAIL_FROM_ADDRESS = os.environ.get('MAIL_FROM_ADDRESS', 'noreply@zerowaste-qro.com')
-MAIL_FROM_NAME = os.environ.get('MAIL_FROM_NAME', 'Zero Waste')
-
-def send_email_resend(to_email, subject, html_body):
-    """Envía email usando Resend REST API (HTTP, no SMTP)."""
-    if not RESEND_API_KEY:
-        app.logger.error('RESEND_API_KEY no configurada. No se puede enviar email.')
-        return False
-    try:
-        response = http_requests.post(
-            'https://api.resend.com/emails',
-            headers={
-                'Authorization': f'Bearer {RESEND_API_KEY}',
-                'Content-Type': 'application/json',
-            },
-            json={
-                'from': f'{MAIL_FROM_NAME} <{MAIL_FROM_ADDRESS}>',
-                'to': [to_email],
-                'subject': subject,
-                'html': html_body,
-            },
-            timeout=10,
-        )
-        if response.status_code in (200, 201):
-            app.logger.info('Email enviado exitosamente mediante Resend.')
-            return True
-        else:
-            app.logger.error('Resend rechazó la solicitud (status=%s).', response.status_code)
-            return False
-    except Exception as e:
-        app.logger.error('Error enviando email vía Resend: %s', type(e).__name__)
-        return False
+# FastAPI is the only Resend client. Flask delegates transactional delivery.
 
 # Variable dinámica para Producción vs Desarrollo
 PUBLIC_API_URL = require_env('PUBLIC_API_URL')
@@ -577,7 +542,7 @@ def generar_password_temporal(longitud=8):
 @app.route('/forgot-password', methods=['POST'])
 @limiter.limit("3/minute")
 def forgot_password():
-    """Genera contraseña temporal, la envía por email real."""
+    """Compatibility endpoint; FastAPI owns reset tokens and Resend delivery."""
     data = request.get_json()
     email = (data.get('email', '') if data else '').strip().lower()
 
@@ -587,6 +552,22 @@ def forgot_password():
     if not email or not re.match(email_regex, email):
         return jsonify({'success': False, 'error': 'Ingresa un correo electrónico válido con @ y dominio.'}), 400
 
+    try:
+        response = http_requests.post(
+            f"{FASTAPI_INTERNAL_URL}/formularios/forgot-password",
+            json={"email": email},
+            timeout=15,
+        )
+        payload = response.json()
+        if response.status_code >= 400:
+            return jsonify({'success': False, 'error': payload.get('detail', 'No fue posible procesar la solicitud.')}), response.status_code
+        return jsonify({'success': True, 'message': payload.get('message', 'Si existe una cuenta, enviaremos instrucciones.')})
+    except (http_requests.RequestException, ValueError) as exc:
+        app.logger.error('FastAPI password recovery unavailable: %s', type(exc).__name__)
+        return jsonify({'success': False, 'error': 'El servicio de recuperación no está disponible.'}), 503
+
+    # Legacy implementation retained temporarily below for rollback reference;
+    # it is unreachable and can be removed after the new flow is deployed.
     # Verificar que exista en la BD
     usuario = Usuario.query.filter(func.lower(Usuario.email) == email).first()
     if not usuario:
@@ -724,22 +705,7 @@ def forgot_password():
             </tr>
         </table>
         """
-        print(f"==================================", flush=True)
-        print(f"[RECOVERY] EMAIL: {email}", flush=True)
-        print(f"[RECOVERY] PASSWORD TEMP: {temp_password}", flush=True)
-        print(f"==================================", flush=True)
-
-        # Enviar via Resend HTTP API (sin SMTP, esquiva el bloqueo de DigitalOcean)
-        import threading
-        def send_async_email():
-            send_email_resend(
-                to_email=email,
-                subject='🔑 Tu contraseña temporal — Zero Waste',
-                html_body=html_body,
-            )
-
-        thread = threading.Thread(target=send_async_email)
-        thread.start()
+        # Disabled legacy branch: FastAPI owns all delivery above.
 
     except Exception as e:
         app.logger.error(f'Error preparando email de recuperación: {e}')

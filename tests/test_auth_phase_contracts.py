@@ -29,7 +29,8 @@ class AuthPhaseContractsTest(unittest.TestCase):
     def test_email_owner_uses_resend_https_not_smtp(self):
         source = (ROOT / "fast_api" / "app" / "services" / "transactional_email.py").read_text(encoding="utf-8")
         self.assertIn("https://api.resend.com/emails", source)
-        self.assertIn("Verifica tu correo en ZeroWaste", (ROOT / "fast_api" / "app" / "routers" / "auth.py").read_text(encoding="utf-8") + source)
+        templates = (ROOT / "fast_api" / "app" / "services" / "email_templates.py").read_text(encoding="utf-8")
+        self.assertIn("Verifica tu correo en ZeroWaste", templates)
         self.assertNotIn("smtplib", source)
         self.assertIn("RATE_LIMITED", source)
         self.assertIn("revoked_at", source)

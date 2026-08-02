@@ -1,6 +1,5 @@
 """Authentication email owner. Sends only through Resend's HTTPS API."""
 
-import html
 import hashlib
 import hmac
 import json
@@ -14,8 +13,9 @@ from sqlalchemy.orm import Session
 
 from app.models.domain_models import EmailVerificationToken, Usuario
 from app.services.auth_crypto import digest
+from app.services.email_templates import EmailContent, render
 
-VERIFY_TTL_MINUTES = 10
+VERIFY_TTL_MINUTES = int(os.getenv("EMAIL_VERIFICATION_TTL_MINUTES", "60"))
 
 
 class EmailDeliveryError(RuntimeError):
@@ -25,7 +25,7 @@ class EmailDeliveryError(RuntimeError):
 def provider_configured() -> bool:
     return bool(
         os.getenv("RESEND_API_KEY", "").strip()
-        and os.getenv("MAIL_FROM_ADDRESS", "").strip()
+        and (os.getenv("RESEND_FROM_EMAIL", "").strip() or os.getenv("MAIL_FROM_ADDRESS", "").strip())
         and os.getenv("EMAIL_OTP_SECRET", "").strip()
     )
 
@@ -38,21 +38,18 @@ def verification_otp(token_hash: str) -> str:
     return f"{int.from_bytes(digest_bytes[:8], 'big') % 1_000_000:06d}"
 
 
-def _template(user: Usuario, verification_url: str, otp: str) -> str:
-    name = html.escape(str(user.nombre or "Usuario"))
-    url = html.escape(verification_url, quote=True)
-    support = html.escape(os.getenv("SUPPORT_EMAIL", "soporte@zerowaste-qro.com"))
-    return f"""<!doctype html><html lang="es"><body style="margin:0;background:#f3f4f6;font-family:'Segoe UI',Roboto,Arial,sans-serif;color:#1f2937"><table role="presentation" cellpadding="0" cellspacing="0" width="100%"><tr><td align="center" style="padding:24px 12px"><table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="max-width:560px;background:#fff;border-radius:18px;overflow:hidden"><tr><td align="center" style="background:#064e3b;padding:34px 24px 28px"><img src="https://www.zerowaste-qro.com/static/img/logo_texture.png" width="64" height="64" alt="ZeroWaste" style="display:block;border-radius:14px;margin:0 auto 16px"><h1 style="color:#fff;margin:0 0 10px;font-size:26px;letter-spacing:2px">ZEROWASTE</h1><div style="width:52px;height:3px;background:#00e096;border-radius:2px;margin:0 auto 14px"></div><p style="color:#a7f3d0;margin:0;font-size:12px;letter-spacing:1.5px;text-transform:uppercase">Verificación de correo</p></td></tr><tr><td style="padding:32px 24px 26px"><p style="font-size:16px;margin:0 0 8px">Hola <strong style="color:#064e3b">{name}</strong>,</p><p style="color:#6b7280;font-size:14px;line-height:1.7;margin:0 0 24px">Usa este código en la aplicación ZeroWaste para confirmar tu correo y activar tu cuenta.</p><table role="presentation" width="100%" style="margin:0 0 24px"><tr><td align="center" style="background:#f0fdf4;border:1px solid #d1fae5;border-radius:12px;padding:24px 16px"><p style="color:#6b7280;font-size:11px;margin:0 0 12px;text-transform:uppercase;letter-spacing:2px;font-weight:700">Tu código de verificación</p><span style="display:inline-block;background:#fff;border:2px solid #10b981;border-radius:10px;padding:14px 22px;color:#064e3b;font-family:'Courier New',monospace;font-size:32px;font-weight:900;letter-spacing:8px">{otp}</span></td></tr></table><table role="presentation" width="100%" style="margin:0 0 24px"><tr><td style="background:#fef3c7;border:1px solid #fde68a;border-radius:10px;padding:14px 16px"><p style="color:#92400e;font-size:13px;font-weight:700;margin:0 0 3px">Este código vence en {VERIFY_TTL_MINUTES} minutos.</p><p style="color:#a16207;font-size:12px;margin:0">No lo compartas. ZeroWaste nunca te lo solicitará por llamada o mensaje.</p></td></tr></table><p style="font-size:14px;font-weight:700;margin:0 0 12px">También puedes verificar desde este dispositivo:</p><p style="margin:0 0 24px"><a href="{url}" style="display:inline-block;background:#047857;color:#fff;text-decoration:none;padding:13px 20px;border-radius:10px;font-weight:700">Verificar correo</a></p><p style="color:#9ca3af;font-size:11px;line-height:1.6;margin:0">Si no creaste esta cuenta, ignora este correo. Enlace alternativo:<br><a href="{url}" style="color:#047857;word-break:break-all">{url}</a><br><br>Soporte: {support}</p></td></tr><tr><td align="center" style="background:#022c22;padding:20px 24px"><p style="color:#6ee7b7;font-size:12px;font-weight:700;margin:0">ZeroWaste</p><p style="color:#6ee7b7;font-size:11px;margin:8px 0 0">Clasificar y reciclar para un futuro más verde · © 2026</p></td></tr></table></td></tr></table></body></html>"""
-
-
-def _send_resend(to_email: str, subject: str, html_body: str) -> str:
+def send_resend(to_email: str, content: EmailContent, *, idempotency_key: str) -> str:
     api_key = os.getenv("RESEND_API_KEY", "").strip()
-    from_address = os.getenv("MAIL_FROM_ADDRESS", "").strip()
-    from_name = os.getenv("MAIL_FROM_NAME", "ZeroWaste").strip() or "ZeroWaste"
+    from_address = (os.getenv("RESEND_FROM_EMAIL", "").strip() or os.getenv("MAIL_FROM_ADDRESS", "").strip())
+    from_name = (os.getenv("RESEND_FROM_NAME", "").strip() or os.getenv("MAIL_FROM_NAME", "ZeroWaste").strip() or "ZeroWaste")
+    reply_to = os.getenv("RESEND_REPLY_TO", "").strip()
     if not api_key or not from_address:
         raise EmailDeliveryError("El proveedor de correo no está configurado.")
-    payload = json.dumps({"from": f"{from_name} <{from_address}>", "to": [to_email], "subject": subject, "html": html_body}).encode("utf-8")
-    request = Request("https://api.resend.com/emails", data=payload, method="POST", headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"})
+    message = {"from": f"{from_name} <{from_address}>", "to": [to_email], "subject": content.subject, "html": content.html, "text": content.text}
+    if reply_to:
+        message["reply_to"] = reply_to
+    payload = json.dumps(message).encode("utf-8")
+    request = Request("https://api.resend.com/emails", data=payload, method="POST", headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json", "User-Agent": "ZeroWaste/1.0", "Idempotency-Key": idempotency_key[:256]})
     try:
         with urlopen(request, timeout=12) as response:
             body = json.loads(response.read().decode("utf-8"))
@@ -81,9 +78,11 @@ def send_verification(db: Session, user: Usuario) -> dict:
     db.add(record)
     db.flush()
     otp = verification_otp(record.token_hash)
-    verification_url = f"https://www.zerowaste-qro.com/api/auth/email/verificar?token={token}"
+    base_url = os.getenv("PUBLIC_BASE_URL", "https://www.zerowaste-qro.com").rstrip("/")
+    verification_url = f"{base_url}/api/auth/email/verificar?token={token}"
+    content = render("verification", name=str(user.nombre or "Usuario"), action_url=verification_url, expires_minutes=VERIFY_TTL_MINUTES, detail=f"Código para la aplicación: {otp}")
     try:
-        message_id = _send_resend(user.email, "Verifica tu correo en ZeroWaste", _template(user, verification_url, otp))
+        message_id = send_resend(user.email, content, idempotency_key=f"email-verification/{record.token_hash}")
     except EmailDeliveryError:
         db.rollback()
         raise
