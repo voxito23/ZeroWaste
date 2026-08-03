@@ -33,6 +33,21 @@ class LocalStagingContractsTest(unittest.TestCase):
         self.assertIn("? 'TRUE' : 'FALSE'", schedules)
         self.assertIn("DB::raw('FALSE')", admin)
 
+    def test_point_qr_unique_index_has_a_single_migration_owner(self):
+        migrations = ROOT / 'laravel_zerowaste/database/migrations'
+        sources = {
+            path.name: path.read_text(encoding='utf-8')
+            for path in migrations.glob('*.php')
+        }
+        create_statement = 'CREATE UNIQUE INDEX uq_point_qr_one_active'
+        owners = [name for name, source in sources.items() if create_statement in source]
+        self.assertEqual(
+            owners,
+            ['2026_08_01_000001_add_secure_point_qr_management.php'],
+        )
+        admin = sources['2026_08_01_000004_add_admin_audit_and_reward_history.php']
+        self.assertNotIn('DROP INDEX IF EXISTS uq_point_qr_one_active', admin)
+
     def test_laravel_boolean_queries_and_writes_are_postgres_safe(self):
         controllers = [
             ROOT / 'laravel_zerowaste/app/Http/Controllers/CollectionScheduleController.php',
