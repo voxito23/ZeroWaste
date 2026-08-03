@@ -81,6 +81,14 @@ www.zerowaste-qro.com {
 		}
 	}
 
+	@mobile_links path /app/* /.well-known/assetlinks.json
+	handle @mobile_links {
+		reverse_proxy fast_api:6000 {
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-Proto https
+		}
+	}
+
 	@api path /api /api/* /zw-docs /zw-docs/* /zw-openapi.json /zw-redoc /zw-redoc/*
 	handle @api {
 		reverse_proxy nginx_api:8080 {

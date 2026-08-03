@@ -106,6 +106,13 @@ class InfrastructureSecurityTests(unittest.TestCase):
         ):
             self.assertIn(route_name, self.caddy)
 
+    def test_mobile_links_bypass_flask_and_reach_fastapi(self):
+        matcher = "@mobile_links path /app/* /.well-known/assetlinks.json"
+        self.assertIn(matcher, self.caddy)
+        mobile_block = self.caddy.split(matcher, 1)[1].split("@api path", 1)[0]
+        self.assertIn("reverse_proxy fast_api:6000", mobile_block)
+        self.assertNotIn("reverse_proxy cliente:5000", mobile_block)
+
     def test_laravel_sessions_are_shared_in_redis(self):
         for name in ("laravel",):
             environment = self.compose["services"][name]["environment"]
