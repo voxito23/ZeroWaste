@@ -7,7 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { api } from '../api/axios';
 import KeyboardAwareScreen from '../components/ui/KeyboardAwareScreen';
 
-const SCHEDULE_MESSAGE = 'La disponibilidad se confirma con el horario vigente del backend en America/Mexico_City.';
+const SCHEDULE_MESSAGE = 'La disponibilidad se confirma con el horario vigente de Querétaro.';
 
 const isoDate = (date) => {
   const year = date.getFullYear();
@@ -81,7 +81,7 @@ export default function CreateCollectionScreen({ navigation, route }) {
 
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}><StatusBar style="dark" />
-      <View className="flex-row items-center border-b border-slate-100 bg-white px-4 py-3"><TouchableOpacity onPress={() => navigation.goBack()} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100"><ArrowLeft color="#0F172A" size={21} /></TouchableOpacity><View className="ml-4"><Text className="text-lg font-black text-slate-900">Solicitar recolección</Text><Text className="text-xs text-slate-500">America/Mexico_City</Text></View></View>
+      <View className="flex-row items-center border-b border-slate-100 bg-white px-4 py-3"><TouchableOpacity onPress={() => navigation.goBack()} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100"><ArrowLeft color="#0F172A" size={21} /></TouchableOpacity><View className="ml-4"><Text className="text-lg font-black text-slate-900">Solicitar recolección</Text><Text className="text-xs text-slate-500">Querétaro, Qro.</Text></View></View>
       <KeyboardAwareScreen
         contentContainerStyle={{ padding: 20, paddingBottom: 28 }}
         footer={<View className="border-t border-slate-100 bg-white px-5 py-3"><TouchableOpacity disabled={submitting || !slot} onPress={submit} className="items-center rounded-2xl bg-emerald-700 py-4 disabled:opacity-50">{submitting ? <ActivityIndicator color="white" /> : <Text className="text-base font-black text-white">Confirmar solicitud</Text>}</TouchableOpacity></View>}

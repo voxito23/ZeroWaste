@@ -21,6 +21,12 @@ from app.services.media import (
     remove_media_file,
     save_media_image,
 )
+from app.services.profile_validation import (
+    validate_profile_bio,
+    validate_profile_location,
+    validate_profile_name,
+    validate_profile_title,
+)
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
 
@@ -126,25 +132,22 @@ def actualizar_perfil(
     current_user: Usuario = Depends(get_current_user)
 ):
     """Actualiza el perfil completo y conserva una foto nueva sólo si la BD confirma."""
-    if nombre is not None:
-        nombre = nombre.strip()
-        if len(nombre) < 2 or len(nombre) > 50:
-            raise HTTPException(status_code=422, detail="El nombre debe tener entre 2 y 50 caracteres.")
-        current_user.nombre = nombre  # type: ignore
-
-    text_fields = {
-        "ubicacion": (ubicacion, 50),
-        "titulo_perfil": (titulo_perfil, 100),
-        "biografia": (biografia, 500),
-        "intereses": (intereses, 500),
-    }
-    for field, (value, maximum) in text_fields.items():
-        if value is None:
-            continue
-        clean_value = value.strip()
-        if len(clean_value) > maximum:
-            raise HTTPException(status_code=422, detail=f"{field} excede {maximum} caracteres.")
-        setattr(current_user, field, clean_value)
+    try:
+        if nombre is not None:
+            current_user.nombre = validate_profile_name(nombre)  # type: ignore
+        if ubicacion is not None:
+            current_user.ubicacion = validate_profile_location(ubicacion)  # type: ignore
+        if titulo_perfil is not None:
+            current_user.titulo_perfil = validate_profile_title(titulo_perfil)  # type: ignore
+        if biografia is not None:
+            current_user.biografia = validate_profile_bio(biografia)  # type: ignore
+        if intereses is not None:
+            clean_intereses = intereses.strip()
+            if len(clean_intereses) > 500:
+                raise ValueError("Los intereses pueden tener como máximo 500 caracteres.")
+            current_user.intereses = clean_intereses  # type: ignore
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     new_image = None
     if foto_perfil is not None and foto_perfil.filename:
@@ -241,6 +244,20 @@ def update_user(
         )
 
     update_data = datos.model_dump(exclude_unset=True)
+    validators = {
+        "nombre": validate_profile_name,
+        "ubicacion": validate_profile_location,
+        "titulo_perfil": validate_profile_title,
+        "biografia": validate_profile_bio,
+    }
+    try:
+        for field, validator in validators.items():
+            if field in update_data:
+                if update_data[field] is None:
+                    raise ValueError(f"{field} no puede quedar vacío.")
+                update_data[field] = validator(update_data[field])
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     for field, value in update_data.items():
         setattr(current_user, field, value)
 

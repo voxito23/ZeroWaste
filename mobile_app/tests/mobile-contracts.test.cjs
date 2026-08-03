@@ -23,6 +23,12 @@ const loadModule = (relative) => {
 
 const appearance = loadModule('services/mapAppearance.js');
 const coordinates = loadModule('utils/coordinates.js');
+const profileValidation = loadModule('utils/profileValidation.js');
+assert.equal(profileValidation.PROFILE_TITLE_OPTIONS.length, 10);
+assert.equal(profileValidation.validateProfile({ name: 'Ana', location: 'Querétaro, Qro.', profileTitle: 'Promotor de Reciclaje', bio: 'Eco' }).field, 'name');
+assert.equal(profileValidation.validateProfile({ name: 'Víctor Rodríguez', location: 'Qro', profileTitle: 'Promotor de Reciclaje', bio: 'Eco' }).field, 'location');
+assert.equal(profileValidation.validateProfile({ name: 'Víctor Rodríguez', location: 'Querétaro, Qro.', profileTitle: '', bio: 'Eco' }).field, 'profileTitle');
+assert.equal(profileValidation.validateProfile({ name: 'Víctor Rodríguez', location: 'Querétaro, Qro.', profileTitle: 'Promotor de Reciclaje', bio: 'Eco' }), null);
 assert.equal(coordinates.isValidCoordinate(null), false);
 assert.equal(coordinates.isValidCoordinate(undefined), false);
 assert.equal(coordinates.isValidCoordinate([]), false);
@@ -53,6 +59,7 @@ const forum = read('screens/ForumScreen.js');
 const postDetail = read('screens/PostScreen.js');
 const notificationsScreen = read('screens/NotificationsScreen.js');
 const editorial = read('data/editorialContent.js');
+const editProfile = read('screens/EditProfileScreen.js');
 
 assert.match(comments, /parent_comment_id/);
 assert.match(comments, /KeyboardAvoidingView/);
@@ -71,5 +78,8 @@ assert.match(notificationsScreen, /\/usuarios\/me\/notificaciones/);
 assert.match(editorial, /Querétaro recicla: 2\.4 kg per cápita al día/);
 assert.doesNotMatch(editorial, /https?:\/\//);
 assert.doesNotMatch(editorial, /<\/?[a-z][^>]*>/i);
+assert.match(editProfile, /PROFILE_TITLE_OPTIONS\.map/);
+assert.match(editProfile, /showDialog\(\{ type: 'error'/);
+assert.match(editProfile, /maxLength=\{100\}/);
 
 console.log('mobile-contracts.test.cjs: mapa, contenido, enlaces, comentarios y push correctos');
