@@ -13,6 +13,12 @@ detectar_compose() {
     printf 'ERROR: no se encontró Docker Compose moderno ni docker-compose clásico.\n' >&2
     return 1
   fi
+
+  local raiz_configuracion="${RAIZ_PROYECTO:-${PROJECT_ROOT:-$(pwd -P)}}"
+  local archivo_entorno_nodo="$raiz_configuracion/.env.node"
+  if [[ -f "$archivo_entorno_nodo" ]]; then
+    COMANDO_COMPOSE+=(--env-file "$archivo_entorno_nodo")
+  fi
 }
 
 ejecutar_compose() {

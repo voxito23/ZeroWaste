@@ -76,6 +76,15 @@ class StartupSafetyTests(unittest.TestCase):
 
     def test_secret_examples_do_not_contain_fallback_values(self):
         expected_blank = {
+            ROOT / ".env.node.example": (
+                "DATABASE_URL=",
+                "DB_URL=",
+                "APP_KEY=",
+                "JWT_SECRET=",
+                "JWT_SECRET_KEY=",
+                "SECRET_KEY=",
+                "GRAFANA_ADMIN_PASSWORD=",
+            ),
             ROOT / "fast_api" / ".env.example": (
                 "DATABASE_URL=",
                 "JWT_SECRET_KEY=",

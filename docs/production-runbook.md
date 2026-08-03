@@ -1,3 +1,4 @@
+
 # Runbook de producción y rollback ZeroWaste
 
 ## Condiciones previas
@@ -57,6 +58,11 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
 ## Despliegue manual en DigitalOcean
+
+Cada Droplet usa `/opt/ZeroWaste/.env.node` con permisos `600`. No copiar un
+`.env` dentro de la imagen ni versionarlo. Los comandos directos de Compose deben
+incluir `--env-file .env.node`; el helper de despliegue lo añade automáticamente
+cuando el archivo existe.
 
 ```sh
 cd /opt/ZeroWaste

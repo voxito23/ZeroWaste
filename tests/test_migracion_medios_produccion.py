@@ -24,6 +24,8 @@ class MigracionMediosProduccionTests(unittest.TestCase):
         self.assertIn("docker compose version", self.docker)
         self.assertIn("docker-compose version", self.docker)
         self.assertIn("COMANDO_COMPOSE", self.docker)
+        self.assertIn('.env.node', self.docker)
+        self.assertIn('--env-file', self.docker)
 
     def test_copia_todas_las_categorias_sin_sobrescribir(self):
         for categoria in (
