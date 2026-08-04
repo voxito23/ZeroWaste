@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Pressable, View } from 'react-native';
+import { Animated, Platform, Pressable, View } from 'react-native';
 import { Camera, Home, Map as MapIcon, MessageSquare, User } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -9,6 +9,15 @@ import { colors, motion } from '../../theme/tokens';
 
 export const TAB_BAR_VISUAL_HEIGHT = 68;
 const TAB_BAR_MARGIN = 12;
+const ANDROID_GESTURE_FALLBACK = 20;
+
+export const getTabBarBottomSpacing = (bottomInset, platform = Platform.OS) => {
+  const reportedInset = Number.isFinite(bottomInset) ? Math.max(bottomInset, 0) : 0;
+  const systemInset = platform === 'android'
+    ? Math.max(reportedInset, ANDROID_GESTURE_FALLBACK)
+    : Math.max(reportedInset, 8);
+  return systemInset + TAB_BAR_MARGIN;
+};
 
 function AnimatedTabButton({ children, disabled, onLongPress, onPress, accessibilityLabel, selected, reduceMotion, style }) {
   const scale = useRef(new Animated.Value(1)).current;
@@ -39,7 +48,8 @@ export default function FloatingTabBar({ state, descriptors, navigation }) {
   const insets = useSafeAreaInsets();
   const { tabY, showTabBar, isTabVisible, reduceMotion } = useScrollContext();
   const activeRoute = state.routes[state.index]?.name;
-  const totalHeight = TAB_BAR_VISUAL_HEIGHT + Math.max(insets.bottom, 8) + TAB_BAR_MARGIN;
+  const bottomSpacing = getTabBarBottomSpacing(insets.bottom);
+  const totalHeight = TAB_BAR_VISUAL_HEIGHT + bottomSpacing;
 
   useEffect(() => {
     showTabBar();
@@ -54,7 +64,7 @@ export default function FloatingTabBar({ state, descriptors, navigation }) {
         left: 0,
         right: 0,
         height: totalHeight,
-        paddingBottom: Math.max(insets.bottom, 8),
+        paddingBottom: bottomSpacing,
         paddingHorizontal: 16,
         justifyContent: 'flex-end',
         opacity: tabY.interpolate({ inputRange: [0, 1], outputRange: [1, 0.15] }),

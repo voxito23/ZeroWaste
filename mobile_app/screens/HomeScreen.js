@@ -536,7 +536,7 @@ export default function HomeScreen() {
             <View className="bg-white"><ScrollView horizontal bounces={false} overScrollMode="never" showsHorizontalScrollIndicator={false} style={{ backgroundColor: '#FFFFFF' }} contentContainerStyle={{ paddingHorizontal: 20, gap: 16, backgroundColor: '#FFFFFF' }}>
               {campaignsList.map((camp) => (
                 <TouchableScale key={camp.id} onPress={camp.link ? () => Linking.openURL(camp.link) : undefined}>
-                  <View className="w-[300px] overflow-hidden rounded-[28px] border border-slate-100 bg-white">
+                  <View className="h-[438px] w-[300px] overflow-hidden rounded-[28px] border border-slate-100 bg-white">
                     <View className="relative h-[190px]">
                       <RemoteImage uri={camp.imageUrl} fallbackSource={camp.fallbackImage} className="h-full w-full" backgroundClassName="bg-white" loadingClassName="bg-white" accessibilityLabel={`Imagen de ${camp.title}`} />
                       
@@ -545,27 +545,33 @@ export default function HomeScreen() {
                       </View>
 
                       <View className="absolute bottom-0 w-full bg-black/50 px-4 py-2.5 flex-row justify-between items-center">
-                        <View className="flex-row items-center gap-1.5">
+                        <View className="mr-3 flex-row items-center gap-1.5">
                           <Calendar color="#fff" size={13} />
                           <Text className="text-white text-[12px] font-bold">{camp.date}</Text>
                         </View>
-                        <View className="flex-row items-center gap-1.5">
+                        <View className="min-w-0 flex-1 flex-row items-center justify-end gap-1.5">
                           <MapPin color="#fff" size={13} />
-                          <Text className="text-white text-[12px] font-bold">{camp.location}</Text>
+                          <Text className="shrink text-white text-[12px] font-bold" numberOfLines={1}>{camp.location}</Text>
                         </View>
                       </View>
                     </View>
 
-                    <View className="p-5 pt-4">
-                      <Text className="text-gray-900 font-extrabold text-[18px] leading-tight mb-2" numberOfLines={2}>{camp.title}</Text>
-                      <Text className="mb-4 text-[13px] font-medium leading-5 text-slate-500" style={{ textAlign: 'justify' }} numberOfLines={3}>{camp.summary}</Text>
+                    <View className="flex-1 justify-between p-5 pt-4">
+                      <View>
+                        <Text className="mb-2 min-h-[44px] text-[18px] font-extrabold leading-[22px] text-gray-900" numberOfLines={2}>{camp.title}</Text>
+                        <Text className="min-h-[60px] text-[13px] font-medium leading-5 text-slate-500" style={{ textAlign: 'justify' }} numberOfLines={3}>{camp.summary}</Text>
+                      </View>
                       
                       {camp.link ? <TouchableScale onPress={() => Linking.openURL(camp.link)}>
                         <View className="bg-[#064E3B] rounded-2xl py-3.5 items-center flex-row justify-center gap-2">
                           <Text className="text-white text-[15px] font-black">Unirse</Text>
                           <ArrowRight color="#fff" size={16} strokeWidth={3} />
                         </View>
-                      </TouchableScale> : null}
+                      </TouchableScale> : (
+                        <View className="items-center justify-center rounded-2xl border border-slate-200 bg-slate-50 py-3.5">
+                          <Text className="text-[13px] font-extrabold text-slate-500">Información próximamente</Text>
+                        </View>
+                      )}
                     </View>
                   </View>
                 </TouchableScale>

@@ -31,7 +31,9 @@ for (const route of ['home', 'forum', 'scanner', 'map', 'profile']) {
 }
 assert.match(tabBar, /position:\s*'absolute'/);
 assert.match(tabBar, /rounded-full/);
-assert.match(tabBar, /Math\.max\(insets\.bottom, 8\)/);
+assert.match(tabBar, /getTabBarBottomSpacing\(insets\.bottom\)/);
+assert.match(tabBar, /ANDROID_GESTURE_FALLBACK/);
+assert.match(tabBar, /paddingBottom:\s*bottomSpacing/);
 assert.match(tabBar, /translateY/);
 assert.match(tabBar, /opacity/);
 assert.match(scroll, /TOP_VISIBILITY_ZONE/);
@@ -89,6 +91,8 @@ assert.match(home, />Tendencias</);
 assert.match(home, /RefreshControl/);
 assert.doesNotMatch(home, /setInterval\(\(\) => setHomeRefreshKey/);
 assert.doesNotMatch(home, /h-\[240px\]/);
+assert.match(home, /h-\[438px\] w-\[300px\]/);
+assert.match(home, /Información próximamente/);
 assert.match(dialog, /SafeAreaView/);
 assert.match(dialog, /navigationBarTranslucent=\{false\}/);
 assert.match(dialog, /bg-white/);
