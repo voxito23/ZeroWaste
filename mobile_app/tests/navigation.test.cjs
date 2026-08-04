@@ -51,6 +51,8 @@ assert.match(map, /clusterRadius=\{48\}/);
 assert.match(map, /MAP_OVERVIEW_CAMERA[\s\S]*pitch:\s*0/);
 assert.doesNotMatch(map, /Mapbox\.StyleImport/);
 assert.match(map, /api\.get\('\/mobile\/config'\)/);
+assert.match(map, /MAP_CARDS_BOTTOM_CLEARANCE = 91/);
+assert.match(map, /bottomSafeArea \+ MAP_CARDS_BOTTOM_CLEARANCE/);
 assert.doesNotMatch(map, /togglePerspective|threeDimensional/);
 assert.match(routeNavigation, /show3dBuildings:\s*true/);
 assert.match(routeNavigation, /new globalThis\.Map\(\)/);

@@ -35,6 +35,7 @@ const MAP_LOAD_TIMEOUT_MS = 15_000;
 const SEARCH_DEBOUNCE_MS = 300;
 const CARD_WIDTH = 304;
 const CARD_SNAP = CARD_WIDTH + 12;
+const MAP_CARDS_BOTTOM_CLEARANCE = 91;
 const SAFE_MAP_LOAD_ERROR = 'No fue posible cargar el mapa. Revisa tu conexión e inténtalo nuevamente.';
 const MAP_OVERVIEW_CAMERA = Object.freeze({ ...MAP_DEFAULT_CAMERA, pitch: 0, heading: 0 });
 
@@ -510,7 +511,7 @@ export default function MapScreen() {
           snapToInterval={CARD_SNAP}
           decelerationRate="fast"
           contentContainerStyle={{ paddingHorizontal: 16 }}
-          style={[styles.cards, { bottom: bottomSafeArea + 72 }]}
+          style={[styles.cards, { bottom: bottomSafeArea + MAP_CARDS_BOTTOM_CLEARANCE }]}
           getItemLayout={(_, index) => ({ length: CARD_SNAP, offset: CARD_SNAP * index, index })}
           onMomentumScrollEnd={(event) => {
             const index = Math.max(0, Math.min(mapPoints.length - 1, Math.round(event.nativeEvent.contentOffset.x / CARD_SNAP)));

@@ -52,10 +52,13 @@ class MapboxContractTests(unittest.TestCase):
 
     def test_mobile_can_load_only_the_public_mapbox_token_at_runtime(self):
         router = (ROOT / "fast_api/app/routers/mobile_links.py").read_text(encoding="utf-8")
+        middleware = (ROOT / "fast_api/app/security/api_key_auth.py").read_text(encoding="utf-8")
         screen = (ROOT / "mobile_app/screens/MapScreen.js").read_text(encoding="utf-8")
         self.assertIn('@router.get("/mobile/config"', router)
         self.assertIn('os.getenv("MAPBOX_PUBLIC_TOKEN"', router)
         self.assertNotIn("MAPBOX_SECRET_TOKEN", router)
+        self.assertIn('"/mobile/config"', middleware)
+        self.assertIn('"/api/mobile/config"', middleware)
         self.assertIn("api.get('/mobile/config')", screen)
 
     def test_docker_passes_one_public_mapbox_token_to_laravel_and_flask(self):

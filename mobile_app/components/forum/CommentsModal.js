@@ -10,6 +10,8 @@ import { resolveAvatar, resolveDisplayName } from '../../utils/user';
 import Skeleton from '../ui/Skeleton';
 import UserAvatar from '../ui/UserAvatar';
 
+const COMPOSER_BOTTOM_LIFT = 12;
+
 export default function CommentsModal({ visible, post, highlightCommentId, onClose, onCountChange }) {
   const PAGE_SIZE = 50;
   const insets = useSafeAreaInsets();
@@ -18,11 +20,10 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   const requestRef = useRef(0);
   const submittingRef = useRef(false);
   const keyboardVisibleRef = useRef(false);
-  const keyboardResetTimerRef = useRef(null);
   const commentsRef = useRef([]);
   const draftPostIdRef = useRef(null);
   const dragY = useRef(new Animated.Value(0)).current;
-  const composerPadding = useRef(new Animated.Value(Math.max(insets.bottom, 8))).current;
+  const composerPadding = useRef(new Animated.Value(Math.max(insets.bottom, 8) + COMPOSER_BOTTOM_LIFT)).current;
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -36,7 +37,6 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   const [highlightedId, setHighlightedId] = useState(null);
   const [reduceMotion, setReduceMotion] = useState(false);
   const [inputHeight, setInputHeight] = useState(48);
-  const [keyboardSession, setKeyboardSession] = useState(0);
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -47,7 +47,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   useEffect(() => {
     if (!visible) return;
     dragY.setValue(0);
-    composerPadding.setValue(Math.max(insets.bottom, 8));
+    composerPadding.setValue(Math.max(insets.bottom, 8) + COMPOSER_BOTTOM_LIFT);
   }, [composerPadding, dragY, insets.bottom, visible]);
 
   useEffect(() => {
@@ -72,17 +72,14 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
       dragY.setValue(0);
       composerPadding.stopAnimation();
       Animated.timing(composerPadding, {
-        toValue: Math.max(insets.bottom, 8),
+        toValue: Math.max(insets.bottom, 8) + COMPOSER_BOTTOM_LIFT,
         duration: reduceMotion ? 0 : 180,
         useNativeDriver: false,
       }).start();
-      clearTimeout(keyboardResetTimerRef.current);
-      keyboardResetTimerRef.current = setTimeout(() => setKeyboardSession((session) => session + 1), reduceMotion ? 0 : 220);
     });
     return () => {
       showSubscription.remove();
       hideSubscription.remove();
-      clearTimeout(keyboardResetTimerRef.current);
     };
   }, [composerPadding, dragY, insets.bottom, reduceMotion]);
 
@@ -99,7 +96,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
     Keyboard.dismiss();
     keyboardVisibleRef.current = false;
     composerPadding.stopAnimation();
-    composerPadding.setValue(Math.max(insets.bottom, 8));
+    composerPadding.setValue(Math.max(insets.bottom, 8) + COMPOSER_BOTTOM_LIFT);
     onClose();
   }, [composerPadding, insets.bottom, onClose]);
 
@@ -198,7 +195,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
 
   return (
     <Modal visible={visible} transparent animationType={reduceMotion ? 'none' : 'slide'} presentationStyle="overFullScreen" statusBarTranslucent navigationBarTranslucent onRequestClose={closeModal}>
-      <KeyboardAvoidingView key={keyboardSession} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
         <View className="flex-1 justify-end bg-slate-950/45">
           <Pressable className="flex-1" onPress={closeModal} accessibilityLabel="Cerrar comentarios" />
           <Animated.View style={{ height: '92%', minHeight: '55%', transform: [{ translateY: dragY }] }}>

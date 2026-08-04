@@ -85,7 +85,8 @@ assert.doesNotMatch(comments, /keyboardLayoutRevision|keyboardRestoreY|Animated\
 assert.match(comments, /statusBarTranslucent navigationBarTranslucent onRequestClose/);
 assert.match(comments, /keyboardVisibleRef/);
 assert.match(comments, /composerPadding/);
-assert.match(comments, /keyboardSession/);
+assert.match(comments, /COMPOSER_BOTTOM_LIFT = 12/);
+assert.doesNotMatch(comments, /keyboardSession|keyboardResetTimerRef/);
 assert.doesNotMatch(comments, /setKeyboardVisible/);
 assert.match(comments, /keyboardVisibleRef\.current = false;[\s\S]*inputRef\.current\?\.blur\(\)/);
 assert.match(comments, /highlightCommentId/);

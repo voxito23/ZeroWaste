@@ -77,6 +77,8 @@ class ApiKeyMiddleware(BaseHTTPMiddleware):
         "/metrics",
         "/health",
         "/ready",
+        "/mobile/config",
+        "/api/mobile/config",
     }
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
