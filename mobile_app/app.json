@@ -11,6 +11,7 @@
     },
     "android": {
       "softwareKeyboardLayoutMode": "resize",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#F0FDF4",
         "foregroundImage": "./assets/branding/zerowaste-adaptive-icon.png"

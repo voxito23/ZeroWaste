@@ -212,6 +212,7 @@ assert.match(app, /bg-white/);
 assert.equal(appConfig.expo.name, 'ZeroWaste');
 assert.equal(appConfig.expo.icon, './assets/branding/zerowaste-icon.png');
 assert.equal(appConfig.expo.android.package, 'com.vic45.mobile_app');
+assert.equal(appConfig.expo.android.googleServicesFile, './google-services.json');
 assert.equal(appConfig.expo.android.adaptiveIcon.foregroundImage, './assets/branding/zerowaste-adaptive-icon.png');
 assert.equal(appConfig.expo.android.softwareKeyboardLayoutMode, 'resize');
 assert.deepEqual(appConfig.expo.plugins.find((entry) => Array.isArray(entry) && entry[0] === 'expo-navigation-bar')?.[1], { style: 'dark', enforceContrast: false });
