@@ -28,7 +28,7 @@ import UserAvatar from '../components/ui/UserAvatar';
 import Skeleton from '../components/ui/Skeleton';
 import ZeroWasteDialog, { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
 import useMapAppearance from '../hooks/useMapAppearance';
-import { getPushRegistrationStatus, registerPushToken, unregisterPushToken } from '../services/mobileNotifications';
+import { getPushRegistrationStatus, pushRegistrationErrorMessage, registerPushToken, unregisterPushToken } from '../services/mobileNotifications';
 import { voiceNavigation } from '../services/voiceNavigation';
 import { useAuth } from '../store/useAuth';
 import { resolveAvatar } from '../utils/user';
@@ -116,7 +116,7 @@ export default function SettingsScreen() {
       else if (result.status === 'denied') showDialog({ type: 'permission', title: 'Permiso no concedido', message: 'Activa las notificaciones de ZeroWaste desde los ajustes del teléfono y vuelve a esta pantalla.', primaryLabel: 'Abrir ajustes', onPrimary: Linking.openSettings, secondaryLabel: 'Ahora no' });
       else showDialog({ type: 'info', title: 'Dispositivo no compatible', message: result.message || 'Esta instalación todavía no puede registrar notificaciones push.' });
     } catch (error) {
-      showDialog({ type: 'error', title: 'No se activaron las notificaciones', message: error.response?.data?.detail || error.userMessage || error.message || 'Verifica tu conexión e inténtalo de nuevo.' });
+      showDialog({ type: 'error', title: 'No se activaron las notificaciones', message: pushRegistrationErrorMessage(error) });
     }
   };
 

@@ -99,6 +99,9 @@ assert.doesNotMatch(comments, /requestAnimationFrame\(\(\) => inputRef\.current\
 assert.match(comments, /highlightCommentId/);
 assert.match(notifications, /getExpoPushTokenAsync/);
 assert.match(notifications, /expoPushToken/);
+assert.match(notifications, /Default FirebaseApp\|Firebase Messaging instance\|googleServicesFile\|google-services/);
+assert.match(notifications, /Esta instalación de ZeroWaste todavía no incluye la configuración de Firebase/);
+assert.match(settings, /pushRegistrationErrorMessage\(error\)/);
 assert.match(notifications, /type === 'collection_created'/);
 assert.match(notifications, /name: 'RouteNavigation'/);
 assert.match(notifications, /requesterName/);

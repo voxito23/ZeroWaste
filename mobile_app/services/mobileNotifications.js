@@ -32,6 +32,22 @@ const DEVICE_ID_KEY = 'zerowaste.push.device-id';
 const PUSH_TOKEN_KEY = 'zerowaste.push.expo-token';
 export const NOTIFICATION_CHANNEL = 'zerowaste-general';
 
+const firebaseConfigurationPattern = /Default FirebaseApp|Firebase Messaging instance|googleServicesFile|google-services\.json/i;
+
+export const pushRegistrationErrorMessage = (error) => {
+  const detail = [
+    error?.response?.data?.detail,
+    error?.userMessage,
+    error?.message,
+  ].find((value) => typeof value === 'string' && value.trim()) || '';
+
+  if (firebaseConfigurationPattern.test(detail)) {
+    return 'Esta instalación de ZeroWaste todavía no incluye la configuración de Firebase para notificaciones. Instala la nueva compilación de la app y vuelve a intentarlo.';
+  }
+
+  return detail || 'Verifica tu conexión e inténtalo de nuevo.';
+};
+
 const getDeviceId = async () => {
   const stored = await SecureStore.getItemAsync(DEVICE_ID_KEY);
   if (stored) return stored;
