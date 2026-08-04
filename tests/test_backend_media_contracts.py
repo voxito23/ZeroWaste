@@ -9,6 +9,7 @@ import re
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from PIL import Image
@@ -138,6 +139,22 @@ class BackendMediaContractTests(unittest.TestCase):
                 )
             with Image.open(Path(temp_dir) / "perfiles" / filename) as stored:
                 self.assertLessEqual(max(stored.size), self.fastapi_media.PROFILE_IMAGE_MAX_DIMENSION)
+
+    def test_new_forum_images_are_resized_and_encoded_as_webp(self):
+        stream = io.BytesIO()
+        Image.new("RGB", (2400, 1500), (0, 128, 64)).save(stream, format="PNG")
+        content = stream.getvalue()
+        with tempfile.TemporaryDirectory(dir=ROOT) as temp_dir:
+            with patch.dict(os.environ, {"MEDIA_ROOT": temp_dir}):
+                fastapi_filename = self.fastapi_media.save_media_image(content, "foro")
+                flask_filename = self.flask_media.save_uploaded_image(
+                    SimpleNamespace(stream=io.BytesIO(content)), "foro"
+                )
+            for filename in (fastapi_filename, flask_filename):
+                self.assertTrue(filename.endswith(".webp"))
+                with Image.open(Path(temp_dir) / "foro" / filename) as stored:
+                    self.assertEqual(stored.format, "WEBP")
+                    self.assertLessEqual(max(stored.size), 1600)
 
     def test_backend_source_contracts_are_safe(self):
         domain_models = (ROOT / "fast_api/app/models/domain_models.py").read_text(encoding="utf-8")

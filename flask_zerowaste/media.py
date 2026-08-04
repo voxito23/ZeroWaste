@@ -17,6 +17,7 @@ DEFAULT_PUBLIC_MEDIA_BASE = "https://www.zerowaste-qro.com/media"
 ZEROWASTE_PUBLIC_HOSTS = {"zerowaste-qro.com", "www.zerowaste-qro.com"}
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 MAX_IMAGE_DIMENSION = 6000
+FORUM_IMAGE_MAX_DIMENSION = 1600
 MEDIA_CATEGORIES = {
     "foro", "perfiles", "recompensas", "campanas", "eventos", "puntos"
 }
@@ -200,6 +201,11 @@ def save_uploaded_image(upload, category):
         if source.width > MAX_IMAGE_DIMENSION or source.height > MAX_IMAGE_DIMENSION:
             raise MediaValidationError("La imagen excede las dimensiones permitidas.")
         source = ImageOps.exif_transpose(source)
+        if category == "foro" and max(source.size) > FORUM_IMAGE_MAX_DIMENSION:
+            source.thumbnail(
+                (FORUM_IMAGE_MAX_DIMENSION, FORUM_IMAGE_MAX_DIMENSION),
+                Image.Resampling.LANCZOS,
+            )
     except MediaValidationError:
         raise
     except (Image.DecompressionBombError, UnidentifiedImageError, OSError, ValueError):
@@ -209,14 +215,17 @@ def save_uploaded_image(upload, category):
 
     directory = media_directory(category)
     directory.mkdir(parents=True, exist_ok=True)
+    output_format = "WEBP" if category == "foro" else image_format
+    extension = _FORMATS[output_format]
     filename = f"{uuid4().hex}.{extension}"
     destination = directory / filename
-    if image_format == "JPEG":
+    if output_format == "JPEG":
         source.convert("RGB").save(destination, "JPEG", quality=88, optimize=True)
-    elif image_format == "PNG":
+    elif output_format == "PNG":
         source.copy().save(destination, "PNG", optimize=True)
     else:
-        source.copy().save(destination, "WEBP", quality=88, method=4)
+        clean = source.convert("RGBA" if source.mode in {"RGBA", "LA"} or "transparency" in source.info else "RGB")
+        clean.save(destination, "WEBP", quality=82 if category == "foro" else 88, method=4)
     try:
         destination.chmod(0o660)
     except OSError:

@@ -4,6 +4,7 @@ import { ImageOff } from 'lucide-react-native';
 import Skeleton from './Skeleton';
 
 const isDevelopment = typeof __DEV__ !== 'undefined' && __DEV__;
+const loadedRemoteUris = new Set();
 
 const safeLogTarget = (uri) => {
   if (!uri) return 'sin-url';
@@ -48,13 +49,13 @@ export default function RemoteImage({
   onError,
 }) {
   const [failed, setFailed] = useState(false);
-  const [loading, setLoading] = useState(Boolean(uri));
+  const [loading, setLoading] = useState(Boolean(uri && !loadedRemoteUris.has(uri)));
   const [attempt, setAttempt] = useState(0);
   const wrapperStyle = useMemo(() => [aspectRatio ? { aspectRatio } : null, style], [aspectRatio, style]);
 
   useEffect(() => {
     setFailed(false);
-    setLoading(Boolean(uri));
+    setLoading(Boolean(uri && !loadedRemoteUris.has(uri)));
     setAttempt(0);
   }, [uri]);
 
@@ -88,16 +89,18 @@ export default function RemoteImage({
     <View className={`${className || ''} ${backgroundClassName} overflow-hidden`} style={wrapperStyle}>
       <Image
         key={`${uri}-${attempt}`}
-        source={{ uri }}
+        source={{ uri, cache: 'force-cache' }}
         className={imageClassName}
         resizeMode={resizeMode}
+        resizeMethod="resize"
         accessibilityLabel={accessibilityLabel}
         onLoadStart={(event) => {
-          setLoading(true);
+          if (!loadedRemoteUris.has(uri)) setLoading(true);
           logImageEvent('inicio', uri);
           onLoadStart?.(event);
         }}
         onLoad={(event) => {
+          loadedRemoteUris.add(uri);
           setLoading(false);
           logImageEvent('cargada', uri);
           onLoad?.(event);

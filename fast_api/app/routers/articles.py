@@ -54,7 +54,7 @@ ARTICLES: tuple[ArticleDetail, ...] = (
         excerpt="Pequeños cambios diarios que reducen la presión de los plásticos de un solo uso.",
         published_at="2026-03-15",
         read_time="5 min",
-        image_url=f"{PUBLIC_STATIC}/plasticos.png",
+        image_url=f"{PUBLIC_STATIC}/plasticos-mobile.jpg",
         blocks=[
             ArticleBlock(type="paragraph", text="La contaminación por plástico representa una de las crisis ambientales más severas de nuestro tiempo. A nivel global, más del 90% del plástico manufacturado nunca ha sido reciclado de manera óptima (PNUMA, 2023). Integrar prácticas diarias para reducir su impacto desde el hogar es imperativo."),
             ArticleBlock(type="section", heading="El impacto de lo efímero", text="Los envases de un solo uso constituyen más del 40% del total de residuos plásticos a nivel mundial (Geyer et al., 2017). Sustituirlos por alternativas reutilizables reduce la presión de los microplásticos sobre los ecosistemas."),
@@ -78,7 +78,7 @@ ARTICLES: tuple[ArticleDetail, ...] = (
         excerpt="Métodos domésticos para reducir el consumo, captar lluvia y reutilizar agua gris.",
         published_at="2026-03-16",
         read_time="8 min",
-        image_url=f"{PUBLIC_STATIC}/aguah.png",
+        image_url=f"{PUBLIC_STATIC}/aguah-mobile.jpg",
         blocks=[
             ArticleBlock(type="paragraph", text="La escasez hídrica ha sobrepasado niveles de alerta en múltiples regiones metropolitanas. Más de 2,000 millones de personas experimentan estrés hídrico domiciliario (OMS, 2022). Minimizar la huella individual dejó de ser opcional."),
             ArticleBlock(type="section", heading="Técnicas inteligentes domésticas", text="El consumo promedio supera los 200 litros diarios por persona en algunas zonas urbanas, aunque las necesidades esenciales son menores. Reparaciones y hábitos en ducha y lavandería producen una reducción inmediata."),
@@ -101,7 +101,7 @@ ARTICLES: tuple[ArticleDetail, ...] = (
         excerpt="Autonomía fotovoltaica y microhábitos para consumir menos electricidad fósil.",
         published_at="2026-03-17",
         read_time="6 min",
-        image_url=f"{PUBLIC_STATIC}/solar.png",
+        image_url=f"{PUBLIC_STATIC}/solar-mobile.jpg",
         blocks=[
             ArticleBlock(type="paragraph", text="La dependencia de combustibles fósiles impulsa el calentamiento global. La radiación solar recibida por la Tierra ofrece un potencial energético suficiente si se aprovecha con infraestructura fotovoltaica eficiente (IRENA, 2023)."),
             ArticleBlock(type="section", heading="Autonomía fotovoltaica doméstica", text="Instalar paneles fotovoltaicos es hoy considerablemente más accesible que hace una década. Los sistemas modernos producen energía de forma descentralizada y requieren poco mantenimiento posterior."),
@@ -124,7 +124,7 @@ ARTICLES: tuple[ArticleDetail, ...] = (
         excerpt="Convierte residuos orgánicos en suelo fértil incluso dentro de un entorno urbano.",
         published_at="2026-03-18",
         read_time="7 min",
-        image_url=f"{PUBLIC_STATIC}/composta.png",
+        image_url=f"{PUBLIC_STATIC}/composta-mobile.jpg",
         blocks=[
             ArticleBlock(type="paragraph", text="Una parte importante de los residuos domésticos es orgánica. Cuando se dispone sin oxígeno puede producir metano; separarla permite convertir un problema en suelo fértil (PNUMA, 2023)."),
             ArticleBlock(type="section", heading="Abraza a las lombrices", text="Una compostera doméstica puede reducir de forma importante el volumen enviado al basurero. La base es equilibrar materiales ricos en nitrógeno y carbono y excluir productos que atraigan fauna nociva."),

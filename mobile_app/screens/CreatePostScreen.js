@@ -11,7 +11,7 @@ import UserAvatar from '../components/ui/UserAvatar';
 import ZeroWasteDialog from '../components/ui/ZeroWasteDialog';
 import { resolveAvatar, resolveDisplayName } from '../utils/user';
 import KeyboardAwareScreen from '../components/ui/KeyboardAwareScreen';
-import { validatePickedProfileImage } from '../utils/imageUpload';
+import { validatePickedForumImage } from '../utils/imageUpload';
 
 export default function CreatePostScreen() {
   const navigation = useNavigation();
@@ -38,7 +38,7 @@ export default function CreatePostScreen() {
 
   const usePickerResult = async (result) => {
     if (result.canceled || !result.assets?.[0]) return;
-    const validation = await validatePickedProfileImage(result.assets[0]);
+    const validation = await validatePickedForumImage(result.assets[0]);
     if (!validation.valid) {
       setError(validation.message);
       return;
@@ -53,7 +53,7 @@ export default function CreatePostScreen() {
       setError('Permite el acceso a tus fotografías para elegir una imagen.');
       return;
     }
-    await usePickerResult(await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [16, 10], quality: 0.6 }));
+    await usePickerResult(await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [16, 10], quality: 0.45 }));
   };
 
   const takePhoto = async () => {
@@ -62,7 +62,7 @@ export default function CreatePostScreen() {
       setError('Permite el acceso a la cámara para tomar una fotografía.');
       return;
     }
-    await usePickerResult(await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [16, 10], quality: 0.6 }));
+    await usePickerResult(await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [16, 10], quality: 0.45 }));
   };
 
   React.useEffect(() => {

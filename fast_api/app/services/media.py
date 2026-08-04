@@ -19,6 +19,7 @@ MAX_IMAGE_BYTES = 5 * 1024 * 1024
 MAX_PROFILE_IMAGE_BYTES = 15 * 1024 * 1024
 MAX_IMAGE_DIMENSION = 6000
 PROFILE_IMAGE_MAX_DIMENSION = 1024
+FORUM_IMAGE_MAX_DIMENSION = 1600
 
 MEDIA_CATEGORIES = {
     "foro",
@@ -244,9 +245,13 @@ def save_media_image(content: bytes, category: str, *, maximum_bytes: int = MAX_
             )
         if source.width > MAX_IMAGE_DIMENSION or source.height > MAX_IMAGE_DIMENSION:
             raise MediaValidationError("La imagen excede las dimensiones permitidas.")
-        if normalized_category == "perfiles" and max(source.size) > PROFILE_IMAGE_MAX_DIMENSION:
+        delivery_max_dimension = {
+            "perfiles": PROFILE_IMAGE_MAX_DIMENSION,
+            "foro": FORUM_IMAGE_MAX_DIMENSION,
+        }.get(normalized_category)
+        if delivery_max_dimension and max(source.size) > delivery_max_dimension:
             source.thumbnail(
-                (PROFILE_IMAGE_MAX_DIMENSION, PROFILE_IMAGE_MAX_DIMENSION),
+                (delivery_max_dimension, delivery_max_dimension),
                 Image.Resampling.LANCZOS,
             )
     except MediaValidationError:
@@ -256,13 +261,14 @@ def save_media_image(content: bytes, category: str, *, maximum_bytes: int = MAX_
             "El archivo no es una imagen válida.", status_code=415
         ) from None
 
-    extension, _mime = format_config
+    output_format = "WEBP" if normalized_category == "foro" else image_format
+    extension, _mime = _IMAGE_FORMATS[output_format]
     destination_dir = media_directory(normalized_category)
     destination_dir.mkdir(parents=True, exist_ok=True)
     filename = f"{uuid4().hex}.{extension}"
     destination = destination_dir / filename
 
-    if image_format == "JPEG":
+    if output_format == "JPEG":
         clean = source.convert("RGB")
         clean.save(
             destination,
@@ -270,15 +276,15 @@ def save_media_image(content: bytes, category: str, *, maximum_bytes: int = MAX_
             quality=86 if normalized_category == "perfiles" else 88,
             optimize=normalized_category != "perfiles",
         )
-    elif image_format == "PNG":
+    elif output_format == "PNG":
         clean = source.copy()
         clean.save(destination, format="PNG", optimize=normalized_category != "perfiles")
     else:
-        clean = source.copy()
+        clean = source.convert("RGBA" if source.mode in {"RGBA", "LA"} or "transparency" in source.info else "RGB")
         clean.save(
             destination,
             format="WEBP",
-            quality=86 if normalized_category == "perfiles" else 88,
+            quality=82 if normalized_category == "foro" else (86 if normalized_category == "perfiles" else 88),
             method=2 if normalized_category == "perfiles" else 4,
         )
     try:

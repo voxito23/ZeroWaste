@@ -466,7 +466,7 @@ export default function HomeScreen() {
                   <View className="mb-2 overflow-hidden rounded-[32px] bg-[#111827]">
                     {/* Image Section */}
                     <View className="relative bg-white" style={{ aspectRatio: 16 / 10 }}>
-                      <RemoteImage uri={normalizeMediaUrl(item.image_url)} fallbackSource={EDITORIAL_IMAGES[item.id]} className="h-full w-full" backgroundClassName="bg-white" loadingClassName="bg-white" aspectRatio={16 / 10} accessibilityLabel={`Imagen de ${item.title}`} />
+                      <RemoteImage uri={EDITORIAL_IMAGES[item.id] ? null : normalizeMediaUrl(item.image_url)} fallbackSource={EDITORIAL_IMAGES[item.id]} className="h-full w-full" backgroundClassName="bg-white" loadingClassName="bg-white" aspectRatio={16 / 10} accessibilityLabel={`Imagen de ${item.title}`} />
                       
                       {/* Dark fade at bottom — smooth blend */}
                       <LinearGradient
@@ -613,7 +613,7 @@ export default function HomeScreen() {
             <TouchableScale scaleVal={0.98} onPress={() => navigation.navigate('NewsDetail', { articleId: localNews.id })}>
               <View className="overflow-hidden rounded-[28px] bg-[#111827]" style={{ shadowColor: '#064E3B', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.15, shadowRadius: 28, elevation: 14 }}>
                 <View className="relative h-[260px]">
-                  <RemoteImage uri={normalizeMediaUrl(localNews.image_url)} fallbackSource={EDITORIAL_IMAGES[localNews.id]} className="h-full w-full" aspectRatio={16 / 10} accessibilityLabel={`Imagen de ${localNews.title}`} />
+                  <RemoteImage uri={EDITORIAL_IMAGES[localNews.id] ? null : normalizeMediaUrl(localNews.image_url)} fallbackSource={EDITORIAL_IMAGES[localNews.id]} className="h-full w-full" aspectRatio={16 / 10} accessibilityLabel={`Imagen de ${localNews.title}`} />
                   <LinearGradient colors={['transparent', 'rgba(17,24,39,0.3)', 'rgba(17,24,39,0.7)', 'rgba(17,24,39,1)']} locations={[0, 0.45, 0.72, 1]} style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 145 }} pointerEvents="none" />
                   <View className="absolute left-4 top-4 z-20 flex-row items-center gap-2">
                     <View className="flex-row items-center gap-2 rounded-full border border-emerald-300/50 bg-emerald-500/90 px-3.5 py-1.5"><Animated.View style={{ opacity: glow }}><View className="h-2 w-2 rounded-full bg-white" /></Animated.View><Text className="text-[10px] font-black uppercase tracking-wider text-white">Noticia local</Text></View>

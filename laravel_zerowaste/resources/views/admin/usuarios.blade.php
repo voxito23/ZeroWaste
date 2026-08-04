@@ -58,7 +58,7 @@
         <div class="flex items-center gap-3 w-full sm:w-auto">
             <div class="relative flex-1 sm:flex-initial">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
-                <input type="text" id="userSearch" placeholder="Buscar..." class="input-premium pl-10 sm:w-56">
+                <input type="text" id="userSearch" maxlength="100" placeholder="Buscar..." class="input-premium pl-10 sm:w-56">
             </div>
             <a href="{{ route('usuarios.create') }}" class="btn-primary whitespace-nowrap">
                 <span class="material-symbols-outlined text-lg">person_add</span> Nuevo
@@ -71,6 +71,10 @@
 <div class="glass-card overflow-hidden" id="tableContainer">
     @include('admin.partials.usuarios_table')
 </div>
+<div id="userTableError" class="hidden mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-center text-sm font-bold text-red-700" role="alert">
+    No fue posible actualizar la lista de usuarios.
+    <button id="retryUsers" type="button" class="ml-2 underline">Reintentar</button>
+</div>
 
 @endsection
 
@@ -81,6 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentSearch = '';
 
     const tableContainer = document.getElementById('tableContainer');
+    const tableError = document.getElementById('userTableError');
     const searchInput = document.getElementById('userSearch');
     const tabButtons = document.querySelectorAll('[data-user-tab]');
     const statCards = document.querySelectorAll('.stat-card');
@@ -89,11 +94,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function fetchTable(url) {
         const tbody = document.getElementById('usersTableBody');
         if(tbody) tbody.style.opacity = '0.3';
+        tableError.classList.add('hidden');
 
         fetch(url, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' }
         })
-        .then(response => response.text())
+        .then(response => {
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.text();
+        })
         .then(html => {
             tableContainer.innerHTML = html;
             const newTbody = document.getElementById('usersTableBody');
@@ -102,7 +111,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => newTbody.style.opacity = '1', 50);
             }
         })
-        .catch(err => console.error('Error fetching data', err));
+        .catch(() => {
+            const currentTbody = document.getElementById('usersTableBody');
+            if(currentTbody) currentTbody.style.opacity = '1';
+            tableError.classList.remove('hidden');
+        });
     }
 
     function updateData() {
@@ -170,6 +183,8 @@ document.addEventListener('DOMContentLoaded', function() {
             updateData();
         }, 300);
     });
+
+    document.getElementById('retryUsers').addEventListener('click', updateData);
 
     // Paginación por AJAX
     tableContainer.addEventListener('click', function(e) {

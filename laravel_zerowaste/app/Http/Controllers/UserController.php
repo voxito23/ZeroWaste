@@ -30,12 +30,12 @@ class UserController extends Controller
         }
 
         // Apply Search Filter
-        if ($request->has('search') && !empty($request->search)) {
-            $search = $request->search;
+        if ($request->filled('search')) {
+            $search = mb_substr(trim((string) $request->input('search')), 0, 100);
             $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('ubicacion', 'like', "%{$search}%");
+                $q->where('nombre', 'ilike', "%{$search}%")
+                  ->orWhere('email', 'ilike', "%{$search}%")
+                  ->orWhere('ubicacion', 'ilike', "%{$search}%");
             });
         }
 

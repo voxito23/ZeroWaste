@@ -17,11 +17,11 @@ export default function ProfileScreen() {
   const { handleScroll } = useScrollContext();
   const { user, logout, updateUser } = useAuth();
   const [profile, setProfile] = useState(user);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!user);
   const [error, setError] = useState('');
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [impact, setImpact] = useState(null);
-  const hasProfileRef = useRef(false);
+  const hasProfileRef = useRef(Boolean(user));
 
   const fetchProfile = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true);
@@ -41,7 +41,12 @@ export default function ProfileScreen() {
     fetchProfile({ silent: hasProfileRef.current });
   }, [fetchProfile]));
 
-  useEffect(() => { if (user) setProfile(user); }, [user]);
+  useEffect(() => {
+    if (!user) return;
+    setProfile(user);
+    setLoading(false);
+    hasProfileRef.current = true;
+  }, [user]);
 
   const avatarUrl = profile?.avatar_url ?? profile?.foto_perfil;
 

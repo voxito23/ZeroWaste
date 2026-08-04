@@ -60,6 +60,16 @@ class InfrastructureSecurityTests(unittest.TestCase):
         password = self.compose["services"]["grafana"]["environment"]["GF_SECURITY_ADMIN_PASSWORD"]
         self.assertIn("GRAFANA_ADMIN_PASSWORD", password)
 
+    def test_canonical_private_monitoring_targets_are_versioned(self):
+        targets_root = ROOT / "prometheus" / "targets"
+        origins = yaml.safe_load((targets_root / "origins.yml").read_text(encoding="utf-8"))
+        nodes = yaml.safe_load((targets_root / "nodes.yml").read_text(encoding="utf-8"))
+        origin_labels = [entry["labels"] for entry in origins]
+        self.assertEqual({labels["node_role"] for labels in origin_labels}, {"primary", "secondary"})
+        self.assertEqual({labels["probe"] for labels in origin_labels}, {"health", "ready"})
+        self.assertTrue(all(entry["targets"][0].startswith("http://10.77.0.") for entry in origins))
+        self.assertTrue(all(entry["targets"][0].startswith("10.77.0.2:") for entry in nodes))
+
     def test_compose_uses_service_dns_and_scalable_names(self):
         for name, service in self.compose["services"].items():
             self.assertNotIn("container_name", service, name)

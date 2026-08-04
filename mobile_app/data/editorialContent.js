@@ -1,10 +1,10 @@
 // Copia estructurada para el cliente nativo del contenido editorial histórico de Flask.
 // No contiene HTML ni enlaces web y funciona como caché incluida en la aplicación.
 export const EDITORIAL_IMAGES = {
-  'reciclar-plastico': require('../assets/images/plasticos.png'),
-  'ahorro-agua': require('../assets/images/aguah.png'),
-  'energia-solar': require('../assets/images/solar.png'),
-  'compostaje-urbano': require('../assets/images/composta.png'),
+  'reciclar-plastico': require('../assets/images/plasticos-mobile.jpg'),
+  'ahorro-agua': require('../assets/images/aguah-mobile.jpg'),
+  'energia-solar': require('../assets/images/solar-mobile.jpg'),
+  'compostaje-urbano': require('../assets/images/composta-mobile.jpg'),
   'queretaro-recicla': require('../assets/images/qrocapita.jpg'),
 };
 

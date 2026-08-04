@@ -4,6 +4,7 @@ import { Animated, Text, View } from 'react-native';
 import { normalizeMediaUrl } from '../../utils/media';
 import Skeleton from './Skeleton';
 
+const loadedAvatarUris = new Set();
 
 const initialFor = (name) => {
   const value = typeof name === 'string' ? name.trim() : '';
@@ -18,14 +19,16 @@ export default function UserAvatar({
   accessibilityLabel,
 }) {
   const normalizedUri = useMemo(() => normalizeMediaUrl(uri, 'perfiles'), [uri]);
-  const [loading, setLoading] = useState(Boolean(normalizedUri));
+  const alreadyLoaded = Boolean(normalizedUri && loadedAvatarUris.has(normalizedUri));
+  const [loading, setLoading] = useState(Boolean(normalizedUri && !alreadyLoaded));
   const [failed, setFailed] = useState(false);
-  const opacity = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(alreadyLoaded ? 1 : 0)).current;
 
   useEffect(() => {
-    setLoading(Boolean(normalizedUri));
+    const cached = Boolean(normalizedUri && loadedAvatarUris.has(normalizedUri));
+    setLoading(Boolean(normalizedUri && !cached));
     setFailed(false);
-    opacity.setValue(0);
+    opacity.setValue(cached ? 1 : 0);
   }, [normalizedUri, opacity]);
 
   const showFallback = !normalizedUri || failed;
@@ -51,13 +54,16 @@ export default function UserAvatar({
       ) : (
         <>
           <Animated.Image
-            source={{ uri: normalizedUri }}
+            source={{ uri: normalizedUri, cache: 'force-cache' }}
             resizeMode="cover"
             style={[frame, { opacity }]}
-            onLoadStart={() => setLoading(true)}
+            onLoadStart={() => {
+              if (!loadedAvatarUris.has(normalizedUri)) setLoading(true);
+            }}
             onLoad={() => {
+              loadedAvatarUris.add(normalizedUri);
               setLoading(false);
-              Animated.timing(opacity, { toValue: 1, duration: 180, useNativeDriver: true }).start();
+              Animated.timing(opacity, { toValue: 1, duration: 120, useNativeDriver: true }).start();
             }}
             onError={() => {
               setLoading(false);

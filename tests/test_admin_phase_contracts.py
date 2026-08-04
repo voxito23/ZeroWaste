@@ -122,6 +122,17 @@ class AdminPhaseContractsTest(unittest.TestCase):
         self.assertNotIn("Debes subir una fotografía de perfil", view)
         self.assertIn("value=\"{{ old('nombre') }}\"", view)
 
+    def test_user_search_uses_real_postgres_columns_and_keeps_ajax_errors_inline(self):
+        controller = (ROOT / "laravel_zerowaste" / "app" / "Http" / "Controllers" / "UserController.php").read_text(encoding="utf-8")
+        view = (ROOT / "laravel_zerowaste" / "resources" / "views" / "admin" / "usuarios.blade.php").read_text(encoding="utf-8")
+        index = controller[controller.index("public function index(Request $request)"):controller.index("public function checkEmail")]
+        self.assertIn("where('nombre', 'ilike'", index)
+        self.assertIn("orWhere('email', 'ilike'", index)
+        self.assertNotIn("where('name'", index)
+        self.assertIn("if (!response.ok) throw new Error", view)
+        self.assertIn('id="userTableError"', view)
+        self.assertIn("tableError.classList.remove('hidden')", view)
+
     def test_movements_have_filters_local_time_and_admin_csv(self):
         controller = (ROOT / "laravel_zerowaste" / "app" / "Http" / "Controllers" / "ImpactAdminController.php").read_text(encoding="utf-8")
         view = (ROOT / "laravel_zerowaste" / "resources" / "views" / "admin" / "impacto" / "movimientos.blade.php").read_text(encoding="utf-8")
@@ -161,9 +172,28 @@ class AdminPhaseContractsTest(unittest.TestCase):
         dashboards = ROOT / "grafana" / "dashboards"
         for path in dashboards.glob("*.json"):
             json.loads(path.read_text(encoding="utf-8"))
-        two_nodes = (dashboards / "zerowaste-two-droplets.json").read_text(encoding="utf-8")
-        service_health = (dashboards / "service-health.json").read_text(encoding="utf-8")
-        self.assertIn("SIN TARGET / NO LISTO", two_nodes)
+        two_nodes_path = dashboards / "zerowaste-two-droplets.json"
+        service_health_path = dashboards / "service-health.json"
+        two_nodes = two_nodes_path.read_text(encoding="utf-8")
+        service_health = service_health_path.read_text(encoding="utf-8")
+        two_nodes_data = json.loads(two_nodes)
+        service_health_data = json.loads(service_health)
+        node_health = next(panel for panel in two_nodes_data["panels"] if panel["id"] == 3)
+        for target in node_health["targets"]:
+            self.assertIn("vector(2)", target["expr"])
+        self.assertEqual(
+            node_health["fieldConfig"]["defaults"]["mappings"][0]["options"]["2"]["text"],
+            "SIN TARGET",
+        )
+        node_summary = next(panel for panel in two_nodes_data["panels"] if panel["id"] == 4)
+        self.assertIn("vector(-1)", node_summary["targets"][0]["expr"])
+        self.assertIn('count(probe_success{job="blackbox-origins"', node_summary["targets"][1]["expr"])
+        failover_mapping = node_summary["fieldConfig"]["overrides"][1]["properties"][0]["value"][0]["options"]
+        self.assertEqual(failover_mapping["2"]["text"], "SIN DATOS")
+        for panel_id in (2, 3, 4, 5, 6, 7, 11, 12, 13):
+            panel = next(panel for panel in service_health_data["panels"] if panel["id"] == panel_id)
+            for target in panel["targets"]:
+                self.assertIn("vector(2)", target["expr"])
         self.assertIn('job=\\"blackbox-public\\"', service_health)
         self.assertNotIn('job=\\"blackbox-https\\"', service_health)
         self.assertNotIn("laravel1", two_nodes + service_health)

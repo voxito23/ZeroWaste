@@ -26,9 +26,8 @@ import { useNavigation } from '@react-navigation/native';
 import { api } from '../api/axios';
 import UserAvatar from '../components/ui/UserAvatar';
 import Skeleton from '../components/ui/Skeleton';
-import ZeroWasteDialog, { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
+import ZeroWasteDialog from '../components/ui/ZeroWasteDialog';
 import useMapAppearance from '../hooks/useMapAppearance';
-import { getPushRegistrationStatus, pushRegistrationErrorMessage, registerPushToken, unregisterPushToken } from '../services/mobileNotifications';
 import { voiceNavigation } from '../services/voiceNavigation';
 import { useAuth } from '../store/useAuth';
 import { resolveAvatar } from '../utils/user';
@@ -37,7 +36,7 @@ const MAP_LABELS = { automatic: 'Automático', day: 'Día', dusk: 'Atardecer', n
 const MAP_SEQUENCE = ['automatic', 'day', 'dusk', 'night'];
 const VOICE_VOLUMES = [0.45, 0.72, 1];
 const volumeLabel = (value) => value < 0.6 ? 'Bajo' : value < 0.9 ? 'Medio' : 'Alto';
-const DEFAULT_PREFERENCES = { push_enabled: true, in_app_enabled: true, comments: true, replies: true, likes: true, news: true, articles: true, campaigns: true, collections: true, points: true, rewards: true, system: true };
+const DEFAULT_PREFERENCES = { in_app_enabled: true, comments: true, replies: true, likes: true, news: true, articles: true, campaigns: true, collections: true, points: true, rewards: true, system: true };
 
 const maskedEmail = (email) => {
   const [name = '', domain = ''] = String(email || '').split('@');
@@ -48,7 +47,6 @@ const maskedEmail = (email) => {
 export default function SettingsScreen() {
   const navigation = useNavigation();
   const { user, logout } = useAuth();
-  const { showDialog } = useZeroWasteDialog();
   const { preference: mapPreference, setPreference: setMapPreference } = useMapAppearance();
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES);
@@ -58,7 +56,6 @@ export default function SettingsScreen() {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [voiceVolume, setVoiceVolume] = useState(1);
   const [reduceMotion, setReduceMotion] = useState(false);
-  const [pushStatus, setPushStatus] = useState({ nativeAvailable: true, permission: 'undetermined', registered: false, activeDevices: 0, lastError: null });
   const voiceAvailable = voiceNavigation.isAvailable();
 
   const loadPreferences = useCallback(() => {
@@ -70,19 +67,14 @@ export default function SettingsScreen() {
       .finally(() => setPreferencesLoading(false));
   }, []);
 
-  const loadPushStatus = useCallback(() => getPushRegistrationStatus()
-    .then(setPushStatus)
-    .catch(() => setPushStatus((current) => ({ ...current, registered: false, lastError: 'StatusUnavailable' }))), []);
-
   useEffect(() => {
     void loadPreferences();
-    void loadPushStatus();
     voiceNavigation.hydrate().then(() => {
       const enabled = voiceAvailable && !voiceNavigation.isMuted();
       setVoiceEnabled(enabled);
       setVoiceVolume(voiceNavigation.getVolume());
     });
-  }, [loadPreferences, loadPushStatus, voiceAvailable]);
+  }, [loadPreferences, voiceAvailable]);
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -105,51 +97,6 @@ export default function SettingsScreen() {
       setSavingPreference('');
     }
   };
-
-  const enablePush = async () => {
-    try {
-      const result = await registerPushToken();
-      if (result.status === 'granted') {
-        await savePreference('push_enabled', true);
-        await loadPushStatus();
-      }
-      else if (result.status === 'denied') showDialog({ type: 'permission', title: 'Permiso no concedido', message: 'Activa las notificaciones de ZeroWaste desde los ajustes del teléfono y vuelve a esta pantalla.', primaryLabel: 'Abrir ajustes', onPrimary: Linking.openSettings, secondaryLabel: 'Ahora no' });
-      else showDialog({ type: 'info', title: 'Dispositivo no compatible', message: result.message || 'Esta instalación todavía no puede registrar notificaciones push.' });
-    } catch (error) {
-      showDialog({ type: 'error', title: 'No se activaron las notificaciones', message: pushRegistrationErrorMessage(error) });
-    }
-  };
-
-  const togglePush = (value) => {
-    if (!value) {
-      void unregisterPushToken().finally(async () => {
-        await savePreference('push_enabled', false);
-        await loadPushStatus();
-      });
-      return;
-    }
-    showDialog({
-      type: 'permission',
-      title: 'Activa notificaciones útiles',
-      message: 'ZeroWaste puede avisarte sobre comentarios, respuestas, recolecciones, puntos y recompensas. Puedes elegir cada categoría y desactivarlas cuando quieras.',
-      primaryLabel: 'Continuar',
-      secondaryLabel: 'Ahora no',
-      onPrimary: () => void enablePush(),
-    });
-  };
-
-  const pushActive = Boolean(preferences.push_enabled && pushStatus.nativeAvailable && pushStatus.permission === 'granted' && pushStatus.registered);
-  const pushDescription = !pushStatus.nativeAvailable
-    ? 'Requiere una Development Build con expo-notifications'
-    : pushStatus.permission === 'denied'
-      ? 'Permiso desactivado en el teléfono'
-      : pushStatus.lastError === 'StatusUnavailable'
-        ? 'No fue posible comprobar el registro'
-        : pushStatus.lastError
-        ? `Requiere revisión: ${pushStatus.lastError}`
-        : pushStatus.registered
-          ? `${pushStatus.activeDevices} dispositivo${pushStatus.activeDevices === 1 ? '' : 's'} registrado${pushStatus.activeDevices === 1 ? '' : 's'}`
-          : 'Toca para registrar este dispositivo';
 
   const cycleMapPreference = async () => {
     const next = MAP_SEQUENCE[(MAP_SEQUENCE.indexOf(mapPreference) + 1) % MAP_SEQUENCE.length];
@@ -174,7 +121,6 @@ export default function SettingsScreen() {
   ], [navigation]);
 
   const notificationRows = [
-    { key: 'push_enabled', label: 'Notificaciones push', description: pushDescription, icon: Bell, onChange: togglePush },
     { key: 'comments', label: 'Comentarios', description: 'Actividad en tus publicaciones', icon: MessageCircle },
     { key: 'replies', label: 'Respuestas', description: 'Respuestas a tus comentarios', icon: MessageCircle },
     { key: 'likes', label: 'Me gusta', description: 'Reacciones a tus publicaciones', icon: ThumbsUp },
@@ -198,7 +144,7 @@ export default function SettingsScreen() {
 
         <Text className="mb-2 mt-1 px-1 text-xs font-black uppercase tracking-widest text-slate-500">NOTIFICACIONES</Text>
         {preferencesError ? <TouchableOpacity onPress={loadPreferences} className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3"><Text className="font-bold text-amber-900">{preferencesError} Toca para reintentar.</Text></TouchableOpacity> : null}
-        {preferencesLoading ? <View className="mb-7 rounded-3xl bg-white p-4">{[0, 1, 2, 3].map((item) => <Skeleton key={item} className="mb-3 h-[58px] rounded-2xl" />)}</View> : <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">{notificationRows.map(({ key, ...row }, index) => <SettingSwitch key={key} {...row} value={key === 'push_enabled' ? pushActive : Boolean(preferences[key])} busy={savingPreference === key} onChange={row.onChange || ((value) => savePreference(key, value))} divider={index > 0} reduceMotion={reduceMotion} />)}</View>}
+        {preferencesLoading ? <View className="mb-7 rounded-3xl bg-white p-4">{[0, 1, 2, 3].map((item) => <Skeleton key={item} className="mb-3 h-[58px] rounded-2xl" />)}</View> : <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">{notificationRows.map(({ key, ...row }, index) => <SettingSwitch key={key} {...row} value={Boolean(preferences[key])} busy={savingPreference === key} onChange={(value) => savePreference(key, value)} divider={index > 0} reduceMotion={reduceMotion} />)}</View>}
 
         <Text className="mb-2 px-1 text-xs font-black uppercase tracking-widest text-slate-500">PREFERENCIAS</Text>
         <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">
@@ -216,7 +162,7 @@ export default function SettingsScreen() {
 
         <TouchableOpacity onPress={() => setLogoutVisible(true)} className="min-h-14 flex-row items-center justify-center rounded-2xl border border-red-100 bg-red-50"><LogOut color="#DC2626" size={20} /><Text className="ml-2 font-black text-red-600">Cerrar sesión</Text></TouchableOpacity>
       </ScrollView>
-      <ZeroWasteDialog visible={logoutVisible} type="warning" title="Cerrar sesión" message="¿Deseas salir de tu cuenta ZeroWaste en este dispositivo?" primaryLabel="Cerrar sesión" onPrimary={() => { setLogoutVisible(false); void unregisterPushToken().finally(logout); }} secondaryLabel="Cancelar" onSecondary={() => setLogoutVisible(false)} />
+      <ZeroWasteDialog visible={logoutVisible} type="warning" title="Cerrar sesión" message="¿Deseas salir de tu cuenta ZeroWaste en este dispositivo?" primaryLabel="Cerrar sesión" onPrimary={() => { setLogoutVisible(false); void logout(); }} secondaryLabel="Cancelar" onSecondary={() => setLogoutVisible(false)} />
     </SafeAreaView>
   );
 }

@@ -85,6 +85,28 @@ curl -fsSI https://www.zerowaste-qro.com/grafana/
 curl -fsSI https://www.zerowaste-qro.com/media/recompensas/termo_reutilizable.png
 ```
 
+## Actualización aislada de Grafana y Prometheus
+
+Los dashboards y los archivos de targets son montajes de solo lectura. Grafana
+recarga el dashboard provisionado, pero Prometheus necesita recrearse cuando
+cambia `prometheus.yml`; los targets `file_sd` se refrescan después sin reiniciar.
+Esta operación no reconstruye aplicaciones, no ejecuta migraciones y debe
+realizarse únicamente en el servidor principal con autorización explícita:
+
+```sh
+cd /opt/ZeroWaste
+test -r prometheus/targets/origins.yml
+test -r prometheus/targets/nodes.yml
+docker compose --env-file .env.node --profile primary-monitoring config --quiet
+docker compose --env-file .env.node --profile primary-monitoring up -d --no-deps --force-recreate blackbox prometheus grafana
+docker compose --env-file .env.node --profile primary-monitoring ps blackbox prometheus grafana
+```
+
+Después se deben comprobar `blackbox-origins`, `blackbox-internal` y
+`blackbox-media-route` desde Prometheus/Grafana. Un valor `SIN TARGET` o
+`SIN MÉTRICA` significa configuración ausente; `NO LISTO` o `CAÍDO` significa
+que el target sí existe y el probe falló.
+
 Para failover Laravel, iniciar sesión normalmente, identificar la réplica en
 logs sin registrar cookies, detener una sola réplica y continuar la navegación:
 

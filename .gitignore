@@ -225,5 +225,3 @@ CLAUDE.md
 *.pem
 *.key
 wg0.conf
-prometheus/targets/nodes.yml
-prometheus/targets/origins.yml
