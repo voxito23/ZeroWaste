@@ -25,8 +25,6 @@ import {
   HAS_VALID_MAPBOX_TOKEN,
   initializeMapbox,
   MAP_DEFAULT_CAMERA,
-  MAP_FALLBACK_STYLE_URL,
-  MAP_STYLE_URL,
   Mapbox,
 } from '../utils/mapbox';
 import { normalizeMediaUrl } from '../utils/media';
@@ -141,20 +139,6 @@ export default function MapScreen() {
   );
 
   const animationDuration = reduceMotion ? 0 : 700;
-  const mapStyleConfig = useMemo(() => ({
-    lightPreset,
-    show3dBuildings: false,
-    show3dObjects: false,
-    show3dFacades: false,
-    show3dLandmarks: false,
-    show3dTrees: false,
-    showPointOfInterestLabels: true,
-    showTransitLabels: true,
-    showPlaceLabels: true,
-    showRoadLabels: true,
-    showPedestrianRoads: true,
-  }), [lightPreset]);
-
   const fitPoints = useCallback((items) => {
     const coordinates = items.map((point) => [point.longitud, point.latitud]).filter(validCoordinate);
     if (!coordinates.length) return;
@@ -391,7 +375,7 @@ export default function MapScreen() {
         <Mapbox.MapView
           key={mapKey}
           style={styles.map}
-          styleURL={usingFallbackStyle ? MAP_FALLBACK_STYLE_URL : MAP_STYLE_URL}
+          styleURL={usingFallbackStyle ? Mapbox.StyleURL.Street : lightPreset === 'night' ? Mapbox.StyleURL.Dark : Mapbox.StyleURL.Street}
           compassEnabled={false}
           scaleBarEnabled={false}
           onLayout={() => setMapMounted(true)}
@@ -400,7 +384,6 @@ export default function MapScreen() {
           onDidFinishLoadingMap={handleMapReady}
           onMapLoadingError={handleMapLoadingError}
         >
-          {!usingFallbackStyle ? <Mapbox.StyleImport id="basemap" existing config={mapStyleConfig} /> : null}
           <Mapbox.Camera ref={cameraRef} defaultSettings={MAP_OVERVIEW_CAMERA} />
           {permissionState === 'granted' ? <Mapbox.LocationPuck puckBearingEnabled puckBearing="heading" /> : null}
           <Mapbox.ShapeSource
@@ -414,39 +397,34 @@ export default function MapScreen() {
           >
             <Mapbox.CircleLayer
               id="zerowaste-clusters"
-              slot={usingFallbackStyle ? undefined : 'top'}
               filter={['has', 'point_count']}
               style={{ circleColor: '#047857', circleRadius: ['step', ['get', 'point_count'], 19, 10, 23, 40, 28], circleStrokeColor: '#ECFDF5', circleStrokeWidth: 4, circleOpacity: 0.96 }}
             />
             <Mapbox.SymbolLayer
               id="zerowaste-cluster-count"
-              slot={usingFallbackStyle ? undefined : 'top'}
               filter={['has', 'point_count']}
               style={{ textField: ['get', 'point_count_abbreviated'], textColor: '#FFFFFF', textSize: 13, textFont: ['DIN Offc Pro Bold', 'Arial Unicode MS Bold'] }}
             />
             <Mapbox.CircleLayer
               id="zerowaste-point-halo"
-              slot={usingFallbackStyle ? undefined : 'top'}
               filter={['!', ['has', 'point_count']]}
-              style={{ circleColor: 'rgba(52,211,153,0.22)', circleRadius: 17, circleStrokeWidth: 0 }}
+              style={{ circleColor: 'rgba(52,211,153,0.22)', circleRadius: 23, circleStrokeWidth: 0 }}
             />
             <Mapbox.CircleLayer
               id="zerowaste-points-visible"
-              slot={usingFallbackStyle ? undefined : 'top'}
               filter={['!', ['has', 'point_count']]}
-              style={{ circleColor: '#065F46', circleRadius: 10, circleStrokeColor: lightPreset === 'night' ? '#D1FAE5' : '#FFFFFF', circleStrokeWidth: 3 }}
+              style={{ circleColor: '#064E3B', circleRadius: 18, circleStrokeColor: '#10B981', circleStrokeWidth: 3 }}
             />
             <Mapbox.SymbolLayer
               id="zerowaste-point-symbol"
-              slot={usingFallbackStyle ? undefined : 'top'}
               filter={['!', ['has', 'point_count']]}
-              style={{ textField: '♻', textColor: '#FFFFFF', textSize: 11, textAllowOverlap: true }}
+              style={{ textField: '♻', textColor: '#FFFFFF', textSize: 17, textAllowOverlap: true }}
             />
           </Mapbox.ShapeSource>
           <Mapbox.ShapeSource id="zerowaste-selected-point" shape={selectedFeature}>
-            <Mapbox.CircleLayer id="zerowaste-selected-halo" slot={usingFallbackStyle ? undefined : 'top'} style={{ circleColor: 'rgba(16,185,129,0.28)', circleRadius: 24 }} />
-            <Mapbox.CircleLayer id="zerowaste-selected-dot" slot={usingFallbackStyle ? undefined : 'top'} style={{ circleColor: '#10B981', circleRadius: 12, circleStrokeColor: '#FFFFFF', circleStrokeWidth: 4 }} />
-            <Mapbox.SymbolLayer id="zerowaste-selected-symbol" slot={usingFallbackStyle ? undefined : 'top'} style={{ textField: '♻', textColor: '#064E3B', textSize: 13, textAllowOverlap: true }} />
+            <Mapbox.CircleLayer id="zerowaste-selected-halo" style={{ circleColor: 'rgba(16,185,129,0.28)', circleRadius: 24 }} />
+            <Mapbox.CircleLayer id="zerowaste-selected-dot" style={{ circleColor: '#10B981', circleRadius: 12, circleStrokeColor: '#FFFFFF', circleStrokeWidth: 4 }} />
+            <Mapbox.SymbolLayer id="zerowaste-selected-symbol" style={{ textField: '♻', textColor: '#064E3B', textSize: 13, textAllowOverlap: true }} />
           </Mapbox.ShapeSource>
         </Mapbox.MapView>
       ) : (

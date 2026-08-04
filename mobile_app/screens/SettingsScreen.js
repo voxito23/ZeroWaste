@@ -109,7 +109,7 @@ export default function SettingsScreen() {
       else if (result.status === 'denied') showDialog({ type: 'permission', title: 'Permiso no concedido', message: 'Activa las notificaciones de ZeroWaste desde los ajustes del teléfono y vuelve a esta pantalla.', primaryLabel: 'Abrir ajustes', onPrimary: Linking.openSettings, secondaryLabel: 'Ahora no' });
       else showDialog({ type: 'info', title: 'Dispositivo no compatible', message: result.message || 'Esta instalación todavía no puede registrar notificaciones push.' });
     } catch (error) {
-      showDialog({ type: 'error', title: 'No se activaron las notificaciones', message: error.userMessage || 'Verifica tu conexión e inténtalo de nuevo.' });
+      showDialog({ type: 'error', title: 'No se activaron las notificaciones', message: error.response?.data?.detail || error.userMessage || error.message || 'Verifica tu conexión e inténtalo de nuevo.' });
     }
   };
 

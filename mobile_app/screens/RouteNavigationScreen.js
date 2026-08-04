@@ -348,7 +348,7 @@ export default function RouteNavigationScreen() {
   const instruction = arrived ? `Llegaste a ${point?.nombre || 'tu destino'}` : primaryBanner(currentStep);
 
   return (
-    <View className="flex-1 bg-emerald-50">
+    <SafeAreaView className="flex-1 bg-emerald-50" edges={['top', 'bottom']}>
       <StatusBar style={lightPreset === 'night' ? 'light' : 'dark'} translucent={false} backgroundColor={lightPreset === 'night' ? '#0F172A' : '#ECFDF5'} />
       <Mapbox.MapView
         key={mapKey}
@@ -381,7 +381,7 @@ export default function RouteNavigationScreen() {
       {!mapReady && !mapError ? <View pointerEvents="none" className="absolute left-5 right-5 top-24 flex-row items-center rounded-2xl bg-white/90 p-4"><ActivityIndicator color="#059669" /><Text className="ml-3 font-bold text-slate-700">Preparando mapa 3D…</Text></View> : null}
       {mapError ? <View className="absolute left-5 right-5 top-24 rounded-2xl border border-red-200 bg-red-50 p-4"><Text className="text-center font-bold text-red-700">{mapError}</Text><Pressable onPress={() => { setUsingFallbackStyle(true); setMapReady(false); setMapError(''); setMapKey((value) => value + 1); }} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">{usingFallbackStyle ? 'Reintentar mapa' : 'Usar mapa compatible'}</Text></Pressable></View> : null}
 
-      <SafeAreaView pointerEvents="box-none" className="absolute inset-0 justify-between" edges={['top', 'bottom']}>
+      <View pointerEvents="box-none" className="absolute inset-0 justify-between">
         <View className="px-4 pt-2">
           {activeNavigation ? <View className="rounded-[24px] bg-emerald-800 p-4 shadow-lg"><View className="flex-row items-start"><Navigation color="white" size={25} /><View className="ml-3 flex-1"><Text className="text-2xl font-black leading-7 text-white">{instruction}</Text><Text className="mt-1 font-semibold text-emerald-100">{currentStep?.name || point?.nombre || 'Ruta ZeroWaste'} · {distance}</Text></View><Pressable onPress={() => navigation.goBack()} className="h-10 w-10 items-center justify-center rounded-full bg-white/15" accessibilityLabel="Cerrar navegación"><X color="white" size={20} /></Pressable></View></View> : <Pressable onPress={() => navigation.goBack()} className="h-12 w-12 items-center justify-center rounded-full bg-white shadow-md" accessibilityLabel="Volver"><ArrowLeft color="#0F172A" size={21} /></Pressable>}
           {rerouting ? <View className="mt-2 self-center flex-row items-center rounded-full bg-amber-500 px-4 py-2"><RefreshCw color="#fff" size={15} /><Text className="ml-2 text-xs font-black text-white">Recalculando ruta…</Text></View> : offRoute ? <View className="mt-2 self-center rounded-full bg-amber-500 px-4 py-2"><Text className="text-xs font-black text-white">Fuera de ruta</Text></View> : navigationPaused ? <View className="mt-2 self-center rounded-full bg-slate-800 px-4 py-2"><Text className="text-xs font-black text-white">Seguimiento pausado</Text></View> : null}
@@ -397,8 +397,8 @@ export default function RouteNavigationScreen() {
             <View className="mt-3 flex-row gap-2">{activeNavigation ? <><Pressable onPress={() => setFollowing(true)} className="min-h-12 flex-1 flex-row items-center justify-center rounded-2xl border border-emerald-700"><LocateFixed color="#047857" size={18} /><Text className="ml-2 font-black text-emerald-800">Recentrar</Text></Pressable><Pressable onPress={() => navigation.goBack()} className="min-h-12 flex-1 items-center justify-center rounded-2xl bg-red-50"><Text className="font-black text-red-700">Salir</Text></Pressable></> : <><Pressable onPress={() => routeData && fitRoute(routeData, true)} disabled={!routeData} className="min-h-12 flex-1 flex-row items-center justify-center rounded-2xl border border-emerald-700 disabled:opacity-40"><MapIcon color="#047857" size={18} /><Text className="ml-2 font-black text-emerald-800">Vista previa</Text></Pressable><Pressable onPress={startNavigation} disabled={!routeData} className="min-h-12 flex-1 flex-row items-center justify-center rounded-2xl bg-emerald-700 disabled:opacity-40"><Play color="white" size={17} /><Text className="ml-2 font-black text-white">Iniciar</Text></Pressable></>}</View>
           </View>
         </View>
-      </SafeAreaView>
-    </View>
+      </View>
+    </SafeAreaView>
   );
 }
 

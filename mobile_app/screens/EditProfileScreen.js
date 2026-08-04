@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Image, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   AlignLeft,
@@ -31,7 +31,6 @@ import { validatePickedProfileImage } from '../utils/imageUpload';
 import { PROFILE_TITLE_OPTIONS, validateProfile } from '../utils/profileValidation';
 import UserAvatar from '../components/ui/UserAvatar';
 import { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
-import KeyboardAwareScreen from '../components/ui/KeyboardAwareScreen';
 
 const TITLE_ICONS = {
   leaf: Leaf,
@@ -170,10 +169,9 @@ export default function EditProfileScreen() {
         <View className="ml-4 flex-1"><Text className="text-xl font-black text-slate-950">Editar perfil</Text><Text className="text-xs font-semibold text-slate-500">Información visible para la comunidad</Text></View>
       </View>
 
-      <KeyboardAwareScreen
-        contentContainerStyle={{ padding: 20, gap: 12, paddingBottom: 28 }}
-        footer={<View className="border-t border-slate-100 bg-white px-5 py-3"><TouchableOpacity disabled={saving || !hasChanges} onPress={save} className="min-h-12 items-center justify-center rounded-2xl bg-emerald-700 disabled:opacity-50" accessibilityState={{ busy: saving, disabled: saving || !hasChanges }}>{saving ? <ActivityIndicator color="white" /> : <Text className="font-black text-white">Guardar cambios</Text>}</TouchableOpacity></View>}
-      >
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20, gap: 12, paddingBottom: 28 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} bounces={false}>
         {formError ? <View className="rounded-2xl border border-red-200 bg-red-50 p-4"><Text accessibilityLiveRegion="polite" className="font-bold text-red-700">{formError}</Text></View> : null}
 
         <View className="items-center rounded-[28px] border border-slate-100 bg-white px-5 py-6">
@@ -206,7 +204,10 @@ export default function EditProfileScreen() {
         <FieldShell icon={AlignLeft} label="Biografía" helper={`${bio.trim().length}/100`} error={errors.bio}>
           <TextInput value={bio} onChangeText={(value) => { setBio(value); clearError('bio'); }} placeholder="Cuéntale algo a la comunidad ZeroWaste" placeholderTextColor="#94A3B8" multiline maxLength={100} textAlignVertical="top" className="min-h-24 py-2 text-[15px] leading-5 text-slate-900" accessibilityLabel="Biografía" />
         </FieldShell>
-      </KeyboardAwareScreen>
+            <TouchableOpacity disabled={saving || !hasChanges} onPress={save} className="mt-3 min-h-14 items-center justify-center rounded-2xl bg-emerald-700 disabled:opacity-50" accessibilityState={{ busy: saving, disabled: saving || !hasChanges }}>{saving ? <ActivityIndicator color="white" /> : <Text className="font-black text-white">Guardar cambios</Text>}</TouchableOpacity>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
 
       <Modal visible={titlePickerVisible} transparent animationType="slide" statusBarTranslucent onRequestClose={() => setTitlePickerVisible(false)}>
         <View className="flex-1 justify-end bg-slate-950/45">

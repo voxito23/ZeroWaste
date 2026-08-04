@@ -40,6 +40,8 @@ export default function RemoteImage({
   resizeMode = 'cover',
   aspectRatio = 16 / 9,
   fallbackSource,
+  backgroundClassName = 'bg-gray-100',
+  loadingClassName = 'bg-slate-200',
   accessibilityLabel = 'Imagen remota',
   onLoadStart,
   onLoad,
@@ -64,7 +66,7 @@ export default function RemoteImage({
 
   if (!uri || failed) {
     return (
-      <View className={`${className || ''} items-center justify-center overflow-hidden bg-gray-100`} style={wrapperStyle}>
+      <View className={`${className || ''} ${backgroundClassName} items-center justify-center overflow-hidden`} style={wrapperStyle}>
         {fallbackSource ? (
           <Image source={fallbackSource} className={imageClassName} resizeMode={resizeMode} accessibilityLabel={`${accessibilityLabel} alternativa`} />
         ) : (
@@ -83,7 +85,7 @@ export default function RemoteImage({
   }
 
   return (
-    <View className={`${className || ''} overflow-hidden bg-gray-100`} style={wrapperStyle}>
+    <View className={`${className || ''} ${backgroundClassName} overflow-hidden`} style={wrapperStyle}>
       <Image
         key={`${uri}-${attempt}`}
         source={{ uri }}
@@ -109,7 +111,7 @@ export default function RemoteImage({
         onLoadEnd={() => setLoading(false)}
       />
       {loading ? (
-        <Skeleton className="absolute inset-0" />
+        <Skeleton className={`absolute inset-0 ${loadingClassName}`} />
       ) : null}
     </View>
   );

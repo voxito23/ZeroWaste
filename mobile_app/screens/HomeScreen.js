@@ -442,6 +442,11 @@ export default function HomeScreen() {
             data={articles}
             horizontal
             pagingEnabled
+            bounces={false}
+            overScrollMode="never"
+            removeClippedSubviews={false}
+            style={{ backgroundColor: '#FFFFFF' }}
+            contentContainerStyle={{ backgroundColor: '#FFFFFF' }}
             showsHorizontalScrollIndicator={false}
             keyExtractor={item => String(item.id)}
             onScrollToIndexFailed={() => {}}
@@ -455,7 +460,7 @@ export default function HomeScreen() {
                   >
                     {/* Image Section */}
                     <View className="relative bg-white" style={{ aspectRatio: 16 / 10 }}>
-                      <RemoteImage uri={normalizeMediaUrl(item.image_url)} fallbackSource={EDITORIAL_IMAGES[item.id]} className="h-full w-full" aspectRatio={16 / 10} accessibilityLabel={`Imagen de ${item.title}`} />
+                      <RemoteImage uri={normalizeMediaUrl(item.image_url)} fallbackSource={EDITORIAL_IMAGES[item.id]} className="h-full w-full" backgroundClassName="bg-white" loadingClassName="bg-white" aspectRatio={16 / 10} accessibilityLabel={`Imagen de ${item.title}`} />
                       
                       {/* Dark fade at bottom — smooth blend */}
                       <LinearGradient
@@ -539,7 +544,7 @@ export default function HomeScreen() {
               <Text className="text-gray-400 text-xs text-center mt-1">Próximamente publicaremos nuevas iniciativas eco-amigables.</Text>
             </View>
           ) : (
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20, gap: 16 }}>
+            <ScrollView horizontal bounces={false} overScrollMode="never" showsHorizontalScrollIndicator={false} style={{ backgroundColor: '#FFFFFF' }} contentContainerStyle={{ paddingHorizontal: 20, gap: 16, backgroundColor: '#FFFFFF' }}>
               {campaignsList.map((camp) => (
                 <TouchableScale key={camp.id} onPress={camp.link ? () => Linking.openURL(camp.link) : undefined}>
                   <View
@@ -547,7 +552,7 @@ export default function HomeScreen() {
                     style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.08, shadowRadius: 24, elevation: 10 }}
                   >
                     <View className="relative h-[190px]">
-                      <RemoteImage uri={camp.imageUrl} fallbackSource={camp.fallbackImage} className="h-full w-full" accessibilityLabel={`Imagen de ${camp.title}`} />
+                      <RemoteImage uri={camp.imageUrl} fallbackSource={camp.fallbackImage} className="h-full w-full" backgroundClassName="bg-white" loadingClassName="bg-white" accessibilityLabel={`Imagen de ${camp.title}`} />
                       
                       <View className="absolute top-4 left-4 bg-black/60 px-3 py-1.5 rounded-full border border-white/10">
                         <Text className="text-white text-[10px] font-black uppercase tracking-[0.1em]">{camp.tag}</Text>

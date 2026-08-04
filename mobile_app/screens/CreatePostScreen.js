@@ -11,6 +11,7 @@ import UserAvatar from '../components/ui/UserAvatar';
 import ZeroWasteDialog from '../components/ui/ZeroWasteDialog';
 import { resolveAvatar, resolveDisplayName } from '../utils/user';
 import KeyboardAwareScreen from '../components/ui/KeyboardAwareScreen';
+import { validatePickedProfileImage } from '../utils/imageUpload';
 
 export default function CreatePostScreen() {
   const navigation = useNavigation();
@@ -34,14 +35,14 @@ export default function CreatePostScreen() {
   const hasDraft = Boolean(title.trim() || content.trim() || selectedImage);
   const closeComposer = () => hasDraft ? setDiscardVisible(true) : navigation.goBack();
 
-  const usePickerResult = (result) => {
+  const usePickerResult = async (result) => {
     if (result.canceled || !result.assets?.[0]) return;
-    const asset = result.assets[0];
-    if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
-      setError('La imagen debe pesar como máximo 5 MB.');
+    const validation = await validatePickedProfileImage(result.assets[0]);
+    if (!validation.valid) {
+      setError(validation.message);
       return;
     }
-    setSelectedImage(asset);
+    setSelectedImage(validation.asset);
     setError('');
   };
 
@@ -51,7 +52,7 @@ export default function CreatePostScreen() {
       setError('Permite el acceso a tus fotografías para elegir una imagen.');
       return;
     }
-    usePickerResult(await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85 }));
+    await usePickerResult(await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [16, 10], quality: 0.6 }));
   };
 
   const takePhoto = async () => {
@@ -60,7 +61,7 @@ export default function CreatePostScreen() {
       setError('Permite el acceso a la cámara para tomar una fotografía.');
       return;
     }
-    usePickerResult(await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.85 }));
+    await usePickerResult(await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [16, 10], quality: 0.6 }));
   };
 
   React.useEffect(() => {
@@ -96,7 +97,7 @@ export default function CreatePostScreen() {
       }
       navigation.navigate('Main', { screen: 'Forum', params: { createdPost, updateKey: Date.now() } });
     } catch (e) {
-      setError(e.userMessage || 'No se pudo crear la publicación.');
+      setError(e.response?.data?.detail || e.userMessage || 'No se pudo crear la publicación.');
     } finally {
       setIsSubmitting(false);
     }
