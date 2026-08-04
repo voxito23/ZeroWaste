@@ -27,6 +27,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { api } from '../api/axios';
 import { useAuth } from '../store/useAuth';
 import { normalizeMediaUrl } from '../utils/media';
+import { validatePickedProfileImage } from '../utils/imageUpload';
 import { PROFILE_TITLE_OPTIONS, validateProfile } from '../utils/profileValidation';
 import UserAvatar from '../components/ui/UserAvatar';
 import { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
@@ -114,18 +115,14 @@ export default function EditProfileScreen() {
       showDialog({ type: 'permission', title: 'Permiso requerido', message: 'Permite el acceso a tus fotografías para cambiar tu perfil.' });
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.85 });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.6 });
     if (result.canceled || !result.assets?.[0]) return;
-    const asset = result.assets[0];
-    if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
-      showDialog({ type: 'warning', title: 'Imagen demasiado grande', message: 'La imagen debe pesar como máximo 5 MB.' });
+    const validation = await validatePickedProfileImage(result.assets[0]);
+    if (!validation.valid) {
+      showDialog({ type: 'warning', title: validation.title, message: validation.message });
       return;
     }
-    if (asset.mimeType && !['image/jpeg', 'image/png', 'image/webp'].includes(asset.mimeType)) {
-      showDialog({ type: 'warning', title: 'Formato no compatible', message: 'Selecciona una fotografía JPEG, PNG o WebP.' });
-      return;
-    }
-    setSelectedImage(asset);
+    setSelectedImage(validation.asset);
   };
 
   const save = async () => {

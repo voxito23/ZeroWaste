@@ -93,14 +93,15 @@ def mobile_login(
     """
     throttle = get_login_throttle()
     client_ip = get_client_ip(request)
-    throttle.assert_allowed(credentials.email, client_ip)
-    usuario = db.query(Usuario).filter(Usuario.email == credentials.email).first()
+    normalized_email = credentials.email.strip().casefold()
+    throttle.assert_allowed(normalized_email, client_ip)
+    usuario = db.query(Usuario).filter(Usuario.email == normalized_email).first()
 
     if not usuario or not verify_password(credentials.password, str(usuario.password)):
-        throttle.record_failure(credentials.email, client_ip)
+        throttle.record_failure(normalized_email, client_ip)
         raise HTTPException(status_code=401, detail=INVALID_MESSAGE)
 
-    throttle.clear(credentials.email, client_ip)
+    throttle.clear(normalized_email, client_ip)
     if usuario.bloqueado:
         raise HTTPException(status_code=403, detail="Usuario bloqueado.")
     if usuario.email_verified_at is None:
@@ -141,7 +142,8 @@ def registro(
     Crea un usuario nuevo con contraseña hasheada, exigiendo una carga de archivo físico (multipart/form-data).
     """
     # A) Validación de Correo Único (ANTES de guardar archivos)
-    existe = db.query(Usuario).filter(Usuario.email == email).first()
+    normalized_email = email.strip().casefold()
+    existe = db.query(Usuario).filter(Usuario.email == normalized_email).first()
     if existe:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -172,8 +174,8 @@ def registro(
 
     # Mapeo explícito de la variable "nombre" junto con el resto de los campos
     nuevo_usuario = Usuario(
-        nombre=nombre,
-        email=email,
+        nombre=nombre.strip(),
+        email=normalized_email,
         password=hash_password(password),
         foto_perfil=nombre_archivo_unico,
     )

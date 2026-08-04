@@ -257,8 +257,7 @@ export default function HomeScreen() {
           setCampaignsList([...dbCampaigns, ...dbEvents]);
         }
       } catch (e) {
-        setCampaignsList([]);
-        setContentError(e.userMessage || 'No se pudieron cargar las campañas y eventos.');
+        setContentError(e.userMessage || 'No se pudieron actualizar las campañas y eventos.');
       } finally {
         setContentLoading(false);
         setHomeRefreshing(false);
@@ -341,7 +340,7 @@ export default function HomeScreen() {
   const avatarUrl = resolveAvatar(user);
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FAFAFA]" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-white" edges={['top']}>
       <StatusBar style="dark" />
 
       <ScrollView 
@@ -414,7 +413,7 @@ export default function HomeScreen() {
         </Animated.View>
 
         {/* ═══ 2. TENDENCIAS (Reference image style: dark card, image top, bold text, nav arrows) ═══ */}
-        <Animated.View style={anim(1)} className="mb-10">
+        <Animated.View style={anim(1)} className="mb-10 bg-white">
           <View className="px-5 mb-4 flex-row items-center justify-between">
             <View>
               <Text className="text-[26px] font-black text-gray-900 tracking-tight">Tendencias</Text>
@@ -455,7 +454,7 @@ export default function HomeScreen() {
                     style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.25, shadowRadius: 28, elevation: 14 }}
                   >
                     {/* Image Section */}
-                    <View className="relative bg-gray-100" style={{ aspectRatio: 16 / 10 }}>
+                    <View className="relative bg-white" style={{ aspectRatio: 16 / 10 }}>
                       <RemoteImage uri={normalizeMediaUrl(item.image_url)} fallbackSource={EDITORIAL_IMAGES[item.id]} className="h-full w-full" aspectRatio={16 / 10} accessibilityLabel={`Imagen de ${item.title}`} />
                       
                       {/* Dark fade at bottom — smooth blend */}
@@ -486,7 +485,7 @@ export default function HomeScreen() {
                         {item.title}
                       </Text>
 
-                      <Text className="mb-4 pr-2 text-[13px] font-medium leading-5 text-gray-300" numberOfLines={3} ellipsizeMode="tail">
+                      <Text className="mb-4 pr-2 text-[13px] font-medium leading-5 text-gray-300" style={{ textAlign: 'justify' }} numberOfLines={3} ellipsizeMode="tail">
                         {item.excerpt}
                       </Text>
 
@@ -521,17 +520,20 @@ export default function HomeScreen() {
         </Animated.View>
 
         {/* ═══ 5. CAMPAÑAS ACTIVAS ════════════════════════════ */}
-        <Animated.View style={anim(4)} className="mb-10">
-          <View className="px-5 mb-5 flex-row items-center justify-between">
-            <Text className="text-[24px] font-black text-gray-900 tracking-tight">Campañas <Text className="text-emerald-600">Activas</Text></Text>
+        <Animated.View style={anim(4)} className="mb-10 bg-white">
+          <View className="mb-5 items-center px-5">
+            <Text className="text-center text-[24px] font-black tracking-tight text-gray-900">Campañas <Text className="text-emerald-600">Activas</Text></Text>
+            <Text className="mt-1 text-center text-xs font-semibold text-slate-400">Iniciativas y eventos disponibles en Querétaro</Text>
+            {contentLoading && campaignsList.length ? <View className="mt-3 flex-row items-center rounded-full bg-emerald-50 px-3 py-2"><ActivityIndicator color="#047857" size="small" /><Text className="ml-2 text-xs font-black text-emerald-800">Actualizando contenido</Text></View> : null}
+            {!contentLoading && contentError && campaignsList.length ? <Text className="mt-3 text-center text-xs font-bold text-amber-700">No se pudo actualizar; conservamos el contenido disponible.</Text> : null}
           </View>
 
-          {contentLoading ? (
-            <ActivityIndicator color="#047857" />
-          ) : contentError ? (
+          {contentLoading && campaignsList.length === 0 ? (
+            <View className="mx-5 overflow-hidden rounded-[28px] border border-slate-100 bg-white"><Skeleton className="h-[190px] w-full" /><View className="p-5"><Skeleton className="h-5 w-3/4 rounded-full" /><Skeleton className="mt-3 h-4 w-full rounded-full" /><Skeleton className="mt-2 h-4 w-2/3 rounded-full" /></View></View>
+          ) : contentError && campaignsList.length === 0 ? (
             <View className="mx-5 rounded-2xl border border-red-200 bg-red-50 p-4"><Text className="text-red-700 text-center font-bold">{contentError}</Text></View>
           ) : campaignsList.length === 0 ? (
-            <View className="px-5 py-8 items-center justify-center bg-gray-50 rounded-[28px] mx-5 border border-gray-100">
+            <View className="mx-5 items-center justify-center rounded-[28px] border border-slate-100 bg-white px-5 py-8">
               <Calendar color="#9CA3AF" size={32} />
               <Text className="text-gray-500 font-bold text-center mt-2 text-base">No hay campañas o eventos activos</Text>
               <Text className="text-gray-400 text-xs text-center mt-1">Próximamente publicaremos nuevas iniciativas eco-amigables.</Text>
@@ -565,7 +567,7 @@ export default function HomeScreen() {
 
                     <View className="p-5 pt-4">
                       <Text className="text-gray-900 font-extrabold text-[18px] leading-tight mb-2" numberOfLines={2}>{camp.title}</Text>
-                      <Text className="mb-4 text-[13px] font-medium leading-5 text-slate-500" numberOfLines={3}>{camp.summary}</Text>
+                      <Text className="mb-4 text-[13px] font-medium leading-5 text-slate-500" style={{ textAlign: 'justify' }} numberOfLines={3}>{camp.summary}</Text>
                       
                       {camp.link ? <TouchableScale onPress={() => Linking.openURL(camp.link)}>
                         <View className="bg-[#064E3B] rounded-2xl py-3.5 items-center flex-row justify-center gap-2">
@@ -606,7 +608,7 @@ export default function HomeScreen() {
                 </View>
                 <View className="p-5 pt-4">
                   <Text className="mb-3 text-[24px] font-black leading-[29px] tracking-tight text-white">{localNews.title}</Text>
-                  <Text className="mb-5 text-[14px] font-medium leading-6 text-gray-400" numberOfLines={3}>{localNews.excerpt}</Text>
+                  <Text className="mb-5 text-[14px] font-medium leading-6 text-gray-400" style={{ textAlign: 'justify' }} numberOfLines={3}>{localNews.excerpt}</Text>
                   <View className="flex-row items-center justify-between border-t border-white/10 pt-4">
                     <View className="flex-row items-center gap-2.5 rounded-2xl bg-emerald-500 px-5 py-3"><Text className="text-[14px] font-black text-white">Leer noticia</Text><ArrowRight color="#fff" size={16} strokeWidth={3} /></View>
                     <TouchableOpacity

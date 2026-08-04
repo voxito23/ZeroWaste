@@ -349,7 +349,7 @@ export default function RouteNavigationScreen() {
 
   return (
     <View className="flex-1 bg-emerald-50">
-      <StatusBar style={lightPreset === 'night' ? 'light' : 'dark'} translucent />
+      <StatusBar style={lightPreset === 'night' ? 'light' : 'dark'} translucent={false} backgroundColor={lightPreset === 'night' ? '#0F172A' : '#ECFDF5'} />
       <Mapbox.MapView
         key={mapKey}
         style={{ flex: 1 }}
@@ -372,6 +372,7 @@ export default function RouteNavigationScreen() {
           animationDuration={650}
         />
         {origin ? <Mapbox.LocationPuck puckBearingEnabled puckBearing="heading" /> : null}
+        {profile === 'driving-traffic' ? <Mapbox.VectorSource id="live-traffic" url="mapbox://mapbox.mapbox-traffic-v1"><Mapbox.LineLayer id="live-traffic-lines" sourceLayerID="traffic" slot={usingFallbackStyle ? undefined : 'middle'} minZoomLevel={7} style={{ lineColor: ['match', ['get', 'congestion'], 'low', '#22C55E', 'moderate', '#F59E0B', 'heavy', '#F97316', 'severe', '#DC2626', '#94A3B8'], lineOpacity: 0.88, lineWidth: ['interpolate', ['linear'], ['zoom'], 7, 1, 12, 2.5, 17, 6], lineCap: 'round', lineJoin: 'round' }} /></Mapbox.VectorSource> : null}
         {alternatives.map((alternative) => <Mapbox.ShapeSource key={alternative.id} id={`alternative-${alternative.id}`} shape={alternative.geometry}><Mapbox.LineLayer id={`alternative-line-${alternative.id}`} slot={usingFallbackStyle ? undefined : 'middle'} style={{ lineColor: '#64748B', lineOpacity: 0.55, lineWidth: 5, lineCap: 'round', lineJoin: 'round' }} /></Mapbox.ShapeSource>)}
         {routeData ? <Mapbox.ShapeSource id="active-route" shape={routeData.geometry}><Mapbox.LineLayer id="active-route-casing" slot={usingFallbackStyle ? undefined : 'middle'} style={{ lineColor: lightPreset === 'night' ? '#0F172A' : '#FFFFFF', lineWidth: 11, lineCap: 'round', lineJoin: 'round' }} /><Mapbox.LineLayer id="active-route-line" slot={usingFallbackStyle ? undefined : 'middle'} style={{ lineColor: '#10B981', lineWidth: 6.5, lineCap: 'round', lineJoin: 'round', lineEmissiveStrength: lightPreset === 'night' ? 0.55 : 0.1 }} /></Mapbox.ShapeSource> : null}
         {validCoordinate(destination) ? <Mapbox.PointAnnotation id={`route-destination-${point?.id || 'point'}`} coordinate={destination}><View className="h-11 w-11 items-center justify-center rounded-full border-4 border-white bg-emerald-700"><MapPin color="white" size={20} /></View></Mapbox.PointAnnotation> : null}

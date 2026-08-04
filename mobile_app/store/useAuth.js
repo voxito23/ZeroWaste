@@ -7,13 +7,18 @@ export const useAuth = create((set) => ({
   user: null,
   token: null,
   isLoading: true,
-  login: async (user, token) => {
-    await SecureStore.setItemAsync('token', token);
-    await SecureStore.setItemAsync('user', JSON.stringify(user));
+  login: async (user, token, { persist = true } = {}) => {
+    if (persist) {
+      await SecureStore.setItemAsync('token', token);
+      await SecureStore.setItemAsync('user', JSON.stringify(user));
+    } else {
+      await SecureStore.deleteItemAsync('token');
+      await SecureStore.deleteItemAsync('user');
+    }
     set({ user, token });
   },
   updateUser: async (user) => {
-    await SecureStore.setItemAsync('user', JSON.stringify(user));
+    if (await SecureStore.getItemAsync('token')) await SecureStore.setItemAsync('user', JSON.stringify(user));
     set({ user });
   },
   logout: async () => {

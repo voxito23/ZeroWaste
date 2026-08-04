@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Image, TouchableOpacity, Modal, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Mail, Lock, Eye, EyeOff, User, Check } from 'lucide-react-native';
+import { Mail, Lock, Eye, EyeOff, User, Check, FileText, ShieldCheck, X } from 'lucide-react-native';
 import CustomInput from '../components/ui/CustomInput';
 import CustomButton from '../components/ui/CustomButton';
 import { api } from '../api/axios';
 import * as ImagePicker from 'expo-image-picker';
 import { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
+import { validatePickedProfileImage } from '../utils/imageUpload';
 
 const getPasswordStrength = (pass) => {
   let score = 0;
@@ -48,14 +49,14 @@ export default function RegisterScreen({ navigation }) {
       showDialog({ type: 'permission', title: 'Permiso requerido', message: 'Permite el acceso a tus fotografías para elegir una imagen.' });
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85 });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.6 });
     if (result.canceled || !result.assets?.[0]) return;
-    const asset = result.assets[0];
-    if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
-      showDialog({ type: 'warning', title: 'Imagen demasiado grande', message: 'La imagen debe pesar como máximo 5 MB.' });
+    const validation = await validatePickedProfileImage(result.assets[0]);
+    if (!validation.valid) {
+      showDialog({ type: 'warning', title: validation.title, message: validation.message });
       return;
     }
-    setSelectedImage(asset);
+    setSelectedImage(validation.asset);
   };
 
   const strengthScore = getPasswordStrength(password);
@@ -67,7 +68,9 @@ export default function RegisterScreen({ navigation }) {
   const reqSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
 
   const handleRegister = async () => {
-    if (!nombre || !email || !password) {
+    const normalizedName = nombre.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedName || !normalizedEmail || !password) {
       showDialog({ type: 'warning', title: 'Campos incompletos', message: 'Completa todos los campos.' });
       return;
     }
@@ -83,7 +86,7 @@ export default function RegisterScreen({ navigation }) {
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(normalizedEmail)) {
       showDialog({ type: 'warning', title: 'Correo no válido', message: 'Ingresa un correo electrónico válido.' });
       return;
     }
@@ -93,8 +96,8 @@ export default function RegisterScreen({ navigation }) {
       let response;
       if (selectedImage) {
         const form = new FormData();
-        form.append('nombre', nombre.trim());
-        form.append('email', email.trim());
+        form.append('nombre', normalizedName);
+        form.append('email', normalizedEmail);
         form.append('password', password);
         form.append('foto_perfil', {
           uri: selectedImage.uri,
@@ -103,19 +106,19 @@ export default function RegisterScreen({ navigation }) {
         });
         response = await api.post('/auth/registro', form);
       } else {
-        response = await api.post('/auth/mobile/registro', { nombre: nombre.trim(), email: email.trim(), password });
+        response = await api.post('/auth/mobile/registro', { nombre: normalizedName, email: normalizedEmail, password });
       }
       if (response.status >= 200 && response.status < 300) {
         let sent = Boolean(response.data?.verification_email_sent);
         if (selectedImage) {
           try {
-            await api.post('/auth/email/reenviar', { email: email.trim() });
+            await api.post('/auth/email/reenviar', { email: normalizedEmail });
             sent = true;
           } catch {
             sent = false;
           }
         }
-        navigation.navigate('VerifyEmail', { email: email.trim().toLowerCase(), sent });
+        navigation.navigate('VerifyEmail', { email: normalizedEmail, sent });
       } else {
         showDialog({ type: 'error', title: 'No pudimos crear tu cuenta', message: response.data.error || 'Ocurrió un error durante el registro.' });
       }
@@ -298,17 +301,22 @@ export default function RegisterScreen({ navigation }) {
       {/* Terms and Privacy Modal */}
       <Modal
         visible={showTerms}
-        animationType="slide"
-        presentationStyle="pageSheet"
+        transparent
+        animationType="fade"
+        presentationStyle="overFullScreen"
+        statusBarTranslucent
         onRequestClose={() => setShowTerms(false)}
       >
-        <SafeAreaView className="flex-1 bg-white pt-2">
-          <View className="px-5 mb-4 mt-2 flex-row items-center justify-between">
-            <Text className="text-xl font-black text-gray-800">
-              {termsType === 'terms' ? 'Términos y Condiciones' : 'Aviso de Privacidad'}
-            </Text>
-            <TouchableOpacity onPress={() => setShowTerms(false)} className="bg-gray-100 p-2 rounded-full">
-              <Text className="text-gray-600 font-bold">X</Text>
+        <View className="flex-1 justify-end bg-slate-950/50">
+        <SafeAreaView className="max-h-[92%] overflow-hidden rounded-t-[30px] bg-white" edges={['bottom']}>
+          <View className="items-center pt-2"><View className="h-1.5 w-12 rounded-full bg-slate-300" /></View>
+          <View className="mb-2 mt-2 flex-row items-center border-b border-slate-100 px-5 pb-4">
+            <View className="h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50">
+              {termsType === 'terms' ? <FileText color="#047857" size={22} /> : <ShieldCheck color="#047857" size={22} />}
+            </View>
+            <View className="ml-3 flex-1"><Text className="text-xl font-black text-slate-950">{termsType === 'terms' ? 'Términos y Condiciones' : 'Aviso de Privacidad'}</Text><Text className="mt-0.5 text-xs font-semibold text-slate-500">Información de ZeroWaste dentro de la aplicación</Text></View>
+            <TouchableOpacity onPress={() => setShowTerms(false)} className="h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-slate-50" accessibilityLabel="Cerrar documento">
+              <X color="#334155" size={21} strokeWidth={2.4} />
             </TouchableOpacity>
           </View>
           
@@ -343,7 +351,9 @@ export default function RegisterScreen({ navigation }) {
               </Text>
             )}
           </ScrollView>
+          <View className="border-t border-slate-100 px-5 py-3"><TouchableOpacity onPress={() => setShowTerms(false)} className="min-h-12 items-center justify-center rounded-2xl bg-emerald-700"><Text className="font-black text-white">Entendido</Text></TouchableOpacity></View>
         </SafeAreaView>
+        </View>
       </Modal>
 
     </SafeAreaView>

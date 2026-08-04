@@ -9,6 +9,10 @@ import { api } from '../api/axios';
 import { useAuth } from '../store/useAuth';
 import Svg, { Path } from 'react-native-svg';
 import { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
+import * as SecureStore from 'expo-secure-store';
+
+const REMEMBER_LOGIN_KEY = 'zerowaste.remember_login';
+const REMEMBER_EMAIL_KEY = 'zerowaste.remember_email';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -31,6 +35,27 @@ export default function LoginScreen({ navigation }) {
   
   const { login } = useAuth();
   const { showDialog } = useZeroWasteDialog();
+
+  const toggleRememberMe = () => {
+    const nextValue = !rememberMe;
+    setRememberMe(nextValue);
+    if (!nextValue) {
+      void SecureStore.deleteItemAsync(REMEMBER_LOGIN_KEY);
+      void SecureStore.deleteItemAsync(REMEMBER_EMAIL_KEY);
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([SecureStore.getItemAsync(REMEMBER_LOGIN_KEY), SecureStore.getItemAsync(REMEMBER_EMAIL_KEY)])
+      .then(([remembered, rememberedEmail]) => {
+        if (!active || remembered !== 'true') return;
+        setRememberMe(true);
+        if (rememberedEmail) setEmail(rememberedEmail);
+      })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     if (retryAfter <= 0) return undefined;
@@ -105,7 +130,8 @@ export default function LoginScreen({ navigation }) {
       clearTimeout(googleTimeoutRef.current);
       setGoogleWaitingVisible(false);
       setGoogleLoading(false);
-      showDialog({ type: 'error', title: 'Google no está disponible', message: error.response?.data?.detail || 'No fue posible abrir el acceso seguro de Google.' });
+      const serverMessage = error.response?.data?.detail;
+      showDialog({ type: 'error', title: error.response?.status === 503 ? 'Google requiere configuración' : 'No fue posible abrir Google', message: serverMessage || 'No fue posible abrir el acceso seguro de Google. Revisa tu conexión e inténtalo nuevamente.' });
     }
   };
 
@@ -146,16 +172,24 @@ export default function LoginScreen({ navigation }) {
 
     // Validación básica de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!emailRegex.test(normalizedEmail)) {
       showDialog({ type: 'warning', title: 'Correo no válido', message: 'Ingresa un correo electrónico válido.' });
       return;
     }
     
     setLoading(true);
     try {
-      const response = await api.post('/auth/mobile/login', { email, password });
+      const response = await api.post('/auth/mobile/login', { email: normalizedEmail, password });
       if (response.data.success && response.data.access_token) {
-        await login(response.data.user, response.data.access_token);
+        await login(response.data.user, response.data.access_token, { persist: rememberMe });
+        if (rememberMe) {
+          await SecureStore.setItemAsync(REMEMBER_LOGIN_KEY, 'true');
+          await SecureStore.setItemAsync(REMEMBER_EMAIL_KEY, normalizedEmail);
+        } else {
+          await SecureStore.deleteItemAsync(REMEMBER_LOGIN_KEY);
+          await SecureStore.deleteItemAsync(REMEMBER_EMAIL_KEY);
+        }
       } else {
         showDialog({ type: 'error', title: 'No pudimos iniciar sesión', message: response.data.error || 'Credenciales inválidas.' });
       }
@@ -254,7 +288,7 @@ export default function LoginScreen({ navigation }) {
         <View className="flex-row justify-between items-center mb-8 px-1">
           <TouchableOpacity 
             className="flex-row items-center" 
-            onPress={() => setRememberMe(!rememberMe)}
+            onPress={toggleRememberMe}
             activeOpacity={0.7}
           >
             <View className={`w-5 h-5 rounded-md border items-center justify-center mr-2 ${rememberMe ? 'bg-primary border-primary' : 'bg-gray-50 border-gray-300'}`}>

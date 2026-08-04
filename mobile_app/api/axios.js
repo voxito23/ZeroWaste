@@ -30,7 +30,7 @@ api.interceptors.request.use(async (config) => {
       delete config.headers['Content-Type'];
       delete config.headers['content-type'];
     }
-    const token = await SecureStore.getItemAsync('token');
+    const token = await SecureStore.getItemAsync('token') || useAuth.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -42,7 +42,7 @@ api.interceptors.request.use(async (config) => {
 
 laravelApi.interceptors.request.use(async (config) => {
   try {
-    const token = await SecureStore.getItemAsync('token');
+    const token = await SecureStore.getItemAsync('token') || useAuth.getState().token;
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -71,6 +71,9 @@ export function getApiErrorMessage(error) {
 
   const status = error.response.status;
   const detail = error.response.data?.detail || error.response.data?.message || error.response.data?.error;
+  const requestUrl = String(error?.config?.url || '');
+  const loginRequest = requestUrl.startsWith('/auth/mobile/login') || requestUrl.startsWith('/auth/google/link');
+  if (status === 401 && loginRequest) return typeof detail === 'string' ? detail : 'Usuario o contraseña incorrectos.';
   if (status === 401) return 'Tu sesión expiró. Inicia sesión nuevamente.';
   if (status === 403) return 'No tienes permiso para realizar esta acción.';
   if (status === 404) return 'No se encontró la información solicitada.';

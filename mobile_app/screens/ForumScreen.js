@@ -338,7 +338,7 @@ export default function ForumScreen({ route }) {
                         {renderTrendTitle(post.titulo)}
                       </Text>
 
-                      <Text className="mb-5 pr-1 text-[15px] font-medium leading-6 text-gray-600" numberOfLines={4} ellipsizeMode="tail">
+                      <Text className="mb-5 pr-1 text-[15px] font-medium leading-6 text-gray-600" style={{ textAlign: 'justify' }} numberOfLines={4} ellipsizeMode="tail">
                         {stripHtml(post.contenido)}
                       </Text>
 
@@ -413,7 +413,7 @@ export default function ForumScreen({ route }) {
 
                     <View className="flex-row items-center gap-1.5 mb-6">
                       <ArrowUpRight color="#6B7280" size={14} />
-                      <Text className="text-gray-500 text-[13px] font-medium flex-1" numberOfLines={3} ellipsizeMode="tail">
+                      <Text className="text-gray-500 text-[13px] font-medium flex-1" style={{ textAlign: 'justify' }} numberOfLines={3} ellipsizeMode="tail">
                         {stripHtml(post.contenido)}
                       </Text>
                     </View>

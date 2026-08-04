@@ -177,7 +177,7 @@ export default function PostScreen() {
         </View>
         <Text className="mb-4 text-[24px] font-black leading-7 text-emerald-950">{post.titulo}</Text>
         {post.aprobado === false ? <View className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3"><Text className="text-sm font-black text-amber-900">Pendiente de revisión</Text><Text className="mt-1 text-xs leading-4 text-amber-800">Solo tú puedes ver esta publicación hasta que sea aprobada.</Text></View> : null}
-        <Text className="mb-6 text-[16px] leading-6 text-slate-700">{htmlToPlainText(post.contenido)}</Text>
+        <Text className="mb-6 text-[16px] leading-6 text-slate-700" style={{ textAlign: 'justify' }}>{htmlToPlainText(post.contenido)}</Text>
         {postImage ? <RemoteImage uri={postImage} className="mb-4 w-full rounded-2xl" aspectRatio={16 / 9} accessibilityLabel="Imagen de la publicación" /> : null}
         <View className="mt-2 flex-row items-center gap-5 border-t border-slate-100 pt-3">
           <LikeButton liked={Boolean(post.liked_by_me)} count={likesCount} pending={likePending} onPress={toggleLike} />

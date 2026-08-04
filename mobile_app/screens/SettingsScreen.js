@@ -227,12 +227,11 @@ function SettingSwitch({ icon: Icon, label, description, value, onChange, divide
 }
 
 function PremiumSwitch({ value, disabled, onChange, label }) {
-  const progress = useRef(new Animated.Value(value ? 1 : 0)).current;
+  const thumbX = useRef(new Animated.Value(value ? 22 : 0)).current;
   useEffect(() => {
-    const animation = Animated.timing(progress, { toValue: value ? 1 : 0, duration: 190, useNativeDriver: false });
+    const animation = Animated.spring(thumbX, { toValue: value ? 22 : 0, damping: 19, stiffness: 260, mass: 0.72, overshootClamping: true, useNativeDriver: true });
     animation.start();
     return () => animation.stop();
-  }, [progress, value]);
-  const trackColor = progress.interpolate({ inputRange: [0, 1], outputRange: ['#CBD5E1', '#059669'] });
-  return <Pressable accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: value, disabled }} disabled={disabled} onPress={() => onChange(!value)} className={disabled ? 'opacity-50' : ''} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}><Animated.View className="h-8 w-[54px] justify-center rounded-full p-1" style={{ backgroundColor: trackColor }}><Animated.View className="h-6 w-6 rounded-full bg-white shadow-sm" style={{ transform: [{ translateX: progress.interpolate({ inputRange: [0, 1], outputRange: [0, 22] }) }, { scale: progress.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 0.92, 1] }) }] }} /></Animated.View></Pressable>;
+  }, [thumbX, value]);
+  return <Pressable accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: value, disabled }} disabled={disabled} onPress={() => onChange(!value)} className={disabled ? 'opacity-50' : ''} hitSlop={8}><View className={`h-8 w-[54px] justify-center rounded-full p-1 ${value ? 'bg-emerald-600' : 'bg-slate-300'}`}><Animated.View className="h-6 w-6 rounded-full bg-white shadow-sm" style={{ transform: [{ translateX: thumbX }] }} /></View></Pressable>;
 }
