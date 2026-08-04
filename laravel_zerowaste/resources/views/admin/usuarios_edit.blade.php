@@ -164,12 +164,20 @@
 
             {{-- Photo Upload --}}
             <div class="mt-5 flex items-center gap-4">
-                <input type="file" name="foto_perfil" id="foto-input" accept="image/*" class="hidden" onchange="previewImage(this)">
+                <input type="file" name="foto_perfil" id="foto-input" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="previewImage(this)">
                 <label for="foto-input" class="inline-flex items-center gap-2 text-xs px-4 py-2.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-bold rounded-xl cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-800/40 transition-colors border border-emerald-200 dark:border-emerald-700/50">
                     <span class="material-symbols-outlined text-base">photo_camera</span> Cambiar Fotografía
                 </label>
-                <span class="text-[11px] text-gray-400 dark:text-emerald-600/60">Formatos: JPG, PNG, WEBP — Máx 250MB</span>
+                <span class="text-[11px] text-gray-400 dark:text-emerald-600/60">Formatos: JPG, PNG, WEBP — Máx. 15 MB</span>
             </div>
+            @error('foto_perfil')
+                <p id="foto-error" class="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700" role="alert">{{ $message }}</p>
+            @else
+                <p id="foto-error" class="mt-3 hidden rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700" role="alert"></p>
+            @enderror
+            @error('perfil')
+                <p class="mt-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700" role="alert">{{ $message }}</p>
+            @enderror
         </div>
 
         {{-- Security Card - Only visible when editing admins or editing yourself --}}
@@ -293,11 +301,24 @@ function togglePass(id, btn) {
 
 function previewImage(input) {
     if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const error = document.getElementById('foto-error');
+        const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowed.includes(file.type) || file.size > 15 * 1024 * 1024) {
+            error.textContent = file.size > 15 * 1024 * 1024
+                ? 'La imagen no debe pesar más de 15 MB.'
+                : 'Selecciona una imagen JPEG, PNG o WebP.';
+            error.classList.remove('hidden');
+            input.value = '';
+            return;
+        }
+        error.textContent = '';
+        error.classList.add('hidden');
         const reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('preview-foto').src = e.target.result;
         }
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(file);
     }
 }
 

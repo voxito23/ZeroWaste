@@ -30,7 +30,7 @@ api.interceptors.request.use(async (config) => {
       delete config.headers['Content-Type'];
       delete config.headers['content-type'];
     }
-    const token = await SecureStore.getItemAsync('token') || useAuth.getState().token;
+    const token = useAuth.getState().token || await SecureStore.getItemAsync('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -42,7 +42,7 @@ api.interceptors.request.use(async (config) => {
 
 laravelApi.interceptors.request.use(async (config) => {
   try {
-    const token = await SecureStore.getItemAsync('token') || useAuth.getState().token;
+    const token = useAuth.getState().token || await SecureStore.getItemAsync('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

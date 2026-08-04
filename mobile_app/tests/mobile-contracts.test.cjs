@@ -67,6 +67,7 @@ const redemptions = read('screens/MyRedemptionsScreen.js');
 const login = read('screens/LoginScreen.js');
 const emailVerification = read('screens/EmailVerificationScreen.js');
 const axiosClient = read('api/axios.js');
+const authStore = read('store/useAuth.js');
 const routeNavigation = read('screens/RouteNavigationScreen.js');
 const mapScreen = read('screens/MapScreen.js');
 const homeScreen = read('screens/HomeScreen.js');
@@ -174,6 +175,9 @@ assert.match(emailVerification, /ScrollView contentContainerStyle=\{\{ flexGrow:
 assert.match(emailVerification, /TouchableWithoutFeedback onPress=\{Keyboard\.dismiss\}/);
 assert.match(emailVerification, /keyboardDismissMode=\{Platform\.OS === 'ios' \? 'interactive' : 'on-drag'\}/);
 assert.match(axiosClient, /Usuario o contraseña incorrectos/);
+assert.match(axiosClient, /useAuth\.getState\(\)\.token \|\| await SecureStore\.getItemAsync\('token'\)/);
+assert.match(authStore, /set\(\{ user, token \}\);[\s\S]*if \(persist\)/);
+assert.match(authStore, /const \[token, userStr\] = await Promise\.all/);
 assert.match(routeNavigation, /mapbox\.mapbox-traffic-v1/);
 assert.match(routeNavigation, /\{ id: 'driving-traffic', label: 'Auto' \}/);
 assert.doesNotMatch(routeNavigation, /label: 'Tráfico'/);

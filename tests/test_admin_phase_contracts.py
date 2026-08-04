@@ -87,6 +87,22 @@ class AdminPhaseContractsTest(unittest.TestCase):
         self.assertIn("post_max_size = 18M", php)
         self.assertIn("client_max_body_size 20m", nginx)
 
+    def test_user_avatar_edit_shows_real_limits_and_recovers_from_failures(self):
+        controller = (ROOT / "laravel_zerowaste" / "app" / "Http" / "Controllers" / "UserController.php").read_text(encoding="utf-8")
+        view = (ROOT / "laravel_zerowaste" / "resources" / "views" / "admin" / "usuarios_edit.blade.php").read_text(encoding="utf-8")
+        update = controller[controller.index("public function update(Request $request, User $user)"):controller.index("public function destroy(User $user)")]
+        self.assertIn("max:15360", update)
+        self.assertIn("'foto_perfil.mimes'", update)
+        self.assertIn("Log::error('No fue posible guardar la foto del usuario", update)
+        self.assertIn("withErrors([", update)
+        self.assertIn("Media::discard(\n                basename(parse_url($previousImage", update)
+        self.assertIn("accept=\"image/jpeg,image/png,image/webp\"", view)
+        self.assertIn("15 * 1024 * 1024", update)
+        self.assertIn("Máx. 15 MB", view)
+        self.assertNotIn("Máx 250MB", view)
+        self.assertIn("file.size > 15 * 1024 * 1024", view)
+        self.assertIn("@error('foto_perfil')", view)
+
     def test_movements_have_filters_local_time_and_admin_csv(self):
         controller = (ROOT / "laravel_zerowaste" / "app" / "Http" / "Controllers" / "ImpactAdminController.php").read_text(encoding="utf-8")
         view = (ROOT / "laravel_zerowaste" / "resources" / "views" / "admin" / "impacto" / "movimientos.blade.php").read_text(encoding="utf-8")

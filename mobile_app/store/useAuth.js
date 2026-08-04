@@ -8,28 +8,44 @@ export const useAuth = create((set) => ({
   token: null,
   isLoading: true,
   login: async (user, token, { persist = true } = {}) => {
-    if (persist) {
-      await SecureStore.setItemAsync('token', token);
-      await SecureStore.setItemAsync('user', JSON.stringify(user));
-    } else {
-      await SecureStore.deleteItemAsync('token');
-      await SecureStore.deleteItemAsync('user');
-    }
     set({ user, token });
+    try {
+      if (persist) {
+        await Promise.all([
+          SecureStore.setItemAsync('token', token),
+          SecureStore.setItemAsync('user', JSON.stringify(user)),
+        ]);
+      } else {
+        await Promise.all([
+          SecureStore.deleteItemAsync('token'),
+          SecureStore.deleteItemAsync('user'),
+        ]);
+      }
+    } catch (error) {
+      console.error('Failed to persist session', error);
+    }
   },
   updateUser: async (user) => {
-    if (await SecureStore.getItemAsync('token')) await SecureStore.setItemAsync('user', JSON.stringify(user));
     set({ user });
+    try {
+      if (await SecureStore.getItemAsync('token')) await SecureStore.setItemAsync('user', JSON.stringify(user));
+    } catch (error) {
+      console.error('Failed to persist user profile', error);
+    }
   },
   logout: async () => {
-    await SecureStore.deleteItemAsync('token');
-    await SecureStore.deleteItemAsync('user');
     set({ user: null, token: null });
+    await Promise.all([
+      SecureStore.deleteItemAsync('token'),
+      SecureStore.deleteItemAsync('user'),
+    ]);
   },
   restoreToken: async () => {
     try {
-      const token = await SecureStore.getItemAsync('token');
-      const userStr = await SecureStore.getItemAsync('user');
+      const [token, userStr] = await Promise.all([
+        SecureStore.getItemAsync('token'),
+        SecureStore.getItemAsync('user'),
+      ]);
       if (token && userStr) {
         set({ token, user: JSON.parse(userStr) });
       }

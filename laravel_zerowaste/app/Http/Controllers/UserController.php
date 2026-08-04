@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Support\Media;
 
@@ -87,6 +88,7 @@ class UserController extends Controller
             'titulo_perfil.max' => 'El título del perfil no puede exceder los 100 caracteres.',
             'biografia.max' => 'La biografía no puede exceder los 500 caracteres.',
             'foto_perfil.image' => 'El archivo debe ser una imagen.',
+            'foto_perfil.mimes' => 'La imagen debe ser JPEG, PNG o WebP.',
             'foto_perfil.max' => 'La imagen no debe pesar más de 5 MB.',
             'foto_perfil.uploaded' => 'Error al subir la imagen. Intenta con una de menor tamaño.',
         ];
@@ -137,7 +139,7 @@ class UserController extends Controller
             'ubicacion' => 'nullable|string|max:30',
             'titulo_perfil' => 'nullable|string|max:100',
             'biografia' => 'nullable|string|max:500',
-            'foto_perfil' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'foto_perfil' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:15360',
         ];
 
         $messages = [
@@ -153,7 +155,8 @@ class UserController extends Controller
             'titulo_perfil.max' => 'El título del perfil no puede exceder los 100 caracteres.',
             'biografia.max' => 'La biografía no puede exceder los 500 caracteres.',
             'foto_perfil.image' => 'El archivo debe ser una imagen.',
-            'foto_perfil.max' => 'La imagen no debe pesar más de 5 MB.',
+            'foto_perfil.mimes' => 'La imagen debe ser JPEG, PNG o WebP.',
+            'foto_perfil.max' => 'La imagen no debe pesar más de 15 MB.',
             'foto_perfil.uploaded' => 'Error al subir la imagen. Intenta con una de menor tamaño.',
         ];
 
@@ -171,17 +174,48 @@ class UserController extends Controller
             $data['password'] = \Illuminate\Support\Facades\Hash::make($request->input('password'));
         }
 
+        $previousImage = $user->foto_perfil;
         $newImage = null;
         if ($request->hasFile('foto_perfil')) {
-            $newImage = Media::store($request->file('foto_perfil'), 'perfiles');
-            $data['foto_perfil'] = $newImage;
+            try {
+                $newImage = Media::store(
+                    $request->file('foto_perfil'),
+                    'perfiles',
+                    15 * 1024 * 1024
+                );
+                $data['foto_perfil'] = $newImage;
+            } catch (\Throwable $error) {
+                Log::error('No fue posible guardar la foto del usuario desde el panel.', [
+                    'exception' => get_class($error),
+                    'user_id' => $user->id,
+                ]);
+
+                return back()->withInput()->withErrors([
+                    'foto_perfil' => $error instanceof \RuntimeException
+                        ? $error->getMessage()
+                        : 'No fue posible guardar la fotografía. Intenta con otra imagen.',
+                ]);
+            }
         }
 
         try {
             $user->update($data);
         } catch (\Throwable $error) {
             Media::discard($newImage, 'perfiles');
-            throw $error;
+            Log::error('No fue posible actualizar el usuario desde el panel.', [
+                'exception' => get_class($error),
+                'user_id' => $user->id,
+            ]);
+
+            return back()->withInput()->withErrors([
+                'perfil' => 'No fue posible guardar los cambios del usuario. Inténtalo nuevamente.',
+            ]);
+        }
+        if ($newImage !== null && is_string($previousImage) && $previousImage !== $newImage) {
+            Media::discard(
+                basename(parse_url($previousImage, PHP_URL_PATH) ?: $previousImage),
+                'perfiles'
+            );
         }
         return redirect()->route('usuarios.index')->with('success', 'Usuario actualizado correctamente.');
     }
