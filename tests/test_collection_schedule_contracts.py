@@ -135,6 +135,9 @@ class CollectionScheduleContractsTest(unittest.TestCase):
         self.assertIn('current_user.rol == "recolector"', rating_block)
         self.assertIn("HTTP_403_FORBIDDEN", rating_block)
         self.assertIn("calificacion_recolector is not None", rating_block)
+        self.assertIn("calificacion_in.comentario.strip()", rating_block)
+        schemas = (ROOT / "fast_api" / "app" / "models" / "schemas.py").read_text(encoding="utf-8")
+        self.assertIn("comentario: Optional[str] = Field(default=None, max_length=500)", schemas)
 
     def test_collection_history_is_scoped_to_the_authenticated_account(self):
         source = (ROOT / "fast_api" / "app" / "routers" / "recoleccion.py").read_text(encoding="utf-8")

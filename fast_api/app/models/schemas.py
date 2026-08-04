@@ -787,5 +787,5 @@ class SolicitudRecoleccionResponse(BaseModel):
 
 class CalificarRecolectorRequest(BaseModel):
     calificacion: int # 1 a 5
-    comentario: Optional[str] = None
+    comentario: Optional[str] = Field(default=None, max_length=500)
 

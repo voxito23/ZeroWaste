@@ -167,7 +167,7 @@ def calificar_recolector(
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="La calificación debe estar entre 1 y 5 estrellas.")
 
     solicitud.calificacion_recolector = calificacion_in.calificacion
-    solicitud.comentario_recolector = calificacion_in.comentario
+    solicitud.comentario_recolector = calificacion_in.comentario.strip() if calificacion_in.comentario and calificacion_in.comentario.strip() else None
     db.commit()
 
     return MessageResponse(success=True, message="Recolector calificado exitosamente.")

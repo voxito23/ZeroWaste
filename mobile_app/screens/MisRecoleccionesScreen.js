@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, ScrollView, TouchableWithoutFeedback } from 'react-native';
 import { useAuth } from '../store/useAuth';
 import { api } from '../api/axios';
 import { useNavigation } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import CustomButton from '../components/ui/CustomButton';
 import { ArrowLeft, Star } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
@@ -14,9 +14,11 @@ export default function MisRecoleccionesScreen() {
   const { user } = useAuth();
   const accountId = String(user?.id ?? '');
   const activeAccountRef = useRef(accountId);
+  const ratingScrollRef = useRef(null);
   activeAccountRef.current = accountId;
   const collectorOnly = user?.rol === 'recolector' && !user?.is_admin;
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { showDialog } = useZeroWasteDialog();
   const [recolecciones, setRecolecciones] = useState([]);
   const [loadedAccountId, setLoadedAccountId] = useState('');
@@ -27,6 +29,7 @@ export default function MisRecoleccionesScreen() {
   const [selectedRecoleccion, setSelectedRecoleccion] = useState(null);
   const [calificacion, setCalificacion] = useState(5);
   const [comentario, setComentario] = useState('');
+  const [submittingCalificacion, setSubmittingCalificacion] = useState(false);
 
   // Modal QR
   const [qrModalVisible, setQrModalVisible] = useState(false);
@@ -41,6 +44,20 @@ export default function MisRecoleccionesScreen() {
     setLoading(true);
     void fetchRecolecciones();
   }, [user?.id]);
+
+  useEffect(() => {
+    if (!calificacionModalVisible) return undefined;
+    let scrollTimer;
+    const eventName = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const subscription = Keyboard.addListener(eventName, () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => ratingScrollRef.current?.scrollToEnd({ animated: true }), 80);
+    });
+    return () => {
+      clearTimeout(scrollTimer);
+      subscription.remove();
+    };
+  }, [calificacionModalVisible]);
 
   const fetchRecolecciones = async () => {
     const requestedAccountId = activeAccountRef.current;
@@ -82,16 +99,30 @@ export default function MisRecoleccionesScreen() {
   };
 
   const submitCalificacion = async () => {
-    if (!selectedRecoleccion) return;
+    if (!selectedRecoleccion || submittingCalificacion) return;
+    Keyboard.dismiss();
+    setSubmittingCalificacion(true);
     try {
       await api.post(`/recolecciones/${selectedRecoleccion.id}/calificar`, {
         calificacion,
-        comentario
+        comentario: comentario.trim() || null,
       });
-      showDialog({ type: 'success', title: 'Calificación enviada', message: 'Gracias por calificar a tu recolector.', onPrimary: () => { setCalificacionModalVisible(false); void fetchRecolecciones(); } });
-    } catch (error) {
-      showDialog({ type: 'error', title: 'No se pudo enviar', message: 'No fue posible enviar la calificación.' });
+      setCalificacionModalVisible(false);
+      setSelectedRecoleccion(null);
+      void fetchRecolecciones();
+      showDialog({ type: 'success', title: 'Calificación enviada', message: 'Gracias por calificar a tu recolector.' });
+    } catch (requestError) {
+      showDialog({ type: 'error', title: 'No se pudo enviar', message: requestError.userMessage || requestError.response?.data?.detail || 'No fue posible enviar la calificación.' });
+    } finally {
+      setSubmittingCalificacion(false);
     }
+  };
+
+  const closeCalificacion = () => {
+    if (submittingCalificacion) return;
+    Keyboard.dismiss();
+    setCalificacionModalVisible(false);
+    setSelectedRecoleccion(null);
   };
 
   return (
@@ -168,52 +199,32 @@ export default function MisRecoleccionesScreen() {
       )}
 
       {/* Modal de Calificación */}
-      <Modal visible={calificacionModalVisible} transparent animationType="slide">
-        <View className="flex-1 justify-center bg-black/50 px-6">
-          <View className="bg-white rounded-3xl p-6 shadow-2xl">
-            <Text className="text-xl font-bold text-text text-center mb-4">Califica el Servicio</Text>
-            <Text className="text-center text-subtext mb-6">
-              ¿Cómo fue tu experiencia con el recolector?
-            </Text>
-            
-            <View className="flex-row justify-center gap-2 mb-6">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <TouchableOpacity key={star} onPress={() => setCalificacion(star)}>
-                  <Star 
-                    size={40} 
-                    color={star <= calificacion ? "#F59E0B" : "#D1D5DB"} 
-                    fill={star <= calificacion ? "#F59E0B" : "transparent"} 
-                  />
-                </TouchableOpacity>
-              ))}
+      <Modal visible={calificacionModalVisible} transparent animationType="slide" statusBarTranslucent navigationBarTranslucent={false} onRequestClose={closeCalificacion}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+            <View className="flex-1 bg-black/50 px-6">
+              <ScrollView ref={ratingScrollRef} contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingVertical: Math.max(insets.bottom, 24) }} keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'} showsVerticalScrollIndicator={false}>
+                <View className="rounded-3xl bg-white p-6 shadow-2xl">
+                  <Text className="mb-4 text-center text-xl font-bold text-text">Califica el Servicio</Text>
+                  <Text className="mb-6 text-center text-subtext">¿Cómo fue tu experiencia con el recolector?</Text>
+                  <View className="mb-6 flex-row justify-center gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <TouchableOpacity key={star} onPress={() => setCalificacion(star)} accessibilityRole="button" accessibilityLabel={`${star} ${star === 1 ? 'estrella' : 'estrellas'}`} accessibilityState={{ selected: star === calificacion }}>
+                        <Star size={40} color={star <= calificacion ? '#F59E0B' : '#D1D5DB'} fill={star <= calificacion ? '#F59E0B' : 'transparent'} />
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <TextInput placeholder="Deja un comentario (opcional)" placeholderTextColor="#94A3B8" value={comentario} onChangeText={setComentario} className="mb-2 min-h-28 rounded-xl border border-gray-200 bg-gray-50 p-4" style={{ color: '#0F172A', fontSize: 16 }} multiline numberOfLines={3} maxLength={500} textAlignVertical="top" blurOnSubmit={false} />
+                  <Text className="mb-5 text-right text-xs font-bold text-slate-400">{comentario.length}/500</Text>
+                  <View className="flex-row gap-3">
+                    <View className="flex-1"><CustomButton title="Cancelar" variant="outline" onPress={closeCalificacion} disabled={submittingCalificacion} /></View>
+                    <View className="flex-1"><CustomButton title="Enviar" onPress={submitCalificacion} loading={submittingCalificacion} /></View>
+                  </View>
+                </View>
+              </ScrollView>
             </View>
-
-            <TextInput
-              placeholder="Deja un comentario (opcional)"
-              value={comentario}
-              onChangeText={setComentario}
-              className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-text mb-6"
-              multiline
-              numberOfLines={3}
-            />
-
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <CustomButton 
-                  title="Cancelar" 
-                  variant="outline" 
-                  onPress={() => setCalificacionModalVisible(false)} 
-                />
-              </View>
-              <View className="flex-1">
-                <CustomButton 
-                  title="Enviar" 
-                  onPress={submitCalificacion} 
-                />
-              </View>
-            </View>
-          </View>
-        </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
 
       {/* Modal QR de Seguridad */}
