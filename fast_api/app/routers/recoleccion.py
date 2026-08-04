@@ -35,6 +35,8 @@ def solicitar_recoleccion(
     current_user: Usuario = Depends(get_current_user),
 ):
     """Crea una nueva solicitud de recolección para el usuario actual."""
+    if current_user.rol == "recolector" and not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Los recolectores no pueden crear solicitudes de recolección.")
     try:
         lock_slot_capacity(db, solicitud_in.scheduled_at)
         scheduled_at = validate_slot(db, solicitud_in.scheduled_at)

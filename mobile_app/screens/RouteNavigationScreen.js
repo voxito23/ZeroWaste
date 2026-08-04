@@ -15,7 +15,7 @@ import {
   VolumeX,
   X,
 } from 'lucide-react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
@@ -100,6 +100,7 @@ const primaryBanner = (step) => step?.bannerInstructions?.[0]?.primary?.text || 
 
 export default function RouteNavigationScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const point = useRoute().params?.point;
   const { lightPreset } = useMapAppearance();
   const cameraRef = useRef(null);
@@ -348,8 +349,8 @@ export default function RouteNavigationScreen() {
   const instruction = arrived ? `Llegaste a ${point?.nombre || 'tu destino'}` : primaryBanner(currentStep);
 
   return (
-    <SafeAreaView className="flex-1 bg-emerald-50" edges={['top', 'bottom']}>
-      <StatusBar style={lightPreset === 'night' ? 'light' : 'dark'} translucent={false} backgroundColor={lightPreset === 'night' ? '#0F172A' : '#ECFDF5'} />
+    <View className="flex-1 bg-emerald-50">
+      <StatusBar style={lightPreset === 'night' ? 'light' : 'dark'} translucent backgroundColor="transparent" />
       <Mapbox.MapView
         key={mapKey}
         style={{ flex: 1 }}
@@ -378,10 +379,10 @@ export default function RouteNavigationScreen() {
         {validCoordinate(destination) ? <Mapbox.PointAnnotation id={`route-destination-${point?.id || 'point'}`} coordinate={destination}><View className="h-11 w-11 items-center justify-center rounded-full border-4 border-white bg-emerald-700"><MapPin color="white" size={20} /></View></Mapbox.PointAnnotation> : null}
       </Mapbox.MapView>
 
-      {!mapReady && !mapError ? <View pointerEvents="none" className="absolute left-5 right-5 top-24 flex-row items-center rounded-2xl bg-white/90 p-4"><ActivityIndicator color="#059669" /><Text className="ml-3 font-bold text-slate-700">Preparando mapa 3D…</Text></View> : null}
-      {mapError ? <View className="absolute left-5 right-5 top-24 rounded-2xl border border-red-200 bg-red-50 p-4"><Text className="text-center font-bold text-red-700">{mapError}</Text><Pressable onPress={() => { setUsingFallbackStyle(true); setMapReady(false); setMapError(''); setMapKey((value) => value + 1); }} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">{usingFallbackStyle ? 'Reintentar mapa' : 'Usar mapa compatible'}</Text></Pressable></View> : null}
+      {!mapReady && !mapError ? <View pointerEvents="none" className="absolute left-5 right-5 flex-row items-center rounded-2xl bg-white/90 p-4" style={{ top: Math.max(insets.top + 70, 88) }}><ActivityIndicator color="#059669" /><Text className="ml-3 font-bold text-slate-700">Preparando mapa 3D…</Text></View> : null}
+      {mapError ? <View className="absolute left-5 right-5 rounded-2xl border border-red-200 bg-red-50 p-4" style={{ top: Math.max(insets.top + 70, 88) }}><Text className="text-center font-bold text-red-700">{mapError}</Text><Pressable onPress={() => { setUsingFallbackStyle(true); setMapReady(false); setMapError(''); setMapKey((value) => value + 1); }} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">{usingFallbackStyle ? 'Reintentar mapa' : 'Usar mapa compatible'}</Text></Pressable></View> : null}
 
-      <View pointerEvents="box-none" className="absolute inset-0 justify-between">
+      <View pointerEvents="box-none" className="absolute inset-0 justify-between" style={{ paddingTop: Math.max(insets.top + 8, 16), paddingBottom: Math.max(insets.bottom + 8, 16) }}>
         <View className="px-4 pt-2">
           {activeNavigation ? <View className="rounded-[24px] bg-emerald-800 p-4 shadow-lg"><View className="flex-row items-start"><Navigation color="white" size={25} /><View className="ml-3 flex-1"><Text className="text-2xl font-black leading-7 text-white">{instruction}</Text><Text className="mt-1 font-semibold text-emerald-100">{currentStep?.name || point?.nombre || 'Ruta ZeroWaste'} · {distance}</Text></View><Pressable onPress={() => navigation.goBack()} className="h-10 w-10 items-center justify-center rounded-full bg-white/15" accessibilityLabel="Cerrar navegación"><X color="white" size={20} /></Pressable></View></View> : <Pressable onPress={() => navigation.goBack()} className="h-12 w-12 items-center justify-center rounded-full bg-white shadow-md" accessibilityLabel="Volver"><ArrowLeft color="#0F172A" size={21} /></Pressable>}
           {rerouting ? <View className="mt-2 self-center flex-row items-center rounded-full bg-amber-500 px-4 py-2"><RefreshCw color="#fff" size={15} /><Text className="ml-2 text-xs font-black text-white">Recalculando ruta…</Text></View> : offRoute ? <View className="mt-2 self-center rounded-full bg-amber-500 px-4 py-2"><Text className="text-xs font-black text-white">Fuera de ruta</Text></View> : navigationPaused ? <View className="mt-2 self-center rounded-full bg-slate-800 px-4 py-2"><Text className="text-xs font-black text-white">Seguimiento pausado</Text></View> : null}
@@ -398,7 +399,7 @@ export default function RouteNavigationScreen() {
           </View>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

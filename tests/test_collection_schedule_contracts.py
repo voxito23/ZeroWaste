@@ -111,6 +111,14 @@ class CollectionScheduleContractsTest(unittest.TestCase):
         end = source.index("def completar_recoleccion_qr")
         self.assertIn("with_for_update().first()", source[start:end])
 
+    def test_collectors_cannot_create_collection_requests(self):
+        source = (ROOT / "fast_api" / "app" / "routers" / "recoleccion.py").read_text(encoding="utf-8")
+        start = source.index("def solicitar_recoleccion")
+        end = source.index('@router.get("", response_model=List[SolicitudRecoleccionResponse]')
+        contract = source[start:end]
+        self.assertIn('current_user.rol == "recolector"', contract)
+        self.assertIn("status_code=403", contract)
+
 
 if __name__ == "__main__":
     unittest.main()

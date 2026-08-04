@@ -86,7 +86,7 @@ assert.match(routeNavigation, /voiceNavigation\.repeat/);
 assert.match(routeNavigation, /offRouteSamplesRef/);
 assert.match(home, />Tendencias</);
 assert.match(home, /RefreshControl/);
-assert.match(home, /setInterval\(\(\) => setHomeRefreshKey/);
+assert.doesNotMatch(home, /setInterval\(\(\) => setHomeRefreshKey/);
 assert.doesNotMatch(home, /h-\[240px\]/);
 assert.match(dialog, /SafeAreaView/);
 assert.match(dialog, /bg-white/);

@@ -130,6 +130,7 @@ export default function MapScreen() {
   const [reduceMotion, setReduceMotion] = useState(false);
 
   const isCollector = user?.rol === 'recolector' || user?.is_admin;
+  const collectorOnly = user?.rol === 'recolector' && !user?.is_admin;
   const mapPoints = debouncedQuery ? results : points;
   const geojson = useMemo(() => pointCollection(mapPoints), [mapPoints]);
   const pointById = useMemo(() => new Map(points.map((point) => [String(point.id), point])), [points]);
@@ -513,7 +514,7 @@ export default function MapScreen() {
 
       <View className="absolute right-4 z-20 flex-row gap-2" style={{ bottom: bottomSafeArea + (mapPoints.length && !emptySearch ? 266 : 90) }}>
         {isCollector ? <TouchableOpacity onPress={() => navigation.navigate('Scanner')} className="h-12 flex-row items-center rounded-full border-2 border-white bg-emerald-800 px-4 shadow-lg elevation-5" accessibilityLabel="Abrir QR de recolector"><QrCode color="white" size={19} /><Text className="ml-2 text-xs font-black text-white">QR recolector</Text></TouchableOpacity> : null}
-        <TouchableOpacity
+        {!collectorOnly ? <TouchableOpacity
           onPress={async () => {
             const coordinates = userLocation || await requestLocation();
             if (!coordinates) {
@@ -525,7 +526,7 @@ export default function MapScreen() {
           className="h-12 flex-row items-center rounded-full border-2 border-white bg-emerald-700 px-4 shadow-lg elevation-5"
         >
           <Truck color="white" size={19} /><Text className="ml-2 text-xs font-black text-white">Recolección</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> : null}
       </View>
     </View>
   );

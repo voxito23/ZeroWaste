@@ -18,7 +18,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useScrollContext } from '../context/ScrollContext';
 import { useAuth } from '../store/useAuth';
 import { api } from '../api/axios';
@@ -130,7 +130,6 @@ export default function HomeScreen() {
   const [reactionError, setReactionError] = useState('');
   const [homeRefreshKey, setHomeRefreshKey] = useState(0);
   const [homeRefreshing, setHomeRefreshing] = useState(false);
-  const homeFocusedOnceRef = useRef(false);
 
   const toggleReaction = useCallback(async (contentType, content) => {
     if (!content?.id || reactionPending[content.id]) return;
@@ -271,13 +270,6 @@ export default function HomeScreen() {
       newsAbortRef.current?.abort();
     };
   }, [fetchArticles, fetchNews, homeRefreshKey]);
-
-  useFocusEffect(useCallback(() => {
-    if (homeFocusedOnceRef.current) setHomeRefreshKey((value) => value + 1);
-    else homeFocusedOnceRef.current = true;
-    const timer = setInterval(() => setHomeRefreshKey((value) => value + 1), 30000);
-    return () => clearInterval(timer);
-  }, []));
 
   useEffect(() => {
     if (reduceMotion) {
@@ -437,7 +429,7 @@ export default function HomeScreen() {
             </View>
           ) : articles.length === 0 && articlesEmpty ? (
             <View className="mx-5 items-center rounded-3xl border border-slate-100 bg-white p-6"><Text className="text-center font-bold text-slate-600">No hay artículos publicados por el momento.</Text><TouchableOpacity onPress={() => fetchArticles({ manualRefresh: true })} className="mt-4 rounded-full border border-emerald-700 px-6 py-3"><Text className="font-black text-emerald-800">Actualizar</Text></TouchableOpacity></View>
-          ) : <><FlatList
+          ) : <><View className="bg-white"><FlatList
             ref={tendListRef}
             data={articles}
             horizontal
@@ -454,10 +446,7 @@ export default function HomeScreen() {
             renderItem={({ item }) => (
               <View style={{ width: width, paddingHorizontal: 20 }}>
                 <TouchableScale scaleVal={0.98} onPress={() => navigation.navigate('ArticleDetail', { articleId: item.id })}>
-                  <View
-                    className="rounded-[32px] overflow-hidden bg-[#111827] mb-2"
-                    style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 16 }, shadowOpacity: 0.25, shadowRadius: 28, elevation: 14 }}
-                  >
+                  <View className="mb-2 overflow-hidden rounded-[32px] bg-[#111827]">
                     {/* Image Section */}
                     <View className="relative bg-white" style={{ aspectRatio: 16 / 10 }}>
                       <RemoteImage uri={normalizeMediaUrl(item.image_url)} fallbackSource={EDITORIAL_IMAGES[item.id]} className="h-full w-full" backgroundClassName="bg-white" loadingClassName="bg-white" aspectRatio={16 / 10} accessibilityLabel={`Imagen de ${item.title}`} />
@@ -517,7 +506,7 @@ export default function HomeScreen() {
                 </TouchableScale>
               </View>
             )}
-          />
+          /></View>
           {articlesRefreshing ? <Text className="mt-2 text-center text-xs font-bold text-emerald-700">Actualizando tendencias…</Text> : null}
           {reactionError ? <Text className="mx-5 mt-2 text-center text-xs font-bold text-red-600">{reactionError}</Text> : null}
           {articlesError ? <View className="mx-5 mt-3 flex-row items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 p-3"><Text className="mr-3 flex-1 text-xs font-bold text-amber-900">No se pudo actualizar; se conservan los artículos visibles.</Text><TouchableOpacity onPress={() => fetchArticles({ manualRefresh: true })}><Text className="font-black text-amber-900">Reintentar</Text></TouchableOpacity></View> : null}
@@ -544,13 +533,10 @@ export default function HomeScreen() {
               <Text className="text-gray-400 text-xs text-center mt-1">Próximamente publicaremos nuevas iniciativas eco-amigables.</Text>
             </View>
           ) : (
-            <ScrollView horizontal bounces={false} overScrollMode="never" showsHorizontalScrollIndicator={false} style={{ backgroundColor: '#FFFFFF' }} contentContainerStyle={{ paddingHorizontal: 20, gap: 16, backgroundColor: '#FFFFFF' }}>
+            <View className="bg-white"><ScrollView horizontal bounces={false} overScrollMode="never" showsHorizontalScrollIndicator={false} style={{ backgroundColor: '#FFFFFF' }} contentContainerStyle={{ paddingHorizontal: 20, gap: 16, backgroundColor: '#FFFFFF' }}>
               {campaignsList.map((camp) => (
                 <TouchableScale key={camp.id} onPress={camp.link ? () => Linking.openURL(camp.link) : undefined}>
-                  <View
-                    className="w-[300px] rounded-[28px] overflow-hidden bg-white border border-gray-100"
-                    style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.08, shadowRadius: 24, elevation: 10 }}
-                  >
+                  <View className="w-[300px] overflow-hidden rounded-[28px] border border-slate-100 bg-white">
                     <View className="relative h-[190px]">
                       <RemoteImage uri={camp.imageUrl} fallbackSource={camp.fallbackImage} className="h-full w-full" backgroundClassName="bg-white" loadingClassName="bg-white" accessibilityLabel={`Imagen de ${camp.title}`} />
                       
@@ -584,7 +570,7 @@ export default function HomeScreen() {
                   </View>
                 </TouchableScale>
               ))}
-            </ScrollView>
+            </ScrollView></View>
           )}
         </Animated.View>
 

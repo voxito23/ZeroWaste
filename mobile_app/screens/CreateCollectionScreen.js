@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Keyboard, KeyboardAvoidingView, Platform, ScrollView, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, MapPin, PackageCheck, Search } from 'lucide-react-native';
+import { ArrowLeft, CalendarDays, Check, CheckCircle2, ChevronDown, Clock3, MapPin, PackageCheck, Search, Truck } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { api } from '../api/axios';
-import KeyboardAwareScreen from '../components/ui/KeyboardAwareScreen';
 import { searchAddresses } from '../utils/addressSearch';
+import { useAuth } from '../store/useAuth';
 
 const SCHEDULE_MESSAGE = 'La disponibilidad se confirma con el horario vigente de Querétaro.';
 const MATERIAL_OPTIONS = ['PET', 'Tapitas', 'Cartón', 'Plástico', 'Latas', 'Baterías', 'Vidrio', 'Electrónicos'];
@@ -24,6 +24,8 @@ const isoDate = (date) => {
 };
 
 export default function CreateCollectionScreen({ navigation, route }) {
+  const { user } = useAuth();
+  const collectorOnly = user?.rol === 'recolector' && !user?.is_admin;
   const routeCoordinates = route.params?.coordinates;
   const dates = useMemo(() => Array.from({ length: 21 }, (_, index) => {
     const value = new Date();
@@ -69,7 +71,7 @@ export default function CreateCollectionScreen({ navigation, route }) {
   }, [form.direccion]);
 
   useEffect(() => {
-    if (!date) return;
+    if (!date || collectorOnly) return;
     let active = true;
     setLoadingSlots(true);
     setSlot(null);
@@ -79,12 +81,16 @@ export default function CreateCollectionScreen({ navigation, route }) {
       .catch((requestError) => { if (active) { setSlots([]); setSlotsError(requestError.userMessage || 'No fue posible consultar la disponibilidad.'); } })
       .finally(() => { if (active) setLoadingSlots(false); });
     return () => { active = false; };
-  }, [date, slotsRequestKey]);
+  }, [collectorOnly, date, slotsRequestKey]);
 
   const update = (key) => (value) => setForm((current) => ({ ...current, [key]: value }));
   const toggleMaterial = (material) => setSelectedMaterials((current) => current.includes(material) ? current.filter((item) => item !== material) : [...current, material]);
   const submit = async () => {
     if (submitting) return;
+    if (collectorOnly) {
+      setError('Los recolectores no pueden crear solicitudes; su función es atender y confirmar recolecciones asignadas.');
+      return;
+    }
     if (!form.direccion.trim() || !selectedMaterials.length || !form.cantidad_estimada.trim() || !slot) {
       setError('Completa la dirección, selecciona al menos un material, indica la cantidad y elige un horario.');
       return;
@@ -117,6 +123,10 @@ export default function CreateCollectionScreen({ navigation, route }) {
     }
   };
 
+  if (collectorOnly) {
+    return <SafeAreaView className="flex-1 items-center justify-center bg-emerald-50 px-7" edges={['top', 'bottom']}><StatusBar style="dark" /><View className="h-20 w-20 items-center justify-center rounded-full bg-white"><Truck color="#047857" size={34} /></View><Text className="mt-5 text-center text-2xl font-black text-emerald-950">Vista exclusiva para usuarios</Text><Text className="mt-3 text-center leading-6 text-slate-600">Tu cuenta de recolector puede consultar solicitudes y confirmar recolecciones mediante QR, pero no crear una solicitud nueva.</Text><TouchableOpacity onPress={() => navigation.goBack()} className="mt-7 min-h-12 items-center justify-center rounded-2xl bg-emerald-700 px-7"><Text className="font-black text-white">Volver al mapa</Text></TouchableOpacity></SafeAreaView>;
+  }
+
   if (created) {
     return <SafeAreaView className="flex-1 items-center justify-center bg-emerald-50 px-7"><StatusBar style="dark" /><CheckCircle2 color="#059669" size={64} /><Text className="mt-5 text-center text-2xl font-black text-emerald-950">Solicitud confirmada</Text><Text className="mt-3 text-center text-slate-600">Folio</Text><Text className="mt-1 font-black tracking-wider text-emerald-800">{created.folio}</Text><Text className="mt-5 text-center text-slate-700">{new Date(created.scheduled_at).toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short', timeZone: 'America/Mexico_City' })}</Text><TouchableOpacity onPress={() => navigation.replace('MisRecolecciones')} className="mt-8 rounded-2xl bg-emerald-700 px-7 py-4"><Text className="font-black text-white">Ver solicitud</Text></TouchableOpacity><TouchableOpacity onPress={() => navigation.navigate('Main')} className="mt-3 px-7 py-3"><Text className="font-bold text-slate-600">Volver al inicio</Text></TouchableOpacity></SafeAreaView>;
   }
@@ -124,10 +134,9 @@ export default function CreateCollectionScreen({ navigation, route }) {
   return (
     <SafeAreaView className="flex-1 bg-slate-50" edges={['top', 'bottom']}><StatusBar style="dark" />
       <View className="flex-row items-center border-b border-slate-100 bg-white px-4 py-3"><TouchableOpacity onPress={() => navigation.goBack()} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100"><ArrowLeft color="#0F172A" size={21} /></TouchableOpacity><View className="ml-4"><Text className="text-lg font-black text-slate-900">Solicitar recolección</Text><Text className="text-xs text-slate-500">Querétaro, Qro.</Text></View></View>
-      <KeyboardAwareScreen
-        contentContainerStyle={{ padding: 20, paddingBottom: 28 }}
-        footer={<View className="border-t border-slate-100 bg-white px-5 py-3"><TouchableOpacity disabled={submitting || !slot} onPress={submit} className="items-center rounded-2xl bg-emerald-700 py-4 disabled:opacity-50">{submitting ? <ActivityIndicator color="white" /> : <Text className="text-base font-black text-white">Confirmar solicitud</Text>}</TouchableOpacity></View>}
-      >
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+          <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 20, paddingBottom: 28 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} bounces={false}>
         <View className="rounded-[24px] border border-emerald-100 bg-emerald-950 p-5"><Text className="text-xs font-black uppercase tracking-widest text-emerald-300">Recolección a domicilio</Text><Text className="mt-2 text-lg font-black leading-6 text-white">Agenda una visita en tres pasos</Text><Text className="mt-2 font-semibold leading-5 text-emerald-100">Escribe tu domicilio, elige la fecha y confirma un horario disponible. {SCHEDULE_MESSAGE}</Text></View>
         {error ? <View className="mt-4 rounded-2xl border border-red-200 bg-red-50 p-4"><Text accessibilityLiveRegion="polite" className="font-bold text-red-700">{error}</Text></View> : null}
         <Field icon={<MapPin color="#059669" size={18} />} label="Dirección del domicilio"><View className="mt-2 flex-row items-center rounded-2xl border border-slate-200 bg-white px-4"><Search color="#64748B" size={18} /><TextInput value={form.direccion} onChangeText={(value) => { update('direccion')(value); setCoordinates(null); }} maxLength={ADDRESS_MAX} placeholder="Ej. Avenida Universidad 123" className="h-14 flex-1 px-3 text-slate-900" autoCorrect={false} /></View>{addressSearching ? <ActivityIndicator className="mt-3" color="#059669" /> : null}{addressSuggestions.length ? <View className="mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white">{addressSuggestions.map((suggestion, index) => <TouchableOpacity key={suggestion.id} onPress={() => { setForm((current) => ({ ...current, direccion: suggestion.label.slice(0, ADDRESS_MAX) })); setCoordinates(suggestion.coordinates); setAddressSuggestions([]); }} className={`min-h-14 flex-row items-center px-4 py-3 ${index ? 'border-t border-slate-100' : ''}`}><MapPin color="#059669" size={17} /><View className="ml-3 flex-1"><Text className="font-bold leading-5 text-slate-900">{suggestion.label}</Text>{suggestion.context ? <Text className="mt-0.5 text-xs text-slate-500">{suggestion.context}</Text> : null}</View><Check color="#059669" size={17} /></TouchableOpacity>)}</View> : null}<View className="mt-2 flex-row justify-between"><Text className="flex-1 text-xs leading-4 text-slate-500">Selecciona una sugerencia para usar sus coordenadas exactas.</Text><Text className="ml-2 text-xs font-bold text-slate-400">{form.direccion.length}/{ADDRESS_MAX}</Text></View></Field>
@@ -136,7 +145,10 @@ export default function CreateCollectionScreen({ navigation, route }) {
         <Field icon={<CalendarDays color="#059669" size={18} />} label="Fecha"><ScrollView horizontal showsHorizontalScrollIndicator={false} className="mt-3">{dates.map((item) => { const value = isoDate(item); return <TouchableOpacity key={value} onPress={() => setDate(value)} className={`mr-2 rounded-2xl border px-4 py-3 ${date === value ? 'border-emerald-700 bg-emerald-700' : 'border-slate-200 bg-white'}`}><Text className={`text-xs font-bold ${date === value ? 'text-white' : 'text-slate-500'}`}>{item.toLocaleDateString('es-MX', { weekday: 'short' })}</Text><Text className={`mt-1 font-black ${date === value ? 'text-white' : 'text-slate-900'}`}>{item.getDate()} {item.toLocaleDateString('es-MX', { month: 'short' })}</Text></TouchableOpacity>; })}</ScrollView></Field>
         <Field icon={<Clock3 color="#059669" size={18} />} label="Horario">{loadingSlots ? <ActivityIndicator className="mt-4" color="#059669" /> : slotsError ? <View className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3"><Text className="font-bold text-red-700">{slotsError}</Text><TouchableOpacity onPress={() => setSlotsRequestKey((value) => value + 1)}><Text className="mt-2 font-black text-red-700">Reintentar horarios</Text></TouchableOpacity></View> : slots.length ? <View className="mt-3 flex-row flex-wrap">{slots.map((item) => <TouchableOpacity key={item.value} onPress={() => setSlot(item)} className={`mb-2 mr-2 rounded-xl border px-4 py-3 ${slot?.value === item.value ? 'border-emerald-700 bg-emerald-700' : 'border-slate-200 bg-white'}`}><Text className={`font-black ${slot?.value === item.value ? 'text-white' : 'text-slate-800'}`}>{item.label}</Text></TouchableOpacity>)}</View> : <Text className="mt-3 font-bold text-amber-700">No hay horarios disponibles para esta fecha.</Text>}</Field>
         <Field label="Notas"><TextInput value={form.notas} onChangeText={update('notas')} maxLength={NOTES_MAX} placeholder="Indicaciones opcionales para encontrar el domicilio" multiline className="mt-2 min-h-[96px] rounded-xl border border-slate-200 bg-white p-4 text-slate-900" textAlignVertical="top" /><Text className="mt-2 text-right text-xs font-bold text-slate-400">{form.notas.length}/{NOTES_MAX}</Text></Field>
-      </KeyboardAwareScreen>
+            <TouchableOpacity disabled={submitting || !slot} onPress={submit} className="mt-6 items-center rounded-2xl bg-emerald-700 py-4 disabled:opacity-50">{submitting ? <ActivityIndicator color="white" /> : <Text className="text-base font-black text-white">Confirmar solicitud</Text>}</TouchableOpacity>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
