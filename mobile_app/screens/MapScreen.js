@@ -25,8 +25,7 @@ import {
   configureMapbox,
   initializeMapbox,
   MAP_DEFAULT_CAMERA,
-  MAP_FALLBACK_STYLE_URL,
-  MAP_STYLE_URL,
+  MAP_2D_STYLE_URL,
   Mapbox,
 } from '../utils/mapbox';
 import { normalizeMediaUrl } from '../utils/media';
@@ -39,17 +38,6 @@ const CARD_SNAP = CARD_WIDTH + 12;
 const MAP_CARDS_BOTTOM_CLEARANCE = 103;
 const SAFE_MAP_LOAD_ERROR = 'No fue posible cargar el mapa. Revisa tu conexión e inténtalo nuevamente.';
 const MAP_OVERVIEW_CAMERA = Object.freeze({ ...MAP_DEFAULT_CAMERA, pitch: 0, heading: 0 });
-const MAP_2D_CONFIG = Object.freeze({
-  lightPreset: 'day',
-  show3dBuildings: false,
-  show3dObjects: false,
-  show3dFacades: false,
-  show3dLandmarks: false,
-  show3dTrees: false,
-  showRoadLabels: true,
-  showPlaceLabels: true,
-  showPointOfInterestLabels: true,
-});
 
 const normalizePoint = (point) => {
   const latitude = Number(point?.latitud ?? point?.latitude);
@@ -115,7 +103,6 @@ export default function MapScreen() {
   const pointSourceRef = useRef(null);
   const cardListRef = useRef(null);
   const mapReadyRef = useRef(false);
-  const fallbackStyleRef = useRef(false);
   const locationRequestRef = useRef(null);
   const searchTimerRef = useRef(null);
   const searchGenerationRef = useRef(0);
@@ -126,7 +113,6 @@ export default function MapScreen() {
   const [mapReady, setMapReady] = useState(false);
   const [mapKey, setMapKey] = useState(0);
   const [mapError, setMapError] = useState('');
-  const [usingFallbackStyle, setUsingFallbackStyle] = useState(false);
   const [points, setPoints] = useState([]);
   const [pointsLoading, setPointsLoading] = useState(true);
   const [pointsReady, setPointsReady] = useState(false);
@@ -197,16 +183,7 @@ export default function MapScreen() {
     if (typeof __DEV__ !== 'undefined' && __DEV__) {
       console.warn(`[map] Mapbox reportó un error de carga${status ? ` (HTTP ${status})` : ''}.`);
     }
-    if (!fallbackStyleRef.current) {
-      fallbackStyleRef.current = true;
-      mapReadyRef.current = false;
-      setMapMounted(false);
-      setMapReady(false);
-      setStyleLoading(true);
-      setUsingFallbackStyle(true);
-      setMapKey((value) => value + 1);
-      return;
-    }
+    if (mapReadyRef.current) return;
     setStyleLoading(false);
     setMapError(SAFE_MAP_LOAD_ERROR);
   }, []);
@@ -218,8 +195,6 @@ export default function MapScreen() {
     setMapReady(false);
     setMapError('');
     setStyleLoading(true);
-    fallbackStyleRef.current = false;
-    setUsingFallbackStyle(false);
     setMapKey((value) => value + 1);
   }, [tokenReady]);
 
@@ -411,7 +386,7 @@ export default function MapScreen() {
         <Mapbox.MapView
           key={mapKey}
           style={styles.map}
-          styleURL={usingFallbackStyle ? MAP_FALLBACK_STYLE_URL : MAP_STYLE_URL}
+          styleURL={MAP_2D_STYLE_URL}
           compassEnabled={false}
           scaleBarEnabled={false}
           onLayout={() => setMapMounted(true)}
@@ -420,7 +395,6 @@ export default function MapScreen() {
           onDidFinishLoadingMap={handleMapReady}
           onMapLoadingError={handleMapLoadingError}
         >
-          {!usingFallbackStyle ? <Mapbox.StyleImport id="basemap" existing config={MAP_2D_CONFIG} /> : null}
           <Mapbox.Camera ref={cameraRef} defaultSettings={MAP_OVERVIEW_CAMERA} />
           {permissionState === 'granted' ? <Mapbox.LocationPuck puckBearingEnabled puckBearing="heading" /> : null}
           <Mapbox.ShapeSource

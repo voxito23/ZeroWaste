@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, ScrollView, Image, Modal, Keyboard, TouchableWithoutFeedback } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { ArrowLeft, Camera, ImagePlus, Images, Send, Trash2, X } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
@@ -15,6 +15,7 @@ import { validatePickedProfileImage } from '../utils/imageUpload';
 
 export default function CreatePostScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   
   const [title, setTitle] = useState('');
@@ -172,7 +173,7 @@ export default function CreatePostScreen() {
           </TouchableOpacity>
         )}<Text className="mt-3 text-right text-[11px] font-bold text-slate-400">{content.length}/5000</Text></View>
       </KeyboardAwareScreen>
-      <Modal visible={sourceVisible} transparent animationType="slide" onRequestClose={() => setSourceVisible(false)}><TouchableWithoutFeedback onPress={() => setSourceVisible(false)}><View className="flex-1 justify-end bg-slate-950/45"><TouchableWithoutFeedback><View className="rounded-t-[30px] bg-white p-6"><View className="flex-row items-center justify-between"><View><Text className="text-xl font-black text-slate-950">Agregar imagen</Text><Text className="mt-1 text-sm text-slate-500">Elige una fotografía clara y relacionada.</Text></View><TouchableOpacity onPress={() => setSourceVisible(false)} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100"><X color="#334155" size={20} /></TouchableOpacity></View><TouchableOpacity onPress={() => { setSourceVisible(false); void pickFromLibrary(); }} className="mt-6 min-h-14 flex-row items-center rounded-2xl bg-emerald-700 px-5"><Images color="white" size={21} /><Text className="ml-3 font-black text-white">Elegir de la galería</Text></TouchableOpacity><TouchableOpacity onPress={() => { setSourceVisible(false); void takePhoto(); }} className="mt-3 min-h-14 flex-row items-center rounded-2xl border border-slate-200 px-5"><Camera color="#047857" size={21} /><Text className="ml-3 font-black text-slate-800">Tomar fotografía</Text></TouchableOpacity></View></TouchableWithoutFeedback></View></TouchableWithoutFeedback></Modal>
+      <Modal visible={sourceVisible} transparent animationType="slide" statusBarTranslucent navigationBarTranslucent={false} onRequestClose={() => setSourceVisible(false)}><TouchableWithoutFeedback onPress={() => setSourceVisible(false)}><View className="flex-1 justify-end bg-slate-950/45"><TouchableWithoutFeedback><View className="rounded-t-[30px] bg-white px-6 pt-6" style={{ paddingBottom: Math.max(insets.bottom, 24) }}><View className="flex-row items-center justify-between"><View className="mr-3 flex-1"><Text className="text-xl font-black text-slate-950">Agregar imagen</Text><Text className="mt-1 text-sm text-slate-500">Elige una fotografía clara y relacionada.</Text></View><TouchableOpacity onPress={() => setSourceVisible(false)} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100" accessibilityLabel="Cerrar opciones de imagen"><X color="#334155" size={20} /></TouchableOpacity></View><TouchableOpacity onPress={() => { setSourceVisible(false); void pickFromLibrary(); }} className="mt-6 min-h-14 flex-row items-center rounded-2xl bg-emerald-700 px-5"><Images color="white" size={21} /><Text className="ml-3 font-black text-white">Elegir de la galería</Text></TouchableOpacity><TouchableOpacity onPress={() => { setSourceVisible(false); void takePhoto(); }} className="mt-3 min-h-14 flex-row items-center rounded-2xl border border-slate-200 px-5"><Camera color="#047857" size={21} /><Text className="ml-3 font-black text-slate-800">Tomar fotografía</Text></TouchableOpacity></View></TouchableWithoutFeedback></View></TouchableWithoutFeedback></Modal>
       <ZeroWasteDialog visible={discardVisible} type="warning" title="¿Descartar publicación?" message="El texto y la imagen que agregaste no se guardarán." primaryLabel="Descartar" onPrimary={() => { setDiscardVisible(false); navigation.goBack(); }} secondaryLabel="Seguir editando" onSecondary={() => setDiscardVisible(false)} />
     </SafeAreaView>
   );

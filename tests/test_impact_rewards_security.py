@@ -44,6 +44,16 @@ class ImpactRewardsSecurityTests(unittest.TestCase):
         self.assertIn("balance.puntos_disponibles -= total", redemption)
         self.assertNotIn("balance.impacto_historico -=", redemption)
 
+    def test_every_verified_point_award_creates_a_typed_notification(self):
+        points = (ROOT / "fast_api/app/services/points.py").read_text(encoding="utf-8")
+        transaction = points.split("with db.begin_nested():", 1)[1].split("return True", 1)[0]
+        self.assertIn("Notificacion", points)
+        self.assertIn('in_app_allowed(db, user_id, "points_earned")', transaction)
+        self.assertIn('"points": int(rule.puntos)', transaction)
+        self.assertIn('"balance": int(balance.puntos_disponibles)', transaction)
+        self.assertIn('type="points_earned"', transaction)
+        self.assertIn('notification.payload = {**payload, "notificationId": str(notification.id)}', transaction)
+
     def test_reward_and_point_operations_use_database_locks(self):
         source = (ROOT / "fast_api/app/routers/impacto.py").read_text(encoding="utf-8")
         self.assertGreaterEqual(source.count("with_for_update()"), 2)

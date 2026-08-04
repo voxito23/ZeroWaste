@@ -4,7 +4,8 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.models.domain_models import MovimientoPuntos, ReglaPuntos, SaldoPuntos
+from app.models.domain_models import MovimientoPuntos, Notificacion, ReglaPuntos, SaldoPuntos
+from app.services.push_notifications import in_app_allowed
 
 
 def award_points(db: Session, *, user_id: int, rule_code: str, reference_type: str, reference_id: str, description: str) -> bool:
@@ -33,14 +34,36 @@ def award_points(db: Session, *, user_id: int, rule_code: str, reference_type: s
     balance.impacto_historico += rule.puntos
     try:
         with db.begin_nested():
-            db.add(MovimientoPuntos(
+            movement = MovimientoPuntos(
                 usuario_id=user_id, tipo="GANADO", cantidad=rule.puntos,
                 saldo_anterior=previous_balance, saldo_nuevo=balance.puntos_disponibles,
                 impacto_anterior=previous_impact, impacto_nuevo=balance.impacto_historico,
                 referencia_tipo=reference_type, referencia_id=str(reference_id), regla_id=rule.id,
                 descripcion=description,
-            ))
+            )
+            db.add(movement)
             db.flush()
+            if in_app_allowed(db, user_id, "points_earned"):
+                payload = {
+                    "type": "points_earned",
+                    "entityId": str(movement.id),
+                    "points": int(rule.puntos),
+                    "balance": int(balance.puntos_disponibles),
+                    "route": "/impacto/puntos",
+                }
+                notification = Notificacion(
+                    user_id=user_id,
+                    titulo=f"Ganaste {rule.puntos} puntos",
+                    mensaje=f"{description}. Tu saldo disponible es de {balance.puntos_disponibles} puntos.",
+                    url="zerowaste://points",
+                    type="points_earned",
+                    entity_id=str(movement.id),
+                    route="/impacto/puntos",
+                    payload=payload,
+                )
+                db.add(notification)
+                db.flush()
+                notification.payload = {**payload, "notificationId": str(notification.id)}
         return True
     except IntegrityError:
         balance.puntos_disponibles = previous_balance

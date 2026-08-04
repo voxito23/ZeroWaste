@@ -5,6 +5,7 @@ const validPublicToken = (value) => value.startsWith('pk.') && !value.includes('
 export let MAPBOX_PUBLIC_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN?.trim() || '';
 export let HAS_VALID_MAPBOX_TOKEN = validPublicToken(MAPBOX_PUBLIC_TOKEN);
 export const MAP_STYLE_URL = 'mapbox://styles/mapbox/standard';
+export const MAP_2D_STYLE_URL = Mapbox.StyleURL.Street;
 export const MAP_FALLBACK_STYLE_URL = Mapbox.StyleURL.Street;
 export const MAP_TRAFFIC_STYLE_URL = Mapbox.StyleURL.TrafficDay;
 export const QUERETARO_CENTER = [-100.3929, 20.5888];

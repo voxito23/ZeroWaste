@@ -44,10 +44,11 @@ class MapboxContractTests(unittest.TestCase):
         self.assertIn("{tokenReady ? (", source)
         self.assertNotIn("tokenReady && mapboxConfigured", source)
         self.assertIn("pointerEvents={mapError ? 'auto' : 'none'}", source)
-        self.assertIn('<Mapbox.StyleImport id="basemap" existing config={MAP_2D_CONFIG}', source)
-        self.assertIn("show3dBuildings: false", source)
+        self.assertIn("styleURL={MAP_2D_STYLE_URL}", source)
+        self.assertNotIn("Mapbox.StyleImport", source)
 
         config = (ROOT / "mobile_app/utils/mapbox.js").read_text(encoding="utf-8")
+        self.assertIn("MAP_2D_STYLE_URL = Mapbox.StyleURL.Street", config)
         self.assertIn("Promise.resolve(Mapbox.setAccessToken(MAPBOX_PUBLIC_TOKEN))", config)
         self.assertIn("configureMapbox", config)
         self.assertNotIn("Mapbox.setAccessToken(MAPBOX_TOKEN);", source)

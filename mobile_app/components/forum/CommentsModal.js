@@ -52,7 +52,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
     const showSubscription = Keyboard.addListener(showEvent, (event) => {
-      if (!reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
+      if (Platform.OS === 'ios' && !reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
       if (keyboardVisibleRef.current) return;
       keyboardVisibleRef.current = true;
       composerPadding.stopAnimation();
@@ -64,7 +64,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
       }).start();
     });
     const hideSubscription = Keyboard.addListener(hideEvent, (event) => {
-      if (!reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
+      if (Platform.OS === 'ios' && !reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
       if (!keyboardVisibleRef.current) return;
       keyboardVisibleRef.current = false;
       dragY.setValue(0);
@@ -196,7 +196,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
 
   return (
     <Modal visible={visible} transparent animationType={reduceMotion ? 'none' : 'slide'} presentationStyle="overFullScreen" statusBarTranslucent navigationBarTranslucent onRequestClose={closeModal}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
+      <KeyboardAvoidingView enabled={Platform.OS === 'ios'} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={0} style={{ flex: 1 }}>
         <View className="flex-1 justify-end bg-slate-950/45">
           <Pressable className="flex-1" onPress={closeModal} accessibilityLabel="Cerrar comentarios" />
           <Animated.View style={{ height: '92%', minHeight: '55%', transform: [{ translateY: dragY }] }}>
