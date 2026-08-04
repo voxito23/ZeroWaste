@@ -92,7 +92,7 @@ export default function EmailVerificationScreen({ navigation, route }) {
 
         <TouchableOpacity disabled={loading || code.length !== 6} onPress={verify} className="mt-7 h-14 flex-row items-center justify-center rounded-2xl bg-emerald-700 disabled:opacity-50">{loading ? <ActivityIndicator color="white" /> : <><ShieldCheck color="white" size={20} /><Text className="ml-2 text-base font-black text-white">Verificar correo</Text></>}</TouchableOpacity>
         <TouchableOpacity disabled={resending || seconds > 0} onPress={resend} className="mt-4 h-12 flex-row items-center justify-center disabled:opacity-50">{resending ? <ActivityIndicator color="#047857" /> : <><RefreshCw color="#047857" size={18} /><Text className="ml-2 font-bold text-emerald-700">{seconds > 0 ? `Enviar otro código en ${seconds}s` : 'Enviar un código nuevo'}</Text></>}</TouchableOpacity>
-        <Text className="mt-5 text-center text-xs leading-5 text-slate-400">El código vence en 10 minutos y solo puede utilizarse una vez. No lo compartas con nadie.</Text>
+        <Text className="mt-5 text-center text-xs leading-5 text-slate-400">El correo indica cuándo vence el código y solo puede utilizarse una vez. No lo compartas con nadie.</Text>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
