@@ -143,10 +143,20 @@ def google_callback(code: str = Query(default=""), state: str = Query(default=""
     user = db.query(Usuario).filter_by(id=account.usuario_id).first() if account else None
     if account:
         account.last_login_at = now
+        account.provider_email = email
+        login_state.usuario_id = account.usuario_id
+        login_state.status = "callback_complete"
     elif (existing := db.query(Usuario).filter(Usuario.email == email).first()):
-        login_state.claims_ciphertext = encrypt(json.dumps({"sub": provider_sub, "email": email, "name": claims.get("name"), "picture": claims.get("picture")}))
-        login_state.usuario_id = existing.id
-        login_state.status = "link_required"
+        if existing.firebase_uid and secrets.compare_digest(str(existing.firebase_uid), provider_sub):
+            db.add(OauthAccount(usuario_id=existing.id, provider="google", provider_subject=provider_sub, provider_email=email, linked_at=now, last_login_at=now))
+            existing.email_verified_at = existing.email_verified_at or now
+            existing.auth_provider = "google" if existing.auth_provider == "local" else existing.auth_provider
+            login_state.usuario_id = existing.id
+            login_state.status = "callback_complete"
+        else:
+            login_state.claims_ciphertext = encrypt(json.dumps({"sub": provider_sub, "email": email, "name": claims.get("name"), "picture": claims.get("picture")}))
+            login_state.usuario_id = existing.id
+            login_state.status = "link_required"
     else:
         user = Usuario(nombre=str(claims.get("name") or email.split("@", 1)[0])[:100], email=email, password=hash_password(secrets.token_urlsafe(48)), foto_perfil="perfil_default.png", auth_provider="google", profile_completed=False, rol="usuario", is_admin=False, email_verified_at=now)
         db.add(user)

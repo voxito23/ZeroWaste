@@ -76,6 +76,22 @@ class AuthPhaseContractsTest(unittest.TestCase):
         self.assertIn("throttle.record_failure", linking)
         self.assertIn("throttle.clear", linking)
 
+    def test_returning_google_account_is_attached_to_one_time_handoff(self):
+        source = (ROOT / "fast_api" / "app" / "routers" / "auth_external.py").read_text(encoding="utf-8")
+        account_branch = source[source.index("if account:"):source.index("elif (existing :=")]
+        self.assertIn("login_state.usuario_id = account.usuario_id", account_branch)
+        self.assertIn('login_state.status = "callback_complete"', account_branch)
+        self.assertIn("account.provider_email = email", account_branch)
+
+    def test_historic_firebase_identity_is_bridged_only_by_exact_subject(self):
+        source = (ROOT / "fast_api" / "app" / "routers" / "auth_external.py").read_text(encoding="utf-8")
+        historic_branch = source[source.index("elif (existing :="):source.index("else:\n        user = Usuario(")]
+        self.assertIn("existing.firebase_uid", historic_branch)
+        self.assertIn("secrets.compare_digest", historic_branch)
+        self.assertIn("provider_subject=provider_sub", historic_branch)
+        self.assertIn('login_state.status = "callback_complete"', historic_branch)
+        self.assertIn('login_state.status = "link_required"', historic_branch)
+
 
 if __name__ == "__main__":
     unittest.main()
