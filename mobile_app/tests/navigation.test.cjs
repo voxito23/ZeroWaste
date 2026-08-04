@@ -94,6 +94,8 @@ assert.match(dialog, /bg-emerald-700/);
 assert.match(dialog, /ZeroWasteDialogProvider/);
 assert.match(app, /<ZeroWasteDialogProvider>/);
 assert.match(app, /initialMetrics=\{initialWindowMetrics\}/);
+assert.match(app, /NavigationBar\.setStyle\('light'\)/);
+assert.match(app, /SystemNavigationBackdrop/);
 assert.doesNotMatch(internalDialogScreens, /Alert\.alert|\bAlert\b/);
 assert.match(remoteImage, /<Skeleton/);
 

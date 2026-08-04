@@ -1,13 +1,11 @@
 import React, { useCallback, useRef, useState } from 'react';
 import {
-  ActivityIndicator,
   ScrollView,
   Share,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
   Archive,
   ArrowLeft,
@@ -33,6 +31,7 @@ import { htmlToPlainText } from '../utils/text';
 import { resolveAvatar } from '../utils/user';
 import { mobileShareUrl } from '../navigation/linking';
 import CommentsModal from '../components/forum/CommentsModal';
+import { PostCardSkeleton } from '../components/ui/Skeleton';
 
 
 const categoryStyle = (category) => {
@@ -132,7 +131,7 @@ export default function PostScreen() {
   };
 
   if (loading && !post) {
-    return <View className="flex-1 items-center justify-center bg-emerald-50"><ActivityIndicator size="large" color="#059669" /></View>;
+    return <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}><StatusBar style="dark" /><View className="flex-row items-center border-b border-slate-100 bg-white px-5 py-3"><View className="h-10 w-10 rounded-full bg-slate-100" /><Text className="ml-4 text-[18px] font-black text-slate-900">Publicación</Text></View><View className="px-4 pt-4"><PostCardSkeleton /></View></SafeAreaView>;
   }
 
   if (!post) {
@@ -163,7 +162,7 @@ export default function PostScreen() {
           <Text className="text-center font-bold text-red-700">{loadError || actionError}</Text>
         </View>
       ) : null}
-      <View className="mt-4 border-y border-emerald-100 bg-white px-5 py-6">
+      <View className="mx-4 mt-4 overflow-hidden rounded-[28px] border border-slate-100 bg-white px-5 py-6">
         <View className="mb-5 flex-row items-center gap-3">
           <UserAvatar uri={postAvatar} name={author.nombre || post.autor_nombre} size={48} accessibilityLabel="Avatar del autor" />
           <View className="flex-1">
@@ -178,30 +177,29 @@ export default function PostScreen() {
         <Text className="mb-4 text-[24px] font-black leading-7 text-emerald-950">{post.titulo}</Text>
         {post.aprobado === false ? <View className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3"><Text className="text-sm font-black text-amber-900">Pendiente de revisión</Text><Text className="mt-1 text-xs leading-4 text-amber-800">Solo tú puedes ver esta publicación hasta que sea aprobada.</Text></View> : null}
         <Text className="mb-6 text-[16px] leading-6 text-slate-700" style={{ textAlign: 'justify' }}>{htmlToPlainText(post.contenido)}</Text>
-        {postImage ? <RemoteImage uri={postImage} className="mb-4 w-full rounded-2xl" aspectRatio={16 / 9} accessibilityLabel="Imagen de la publicación" /> : null}
-        <View className="mt-2 flex-row items-center gap-5 border-t border-slate-100 pt-3">
+        {postImage ? <View className="mb-4 overflow-hidden rounded-[22px] bg-white"><RemoteImage uri={postImage} className="w-full" backgroundClassName="bg-white" loadingClassName="bg-white" aspectRatio={16 / 9} accessibilityLabel="Imagen de la publicación" /></View> : null}
+        <View className="mt-2 flex-row flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-4">
           <LikeButton liked={Boolean(post.liked_by_me)} count={likesCount} pending={likePending} onPress={toggleLike} />
-          <TouchableOpacity onPress={() => setCommentsModalVisible(true)} className="min-h-11 flex-row items-center gap-2 px-2" accessibilityLabel={`Abrir ${commentsCount} comentarios`}>
-            <MessageCircle color="#64748B" size={20} /><Text className="font-bold text-slate-600">{commentsCount} Comentarios</Text>
+          <TouchableOpacity onPress={() => setCommentsModalVisible(true)} className="min-h-11 flex-row items-center gap-2 rounded-full bg-slate-50 px-3" accessibilityLabel={`Abrir ${commentsCount} comentarios`}>
+            <MessageCircle color="#475569" size={19} /><Text className="text-sm font-bold text-slate-700">{commentsCount} Comentarios</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={sharePost} className="min-h-11 flex-row items-center gap-2 px-2" accessibilityLabel="Compartir publicación"><Share2 color="#64748B" size={19} /><Text className="font-bold text-slate-600">Compartir</Text></TouchableOpacity>
+          <TouchableOpacity onPress={sharePost} className="min-h-11 flex-row items-center gap-2 rounded-full bg-slate-50 px-3" accessibilityLabel="Compartir publicación"><Share2 color="#475569" size={18} /><Text className="text-sm font-bold text-slate-700">Compartir</Text></TouchableOpacity>
         </View>
       </View>
     </>
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-emerald-50" edges={['top']}>
+    <SafeAreaView className="flex-1 bg-slate-50" edges={['top']}>
       <StatusBar style="dark" />
-      <LinearGradient colors={['#D1FAE5', '#ECFDF5']} className="absolute inset-0" />
-      <View className="z-20 flex-row items-center border-b border-emerald-100 bg-emerald-50/95 px-5 py-3">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="h-10 w-10 items-center justify-center rounded-full bg-white" accessibilityLabel="Volver">
-          <ArrowLeft color="#064E3B" size={20} />
+      <View className="z-20 flex-row items-center border-b border-slate-100 bg-white px-5 py-3">
+        <TouchableOpacity onPress={() => navigation.goBack()} className="h-10 w-10 items-center justify-center rounded-full bg-slate-100" accessibilityLabel="Volver">
+          <ArrowLeft color="#0F172A" size={20} />
         </TouchableOpacity>
-        <Text className="ml-4 flex-1 text-[18px] font-black text-emerald-950">Discusión</Text>
+        <View className="ml-4 flex-1"><Text className="text-[18px] font-black text-slate-950">Publicación</Text><Text className="text-xs font-semibold text-slate-500">Comunidad ZeroWaste</Text></View>
       </View>
       <ScrollView
-          contentContainerStyle={{ paddingBottom: 32 }}
+          contentContainerStyle={{ paddingBottom: 40 }}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="on-drag"
           showsVerticalScrollIndicator={false}
