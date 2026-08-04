@@ -17,6 +17,7 @@ from app.models.schemas import (
 from app.security.jwt_auth import get_current_user
 from app.services.collection_schedule import ScheduleValidationError, available_slots, lock_slot_capacity, validate_slot
 from app.services.collection_qr import CollectionQrError, complete_collection
+from app.services.media import build_public_avatar_url
 from app.services.qr_tokens import encrypt_token, new_token, public_content, token_hash
 from app.services.push_notifications import active_tokens, in_app_allowed, push_allowed, send_expo_push
 
@@ -62,18 +63,25 @@ def solicitar_recoleccion(
 
     notification_type = "collection_created"
     route = f"/collections/{nueva_solicitud.id}/navigate"
+    requester_name = str(current_user.nombre or "Usuario ZeroWaste").strip()[:100]
+    destination = str(nueva_solicitud.direccion).strip()[:500]
+    materials = str(nueva_solicitud.materiales or "Materiales por confirmar").strip()[:500]
     base_payload = {
         "type": notification_type,
         "entityId": str(nueva_solicitud.id),
         "route": route,
-        "requesterName": current_user.nombre,
+        "requesterName": requester_name,
+        "requesterAvatarUrl": build_public_avatar_url(current_user.foto_perfil) or "",
         "latitude": float(nueva_solicitud.latitud),
         "longitude": float(nueva_solicitud.longitud),
-        "address": nueva_solicitud.direccion,
-        "materials": nueva_solicitud.materiales or "",
+        "address": destination,
+        "materials": materials,
+        "quantity": str(nueva_solicitud.cantidad_estimada or "").strip()[:100],
+        "scheduledAt": scheduled_at.isoformat(),
+        "folio": str(nueva_solicitud.folio or "")[:30],
     }
-    title = f"Nueva recolección de {current_user.nombre}"
-    body = f"{nueva_solicitud.direccion} · {nueva_solicitud.materiales or 'Materiales por confirmar'}"
+    title = "Nueva solicitud de recolección"
+    body = f"{requester_name} · Destino: {destination}"
     push_deliveries = []
     collectors = db.query(Usuario).filter(
         Usuario.rol == "recolector",

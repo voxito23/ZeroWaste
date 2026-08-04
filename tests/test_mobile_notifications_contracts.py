@@ -27,6 +27,7 @@ class MobileNotificationContractsTests(unittest.TestCase):
     def test_mobile_handles_foreground_background_and_cold_start_contracts(self):
         mobile = (ROOT / "mobile_app/services/mobileNotifications.js").read_text(encoding="utf-8")
         navigator = (ROOT / "mobile_app/navigation/AppNavigator.js").read_text(encoding="utf-8")
+        center = (ROOT / "mobile_app/screens/NotificationsScreen.js").read_text(encoding="utf-8")
         self.assertIn("setNotificationHandler", mobile)
         self.assertIn("getExpoPushTokenAsync", mobile)
         self.assertIn("addNotificationResponseReceivedListener", navigator)
@@ -34,6 +35,17 @@ class MobileNotificationContractsTests(unittest.TestCase):
         self.assertIn("highlightCommentId", mobile)
         self.assertIn("getPushRegistrationStatus", mobile)
         self.assertNotIn("Linking.openURL", mobile)
+        self.assertIn("requesterAvatarUrl", mobile)
+        self.assertIn("Solicitó:", center)
+        self.assertIn("Destino:", center)
+        self.assertIn("Ver ruta", center)
+        self.assertIn("America/Mexico_City", center)
+
+    def test_legacy_notification_endpoint_preserves_typed_collection_payload(self):
+        router = (ROOT / "fast_api/app/routers/usuarios.py").read_text(encoding="utf-8")
+        block = router[router.index('def read_notifications'):router.index('@router.get("/me/notificaciones/no-leidas"')]
+        for field in ["Notificacion.type", "Notificacion.entity_id", "Notificacion.route", "Notificacion.payload"]:
+            self.assertIn(field, block)
 
     def test_schema_change_is_prepared_but_not_applied_by_runtime(self):
         migration = ROOT / "laravel_zerowaste/database/migrations/2026_08_02_000001_add_mobile_notifications_and_comment_replies.php"

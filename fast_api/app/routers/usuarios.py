@@ -49,13 +49,35 @@ def read_current_user(current_user: Usuario = Depends(get_current_user)):
 def read_notifications(db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
     rows = (
         db.query(Notificacion)
-        .options(load_only(Notificacion.id, Notificacion.titulo, Notificacion.mensaje, Notificacion.url, Notificacion.leida, Notificacion.created_at))
+        .options(load_only(
+            Notificacion.id,
+            Notificacion.titulo,
+            Notificacion.mensaje,
+            Notificacion.url,
+            Notificacion.type,
+            Notificacion.entity_id,
+            Notificacion.route,
+            Notificacion.payload,
+            Notificacion.leida,
+            Notificacion.created_at,
+        ))
         .filter_by(user_id=current_user.id)
         .order_by(Notificacion.created_at.desc())
         .limit(100)
         .all()
     )
-    return [{"id": row.id, "titulo": row.titulo, "mensaje": row.mensaje, "url": row.url, "leida": row.leida, "created_at": row.created_at} for row in rows]
+    return [{
+        "id": row.id,
+        "titulo": row.titulo,
+        "mensaje": row.mensaje,
+        "url": row.url,
+        "type": row.type,
+        "entity_id": row.entity_id,
+        "route": row.route,
+        "payload": row.payload or {},
+        "leida": row.leida,
+        "created_at": row.created_at,
+    } for row in rows]
 
 
 @router.get("/me/notificaciones/no-leidas", summary="Contar notificaciones no leídas")

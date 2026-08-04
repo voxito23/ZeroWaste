@@ -125,8 +125,12 @@ class CollectionScheduleContractsTest(unittest.TestCase):
         rating_block = source[source.index("def calificar_recolector"):source.index('@router.post("/{solicitud_id}/qr"')]
         self.assertIn('notification_type = "collection_created"', create_block)
         self.assertIn('Usuario.rol == "recolector"', create_block)
-        self.assertIn('"requesterName": current_user.nombre', create_block)
+        self.assertIn('"requesterName": requester_name', create_block)
+        self.assertIn('"requesterAvatarUrl": build_public_avatar_url', create_block)
         self.assertIn('"latitude": float(nueva_solicitud.latitud)', create_block)
+        self.assertIn('"address": destination', create_block)
+        self.assertIn('"scheduledAt": scheduled_at.isoformat()', create_block)
+        self.assertIn('body = f"{requester_name} · Destino: {destination}"', create_block)
         self.assertIn("background_tasks.add_task(send_expo_push", create_block)
         self.assertIn('current_user.rol == "recolector"', rating_block)
         self.assertIn("HTTP_403_FORBIDDEN", rating_block)
