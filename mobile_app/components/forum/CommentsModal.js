@@ -64,7 +64,6 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
       keyboardVisibleRef.current = false;
       setKeyboardVisible(false);
       dragY.setValue(0);
-      if (Platform.OS === 'android') requestAnimationFrame(() => inputRef.current?.blur());
     });
     return () => {
       showSubscription.remove();
@@ -183,10 +182,10 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
 
   return (
     <Modal visible={visible} transparent animationType={reduceMotion ? 'none' : 'slide'} presentationStyle="overFullScreen" statusBarTranslucent navigationBarTranslucent={false} onRequestClose={closeModal}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
-        <View className="flex-1 justify-end bg-slate-950/45">
-          <Pressable className="flex-1" onPress={closeModal} accessibilityLabel="Cerrar comentarios" />
-          <Animated.View style={{ height: '92%', minHeight: '55%', transform: [{ translateY: dragY }] }}>
+      <View className="flex-1 justify-end bg-slate-950/45">
+        <Pressable className="flex-1" onPress={closeModal} accessibilityLabel="Cerrar comentarios" />
+        <Animated.View style={{ height: '92%', minHeight: '55%', transform: [{ translateY: dragY }] }}>
+          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
           <SafeAreaView className="flex-1 overflow-hidden rounded-t-[30px] bg-slate-50" edges={[]}>
             <View {...dragResponder.panHandlers} className="items-center bg-white pt-2"><TouchableOpacity onPress={closeModal} className="h-7 w-20 items-center justify-center" accessibilityLabel="Cerrar comentarios"><View className="h-1.5 w-12 rounded-full bg-slate-300" /></TouchableOpacity></View>
             <View className="flex-row items-center border-b border-slate-100 bg-white px-5 pb-4 pt-1"><View className="flex-1"><Text className="text-xl font-black text-slate-950">Comentarios</Text><Text className="mt-0.5 text-xs font-semibold text-slate-500" numberOfLines={1}>{post?.titulo || 'Publicación ZeroWaste'}</Text></View><TouchableOpacity onPress={closeModal} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100" accessibilityLabel="Cerrar"><X color="#334155" size={20} /></TouchableOpacity></View>
@@ -220,9 +219,9 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
               <View className="flex-row items-end"><TextInput ref={inputRef} value={draft} onChangeText={(value) => { setDraft(value); if (composerError) setComposerError(''); }} onFocus={handleInputFocus} onContentSizeChange={({ nativeEvent }) => setInputHeight(Math.min(112, Math.max(48, nativeEvent.contentSize.height + 20)))} multiline blurOnSubmit={false} scrollEnabled={inputHeight >= 112} maxLength={1000} placeholder={replyingTo ? `Responde a ${resolveDisplayName(replyingTo)}…` : 'Escribe un comentario…'} placeholderTextColor="#94A3B8" className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900" style={{ height: inputHeight }} textAlignVertical="top" accessibilityLabel={replyingTo ? `Respuesta para ${resolveDisplayName(replyingTo)}` : 'Nuevo comentario'} /><TouchableOpacity disabled={submitting || draft.trim().length < 11} onPress={submit} className="ml-2 h-12 w-12 items-center justify-center rounded-full bg-emerald-700 disabled:opacity-40" accessibilityLabel={replyingTo ? 'Enviar respuesta' : 'Enviar comentario'}>{submitting ? <ActivityIndicator color="white" /> : <Send color="white" size={19} strokeWidth={2.5} />}</TouchableOpacity></View>
             </View>
           </SafeAreaView>
-          </Animated.View>
-        </View>
-      </KeyboardAvoidingView>
+          </KeyboardAvoidingView>
+        </Animated.View>
+      </View>
     </Modal>
   );
 }

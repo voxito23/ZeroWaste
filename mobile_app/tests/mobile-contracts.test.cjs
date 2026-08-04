@@ -93,7 +93,11 @@ assert.match(comments, /const \[keyboardVisible, setKeyboardVisible\] = useState
 assert.match(comments, /paddingBottom: keyboardVisible \? 8 : Math\.max\(insets\.bottom, 8\)/);
 assert.doesNotMatch(comments, /COMPOSER_BOTTOM_LIFT/);
 assert.doesNotMatch(comments, /keyboardSession|keyboardResetTimerRef/);
-assert.match(comments, /Platform\.OS === 'android'[\s\S]*requestAnimationFrame\(\(\) => inputRef\.current\?\.blur\(\)\)/);
+assert.doesNotMatch(comments, /requestAnimationFrame\(\(\) => inputRef\.current\?\.blur\(\)\)/);
+assert.ok(
+  comments.indexOf("<Animated.View style={{ height: '92%'") < comments.indexOf('<KeyboardAvoidingView behavior='),
+  'el ajuste de teclado debe permanecer dentro de la hoja de comentarios',
+);
 assert.match(comments, /highlightCommentId/);
 assert.match(notifications, /getExpoPushTokenAsync/);
 assert.match(notifications, /expoPushToken/);

@@ -48,7 +48,8 @@ class MapboxContractTests(unittest.TestCase):
         self.assertNotIn("Mapbox.StyleImport", source)
 
         config = (ROOT / "mobile_app/utils/mapbox.js").read_text(encoding="utf-8")
-        self.assertIn("MAP_2D_STYLE_URL = Mapbox.StyleURL.Street", config)
+        self.assertIn("MAP_2D_STYLE_URL = 'mapbox://styles/mapbox/streets-v12'", config)
+        self.assertNotIn("MAP_2D_STYLE_URL = Mapbox.StyleURL.Street", config)
         self.assertIn("Promise.resolve(Mapbox.setAccessToken(MAPBOX_PUBLIC_TOKEN))", config)
         self.assertIn("configureMapbox", config)
         self.assertNotIn("Mapbox.setAccessToken(MAPBOX_TOKEN);", source)

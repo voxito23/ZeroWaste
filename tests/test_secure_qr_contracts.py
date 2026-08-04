@@ -58,6 +58,9 @@ class SecureQrContractsTest(unittest.TestCase):
         service = (ROOT / "laravel_zerowaste" / "app" / "Services" / "FastApiQrService.php").read_text(encoding="utf-8")
         self.assertIn("array_unique($keys)", service)
         self.assertIn("foreach ($this->keys() as $key)", service)
+        self.assertIn("foreach ($this->baseUrls() as $baseUrl)", service)
+        self.assertIn("$composeUrl = 'http://fast_api:6000'", service)
+        self.assertIn("parse_url($runtimeUrl, PHP_URL_HOST)", service)
         self.assertIn("[401, 403]", service)
         self.assertNotIn("Log::", service)
 

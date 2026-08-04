@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 use Throwable;
@@ -27,12 +28,38 @@ class FastApiQrService
         return array_values(array_unique($keys));
     }
 
-    private function client(string $key): PendingRequest
+    /** @return list<string> */
+    private function baseUrls(): array
     {
         $runtimeUrl = trim((string) getenv('FASTAPI_INTERNAL_URL'));
-        $baseUrl = $runtimeUrl !== '' ? $runtimeUrl : (string) config('services.fastapi.url');
+        $configuredUrl = trim((string) config('services.fastapi.url'));
+        $composeUrl = 'http://fast_api:6000';
+        $urls = array_values(array_unique(array_filter([
+            $runtimeUrl,
+            $configuredUrl,
+        ])));
 
-        return Http::baseUrl(rtrim($baseUrl, '/'))
+        // En producción Laravel y FastAPI comparten la red de Compose. Si una
+        // URL pública quedó guardada en el entorno, priorizar el contenedor local
+        // evita que el QR termine autenticándose contra el otro nodo del balanceo.
+        $runtimeHost = strtolower((string) parse_url($runtimeUrl, PHP_URL_HOST));
+        if ($runtimeHost !== 'fast_api') {
+            array_unshift($urls, $composeUrl);
+        }
+        if ($urls === []) {
+            $urls[] = $composeUrl;
+        }
+
+        return array_values(array_unique(array_map(
+            static fn (string $url): string => rtrim($url, '/'),
+            $urls
+        )));
+    }
+
+    private function client(string $baseUrl, string $key): PendingRequest
+    {
+
+        return Http::baseUrl($baseUrl)
             ->acceptJson()
             ->withHeaders(['X-API-Key' => $key])
             ->timeout(15)
@@ -111,14 +138,26 @@ class FastApiQrService
     private function request(string $method, string $path, array $payload = [])
     {
         $response = null;
-        foreach ($this->keys() as $key) {
-            $client = $this->client($key);
-            $response = $method === 'get'
-                ? $client->get($path)
-                : $client->post($path, $payload);
-            if (! in_array($response->status(), [401, 403], true)) {
-                return $response;
+        $connectionError = null;
+        foreach ($this->baseUrls() as $baseUrl) {
+            foreach ($this->keys() as $key) {
+                try {
+                    $client = $this->client($baseUrl, $key);
+                    $response = $method === 'get'
+                        ? $client->get($path)
+                        : $client->post($path, $payload);
+                } catch (ConnectionException $error) {
+                    $connectionError = $error;
+                    break;
+                }
+                if (! in_array($response->status(), [401, 403], true)) {
+                    return $response;
+                }
             }
+        }
+
+        if ($response === null && $connectionError !== null) {
+            throw $connectionError;
         }
 
         return $response;

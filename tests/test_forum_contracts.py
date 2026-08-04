@@ -118,8 +118,17 @@ class ForumSourceContractsTests(unittest.TestCase):
             "Keyboard.addListener",
             "useSafeAreaInsets",
             "onContentSizeChange",
+            "<Animated.View style={{ height: '92%'",
+            "<KeyboardAvoidingView behavior=",
         ):
             self.assertIn(expected, comments_modal)
+        self.assertLess(
+            comments_modal.index("<Animated.View style={{ height: '92%'"),
+            comments_modal.index("<KeyboardAvoidingView behavior="),
+        )
+        self.assertIn('<Skeleton className="absolute inset-0 rounded-full"', (
+            ROOT / "mobile_app/components/ui/UserAvatar.js"
+        ).read_text(encoding="utf-8"))
         for expected in (
             "api.put(`/foro/posts/${postId}/like`)",
             "api.delete(`/foro/posts/${postId}/like`)",
