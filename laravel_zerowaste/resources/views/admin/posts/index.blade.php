@@ -370,9 +370,9 @@ window.deleteRespuesta = function(id) {
     });
 }
 
-window.confirmarEliminarPost = function(formId) {
+window.confirmarEliminarPost = async function(formId) {
     const isDark = document.documentElement.classList.contains('dark');
-    Swal.fire({
+    const result = await Swal.fire({
         html: `<div class="text-center">
             <div class="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-900/50">
                 <span class="material-symbols-outlined text-red-500 text-3xl">delete_forever</span>
@@ -392,11 +392,17 @@ window.confirmarEliminarPost = function(formId) {
             confirmButton: 'rounded-full px-5 py-2.5',
             cancelButton: 'rounded-full px-5 py-2.5 border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800'
         }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            document.getElementById(formId).submit();
-        }
     });
+    if (!result.isConfirmed) return;
+
+    const form = document.getElementById(formId);
+    const button = form?.querySelector('button');
+    if (button) {
+        button.disabled = true;
+        button.classList.add('opacity-60', 'cursor-wait');
+        button.innerHTML = '<span class="material-symbols-outlined animate-spin text-[20px]">progress_activity</span>';
+    }
+    form?.requestSubmit();
 }
 </script>
 @endpush

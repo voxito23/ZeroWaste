@@ -95,6 +95,21 @@ class AdminPhaseContractsTest(unittest.TestCase):
         self.assertIn("streamDownload", controller)
         self.assertIn("America/Mexico_City", view)
 
+    def test_forum_post_deletion_cleans_dependencies_in_one_transaction(self):
+        controller = (ROOT / "laravel_zerowaste" / "app" / "Http" / "Controllers" / "PostController.php").read_text(encoding="utf-8")
+        view = (ROOT / "laravel_zerowaste" / "resources" / "views" / "admin" / "posts" / "index.blade.php").read_text(encoding="utf-8")
+        destroy = controller[controller.index("function destroy("):controller.index("public function approve")]
+        self.assertIn("DB::transaction", destroy)
+        self.assertIn("lockForUpdate()", destroy)
+        for table in ["notificaciones", "likes_foro", "respuestas", "posts"]:
+            self.assertIn(f"DB::table('{table}')", destroy)
+        self.assertIn("forum_post.deleted", destroy)
+        self.assertIn("Media::discard($image, 'foro')", destroy)
+        self.assertLess(destroy.index("DB::transaction"), destroy.index("Media::discard"))
+        self.assertNotIn("$post->delete()", destroy)
+        self.assertIn("form?.requestSubmit()", view)
+        self.assertNotIn("document.getElementById(formId).submit()", view)
+
     def test_audit_logger_excludes_sensitive_fields(self):
         source = (ROOT / "laravel_zerowaste" / "app" / "Services" / "AuditLogger.php").read_text(encoding="utf-8")
         for field in ["password", "token", "jwt", "cookie", "secret"]:

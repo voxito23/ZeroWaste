@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Support\Media;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -19,13 +20,49 @@ class PostController extends Controller
         return view('admin.posts.index', compact('posts'));
     }
 
-    public function destroy(Post $post)
+    public function destroy(Request $request, Post $post)
     {
-        // El administrador principal puede borrar cualquier post
-        $post->delete();
+        $postId = $post->id;
+        $image = $post->imagen;
+
+        try {
+            DB::transaction(function () use ($request, $postId, $image) {
+                DB::table('posts')->where('id', $postId)->lockForUpdate()->firstOrFail();
+
+                $replyIds = DB::table('respuestas')->where('post_id', $postId)->pluck('id');
+                if ($replyIds->isNotEmpty()) {
+                    DB::table('notificaciones')->whereIn('comment_id', $replyIds)->delete();
+                }
+
+                DB::table('notificaciones')->where('post_id', $postId)->delete();
+                DB::table('likes_foro')->where('post_id', $postId)->delete();
+                DB::table('respuestas')->where('post_id', $postId)->delete();
+                DB::table('posts')->where('id', $postId)->delete();
+
+                AuditLogger::record($request, 'forum_post.deleted', 'post', $postId, [
+                    'had_image' => filled($image),
+                ]);
+            });
+        } catch (\Throwable $error) {
+            Log::error('No fue posible eliminar una publicación.', [
+                'exception' => get_class($error),
+                'post_id' => $postId,
+            ]);
+
+            return back()->with('error', 'No fue posible eliminar la publicación. Ningún cambio fue aplicado.');
+        }
+
+        try {
+            Media::discard($image, 'foro');
+        } catch (\Throwable $error) {
+            Log::warning('La publicación se eliminó, pero su archivo no pudo limpiarse.', [
+                'exception' => get_class($error),
+                'post_id' => $postId,
+            ]);
+        }
 
         return redirect()->route('posts.index')
-                         ->with('success', 'El post ha sido eliminado correctamente.');
+                         ->with('success', 'La publicación y sus comentarios se eliminaron correctamente.');
     }
 
     public function approve(Request $request, Post $post)
