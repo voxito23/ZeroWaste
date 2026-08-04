@@ -136,6 +136,18 @@ class CollectionScheduleContractsTest(unittest.TestCase):
         self.assertIn("HTTP_403_FORBIDDEN", rating_block)
         self.assertIn("calificacion_recolector is not None", rating_block)
 
+    def test_collection_history_is_scoped_to_the_authenticated_account(self):
+        source = (ROOT / "fast_api" / "app" / "routers" / "recoleccion.py").read_text(encoding="utf-8")
+        start = source.index("def mis_solicitudes")
+        end = source.index('@router.post("/{solicitud_id}/calificar"')
+        block = source[start:end]
+        self.assertIn("SolicitudRecoleccion.usuario_id == current_user.id", block)
+        self.assertIn("SolicitudRecoleccion.recolector_id == current_user.id", block)
+        self.assertIn('SolicitudRecoleccion.estado == "pendiente"', block)
+        self.assertIn("SolicitudRecoleccion.recolector_id.is_(None)", block)
+        self.assertIn("get_admin_principal_email()", block)
+        self.assertIn("administrator = bool(current_user.is_admin)", block)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -64,6 +64,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
       keyboardVisibleRef.current = false;
       setKeyboardVisible(false);
       dragY.setValue(0);
+      if (Platform.OS === 'android') requestAnimationFrame(() => inputRef.current?.blur());
     });
     return () => {
       showSubscription.remove();
@@ -182,7 +183,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
 
   return (
     <Modal visible={visible} transparent animationType={reduceMotion ? 'none' : 'slide'} presentationStyle="overFullScreen" statusBarTranslucent navigationBarTranslucent={false} onRequestClose={closeModal}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={0} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
         <View className="flex-1 justify-end bg-slate-950/45">
           <Pressable className="flex-1" onPress={closeModal} accessibilityLabel="Cerrar comentarios" />
           <Animated.View style={{ height: '92%', minHeight: '55%', transform: [{ translateY: dragY }] }}>

@@ -2,24 +2,25 @@
 Router del foro — CRUD completo: posts, respuestas y likes.
 """
 
+import hashlib
 import os
 from typing import List
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Query, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Query, Request, UploadFile, status
 from fastapi.responses import FileResponse
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.data.database import get_db
 from app.models.domain_models import (
-    Usuario, Categoria, Foro, RespuestaForo, LikeForo, Actividad, Notificacion
+    Usuario, Categoria, Foro, RespuestaForo, LikeForo, Actividad, AuditLog, Notificacion
 )
 from app.models.schemas import (
     PostCreate, PostUpdate, PostResponse, PostDetailResponse,
     ForumAuthor, RespuestaCreate, RespuestaResponse,
     LikeResponse, CategoriaResponse, MessageResponse,
 )
-from app.security.jwt_auth import get_current_user, get_optional_current_user
+from app.security.jwt_auth import get_admin_principal_email, get_current_user, get_optional_current_user
 from app.services.media import (
     MAX_IMAGE_BYTES,
     MediaValidationError,
@@ -281,22 +282,48 @@ def update_post(
 @router.delete("/posts/{post_id}", response_model=MessageResponse, summary="Eliminar un post")
 def delete_post(
     post_id: int,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user),
 ):
-    """Elimina un post y sus respuestas/likes asociados. Solo el autor puede eliminarlo."""
-    post = db.query(Foro).filter(Foro.id == post_id).first()
+    """Elimina una publicación como autor o administrador autenticado."""
+    post = db.query(Foro).filter(Foro.id == post_id).with_for_update().first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
-    if post.autor_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo el autor puede eliminar este post.")
+    principal = get_admin_principal_email()
+    administrator = bool(current_user.is_admin) and bool(principal) and str(current_user.email or "").strip().casefold() == principal
+    administrative_delete = post.autor_id != current_user.id
+    if administrative_delete and not administrator:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Solo el autor o un administrador puede eliminar esta publicación.")
 
-    # Eliminar registros dependientes (respuestas y likes)
-    db.query(RespuestaForo).filter(RespuestaForo.post_id == post_id).delete()
-    db.query(LikeForo).filter(LikeForo.post_id == post_id).delete()
-    db.delete(post)
-    db.commit()
-    return MessageResponse(success=True, message="Post eliminado correctamente.")
+    image = post.imagen
+    reply_ids = [row[0] for row in db.query(RespuestaForo.id).filter(RespuestaForo.post_id == post_id).all()]
+    notification_filter = Notificacion.post_id == post_id
+    if reply_ids:
+        notification_filter = or_(notification_filter, Notificacion.comment_id.in_(reply_ids))
+
+    try:
+        db.query(Notificacion).filter(notification_filter).delete(synchronize_session=False)
+        db.query(LikeForo).filter(LikeForo.post_id == post_id).delete(synchronize_session=False)
+        db.query(RespuestaForo).filter(RespuestaForo.post_id == post_id).delete(synchronize_session=False)
+        db.delete(post)
+        if administrative_delete:
+            client_ip = request.client.host if request.client else None
+            db.add(AuditLog(
+                administrator_id=current_user.id,
+                action="forum_post.deleted",
+                subject_type="post",
+                subject_id=str(post_id),
+                metadata_json={"author_id": post.autor_id, "source": "fastapi"},
+                ip_hash=hashlib.sha256(client_ip.encode("utf-8")).hexdigest() if client_ip else None,
+            ))
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+    remove_media_file(image, "foro")
+    return MessageResponse(success=True, message="Publicación eliminada correctamente.")
 
 
 # Respuestas a publicaciones

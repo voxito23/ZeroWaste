@@ -43,6 +43,7 @@
                     @php 
                         $catName = $post->categoria->nombre ?? 'Sin categoría';
                         $catClass = getCategoryColorClass($catName);
+                        $plainContent = \App\Support\ForumContent::plainText($post->contenido);
                     @endphp
                     <tr>
                         <td>
@@ -58,7 +59,7 @@
                                 @endif
                                 <div>
                                     <h3 class="text-sm font-bold text-gray-900 dark:text-white line-clamp-1" title="{{ $post->titulo }}">{{ $post->titulo }}</h3>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">{{ strip_tags($post->contenido) }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">{{ \Illuminate\Support\Str::limit(\Illuminate\Support\Str::squish($plainContent), 180) }}</p>
                                 </div>
                             </div>
                         </td>
@@ -103,7 +104,7 @@
                                     onclick="viewPostDetail(this)"
                                     class="p-2 text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded-xl transition-colors" title="Ver Detalles">
                                     <span class="material-symbols-outlined text-[20px]">visibility</span>
-                                    <span class="hidden data-content">{{ base64_encode($post->contenido) }}</span>
+                                    <span class="hidden data-content">{{ base64_encode($plainContent) }}</span>
                                 </button>
                                 
                                 <form id="delete-post-{{ $post->id }}" action="{{ route('posts.destroy', $post->id) }}" method="POST" class="inline-block">

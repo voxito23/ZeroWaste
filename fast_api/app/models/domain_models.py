@@ -244,6 +244,18 @@ class Notificacion(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+    id = Column(Integer, primary_key=True)
+    administrator_id = Column(Integer, ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True)
+    action = Column(String(80), nullable=False, index=True)
+    subject_type = Column(String(80), nullable=False, index=True)
+    subject_id = Column(String(100), nullable=True)
+    metadata_json = Column("metadata", JSON, nullable=True)
+    ip_hash = Column(String(64), nullable=True)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=lambda: datetime.now(timezone.utc), index=True)
+
+
 class DevicePushToken(Base):
     __tablename__ = "device_push_tokens"
     id = Column(Integer, primary_key=True)

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, Modal, TextInput, ActivityIndicator } from 'react-native';
 import { useAuth } from '../store/useAuth';
 import { api } from '../api/axios';
@@ -12,9 +12,14 @@ import { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
 
 export default function MisRecoleccionesScreen() {
   const { user } = useAuth();
+  const accountId = String(user?.id ?? '');
+  const activeAccountRef = useRef(accountId);
+  activeAccountRef.current = accountId;
+  const collectorOnly = user?.rol === 'recolector' && !user?.is_admin;
   const navigation = useNavigation();
   const { showDialog } = useZeroWasteDialog();
   const [recolecciones, setRecolecciones] = useState([]);
+  const [loadedAccountId, setLoadedAccountId] = useState('');
   const [loading, setLoading] = useState(true);
 
   // Modal Calificacion
@@ -30,19 +35,37 @@ export default function MisRecoleccionesScreen() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchRecolecciones();
-  }, []);
+    setRecolecciones([]);
+    setLoadedAccountId('');
+    setError('');
+    setLoading(true);
+    void fetchRecolecciones();
+  }, [user?.id]);
 
   const fetchRecolecciones = async () => {
+    const requestedAccountId = activeAccountRef.current;
+    if (!requestedAccountId) {
+      setLoading(false);
+      return;
+    }
+    setError('');
     try {
       const { data } = await api.get('/recolecciones');
-      setRecolecciones(data);
+      if (requestedAccountId !== activeAccountRef.current) return;
+      setRecolecciones(Array.isArray(data) ? data : []);
+      setLoadedAccountId(requestedAccountId);
     } catch (e) {
-      setError(e.userMessage || 'No se pudieron cargar las recolecciones.');
+      if (requestedAccountId === activeAccountRef.current) {
+        setLoadedAccountId(requestedAccountId);
+        setError(e.userMessage || 'No se pudieron cargar las recolecciones.');
+      }
     } finally {
-      setLoading(false);
+      if (requestedAccountId === activeAccountRef.current) setLoading(false);
     }
   };
+
+  const visibleCollections = loadedAccountId === accountId ? recolecciones : [];
+  const accountLoading = loading || loadedAccountId !== accountId;
 
   const openSecureQr = async (collection) => {
     setQrLoading(true);
@@ -78,20 +101,20 @@ export default function MisRecoleccionesScreen() {
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
           <ArrowLeft color="#064E3B" size={24} />
         </TouchableOpacity>
-        <Text className="text-2xl font-black text-text">Mis Recolecciones</Text>
+        <Text className="text-2xl font-black text-text">{collectorOnly ? 'Recolecciones disponibles' : 'Mis Recolecciones'}</Text>
       </View>
       {error ? <TouchableOpacity onPress={fetchRecolecciones} className="mb-4 rounded-xl bg-red-50 p-3"><Text className="text-center font-bold text-red-700">{error}{'\n'}Reintentar</Text></TouchableOpacity> : null}
 
-      {loading ? (
+      {accountLoading ? (
         <ActivityIndicator size="large" color="#064E3B" className="mt-20" />
       ) : (
         <FlatList
-          data={recolecciones}
+          data={visibleCollections}
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={{ paddingBottom: 100 }}
           ListEmptyComponent={
             <View className="items-center mt-12">
-              <Text className="text-subtext text-center text-lg">No has solicitado recolecciones aún.</Text>
+              <Text className="text-subtext text-center text-lg">{collectorOnly ? 'No hay solicitudes disponibles o asignadas a tu cuenta.' : 'No has solicitado recolecciones aún.'}</Text>
             </View>
           }
           renderItem={({ item }) => (

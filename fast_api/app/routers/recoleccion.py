@@ -1,7 +1,7 @@
 from typing import List
 import uuid
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
-from sqlalchemy import or_
+from sqlalchemy import and_, or_
 from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta, timezone
 from pydantic import BaseModel
@@ -14,7 +14,7 @@ from app.models.schemas import (
     CalificarRecolectorRequest,
     MessageResponse
 )
-from app.security.jwt_auth import get_current_user
+from app.security.jwt_auth import get_admin_principal_email, get_current_user
 from app.services.collection_schedule import ScheduleValidationError, available_slots, lock_slot_capacity, validate_slot
 from app.services.collection_qr import CollectionQrError, complete_collection
 from app.services.media import build_public_avatar_url
@@ -121,9 +121,20 @@ def mis_solicitudes(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user),
 ):
-    """Devuelve el historial de solicitudes de recolección o todas si el usuario es recolector/admin."""
+    """Devuelve solo solicitudes autorizadas para la cuenta autenticada."""
     query = db.query(SolicitudRecoleccion)
-    if current_user.rol not in ['recolector', 'admin'] and not current_user.is_admin:
+    role = str(current_user.rol or "").strip().lower()
+    principal = get_admin_principal_email()
+    administrator = bool(current_user.is_admin) and bool(principal) and str(current_user.email or "").strip().casefold() == principal
+    if not administrator and role == "recolector":
+        query = query.filter(or_(
+            SolicitudRecoleccion.recolector_id == current_user.id,
+            and_(
+                SolicitudRecoleccion.estado == "pendiente",
+                SolicitudRecoleccion.recolector_id.is_(None),
+            ),
+        ))
+    elif not administrator:
         query = query.filter(SolicitudRecoleccion.usuario_id == current_user.id)
     solicitudes = query.order_by(SolicitudRecoleccion.created_at.desc()).all()
     return solicitudes

@@ -75,6 +75,14 @@ class ForumContentTests(unittest.TestCase):
                 self.assertNotIn("<", result)
                 self.assertNotIn("alert", result)
 
+    def test_encoded_editor_html_becomes_readable_plain_text(self):
+        source = '&lt;p data-path-to-node="10"&gt;Separar correctamente ayuda.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&lt;p&gt;Vidrio limpio&lt;/p&gt;&lt;/li&gt;&lt;/ul&gt;'
+        result = self.fast.forum_text_for_output(source)
+        self.assertIn("Separar correctamente ayuda.", result)
+        self.assertIn("• Vidrio limpio", result)
+        self.assertNotIn("data-path-to-node", result)
+        self.assertNotIn("<p", result)
+
     def test_flask_post_normalizer_stores_plain_text(self):
         source = "Inicio de una explicación suficientemente extensa para publicar y compartir con la comunidad." + (
             "<div><ul><li>Primer consejo práctico para compostar.</li><li>Segundo consejo práctico.</li></ul></div>"
@@ -148,6 +156,27 @@ class ForumSourceContractsTests(unittest.TestCase):
         self.assertIn("editor.innerText.trim()", flask_post)
         self.assertIn("normalize_comment", flask_app)
         self.assertIn("escapeHtml(c.contenido)", laravel_posts)
+
+    def test_laravel_admin_normalizes_legacy_post_markup(self):
+        normalizer = (ROOT / "laravel_zerowaste/app/Support/ForumContent.php").read_text(encoding="utf-8")
+        view = (ROOT / "laravel_zerowaste/resources/views/admin/posts/index.blade.php").read_text(encoding="utf-8")
+        self.assertIn("html_entity_decode", normalizer)
+        self.assertIn("strip_tags", normalizer)
+        self.assertIn("• ", normalizer)
+        self.assertIn("ForumContent::plainText", view)
+        self.assertIn("base64_encode($plainContent)", view)
+
+    def test_fastapi_post_delete_allows_author_or_admin_and_cleans_dependencies(self):
+        router = (ROOT / "fast_api/app/routers/foro.py").read_text(encoding="utf-8")
+        block = router[router.index("def delete_post("):router.index("# Respuestas a publicaciones")]
+        self.assertIn("current_user.is_admin", block)
+        self.assertIn("get_admin_principal_email()", block)
+        self.assertIn("current_user.email", block)
+        self.assertIn("with_for_update()", block)
+        for model in ["Notificacion", "LikeForo", "RespuestaForo"]:
+            self.assertIn(f"db.query({model})", block)
+        self.assertIn("AuditLog", block)
+        self.assertIn('action="forum_post.deleted"', block)
 
     def test_cleanup_is_guarded_and_defaults_to_rollback(self):
         cleanup = (ROOT / "scripts/propuesta_limpieza_foro.sql").read_text(encoding="utf-8")

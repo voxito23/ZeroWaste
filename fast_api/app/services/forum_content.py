@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from html import unescape
 from html.parser import HTMLParser
 
 
@@ -36,7 +37,8 @@ class _ForumPlainTextParser(HTMLParser):
         elif not self.ignored_depth and tag == "li":
             self.parts.append("\n• ")
         elif not self.ignored_depth and tag in _BLOCK_TAGS:
-            self.parts.append("\n")
+            if not (tag == "p" and self.parts and self.parts[-1] == "\n• "):
+                self.parts.append("\n")
 
     def handle_endtag(self, tag: str) -> None:
         tag = tag.lower()
@@ -54,13 +56,19 @@ def forum_text_for_output(value: object) -> str:
     """Safely normalize plain text and legacy rich-editor HTML for API output."""
     if not isinstance(value, str):
         return ""
+    normalized = _CONTROL_CHARACTERS.sub("", value)
+    for _attempt in range(3):
+        decoded = unescape(normalized)
+        if decoded == normalized:
+            break
+        normalized = decoded
     parser = _ForumPlainTextParser()
     try:
-        parser.feed(_CONTROL_CHARACTERS.sub("", value))
+        parser.feed(normalized)
         parser.close()
         text = "".join(parser.parts)
     except Exception:
-        text = re.sub(r"<[^>]*>", "", value)
+        text = re.sub(r"<[^>]*>", "", normalized)
     text = text.replace("\r", "")
     text = re.sub(r"[ \t]+\n", "\n", text)
     text = re.sub(r"\n[ \t]+", "\n", text)
