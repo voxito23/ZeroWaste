@@ -72,7 +72,7 @@
                             </div>
                         </td>
                         <td>
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border {{ $catClass }}">
+                            <span class="inline-flex min-h-8 items-center whitespace-nowrap rounded-full border px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-wide {{ $catClass }}">
                                 {{ $catName }}
                             </span>
                         </td>
@@ -143,13 +143,27 @@
 <script>
 async function confirmarAprobacion(formId) {
     const result = await Swal.fire({
-        title: '¿Aprobar esta publicación?',
-        text: 'Quedará visible para la comunidad y la regla activa decidirá los puntos. La operación es idempotente.',
-        icon: 'question',
+        html: `<div class="text-center">
+            <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+                <span class="material-symbols-outlined text-4xl">fact_check</span>
+            </div>
+            <h3 class="text-xl font-black text-slate-900 dark:text-white">Aprobar publicación</h3>
+            <p class="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-500 dark:text-slate-300">La publicación quedará visible para la comunidad. Si corresponde, FastAPI otorgará los puntos de la regla activa sin duplicarlos.</p>
+            <div class="mx-auto mt-4 flex max-w-sm items-start gap-2 rounded-xl bg-emerald-50 p-3 text-left text-xs font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+                <span class="material-symbols-outlined text-lg">verified_user</span><span>Esta acción queda registrada en la auditoría administrativa.</span>
+            </div>
+        </div>`,
         showCancelButton: true,
-        confirmButtonText: 'Sí, aprobar',
+        confirmButtonText: 'Aprobar publicación',
         cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#059669'
+        confirmButtonColor: '#047857',
+        width: 430,
+        buttonsStyling: true,
+        customClass: {
+            popup: 'rounded-[1.75rem] border border-emerald-100 shadow-2xl dark:border-emerald-900',
+            confirmButton: 'rounded-xl px-5 py-3 font-black',
+            cancelButton: 'rounded-xl px-5 py-3 font-bold'
+        }
     });
     if (!result.isConfirmed) return;
     const form = document.getElementById(formId);
@@ -264,7 +278,7 @@ function viewPostDetail(btn) {
             <div class="text-left">
                 <!-- Encabezado Modal -->
                 <div class="flex items-start justify-between mb-4 pr-8">
-                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${catClass}">
+                    <span class="inline-flex min-h-8 items-center whitespace-nowrap rounded-full border px-3.5 py-1.5 text-xs font-extrabold uppercase tracking-wide ${catClass}">
                         ${category}
                     </span>
                     <span class="text-xs font-semibold text-gray-400 flex items-center gap-1">

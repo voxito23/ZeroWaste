@@ -43,23 +43,46 @@ class ImpactAdminController extends Controller
     public function storeReward(Request $request)
     {
         $data = $this->validateReward($request, true);
-        if ($request->hasFile('imagen_archivo')) $data['imagen'] = Media::store($request->file('imagen_archivo'), 'recompensas');
-        $data['activa'] = DB::raw($request->boolean('activa') ? 'TRUE' : 'FALSE');
-        $data['created_at'] = now(); $data['updated_at'] = now();
-        $id = DB::table('recompensas')->insertGetId($data);
-        AuditLogger::record($request, 'reward.created', 'recompensa', $id, ['nombre' => $data['nombre']]);
+        unset($data['imagen_archivo']);
+        $newImage = null;
+
+        try {
+            if ($request->hasFile('imagen_archivo')) {
+                $newImage = Media::store($request->file('imagen_archivo'), 'recompensas');
+                $data['imagen'] = $newImage;
+            }
+            $data['nombre'] = trim($data['nombre']);
+            $data['descripcion'] = trim($data['descripcion']);
+            $data['activa'] = DB::raw($request->boolean('activa') ? 'TRUE' : 'FALSE');
+            $data['created_at'] = now();
+            $data['updated_at'] = now();
+
+            DB::transaction(function () use ($data, $request) {
+                $id = DB::table('recompensas')->insertGetId($data);
+                AuditLogger::record($request, 'reward.created', 'recompensa', $id, ['nombre' => $data['nombre']]);
+            });
+        } catch (\Throwable $error) {
+            Media::discard($newImage, 'recompensas');
+            Log::error('No fue posible crear una recompensa.', ['exception' => get_class($error)]);
+
+            return back()->withInput()->with('error', 'No fue posible crear la recompensa. Verifica el almacenamiento de imágenes e inténtalo nuevamente.');
+        }
+
         return back()->with('success', 'La recompensa fue creada correctamente.');
     }
 
     public function updateReward(Request $request, int $id): RedirectResponse
     {
         $data = $this->validateReward($request);
+        unset($data['imagen_archivo']);
         $newImage = null;
         try {
             if ($request->hasFile('imagen_archivo')) {
                 $newImage = Media::store($request->file('imagen_archivo'), 'recompensas');
                 $data['imagen'] = $newImage;
             }
+            $data['nombre'] = trim($data['nombre']);
+            $data['descripcion'] = trim($data['descripcion']);
             $data['activa'] = DB::raw($request->boolean('activa') ? 'TRUE' : 'FALSE');
             $data['updated_at'] = now();
             DB::transaction(function () use ($data, $id, $request) {
@@ -86,11 +109,17 @@ class ImpactAdminController extends Controller
     private function validateReward(Request $request, bool $imageRequired = false): array
     {
         return $request->validate([
-            'nombre' => ['required','string','max:150'], 'descripcion' => ['required','string','max:2000'],
+            'nombre' => ['required','string','max:150',$this->maximumWords(12)],
+            'descripcion' => ['required','string','max:2000',$this->maximumWords(120)],
             'costo_puntos' => ['required','integer','min:1'], 'stock' => ['required','integer','min:0'],
             'imagen_archivo' => [$imageRequired ? 'required' : 'nullable','image','mimes:jpg,jpeg,png,webp','max:5120'],
             'limite_por_usuario' => ['nullable','integer','min:1'], 'orden' => ['required','integer','min:0'],
             'activa' => ['nullable','boolean'], 'available_at' => ['nullable','date'],
+        ], [
+            'nombre.required' => 'Escribe el nombre de la recompensa.',
+            'descripcion.required' => 'Escribe una descripción para la tienda.',
+            'imagen_archivo.required' => 'Selecciona la imagen que se mostrará en la tienda.',
+            'imagen_archivo.max' => 'La imagen no debe superar 5 MB.',
         ]);
     }
 
@@ -150,7 +179,8 @@ class ImpactAdminController extends Controller
 
     public function storeRule(Request $request)
     {
-        $data = $request->validate(['codigo'=>['required','string','max:60','regex:/^[A-Z0-9_]+$/','unique:reglas_puntos,codigo'], 'puntos'=>'required|integer|min:0|max:100000', 'limite_diario'=>'nullable|integer|min:1|max:1000', 'descripcion'=>'required|string|max:255', 'activa'=>'nullable|boolean']);
+        $data = $request->validate(['codigo'=>['required','string','max:60','regex:/^[A-Z0-9_]+$/','unique:reglas_puntos,codigo'], 'puntos'=>'required|integer|min:0|max:100000', 'limite_diario'=>'nullable|integer|min:1|max:1000', 'descripcion'=>['required','string','max:255',$this->maximumWords(35)], 'activa'=>'nullable|boolean']);
+        $data['descripcion'] = trim($data['descripcion']);
         $data['activa'] = DB::raw($request->boolean('activa') ? 'TRUE' : 'FALSE'); $data['updated_by'] = $request->user()->id; $data['created_at'] = now(); $data['updated_at'] = now();
         $id = DB::table('reglas_puntos')->insertGetId($data);
         AuditLogger::record($request, 'point_rule.created', 'regla_puntos', $id, ['codigo' => $data['codigo']]);
@@ -162,7 +192,7 @@ class ImpactAdminController extends Controller
         $validated = $request->validate([
             'puntos' => ['required', 'integer', 'min:0', 'max:100000'],
             'limite_diario' => ['nullable', 'integer', 'min:1', 'max:1000'],
-            'descripcion' => ['required', 'string', 'max:255'],
+            'descripcion' => ['required', 'string', 'max:255', $this->maximumWords(35)],
             'activa' => ['nullable', 'boolean'],
         ], [
             'puntos.required' => 'Indica cuántos puntos otorga la regla.',
@@ -229,12 +259,42 @@ class ImpactAdminController extends Controller
 
     private function movementQuery(Request $request)
     {
+        $endDateRules = ['nullable', 'date_format:Y-m-d'];
+        if ($request->filled('desde')) {
+            $endDateRules[] = 'after_or_equal:desde';
+        }
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:150'],
+            'tipo' => ['nullable', 'in:GANADO,CANJE,DEVOLUCIÓN,AJUSTE'],
+            'referencia' => ['nullable', 'string', 'max:100'],
+            'desde' => ['nullable', 'date_format:Y-m-d'],
+            'hasta' => $endDateRules,
+        ], [
+            'tipo.in' => 'Selecciona un tipo de movimiento válido.',
+            'desde.date_format' => 'La fecha inicial no es válida.',
+            'hasta.date_format' => 'La fecha final no es válida.',
+            'hasta.after_or_equal' => 'La fecha final debe ser igual o posterior a la fecha inicial.',
+        ]);
         $query = DB::table('movimientos_puntos')->join('usuarios', 'usuarios.id', '=', 'movimientos_puntos.usuario_id')->leftJoin('usuarios as admins', 'admins.id', '=', 'movimientos_puntos.administrador_id')->select('movimientos_puntos.*', 'usuarios.nombre as usuario', 'admins.nombre as responsable');
-        if ($request->filled('q')) $query->where(fn ($q) => $q->where('usuarios.nombre', 'ilike', '%'.$request->q.'%')->orWhere('usuarios.email', 'ilike', '%'.$request->q.'%'));
-        if ($request->filled('tipo')) $query->where('movimientos_puntos.tipo', $request->tipo);
-        if ($request->filled('referencia')) $query->where(fn ($q) => $q->where('referencia_tipo', 'ilike', '%'.$request->referencia.'%')->orWhere('referencia_id', 'ilike', '%'.$request->referencia.'%'));
-        if ($request->filled('desde')) $query->whereDate('movimientos_puntos.created_at', '>=', $request->desde);
-        if ($request->filled('hasta')) $query->whereDate('movimientos_puntos.created_at', '<=', $request->hasta);
+        if (! empty($filters['q'])) $query->where(fn ($q) => $q->where('usuarios.nombre', 'ilike', '%'.$filters['q'].'%')->orWhere('usuarios.email', 'ilike', '%'.$filters['q'].'%'));
+        if (! empty($filters['tipo'])) $query->where('movimientos_puntos.tipo', $filters['tipo']);
+        if (! empty($filters['referencia'])) $query->where(fn ($q) => $q->where('referencia_tipo', 'ilike', '%'.$filters['referencia'].'%')->orWhere('referencia_id', 'ilike', '%'.$filters['referencia'].'%'));
+        if (! empty($filters['desde'])) $query->whereDate('movimientos_puntos.created_at', '>=', $filters['desde']);
+        if (! empty($filters['hasta'])) $query->whereDate('movimientos_puntos.created_at', '<=', $filters['hasta']);
         return $query->orderByDesc('movimientos_puntos.created_at');
+    }
+
+    private function maximumWords(int $maximum): \Closure
+    {
+        return static function (string $attribute, mixed $value, \Closure $fail) use ($maximum): void {
+            if (! is_string($value)) {
+                return;
+            }
+            preg_match_all('/[\p{L}\p{N}]+(?:[\x{2019}\x{27}-][\p{L}\p{N}]+)*/u', trim($value), $matches);
+            if (count($matches[0]) > $maximum) {
+                $label = $attribute === 'nombre' ? 'El nombre' : 'La descripción';
+                $fail("{$label} admite un máximo de {$maximum} palabras.");
+            }
+        };
     }
 }

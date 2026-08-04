@@ -33,9 +33,37 @@ scrape_configs:
           - https://www.zerowaste-qro.com/load-balancer-health
           - https://www.zerowaste-qro.com/api/health
           - https://www.zerowaste-qro.com/api/ready
+          - https://www.zerowaste-qro.com/api/mapa/puntos
+          - https://www.zerowaste-qro.com/api/foro/posts
           - https://www.zerowaste-qro.com/zw-interno
           - https://www.zerowaste-qro.com/
         labels: {service: public}
+    relabel_configs:
+      - {source_labels: [__address__], target_label: __param_target}
+      - {source_labels: [__param_target], target_label: instance}
+      - {target_label: __address__, replacement: blackbox:9115}
+
+  - job_name: blackbox-internal
+    metrics_path: /probe
+    params: {module: [http_2xx_internal]}
+    static_configs:
+      - targets:
+          - http://nginx_api:8081/nginx-health
+          - http://fast_api:6000/health
+          - http://cliente:5000/health
+          - http://grafana:3000/grafana/api/health
+        labels: {service: internal-contract}
+    relabel_configs:
+      - {source_labels: [__address__], target_label: __param_target}
+      - {source_labels: [__param_target], target_label: instance}
+      - {target_label: __address__, replacement: blackbox:9115}
+
+  - job_name: blackbox-media-route
+    metrics_path: /probe
+    params: {module: [https_expected_404]}
+    static_configs:
+      - targets: [https://www.zerowaste-qro.com/media/__zerowaste_probe_missing__.webp]
+        labels: {service: media}
     relabel_configs:
       - {source_labels: [__address__], target_label: __param_target}
       - {source_labels: [__param_target], target_label: instance}

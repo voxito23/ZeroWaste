@@ -4,6 +4,7 @@
 <div class="space-y-6">
     <div class="page-header"><div><p class="text-sm text-slate-500">Catálogo, disponibilidad y stock</p></div><button class="btn-primary" type="button" onclick="rewardCreate.showModal()"><span class="material-symbols-outlined">add</span> Nueva recompensa</button></div>
     @if(session('success'))<div role="status" class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 font-bold text-emerald-800">{{ session('success') }}</div>@endif
+    @if(session('error'))<div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 font-bold text-red-800">{{ session('error') }}</div>@endif
     @if($errors->any())<div role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 font-bold text-red-800">No fue posible completar la operación. Revisa los campos e inténtalo nuevamente.<ul class="mt-2 list-disc pl-5 font-normal">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
     <form class="glass-card grid gap-3 p-4 md:grid-cols-[1fr_180px_180px_180px_auto]" method="GET"><input class="input-premium" name="q" value="{{ request('q') }}" placeholder="Buscar recompensa…"><select class="input-premium" name="estado"><option value="">Todos los estados</option><option value="activa" @selected(request('estado')==='activa')>Activas</option><option value="inactiva" @selected(request('estado')==='inactiva')>Inactivas</option></select><select class="input-premium" name="stock"><option value="">Cualquier stock</option><option value="con" @selected(request('stock')==='con')>Con stock</option><option value="sin" @selected(request('stock')==='sin')>Sin stock</option></select><select class="input-premium" name="sort"><option value="orden">Orden</option><option value="nombre">Nombre</option><option value="costo_puntos">Costo</option><option value="stock">Stock</option></select><button class="btn-secondary">Filtrar</button></form>
     <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -18,4 +19,7 @@
 @push('scripts')<script>
 async function retireReward(id){const result=await Swal.fire({title:'¿Retirar esta recompensa?',text:'La recompensa dejará de mostrarse en la tienda, pero sus canjes históricos se conservarán.',icon:'warning',showCancelButton:true,confirmButtonText:'Retirar recompensa',cancelButtonText:'Cancelar',confirmButtonColor:'#dc2626'});if(result.isConfirmed)document.getElementById('retire-'+id).requestSubmit();}
 document.querySelectorAll('[data-loading-form]').forEach(form=>form.addEventListener('submit',()=>{const button=form.querySelector('button[type=submit],button:not([type])');if(button){button.disabled=true;button.innerHTML='<span class="animate-spin">◌</span> Guardando…';}}));
+@if($errors->any())
+document.getElementById('rewardCreate')?.showModal();
+@endif
 </script>@endpush

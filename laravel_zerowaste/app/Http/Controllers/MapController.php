@@ -7,6 +7,7 @@ use App\Models\Location;
 use App\Support\Media;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class MapController extends Controller
 {
@@ -77,10 +78,13 @@ class MapController extends Controller
         AuditLogger::record($request, 'point.created', 'location', $location->id, ['nombre' => $location->nombre]);
         if ($request->input('submit_action') === 'save_and_qr') {
             try {
-                app(\App\Services\FastApiQrService::class)->generatePoint($location->id);
+                $qrService = app(\App\Services\FastApiQrService::class);
+                $qrService->generatePoint($location->id);
                 return redirect()->route('mapa.qr.show', $location)->with('success', 'Punto creado correctamente. El código QR fue generado correctamente.');
             } catch (\Throwable $error) {
-                return redirect()->route('mapa.index')->with('error', 'El punto fue creado, pero no fue posible generar el código QR.');
+                Log::warning('El punto fue creado, pero falló la generación del QR.', ['location_id' => $location->id, 'exception' => get_class($error), 'status' => (int) $error->getCode()]);
+                $qrService ??= app(\App\Services\FastApiQrService::class);
+                return redirect()->route('mapa.index')->with('error', 'El punto fue creado. '.$qrService->userMessage($error, 'generar'));
             }
         }
         return redirect()->route('mapa.index')->with('success', 'Punto creado correctamente.');

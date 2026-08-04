@@ -2,7 +2,7 @@ groups:
   - name: zerowaste-two-droplets
     rules:
       - alert: ZeroWastePrimaryDown
-        expr: probe_success{job="blackbox-origins",node_role="primary",probe="health"} == 0 and probe_success{job="blackbox-origins",node_role="secondary",probe="health"} == 1
+        expr: (count(probe_success{job="blackbox-origins",probe="health"}) == 2) and on() (probe_success{job="blackbox-origins",node_role="primary",probe="health"} == 0) and on() (probe_success{job="blackbox-origins",node_role="secondary",probe="health"} == 1)
         for: 2m
         labels: {severity: warning}
         annotations: {summary: "Primary unavailable; secondary is ready"}
@@ -12,12 +12,12 @@ groups:
         labels: {severity: warning}
         annotations: {summary: "Secondary unavailable"}
       - alert: ZeroWasteBothNodesDown
-        expr: sum(probe_success{job="blackbox-origins",probe="health"}) == 0
+        expr: count(probe_success{job="blackbox-origins",probe="health"}) == 2 and sum(probe_success{job="blackbox-origins",probe="health"}) == 0
         for: 2m
         labels: {severity: critical}
         annotations: {summary: "Both ZeroWaste nodes are unavailable"}
       - alert: ZeroWasteFailoverActive
-        expr: probe_success{job="blackbox-origins",node_role="primary",probe="health"} == 0 and probe_success{job="blackbox-public",instance=~".*/load-balancer-health"} == 1 and probe_success{job="blackbox-origins",node_role="secondary",probe="health"} == 1
+        expr: (count(probe_success{job="blackbox-origins",probe="health"}) == 2) and on() (probe_success{job="blackbox-origins",node_role="primary",probe="health"} == 0) and on() (probe_success{job="blackbox-public",instance=~".*/load-balancer-health"} == 1) and on() (probe_success{job="blackbox-origins",node_role="secondary",probe="health"} == 1)
         for: 2m
         labels: {severity: warning}
         annotations: {summary: "An authorized external failover is probably active"}
@@ -42,15 +42,20 @@ groups:
         labels: {severity: warning}
         annotations: {summary: "Secondary WireGuard exporter path is unavailable"}
       - alert: ZeroWasteSharedRedisDown
-        expr: redis_up{job="redis-external"} == 0
+        expr: up{job="redis-external"} == 0 or redis_up{job="redis-external"} == 0
         for: 2m
         labels: {severity: critical}
         annotations: {summary: "Shared Redis is unavailable"}
       - alert: ZeroWasteSupabaseNotReady
-        expr: probe_success{job="blackbox-origins",probe="ready"} == 0
+        expr: (count(probe_success{job="blackbox-origins",probe="ready"}) > 0) and on() (probe_success{job="blackbox-origins",probe="ready"} == 0)
         for: 2m
         labels: {severity: critical}
         annotations: {summary: "A node cannot reach shared dependencies"}
+      - alert: ZeroWasteOriginTargetsMissing
+        expr: absent(probe_success{job="blackbox-origins"}) == 1
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: "No origin targets are loaded; create prometheus/targets/origins.yml"}
       - alert: ZeroWasteMediaStorageDown
         expr: zerowaste_media_storage_ready == 0
         for: 2m

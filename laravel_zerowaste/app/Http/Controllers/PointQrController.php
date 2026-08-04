@@ -7,6 +7,7 @@ use App\Services\FastApiQrService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Services\AuditLogger;
 
 class PointQrController extends Controller
@@ -20,7 +21,8 @@ class PointQrController extends Controller
             $history = $this->qr->history($location->id);
             return view('admin.mapa.qr', compact('location', 'qr', 'history'));
         } catch (\Throwable $error) {
-            return redirect()->route('mapa.index')->with('error', 'No fue posible consultar el código QR.');
+            $this->reportFailure('consult', $location->id, $error);
+            return redirect()->route('mapa.index')->with('error', $this->qr->userMessage($error, 'consultar'));
         }
     }
 
@@ -31,7 +33,8 @@ class PointQrController extends Controller
             AuditLogger::record($request, 'point_qr.generated', 'location', $location->id);
             return redirect()->route('mapa.qr.show', $location)->with('success', 'El código QR fue generado correctamente.');
         } catch (\Throwable $error) {
-            return back()->with('error', 'No fue posible generar el código QR.');
+            $this->reportFailure('generate', $location->id, $error);
+            return back()->with('error', $this->qr->userMessage($error, 'generar'));
         }
     }
 
@@ -42,7 +45,8 @@ class PointQrController extends Controller
             AuditLogger::record($request, 'point_qr.regenerated', 'location', $location->id);
             return redirect()->route('mapa.qr.show', $location)->with('success', 'El código QR fue regenerado correctamente.');
         } catch (\Throwable $error) {
-            return back()->with('error', 'No fue posible regenerar el código QR.');
+            $this->reportFailure('regenerate', $location->id, $error);
+            return back()->with('error', $this->qr->userMessage($error, 'regenerar'));
         }
     }
 
@@ -53,7 +57,8 @@ class PointQrController extends Controller
             AuditLogger::record($request, 'point_qr.revoked', 'location', $location->id);
             return redirect()->route('mapa.index')->with('success', 'El código QR fue revocado correctamente.');
         } catch (\Throwable $error) {
-            return back()->with('error', 'No fue posible revocar el código QR.');
+            $this->reportFailure('revoke', $location->id, $error);
+            return back()->with('error', $this->qr->userMessage($error, 'revocar'));
         }
     }
 
@@ -69,7 +74,18 @@ class PointQrController extends Controller
                 'X-Content-Type-Options' => 'nosniff',
             ]);
         } catch (\Throwable $error) {
-            return back()->with('error', 'No fue posible descargar el código QR.');
+            $this->reportFailure('download', $location->id, $error);
+            return back()->with('error', $this->qr->userMessage($error, 'descargar'));
         }
+    }
+
+    private function reportFailure(string $operation, int $locationId, \Throwable $error): void
+    {
+        Log::warning('Falló una operación administrativa de QR.', [
+            'operation' => $operation,
+            'location_id' => $locationId,
+            'exception' => get_class($error),
+            'status' => (int) $error->getCode(),
+        ]);
     }
 }
