@@ -114,6 +114,7 @@ services:
       QUEUE_CONNECTION: redis
       REDIS_QUEUE: ${REDIS_QUEUE:-zerowaste:queue:default}
       MEDIA_ROOT: /data/media
+      MEDIA_GID: ${MEDIA_GID:-2000}
     volumes:
       - type: bind
         source: ${MEDIA_ROOT:-./shared/media}

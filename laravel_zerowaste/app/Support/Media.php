@@ -109,14 +109,17 @@ final class Media
         return rtrim(self::publicBaseUrl(), '/').'/'.$selected.'/'.$encoded;
     }
 
-    public static function store(UploadedFile $file, string $category): string
+    public static function store(UploadedFile $file, string $category, int $maximumBytes = 5 * 1024 * 1024): string
     {
         $normalized = self::category($category);
         if ($normalized === null) {
             throw new InvalidArgumentException('Categoría de medios no permitida.');
         }
-        if (! $file->isValid() || $file->getSize() === false || $file->getSize() > 5 * 1024 * 1024) {
-            throw new RuntimeException('La imagen no es válida o supera 5 MB.');
+        if ($maximumBytes < 1 || $maximumBytes > 15 * 1024 * 1024) {
+            throw new InvalidArgumentException('El límite de imagen solicitado no es válido.');
+        }
+        if (! $file->isValid() || $file->getSize() === false || $file->getSize() > $maximumBytes) {
+            throw new RuntimeException('La imagen no es válida o supera el límite permitido.');
         }
         $mime = $file->getMimeType();
         $extension = is_string($mime) ? (self::MIME_EXTENSIONS[$mime] ?? null) : null;

@@ -198,7 +198,7 @@ export default function SettingsScreen() {
 
         <Text className="mb-2 mt-1 px-1 text-xs font-black uppercase tracking-widest text-slate-500">NOTIFICACIONES</Text>
         {preferencesError ? <TouchableOpacity onPress={loadPreferences} className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3"><Text className="font-bold text-amber-900">{preferencesError} Toca para reintentar.</Text></TouchableOpacity> : null}
-        {preferencesLoading ? <View className="mb-7 rounded-3xl bg-white p-4">{[0, 1, 2, 3].map((item) => <Skeleton key={item} className="mb-3 h-[58px] rounded-2xl" />)}</View> : <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">{notificationRows.map(({ key, ...row }, index) => <SettingSwitch key={key} {...row} value={key === 'push_enabled' ? pushActive : Boolean(preferences[key])} disabled={savingPreference === key} onChange={row.onChange || ((value) => savePreference(key, value))} divider={index > 0} reduceMotion={reduceMotion} />)}</View>}
+        {preferencesLoading ? <View className="mb-7 rounded-3xl bg-white p-4">{[0, 1, 2, 3].map((item) => <Skeleton key={item} className="mb-3 h-[58px] rounded-2xl" />)}</View> : <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">{notificationRows.map(({ key, ...row }, index) => <SettingSwitch key={key} {...row} value={key === 'push_enabled' ? pushActive : Boolean(preferences[key])} busy={savingPreference === key} onChange={row.onChange || ((value) => savePreference(key, value))} divider={index > 0} reduceMotion={reduceMotion} />)}</View>}
 
         <Text className="mb-2 px-1 text-xs font-black uppercase tracking-widest text-slate-500">PREFERENCIAS</Text>
         <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">
@@ -229,11 +229,11 @@ function SettingRow({ icon: Icon, label, description, value, onPress, divider })
   return <TouchableOpacity onPress={onPress} className={`min-h-[72px] flex-row items-center px-4 py-3 ${divider ? 'border-t border-slate-100' : ''}`} accessibilityRole="button"><View className="h-10 w-10 items-center justify-center rounded-full bg-emerald-50"><Icon color="#059669" size={19} /></View><View className="ml-3 flex-1"><Text className="font-bold text-slate-900">{label}</Text><Text className="mt-0.5 text-xs leading-4 text-slate-500">{description}</Text></View>{value ? <Text className="mr-2 max-w-24 text-right text-xs font-bold text-slate-500">{value}</Text> : null}<ChevronRight color="#94A3B8" size={18} /></TouchableOpacity>;
 }
 
-function SettingSwitch({ icon: Icon, label, description, value, onChange, divider, disabled, reduceMotion }) {
-  return <View className={`min-h-[72px] flex-row items-center px-4 py-3 ${divider ? 'border-t border-slate-100' : ''}`}><View className="h-10 w-10 items-center justify-center rounded-full bg-emerald-50"><Icon color="#059669" size={19} /></View><View className="ml-3 flex-1"><Text className="font-bold text-slate-900">{label}</Text><Text className="mt-0.5 text-xs leading-4 text-slate-500">{description}</Text></View><PremiumSwitch value={value} disabled={disabled} onChange={onChange} label={label} reduceMotion={reduceMotion} /></View>;
+function SettingSwitch({ icon: Icon, label, description, value, onChange, divider, disabled, busy, reduceMotion }) {
+  return <View className={`min-h-[72px] flex-row items-center px-4 py-3 ${divider ? 'border-t border-slate-100' : ''}`}><View className="h-10 w-10 items-center justify-center rounded-full bg-emerald-50"><Icon color="#059669" size={19} /></View><View className="ml-3 flex-1"><Text className="font-bold text-slate-900">{label}</Text><Text className="mt-0.5 text-xs leading-4 text-slate-500">{description}</Text></View><PremiumSwitch value={value} disabled={disabled} busy={busy} onChange={onChange} label={label} reduceMotion={reduceMotion} /></View>;
 }
 
-function PremiumSwitch({ value, disabled, onChange, label, reduceMotion }) {
+function PremiumSwitch({ value, disabled, busy, onChange, label, reduceMotion }) {
   const thumbX = useRef(new Animated.Value(value ? 22 : 0)).current;
   const trackOpacity = useRef(new Animated.Value(value ? 1 : 0)).current;
   const pressScale = useRef(new Animated.Value(1)).current;
@@ -254,5 +254,5 @@ function PremiumSwitch({ value, disabled, onChange, label, reduceMotion }) {
     if (reduceMotion) return;
     Animated.spring(pressScale, { toValue, damping: 20, stiffness: 330, mass: 0.55, useNativeDriver: true }).start();
   };
-  return <Pressable accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: value, disabled }} disabled={disabled} onPress={() => onChange(!value)} onPressIn={() => animatePress(0.96)} onPressOut={() => animatePress(1)} className={disabled ? 'opacity-50' : ''} hitSlop={8}><Animated.View className="h-8 w-[54px] justify-center overflow-hidden rounded-full bg-slate-300 p-1" style={{ transform: [{ scale: pressScale }] }}><Animated.View pointerEvents="none" className="absolute inset-0 rounded-full bg-emerald-600" style={{ opacity: trackOpacity }} /><Animated.View className="h-6 w-6 items-center justify-center rounded-full border border-white bg-white shadow-sm" style={{ transform: [{ translateX: thumbX }] }}><Animated.View className="h-2 w-2 rounded-full bg-emerald-600" style={{ opacity: trackOpacity }} /></Animated.View></Animated.View></Pressable>;
+  return <Pressable accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: value, disabled, busy }} disabled={disabled || busy} onPress={() => onChange(!value)} onPressIn={() => animatePress(0.96)} onPressOut={() => animatePress(1)} className={disabled ? 'opacity-50' : ''} hitSlop={8}><Animated.View className="h-8 w-[54px] justify-center overflow-hidden rounded-full bg-slate-300 p-1" style={{ transform: [{ scale: pressScale }] }}><Animated.View pointerEvents="none" className="absolute inset-0 rounded-full bg-emerald-600" style={{ opacity: trackOpacity }} /><Animated.View className="h-6 w-6 rounded-full border border-white bg-white shadow-sm" style={{ transform: [{ translateX: thumbX }] }} /></Animated.View></Pressable>;
 }

@@ -19,14 +19,13 @@ import { StatusBar } from 'expo-status-bar';
 import { api } from '../api/axios';
 import RemoteImage from '../components/ui/RemoteImage';
 import { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
-import useMapAppearance from '../hooks/useMapAppearance';
 import { useAuth } from '../store/useAuth';
 import {
   HAS_VALID_MAPBOX_TOKEN,
+  configureMapbox,
   initializeMapbox,
   MAP_DEFAULT_CAMERA,
   MAP_FALLBACK_STYLE_URL,
-  MAP_STYLE_URL,
   Mapbox,
 } from '../utils/mapbox';
 import { normalizeMediaUrl } from '../utils/media';
@@ -99,18 +98,6 @@ export default function MapScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { showDialog } = useZeroWasteDialog();
-  const { lightPreset } = useMapAppearance();
-  const mapConfig = useMemo(() => ({
-    lightPreset,
-    show3dBuildings: false,
-    show3dObjects: false,
-    show3dFacades: false,
-    show3dLandmarks: false,
-    show3dTrees: false,
-    showRoadLabels: true,
-    showPlaceLabels: true,
-    showPointOfInterestLabels: true,
-  }), [lightPreset]);
   const cameraRef = useRef(null);
   const pointSourceRef = useRef(null);
   const cardListRef = useRef(null);
@@ -119,12 +106,11 @@ export default function MapScreen() {
   const searchTimerRef = useRef(null);
   const searchGenerationRef = useRef(0);
 
-  const tokenReady = HAS_VALID_MAPBOX_TOKEN;
+  const [tokenReady, setTokenReady] = useState(HAS_VALID_MAPBOX_TOKEN);
   const [mapMounted, setMapMounted] = useState(false);
   const [styleLoading, setStyleLoading] = useState(tokenReady);
   const [mapReady, setMapReady] = useState(false);
   const [mapKey, setMapKey] = useState(0);
-  const [usingFallbackStyle, setUsingFallbackStyle] = useState(false);
   const [mapError, setMapError] = useState(tokenReady ? '' : 'El mapa interactivo no está disponible en esta compilación. Puedes consultar todos los puntos en el modo listado.');
   const [points, setPoints] = useState([]);
   const [pointsLoading, setPointsLoading] = useState(true);
@@ -202,13 +188,32 @@ export default function MapScreen() {
 
   const retryMap = useCallback(() => {
     if (!tokenReady) return;
-    setUsingFallbackStyle(true);
     mapReadyRef.current = false;
     setMapMounted(false);
     setMapReady(false);
     setMapError('');
     setStyleLoading(true);
     setMapKey((value) => value + 1);
+  }, [tokenReady]);
+
+  useEffect(() => {
+    if (tokenReady) return undefined;
+    let active = true;
+    api.get('/mobile/config')
+      .then(({ data }) => {
+        if (!active) return;
+        if (!configureMapbox(data?.mapbox_public_token)) {
+          setMapError('El servidor todavía no tiene disponible el token público de Mapbox.');
+          return;
+        }
+        setTokenReady(true);
+        setStyleLoading(true);
+        setMapError('');
+      })
+      .catch(() => {
+        if (active) setMapError('No fue posible preparar el mapa 2D. Revisa la configuración pública de Mapbox.');
+      });
+    return () => { active = false; };
   }, [tokenReady]);
 
   const fetchPoints = useCallback(async ({ preserve = false } = {}) => {
@@ -389,7 +394,7 @@ export default function MapScreen() {
         <Mapbox.MapView
           key={mapKey}
           style={styles.map}
-          styleURL={usingFallbackStyle ? MAP_FALLBACK_STYLE_URL : MAP_STYLE_URL}
+          styleURL={MAP_FALLBACK_STYLE_URL}
           compassEnabled={false}
           scaleBarEnabled={false}
           onLayout={() => setMapMounted(true)}
@@ -398,7 +403,6 @@ export default function MapScreen() {
           onDidFinishLoadingMap={handleMapReady}
           onMapLoadingError={handleMapLoadingError}
         >
-          {!usingFallbackStyle ? <Mapbox.StyleImport id="basemap" existing config={mapConfig} /> : null}
           <Mapbox.Camera ref={cameraRef} defaultSettings={MAP_OVERVIEW_CAMERA} />
           {permissionState === 'granted' ? <Mapbox.LocationPuck puckBearingEnabled puckBearing="heading" /> : null}
           <Mapbox.ShapeSource
@@ -461,7 +465,7 @@ export default function MapScreen() {
             {!mapError ? <ActivityIndicator color="#047857" /> : null}
             <Text className={`text-center font-black ${mapError ? 'text-emerald-950' : 'ml-3 text-slate-800'}`}>{mapError || 'Preparando mapa…'}</Text>
           </View>
-          {mapError && tokenReady ? <TouchableOpacity onPress={retryMap} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">{usingFallbackStyle ? 'Reintentar mapa' : 'Usar mapa compatible'}</Text></TouchableOpacity> : null}
+          {mapError && tokenReady ? <TouchableOpacity onPress={retryMap} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">Reintentar mapa</Text></TouchableOpacity> : null}
         </View>
       ) : null}
 

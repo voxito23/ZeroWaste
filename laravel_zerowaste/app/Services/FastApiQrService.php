@@ -11,7 +11,11 @@ class FastApiQrService
 {
     private function client(): PendingRequest
     {
-        $key = (string) config('services.fastapi.system_api_key');
+        $keys = array_values(array_filter(array_map(
+            static fn (string $key): string => trim($key),
+            explode(',', (string) config('services.fastapi.system_api_key'))
+        )));
+        $key = $keys[0] ?? '';
         if ($key === '') {
             throw new RuntimeException('SYSTEM_API_KEY no está configurada para la comunicación interna.');
         }

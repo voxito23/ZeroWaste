@@ -18,9 +18,11 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   const requestRef = useRef(0);
   const submittingRef = useRef(false);
   const keyboardVisibleRef = useRef(false);
+  const keyboardResetTimerRef = useRef(null);
   const commentsRef = useRef([]);
   const draftPostIdRef = useRef(null);
   const dragY = useRef(new Animated.Value(0)).current;
+  const composerPadding = useRef(new Animated.Value(Math.max(insets.bottom, 8))).current;
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -33,8 +35,8 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   const [loadingMore, setLoadingMore] = useState(false);
   const [highlightedId, setHighlightedId] = useState(null);
   const [reduceMotion, setReduceMotion] = useState(false);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [inputHeight, setInputHeight] = useState(48);
+  const [keyboardSession, setKeyboardSession] = useState(0);
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -42,7 +44,11 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
     return () => subscription.remove();
   }, []);
 
-  useEffect(() => { if (visible) dragY.setValue(0); }, [dragY, visible]);
+  useEffect(() => {
+    if (!visible) return;
+    dragY.setValue(0);
+    composerPadding.setValue(Math.max(insets.bottom, 8));
+  }, [composerPadding, dragY, insets.bottom, visible]);
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -51,20 +57,33 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
       if (Platform.OS === 'ios' && !reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
       if (keyboardVisibleRef.current) return;
       keyboardVisibleRef.current = true;
-      setKeyboardVisible(true);
+      composerPadding.stopAnimation();
+      Animated.timing(composerPadding, {
+        toValue: 8,
+        duration: reduceMotion ? 0 : 140,
+        useNativeDriver: false,
+      }).start();
     });
     const hideSubscription = Keyboard.addListener(hideEvent, (event) => {
       if (Platform.OS === 'ios' && !reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
       if (!keyboardVisibleRef.current) return;
       keyboardVisibleRef.current = false;
-      setKeyboardVisible(false);
       dragY.setValue(0);
+      composerPadding.stopAnimation();
+      Animated.timing(composerPadding, {
+        toValue: Math.max(insets.bottom, 8),
+        duration: reduceMotion ? 0 : 180,
+        useNativeDriver: false,
+      }).start();
+      clearTimeout(keyboardResetTimerRef.current);
+      keyboardResetTimerRef.current = setTimeout(() => setKeyboardSession((session) => session + 1), reduceMotion ? 0 : 220);
     });
     return () => {
       showSubscription.remove();
       hideSubscription.remove();
+      clearTimeout(keyboardResetTimerRef.current);
     };
-  }, [dragY, reduceMotion]);
+  }, [composerPadding, dragY, insets.bottom, reduceMotion]);
 
   useEffect(() => {
     if (!visible || !post?.id || String(draftPostIdRef.current) === String(post.id)) return;
@@ -78,9 +97,10 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   const closeModal = useCallback(() => {
     Keyboard.dismiss();
     keyboardVisibleRef.current = false;
-    setKeyboardVisible(false);
+    composerPadding.stopAnimation();
+    composerPadding.setValue(Math.max(insets.bottom, 8));
     onClose();
-  }, [onClose]);
+  }, [composerPadding, insets.bottom, onClose]);
 
   const dragResponder = useMemo(() => PanResponder.create({
     onMoveShouldSetPanResponder: (_event, gesture) => gesture.dy > 6 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
@@ -176,8 +196,8 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   };
 
   return (
-    <Modal visible={visible} transparent animationType={reduceMotion ? 'none' : 'slide'} presentationStyle="overFullScreen" statusBarTranslucent navigationBarTranslucent={false} onRequestClose={closeModal}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
+    <Modal visible={visible} transparent animationType={reduceMotion ? 'none' : 'slide'} presentationStyle="overFullScreen" statusBarTranslucent navigationBarTranslucent onRequestClose={closeModal}>
+      <KeyboardAvoidingView key={keyboardSession} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
         <View className="flex-1 justify-end bg-slate-950/45">
           <Pressable className="flex-1" onPress={closeModal} accessibilityLabel="Cerrar comentarios" />
           <Animated.View style={{ height: '92%', minHeight: '55%', transform: [{ translateY: dragY }] }}>
@@ -207,12 +227,12 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
                 return <View className={`mb-3 rounded-2xl border p-3 ${highlighted ? 'border-emerald-400 bg-emerald-50' : 'border-slate-100 bg-white'}`}><View className="flex-row items-start"><UserAvatar uri={resolveAvatar(item)} name={resolveDisplayName(item)} size={38} /><View className="ml-3 flex-1"><View className="flex-row items-center"><Text className="flex-1 text-sm font-black text-slate-900" numberOfLines={1}>{resolveDisplayName(item)}</Text><Text className="text-[10px] font-semibold text-slate-400">{formatRelativeDate(item.created_at)}</Text></View>{parent ? <Text className="mt-1 text-xs font-bold text-emerald-700">En respuesta a {resolveDisplayName(parent)}</Text> : null}<Text className="mt-1 text-sm leading-5 text-slate-700" style={{ textAlign: 'justify' }}>{htmlToPlainText(item.contenido)}</Text><TouchableOpacity onPress={() => beginReply(item)} className="mt-2 min-h-8 flex-row items-center self-start" accessibilityLabel={`Responder a ${resolveDisplayName(item)}`}><Reply color="#64748B" size={14} /><Text className="ml-1.5 text-xs font-black text-slate-500">Responder</Text></TouchableOpacity></View></View></View>;
               }}
             />
-            <View className="shrink-0 border-t border-slate-200 bg-white px-4 pt-3" style={{ paddingBottom: keyboardVisible ? 8 : Math.max(insets.bottom, 8), elevation: 12 }}>
+            <Animated.View className="shrink-0 border-t border-slate-200 bg-white px-4 pt-3" style={{ paddingBottom: composerPadding, elevation: 12 }}>
               {replyingTo ? <View className="mb-2 flex-row items-center rounded-xl bg-emerald-50 px-3 py-2" accessibilityLiveRegion="polite"><Text className="flex-1 text-xs font-bold text-emerald-800" numberOfLines={1}>Respondiendo a {resolveDisplayName(replyingTo)}</Text><TouchableOpacity onPress={() => setReplyingTo(null)} className="h-8 w-8 items-center justify-center" accessibilityLabel="Cancelar respuesta"><X color="#047857" size={16} /></TouchableOpacity></View> : null}
               {composerError ? <Text className="mb-2 text-xs font-bold text-red-700" accessibilityLiveRegion="polite">{composerError}</Text> : null}
               <View className="mb-2 flex-row items-center justify-between"><Text className="text-xs font-black text-slate-700">{replyingTo ? 'Escribe tu respuesta' : 'Escribe un comentario'}</Text><Text className="text-[10px] font-bold text-slate-400">{draft.trim().length}/1000 · mín. 11</Text></View>
               <View className="flex-row items-end"><TextInput ref={inputRef} value={draft} onChangeText={(value) => { setDraft(value); if (composerError) setComposerError(''); }} onFocus={handleInputFocus} onContentSizeChange={({ nativeEvent }) => setInputHeight(Math.min(112, Math.max(48, nativeEvent.contentSize.height + 20)))} multiline blurOnSubmit={false} scrollEnabled={inputHeight >= 112} maxLength={1000} placeholder={replyingTo ? `Responde a ${resolveDisplayName(replyingTo)}…` : 'Escribe un comentario…'} placeholderTextColor="#94A3B8" className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900" style={{ height: inputHeight }} textAlignVertical="top" accessibilityLabel={replyingTo ? `Respuesta para ${resolveDisplayName(replyingTo)}` : 'Nuevo comentario'} /><TouchableOpacity disabled={submitting || draft.trim().length < 11} onPress={submit} className="ml-2 h-12 w-12 items-center justify-center rounded-full bg-emerald-700 disabled:opacity-40" accessibilityLabel={replyingTo ? 'Enviar respuesta' : 'Enviar comentario'}>{submitting ? <ActivityIndicator color="white" /> : <Send color="white" size={19} strokeWidth={2.5} />}</TouchableOpacity></View>
-            </View>
+            </Animated.View>
           </SafeAreaView>
           </Animated.View>
         </View>

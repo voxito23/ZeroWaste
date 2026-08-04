@@ -33,6 +33,29 @@ class AdminPhaseContractsTest(unittest.TestCase):
         self.assertIn("'location_id' => $locationId", controller)
         for unsafe in ["token_ciphertext", "X-API-Key", "response_body"]:
             self.assertNotIn(unsafe, controller)
+        self.assertIn("explode(',', (string) config('services.fastapi.system_api_key'))", service)
+
+    def test_laravel_media_volume_is_prepared_with_shared_group(self):
+        compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+        dockerfile = (ROOT / "laravel_zerowaste" / "Dockerfile").read_text(encoding="utf-8")
+        entrypoint = (ROOT / "laravel_zerowaste" / "docker" / "entrypoint.sh").read_text(encoding="utf-8")
+        self.assertIn("MEDIA_GID: ${MEDIA_GID:-2000}", compose)
+        self.assertIn('ENTRYPOINT ["zerowaste-laravel-entrypoint"]', dockerfile)
+        self.assertIn('media_root" = "/data/media"', entrypoint)
+        self.assertIn('-m 2770', entrypoint)
+        self.assertNotIn('chmod 777', entrypoint)
+
+    def test_admin_avatar_supports_fifteen_megabytes_end_to_end(self):
+        controller = (ROOT / "laravel_zerowaste" / "app" / "Http" / "Controllers" / "AdminProfileController.php").read_text(encoding="utf-8")
+        media = (ROOT / "laravel_zerowaste" / "app" / "Support" / "Media.php").read_text(encoding="utf-8")
+        php = (ROOT / "laravel_zerowaste" / "docker" / "php-production.ini").read_text(encoding="utf-8")
+        nginx = (ROOT / "nginx" / "api.conf").read_text(encoding="utf-8")
+        self.assertIn("max:15360", controller)
+        self.assertIn("15 * 1024 * 1024", controller)
+        self.assertIn("int $maximumBytes", media)
+        self.assertIn("upload_max_filesize = 16M", php)
+        self.assertIn("post_max_size = 18M", php)
+        self.assertIn("client_max_body_size 20m", nginx)
 
     def test_movements_have_filters_local_time_and_admin_csv(self):
         controller = (ROOT / "laravel_zerowaste" / "app" / "Http" / "Controllers" / "ImpactAdminController.php").read_text(encoding="utf-8")

@@ -1,10 +1,9 @@
 import Mapbox from '@rnmapbox/maps';
 
-export const MAPBOX_PUBLIC_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN?.trim() || '';
-export const HAS_VALID_MAPBOX_TOKEN = (
-  MAPBOX_PUBLIC_TOKEN.startsWith('pk.')
-  && !MAPBOX_PUBLIC_TOKEN.includes('YOUR_')
-);
+const validPublicToken = (value) => value.startsWith('pk.') && !value.includes('YOUR_');
+
+export let MAPBOX_PUBLIC_TOKEN = process.env.EXPO_PUBLIC_MAPBOX_TOKEN?.trim() || '';
+export let HAS_VALID_MAPBOX_TOKEN = validPublicToken(MAPBOX_PUBLIC_TOKEN);
 export const MAP_STYLE_URL = 'mapbox://styles/mapbox/standard';
 export const MAP_FALLBACK_STYLE_URL = Mapbox.StyleURL.Street;
 export const MAP_TRAFFIC_STYLE_URL = Mapbox.StyleURL.TrafficDay;
@@ -19,6 +18,15 @@ export const MAP_DEFAULT_CAMERA = Object.freeze({
 let initializationPromise = null;
 
 if (HAS_VALID_MAPBOX_TOKEN) Mapbox.setAccessToken(MAPBOX_PUBLIC_TOKEN);
+
+export const configureMapbox = (value) => {
+  const token = String(value || '').trim();
+  if (!validPublicToken(token)) return false;
+  MAPBOX_PUBLIC_TOKEN = token;
+  HAS_VALID_MAPBOX_TOKEN = true;
+  initializationPromise = Promise.resolve(Mapbox.setAccessToken(token)).then(() => true);
+  return true;
+};
 
 export const initializeMapbox = () => {
   if (!HAS_VALID_MAPBOX_TOKEN) {

@@ -23,13 +23,13 @@ class AdminProfileController extends Controller
     public function update(Request $request)
     {
         $request->validate([
-            'foto_perfil' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'foto_perfil' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:15360',
             'password_actual' => 'nullable|required_with:password|current_password',
             'password'    => 'nullable|string|min:6|confirmed',
         ], [
             'foto_perfil.image' => 'El archivo debe ser una imagen.',
             'foto_perfil.mimes' => 'La imagen debe ser JPEG, PNG o WebP.',
-            'foto_perfil.max' => 'La imagen no debe pesar más de 5 MB.',
+            'foto_perfil.max' => 'La imagen no debe pesar más de 15 MB.',
             'foto_perfil.uploaded' => 'Error al subir la imagen. Intenta con una de menor tamaño.',
             'password_actual.required_with' => 'Debes ingresar tu contraseña actual para establecer una nueva.',
             'password_actual.current_password' => 'La contraseña actual es incorrecta.',
@@ -44,7 +44,10 @@ class AdminProfileController extends Controller
         $newImage = null;
         if ($request->hasFile('foto_perfil')) {
             try {
-                $newImage = Media::store($request->file('foto_perfil'), 'perfiles');
+                if (! is_writable(Media::directory('perfiles'))) {
+                    throw new \RuntimeException('El directorio compartido de perfiles no permite escritura.');
+                }
+                $newImage = Media::store($request->file('foto_perfil'), 'perfiles', 15 * 1024 * 1024);
                 $user->foto_perfil = $newImage;
             } catch (\Throwable $error) {
                 Log::error('No fue posible guardar la foto del perfil administrativo.', [
@@ -53,7 +56,9 @@ class AdminProfileController extends Controller
                 ]);
 
                 return back()->withInput()->withErrors([
-                    'foto_perfil' => 'No fue posible guardar la fotografía. Intenta de nuevo o elige otra imagen.',
+                    'foto_perfil' => $error instanceof \RuntimeException && str_contains($error->getMessage(), 'no permite escritura')
+                        ? 'El almacenamiento de imágenes está temporalmente sin permisos de escritura. Reinicia Laravel con la configuración de medios actualizada.'
+                        : 'No fue posible guardar la fotografía. Intenta de nuevo o elige otra imagen.',
                 ]);
             }
         }

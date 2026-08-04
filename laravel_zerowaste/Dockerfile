@@ -54,6 +54,7 @@ COPY docker/php-production.ini /usr/local/etc/php/conf.d/99-zerowaste-production
 WORKDIR /var/www/html
 COPY . .
 COPY --from=vendor /var/www/html/vendor ./vendor
+COPY docker/entrypoint.sh /usr/local/bin/zerowaste-laravel-entrypoint
 
 RUN mkdir -p \
         storage/framework/cache/data \
@@ -62,8 +63,10 @@ RUN mkdir -p \
         storage/logs \
         bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R u=rwX,g=rwX,o= storage bootstrap/cache
+    && chmod -R u=rwX,g=rwX,o= storage bootstrap/cache \
+    && chmod 0755 /usr/local/bin/zerowaste-laravel-entrypoint
 
 EXPOSE 80
 
+ENTRYPOINT ["zerowaste-laravel-entrypoint"]
 CMD ["apache2-foreground"]

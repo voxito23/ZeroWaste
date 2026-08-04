@@ -16,6 +16,16 @@ IDENTIFIER = re.compile(r"^[A-Za-z0-9-]{1,120}$")
 FINGERPRINT = re.compile(r"^(?:[A-Fa-f0-9]{2}:){31}[A-Fa-f0-9]{2}$")
 
 
+@router.get("/mobile/config", include_in_schema=False)
+def mobile_public_config():
+    """Return only values that are intentionally safe to embed in the mobile client."""
+    mapbox_token = os.getenv("MAPBOX_PUBLIC_TOKEN", "").strip()
+    return {
+        "mapbox_public_token": mapbox_token if mapbox_token.startswith("pk.") else None,
+        "mapbox_ready": mapbox_token.startswith("pk."),
+    }
+
+
 @router.get("/app/{kind}/{identifier}", response_class=HTMLResponse, include_in_schema=False)
 def mobile_fallback(kind: str, identifier: str):
     if kind not in KINDS or not IDENTIFIER.fullmatch(identifier):

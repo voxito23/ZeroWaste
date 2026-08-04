@@ -25,14 +25,14 @@
                     <label for="foto_perfil" class="absolute bottom-0 right-0 bg-secondary hover:bg-forest-dark text-white p-3 rounded-full cursor-pointer shadow-lg transform hover:scale-110 transition-all">
                         <span class="material-symbols-outlined text-sm">edit</span>
                     </label>
-                    <input type="file" id="foto_perfil" name="foto_perfil" accept="image/*" class="hidden" onchange="previewImage(this)">
+                    <input type="file" id="foto_perfil" name="foto_perfil" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="previewImage(this)">
                 </div>
                 
                 <div>
                     <h3 class="text-2xl font-black text-secondary dark:text-emerald-100">{{ $isAuth ? \Illuminate\Support\Facades\Auth::user()->nombre : 'Admin' }}</h3>
                     <p class="text-gray-500 dark:text-gray-400 font-medium">Administrador Principal</p>
                     <p class="text-xs text-primary font-bold mt-2">La foto seleccionada se recortará en formato redondo.</p>
-                    @error('foto_perfil')<p class="mt-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700" role="alert">{{ $message }}</p>@enderror
+                    <p id="foto-error" class="mt-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700 @unless($errors->has('foto_perfil')) hidden @endunless" role="alert">{{ $errors->first('foto_perfil') }}</p>
                 </div>
             </div>
 
@@ -104,6 +104,19 @@
 <script>
     function previewImage(input) {
         if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const error = document.getElementById('foto-error');
+            const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+            if (!allowed.includes(file.type) || file.size > 15 * 1024 * 1024) {
+                error.textContent = file.size > 15 * 1024 * 1024
+                    ? 'La imagen no debe pesar más de 15 MB.'
+                    : 'Selecciona una imagen JPEG, PNG o WebP.';
+                error.classList.remove('hidden');
+                input.value = '';
+                return;
+            }
+            error.textContent = '';
+            error.classList.add('hidden');
             var reader = new FileReader();
             reader.onload = function(e) {
                 document.getElementById('avatar-preview').src = e.target.result;
