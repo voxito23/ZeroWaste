@@ -12,9 +12,13 @@ class FastApiQrService
     /** @return list<string> */
     private function keys(): array
     {
+        $configured = implode(',', array_filter([
+            (string) config('services.fastapi.system_api_key'),
+            (string) getenv('SYSTEM_API_KEY'),
+        ]));
         $keys = array_values(array_filter(array_map(
             static fn (string $key): string => trim($key),
-            explode(',', (string) config('services.fastapi.system_api_key'))
+            explode(',', $configured)
         )));
         if ($keys === []) {
             throw new RuntimeException('SYSTEM_API_KEY no está configurada para la comunicación interna.');
@@ -25,7 +29,10 @@ class FastApiQrService
 
     private function client(string $key): PendingRequest
     {
-        return Http::baseUrl(rtrim((string) config('services.fastapi.url'), '/'))
+        $runtimeUrl = trim((string) getenv('FASTAPI_INTERNAL_URL'));
+        $baseUrl = $runtimeUrl !== '' ? $runtimeUrl : (string) config('services.fastapi.url');
+
+        return Http::baseUrl(rtrim($baseUrl, '/'))
             ->acceptJson()
             ->withHeaders(['X-API-Key' => $key])
             ->timeout(15)

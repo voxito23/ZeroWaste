@@ -129,6 +129,9 @@ final class Media
 
         $directory = self::directory($normalized);
         File::ensureDirectoryExists($directory, 02770, true);
+        if (! is_writable($directory)) {
+            throw new RuntimeException('El directorio compartido de perfiles no permite escritura.');
+        }
         $filename = Str::uuid()->toString().'.'.$extension;
         $file->move($directory, $filename);
         $path = $directory.DIRECTORY_SEPARATOR.$filename;

@@ -15,6 +15,8 @@ class MobileProfileMediaTests(unittest.TestCase):
         forum = (ROOT / "fast_api/app/routers/foro.py").read_text(encoding="utf-8")
         self.assertIn("MAX_PROFILE_IMAGE_BYTES = 15 * 1024 * 1024", mobile)
         self.assertIn("MAX_PROFILE_IMAGE_BYTES = 15 * 1024 * 1024", media)
+        self.assertIn("PROFILE_IMAGE_MAX_DIMENSION = 1024", media)
+        self.assertIn('normalized_category == "perfiles"', media)
         self.assertIn('maximum_bytes=MAX_PROFILE_IMAGE_BYTES', users)
         self.assertIn("MAX_IMAGE_BYTES + 1", forum)
 
@@ -30,7 +32,7 @@ class MobileProfileMediaTests(unittest.TestCase):
         self.assertIn("form.append('biografia', bio.trim())", source)
         self.assertIn("form.append('foto_perfil'", source)
         self.assertIn("api.put('/usuarios/perfil/actualizar', form, { timeout: PROFILE_UPLOAD_TIMEOUT_MS })", source)
-        self.assertIn("PROFILE_UPLOAD_TIMEOUT_MS = 90_000", source)
+        self.assertIn("PROFILE_UPLOAD_TIMEOUT_MS = 45_000", source)
 
 
 if __name__ == "__main__":

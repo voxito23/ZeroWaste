@@ -39,14 +39,12 @@ class AdminProfileController extends Controller
 
         /** @var \App\Models\User $user */
         $user = Auth::user();
+        $previousImage = $user->foto_perfil;
 
         // Actualización de foto de perfil
         $newImage = null;
         if ($request->hasFile('foto_perfil')) {
             try {
-                if (! is_writable(Media::directory('perfiles'))) {
-                    throw new \RuntimeException('El directorio compartido de perfiles no permite escritura.');
-                }
                 $newImage = Media::store($request->file('foto_perfil'), 'perfiles', 15 * 1024 * 1024);
                 $user->foto_perfil = $newImage;
             } catch (\Throwable $error) {
@@ -82,6 +80,10 @@ class AdminProfileController extends Controller
             return back()->withInput()->withErrors([
                 'perfil' => 'No fue posible guardar los cambios del perfil. Inténtalo nuevamente.',
             ]);
+        }
+
+        if ($newImage !== null && is_string($previousImage) && $previousImage !== $newImage) {
+            Media::discard(basename(parse_url($previousImage, PHP_URL_PATH) ?: $previousImage), 'perfiles');
         }
 
         return redirect()->route('admin.perfil.edit')->with('success', 'Perfil actualizado correctamente.');

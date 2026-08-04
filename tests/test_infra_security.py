@@ -113,6 +113,13 @@ class InfrastructureSecurityTests(unittest.TestCase):
         self.assertIn("reverse_proxy fast_api:6000", mobile_block)
         self.assertNotIn("reverse_proxy cliente:5000", mobile_block)
 
+    def test_public_mobile_map_config_can_bypass_a_restarting_nginx(self):
+        matcher = "@mobile_config path /api/mobile/config"
+        self.assertIn(matcher, self.caddy)
+        config_block = self.caddy.split(matcher, 1)[1].split("@api path", 1)[0]
+        self.assertIn("rewrite * /mobile/config", config_block)
+        self.assertIn("reverse_proxy fast_api:6000", config_block)
+
     def test_laravel_sessions_are_shared_in_redis(self):
         for name in ("laravel",):
             environment = self.compose["services"][name]["environment"]

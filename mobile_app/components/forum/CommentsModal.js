@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, Animated, FlatList, Keyboard, KeyboardAvoidingView, Modal, PanResponder, Platform, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, Animated, Easing, FlatList, Keyboard, KeyboardAvoidingView, Modal, PanResponder, Platform, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { MessageCircle, Reply, Send, X } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -54,28 +54,31 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
     const showSubscription = Keyboard.addListener(showEvent, (event) => {
-      if (Platform.OS === 'ios' && !reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
+      if (!reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
       if (keyboardVisibleRef.current) return;
       keyboardVisibleRef.current = true;
       composerPadding.stopAnimation();
       Animated.timing(composerPadding, {
         toValue: 8,
-        duration: reduceMotion ? 0 : 140,
+        duration: reduceMotion ? 0 : Math.min(300, Math.max(180, Number(event?.duration) || 220)),
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: false,
       }).start();
     });
     const hideSubscription = Keyboard.addListener(hideEvent, (event) => {
-      if (Platform.OS === 'ios' && !reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
+      if (!reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
       if (!keyboardVisibleRef.current) return;
       keyboardVisibleRef.current = false;
-      inputRef.current?.blur();
       dragY.setValue(0);
       composerPadding.stopAnimation();
       Animated.timing(composerPadding, {
         toValue: Math.max(insets.bottom, 8) + COMPOSER_BOTTOM_LIFT,
-        duration: reduceMotion ? 0 : 180,
+        duration: reduceMotion ? 0 : Math.min(320, Math.max(200, Number(event?.duration) || 240)),
+        easing: Easing.inOut(Easing.cubic),
         useNativeDriver: false,
-      }).start();
+      }).start(({ finished }) => {
+        if (finished) requestAnimationFrame(() => inputRef.current?.blur());
+      });
     });
     return () => {
       showSubscription.remove();

@@ -126,6 +126,19 @@ class BackendMediaContractTests(unittest.TestCase):
                 )
         self.assertTrue(filename.endswith(".png"))
 
+    def test_profile_images_are_resized_for_fast_mobile_delivery(self):
+        stream = io.BytesIO()
+        Image.new("RGB", (2048, 1536), (0, 128, 64)).save(stream, format="JPEG", quality=92)
+        with tempfile.TemporaryDirectory(dir=ROOT) as temp_dir:
+            with patch.dict(os.environ, {"MEDIA_ROOT": temp_dir}):
+                filename = self.fastapi_media.save_media_image(
+                    stream.getvalue(),
+                    "perfiles",
+                    maximum_bytes=self.fastapi_media.MAX_PROFILE_IMAGE_BYTES,
+                )
+            with Image.open(Path(temp_dir) / "perfiles" / filename) as stored:
+                self.assertLessEqual(max(stored.size), self.fastapi_media.PROFILE_IMAGE_MAX_DIMENSION)
+
     def test_backend_source_contracts_are_safe(self):
         domain_models = (ROOT / "fast_api/app/models/domain_models.py").read_text(encoding="utf-8")
         foro_block = domain_models.split("class Foro", 1)[1].split("class RespuestaForo", 1)[0]

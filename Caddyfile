@@ -89,6 +89,17 @@ www.zerowaste-qro.com {
 		}
 	}
 
+	# Mapbox bootstrap is intentionally public and remains available even while
+	# the internal API proxy is being recreated.
+	@mobile_config path /api/mobile/config
+	handle @mobile_config {
+		rewrite * /mobile/config
+		reverse_proxy fast_api:6000 {
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-Proto https
+		}
+	}
+
 	@api path /api /api/* /zw-docs /zw-docs/* /zw-openapi.json /zw-redoc /zw-redoc/*
 	handle @api {
 		reverse_proxy nginx_api:8080 {

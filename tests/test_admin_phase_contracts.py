@@ -33,7 +33,9 @@ class AdminPhaseContractsTest(unittest.TestCase):
         self.assertIn("'location_id' => $locationId", controller)
         for unsafe in ["token_ciphertext", "X-API-Key", "response_body"]:
             self.assertNotIn(unsafe, controller)
-        self.assertIn("explode(',', (string) config('services.fastapi.system_api_key'))", service)
+        self.assertIn("explode(',', $configured)", service)
+        self.assertIn("getenv('SYSTEM_API_KEY')", service)
+        self.assertIn("getenv('FASTAPI_INTERNAL_URL')", service)
 
     def test_qr_services_share_the_same_compose_integration_contract(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
@@ -59,6 +61,10 @@ class AdminPhaseContractsTest(unittest.TestCase):
         self.assertIn("max:15360", controller)
         self.assertIn("15 * 1024 * 1024", controller)
         self.assertIn("int $maximumBytes", media)
+        self.assertIn("File::ensureDirectoryExists", media)
+        self.assertIn("is_writable($directory)", media)
+        self.assertNotIn("is_writable(Media::directory('perfiles'))", controller)
+        self.assertIn("Media::discard(basename(parse_url($previousImage", controller)
         self.assertIn("upload_max_filesize = 16M", php)
         self.assertIn("post_max_size = 18M", php)
         self.assertIn("client_max_body_size 20m", nginx)

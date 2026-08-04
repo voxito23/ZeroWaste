@@ -18,6 +18,7 @@ ZEROWASTE_PUBLIC_HOSTS = {"zerowaste-qro.com", "www.zerowaste-qro.com"}
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
 MAX_PROFILE_IMAGE_BYTES = 15 * 1024 * 1024
 MAX_IMAGE_DIMENSION = 6000
+PROFILE_IMAGE_MAX_DIMENSION = 1024
 
 MEDIA_CATEGORIES = {
     "foro",
@@ -218,6 +219,9 @@ def media_directory(category: str) -> Path:
 def save_media_image(content: bytes, category: str, *, maximum_bytes: int = MAX_IMAGE_BYTES) -> str:
     """Validate and normalize image bytes, then persist them under a UUID name."""
 
+    normalized_category = _normalized_category(category)
+    if normalized_category is None:
+        raise ValueError("Categoría de medios no permitida.")
     if maximum_bytes < 1 or maximum_bytes > MAX_PROFILE_IMAGE_BYTES:
         raise ValueError("El límite interno de imagen no es válido.")
     if not content or len(content) > maximum_bytes:
@@ -240,6 +244,11 @@ def save_media_image(content: bytes, category: str, *, maximum_bytes: int = MAX_
             )
         if source.width > MAX_IMAGE_DIMENSION or source.height > MAX_IMAGE_DIMENSION:
             raise MediaValidationError("La imagen excede las dimensiones permitidas.")
+        if normalized_category == "perfiles" and max(source.size) > PROFILE_IMAGE_MAX_DIMENSION:
+            source.thumbnail(
+                (PROFILE_IMAGE_MAX_DIMENSION, PROFILE_IMAGE_MAX_DIMENSION),
+                Image.Resampling.LANCZOS,
+            )
     except MediaValidationError:
         raise
     except (Image.DecompressionBombError, UnidentifiedImageError, OSError, ValueError):
@@ -248,20 +257,30 @@ def save_media_image(content: bytes, category: str, *, maximum_bytes: int = MAX_
         ) from None
 
     extension, _mime = format_config
-    destination_dir = media_directory(category)
+    destination_dir = media_directory(normalized_category)
     destination_dir.mkdir(parents=True, exist_ok=True)
     filename = f"{uuid4().hex}.{extension}"
     destination = destination_dir / filename
 
     if image_format == "JPEG":
         clean = source.convert("RGB")
-        clean.save(destination, format="JPEG", quality=88, optimize=True)
+        clean.save(
+            destination,
+            format="JPEG",
+            quality=86 if normalized_category == "perfiles" else 88,
+            optimize=normalized_category != "perfiles",
+        )
     elif image_format == "PNG":
         clean = source.copy()
-        clean.save(destination, format="PNG", optimize=True)
+        clean.save(destination, format="PNG", optimize=normalized_category != "perfiles")
     else:
         clean = source.copy()
-        clean.save(destination, format="WEBP", quality=88, method=4)
+        clean.save(
+            destination,
+            format="WEBP",
+            quality=86 if normalized_category == "perfiles" else 88,
+            method=2 if normalized_category == "perfiles" else 4,
+        )
     try:
         destination.chmod(0o660)
     except OSError:

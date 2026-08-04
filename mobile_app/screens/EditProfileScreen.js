@@ -32,7 +32,7 @@ import { PROFILE_TITLE_OPTIONS, validateProfile } from '../utils/profileValidati
 import UserAvatar from '../components/ui/UserAvatar';
 import { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
 
-const PROFILE_UPLOAD_TIMEOUT_MS = 90_000;
+const PROFILE_UPLOAD_TIMEOUT_MS = 45_000;
 
 const TITLE_ICONS = {
   leaf: Leaf,
