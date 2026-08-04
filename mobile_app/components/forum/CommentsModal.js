@@ -10,7 +10,7 @@ import { resolveAvatar, resolveDisplayName } from '../../utils/user';
 import Skeleton from '../ui/Skeleton';
 import UserAvatar from '../ui/UserAvatar';
 
-const COMPOSER_BOTTOM_LIFT = 12;
+const COMPOSER_BOTTOM_LIFT = 24;
 
 export default function CommentsModal({ visible, post, highlightCommentId, onClose, onCountChange }) {
   const PAGE_SIZE = 50;

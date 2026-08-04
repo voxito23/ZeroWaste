@@ -29,7 +29,8 @@ class MobileProfileMediaTests(unittest.TestCase):
         self.assertIn("form.append('ubicacion', location.trim())", source)
         self.assertIn("form.append('biografia', bio.trim())", source)
         self.assertIn("form.append('foto_perfil'", source)
-        self.assertIn("api.put('/usuarios/perfil/actualizar', form)", source)
+        self.assertIn("api.put('/usuarios/perfil/actualizar', form, { timeout: PROFILE_UPLOAD_TIMEOUT_MS })", source)
+        self.assertIn("PROFILE_UPLOAD_TIMEOUT_MS = 90_000", source)
 
 
 if __name__ == "__main__":

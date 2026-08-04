@@ -26,6 +26,7 @@ import {
   initializeMapbox,
   MAP_DEFAULT_CAMERA,
   MAP_FALLBACK_STYLE_URL,
+  MAP_STYLE_URL,
   Mapbox,
 } from '../utils/mapbox';
 import { normalizeMediaUrl } from '../utils/media';
@@ -35,7 +36,7 @@ const MAP_LOAD_TIMEOUT_MS = 15_000;
 const SEARCH_DEBOUNCE_MS = 300;
 const CARD_WIDTH = 304;
 const CARD_SNAP = CARD_WIDTH + 12;
-const MAP_CARDS_BOTTOM_CLEARANCE = 91;
+const MAP_CARDS_BOTTOM_CLEARANCE = 103;
 const SAFE_MAP_LOAD_ERROR = 'No fue posible cargar el mapa. Revisa tu conexión e inténtalo nuevamente.';
 const MAP_OVERVIEW_CAMERA = Object.freeze({ ...MAP_DEFAULT_CAMERA, pitch: 0, heading: 0 });
 
@@ -103,16 +104,18 @@ export default function MapScreen() {
   const pointSourceRef = useRef(null);
   const cardListRef = useRef(null);
   const mapReadyRef = useRef(false);
+  const fallbackStyleRef = useRef(false);
   const locationRequestRef = useRef(null);
   const searchTimerRef = useRef(null);
   const searchGenerationRef = useRef(0);
 
-  const [tokenReady, setTokenReady] = useState(HAS_VALID_MAPBOX_TOKEN);
+  const [tokenReady, setTokenReady] = useState(false);
   const [mapMounted, setMapMounted] = useState(false);
-  const [styleLoading, setStyleLoading] = useState(tokenReady);
+  const [styleLoading, setStyleLoading] = useState(true);
   const [mapReady, setMapReady] = useState(false);
   const [mapKey, setMapKey] = useState(0);
-  const [mapError, setMapError] = useState(tokenReady ? '' : 'El mapa interactivo no está disponible en esta compilación. Puedes consultar todos los puntos en el modo listado.');
+  const [mapError, setMapError] = useState('');
+  const [usingFallbackStyle, setUsingFallbackStyle] = useState(false);
   const [points, setPoints] = useState([]);
   const [pointsLoading, setPointsLoading] = useState(true);
   const [pointsReady, setPointsReady] = useState(false);
@@ -183,6 +186,16 @@ export default function MapScreen() {
     if (typeof __DEV__ !== 'undefined' && __DEV__) {
       console.warn(`[map] Mapbox reportó un error de carga${status ? ` (HTTP ${status})` : ''}.`);
     }
+    if (!fallbackStyleRef.current) {
+      fallbackStyleRef.current = true;
+      mapReadyRef.current = false;
+      setMapMounted(false);
+      setMapReady(false);
+      setStyleLoading(true);
+      setUsingFallbackStyle(true);
+      setMapKey((value) => value + 1);
+      return;
+    }
     setStyleLoading(false);
     setMapError(SAFE_MAP_LOAD_ERROR);
   }, []);
@@ -194,28 +207,33 @@ export default function MapScreen() {
     setMapReady(false);
     setMapError('');
     setStyleLoading(true);
+    fallbackStyleRef.current = false;
+    setUsingFallbackStyle(false);
     setMapKey((value) => value + 1);
   }, [tokenReady]);
 
   useEffect(() => {
-    if (tokenReady) return undefined;
     let active = true;
-    api.get('/mobile/config')
-      .then(({ data }) => {
-        if (!active) return;
-        if (!configureMapbox(data?.mapbox_public_token)) {
-          setMapError('El servidor todavía no tiene disponible el token público de Mapbox.');
-          return;
+    const prepareMapbox = async () => {
+      try {
+        if (!HAS_VALID_MAPBOX_TOKEN) {
+          const { data } = await api.get('/mobile/config');
+          if (!configureMapbox(data?.mapbox_public_token)) {
+            throw new Error('invalid-public-mapbox-token');
+          }
         }
+        await initializeMapbox();
+        if (!active) return;
         setTokenReady(true);
         setStyleLoading(true);
         setMapError('');
-      })
-      .catch(() => {
+      } catch {
         if (active) setMapError('No fue posible preparar el mapa 2D. Revisa la configuración pública de Mapbox.');
-      });
+      }
+    };
+    void prepareMapbox();
     return () => { active = false; };
-  }, [tokenReady]);
+  }, []);
 
   const fetchPoints = useCallback(async ({ preserve = false } = {}) => {
     setPointsLoading(true);
@@ -297,19 +315,6 @@ export default function MapScreen() {
     void fetchPoints();
     void requestLocation();
   }, []);
-
-  useEffect(() => {
-    let active = true;
-    if (tokenReady) {
-      initializeMapbox().catch(() => {
-        if (active) {
-          setStyleLoading(false);
-          setMapError('No fue posible inicializar Mapbox en esta compilación.');
-        }
-      });
-    }
-    return () => { active = false; };
-  }, [mapKey, tokenReady]);
 
   useEffect(() => {
     if (!tokenReady || mapReadyRef.current) return undefined;
@@ -395,7 +400,7 @@ export default function MapScreen() {
         <Mapbox.MapView
           key={mapKey}
           style={styles.map}
-          styleURL={MAP_FALLBACK_STYLE_URL}
+          styleURL={usingFallbackStyle ? MAP_FALLBACK_STYLE_URL : MAP_STYLE_URL}
           compassEnabled={false}
           scaleBarEnabled={false}
           onLayout={() => setMapMounted(true)}

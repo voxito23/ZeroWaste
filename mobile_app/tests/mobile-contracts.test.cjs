@@ -85,7 +85,7 @@ assert.doesNotMatch(comments, /keyboardLayoutRevision|keyboardRestoreY|Animated\
 assert.match(comments, /statusBarTranslucent navigationBarTranslucent onRequestClose/);
 assert.match(comments, /keyboardVisibleRef/);
 assert.match(comments, /composerPadding/);
-assert.match(comments, /COMPOSER_BOTTOM_LIFT = 12/);
+assert.match(comments, /COMPOSER_BOTTOM_LIFT = 24/);
 assert.doesNotMatch(comments, /keyboardSession|keyboardResetTimerRef/);
 assert.doesNotMatch(comments, /setKeyboardVisible/);
 assert.match(comments, /keyboardVisibleRef\.current = false;[\s\S]*inputRef\.current\?\.blur\(\)/);
@@ -137,7 +137,7 @@ assert.match(routeNavigation, /paddingTop: topSafeInset \+ 12/);
 assert.match(routeNavigation, /paddingBottom: bottomSafeInset \+ 12/);
 assert.match(routeNavigation, /height: bottomSafeInset/);
 assert.doesNotMatch(routeNavigation, /label="DISTANCIA"/);
-assert.match(mapScreen, /styleURL=\{MAP_FALLBACK_STYLE_URL\}/);
+assert.match(mapScreen, /styleURL=\{usingFallbackStyle \? MAP_FALLBACK_STYLE_URL : MAP_STYLE_URL\}/);
 assert.match(mapScreen, /api\.get\('\/mobile\/config'\)/);
 assert.match(mapScreen, /configureMapbox/);
 assert.doesNotMatch(mapScreen, /<Mapbox\.StyleImport/);

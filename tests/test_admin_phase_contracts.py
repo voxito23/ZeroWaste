@@ -35,6 +35,12 @@ class AdminPhaseContractsTest(unittest.TestCase):
             self.assertNotIn(unsafe, controller)
         self.assertIn("explode(',', (string) config('services.fastapi.system_api_key'))", service)
 
+    def test_qr_services_share_the_same_compose_integration_contract(self):
+        compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+        shared_environment = compose.split("x-app-environment:", 1)[1].split("services:", 1)[0]
+        self.assertIn("SYSTEM_API_KEY: ${SYSTEM_API_KEY:-}", shared_environment)
+        self.assertIn("FASTAPI_INTERNAL_URL: ${FASTAPI_INTERNAL_URL:-http://fast_api:6000}", shared_environment)
+
     def test_laravel_media_volume_is_prepared_with_shared_group(self):
         compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
         dockerfile = (ROOT / "laravel_zerowaste" / "Dockerfile").read_text(encoding="utf-8")

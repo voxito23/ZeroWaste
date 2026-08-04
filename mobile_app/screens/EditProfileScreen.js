@@ -32,6 +32,8 @@ import { PROFILE_TITLE_OPTIONS, validateProfile } from '../utils/profileValidati
 import UserAvatar from '../components/ui/UserAvatar';
 import { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
 
+const PROFILE_UPLOAD_TIMEOUT_MS = 90_000;
+
 const TITLE_ICONS = {
   leaf: Leaf,
   globe: Globe2,
@@ -147,7 +149,7 @@ export default function EditProfileScreen() {
           type: selectedImage.mimeType || 'image/jpeg',
         });
       }
-      const { data } = await api.put('/usuarios/perfil/actualizar', form);
+      const { data } = await api.put('/usuarios/perfil/actualizar', form, { timeout: PROFILE_UPLOAD_TIMEOUT_MS });
       savedRef.current = true;
       await updateUser(data.perfil);
       showDialog({ type: 'success', title: 'Perfil actualizado', message: 'Tu información y fotografía quedaron sincronizadas.', primaryLabel: 'Continuar', onPrimary: () => navigation.goBack() });
