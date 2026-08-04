@@ -149,8 +149,13 @@ assert.match(collectionHistory, /loadedAccountId === accountId \? recolecciones 
 assert.match(collectionHistory, /visible=\{calificacionModalVisible\}[\s\S]*KeyboardAvoidingView[\s\S]*ScrollView/);
 assert.match(collectionHistory, /keyboardShouldPersistTaps="handled"/);
 assert.match(collectionHistory, /ratingScrollRef\.current\?\.scrollToEnd\(\{ animated: true \}\)/);
-assert.match(collectionHistory, /Keyboard\.dismiss\(\);[\s\S]*setSubmittingCalificacion\(true\)/);
-assert.match(collectionHistory, /setCalificacionModalVisible\(false\);[\s\S]*showDialog\(\{ type: 'success'/);
+assert.match(collectionHistory, /presentationStyle="overFullScreen"/);
+assert.match(collectionHistory, /enabled=\{Platform\.OS === 'ios'\}/);
+assert.match(collectionHistory, /absolute inset-0 bg-slate-950\/50/);
+assert.match(collectionHistory, /ratingSubmittingRef\.current/);
+assert.match(collectionHistory, /setSubmittingCalificacion\(true\);[\s\S]*Keyboard\.dismiss\(\)/);
+assert.match(collectionHistory, /setCalificacionModalVisible\(false\);[\s\S]*setTimeout\(\(\) => \{[\s\S]*showDialog\(\{ type: 'success'/);
+assert.match(collectionHistory, /calificacionError[\s\S]*accessibilityLiveRegion="polite"/);
 assert.match(collectionHistory, /loading=\{submittingCalificacion\}/);
 assert.match(collectionHistory, /maxLength=\{500\}/);
 assert.match(redemptions, /RefreshControl/);

@@ -17,11 +17,11 @@ export default function ProfileScreen() {
   const { handleScroll } = useScrollContext();
   const { user, logout, updateUser } = useAuth();
   const [profile, setProfile] = useState(user);
-  const [loading, setLoading] = useState(!user);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [impact, setImpact] = useState(null);
-  const hasProfileRef = useRef(Boolean(user));
+  const hasProfileRef = useRef(false);
 
   const fetchProfile = useCallback(async ({ silent = false } = {}) => {
     if (!silent) setLoading(true);
@@ -44,8 +44,6 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (!user) return;
     setProfile(user);
-    setLoading(false);
-    hasProfileRef.current = true;
   }, [user]);
 
   const avatarUrl = profile?.avatar_url ?? profile?.foto_perfil;
@@ -59,7 +57,7 @@ export default function ProfileScreen() {
           <Text className="text-gray-500 mt-1">Información sincronizada con tu cuenta.</Text>
         </View>
 
-        {loading ? <ProfileSkeleton /> : <>{error ? (
+        {loading ? <ProfileSkeleton profile={profile} /> : <>{error ? (
           <View className="mx-6 mb-4 rounded-2xl border border-red-200 bg-red-50 p-4">
             <Text className="text-red-700 text-center font-bold">{error}</Text>
             <TouchableOpacity onPress={fetchProfile} className="mt-3 self-center"><Text className="text-red-700 font-black">Reintentar</Text></TouchableOpacity>
@@ -131,6 +129,7 @@ export default function ProfileScreen() {
 
 function ProfileStat({ label, value }) { return <View className="flex-1 items-center"><Text className="text-lg font-black text-emerald-900">{typeof value === 'number' ? value.toLocaleString('es-MX') : value ?? '—'}</Text><Text className="mt-1 text-[10px] font-black uppercase text-emerald-700">{label}</Text></View>; }
 
-function ProfileSkeleton() {
-  return <View className="px-6"><View className="rounded-[28px] border border-slate-100 bg-white p-6"><View className="flex-row items-center"><Skeleton className="h-20 w-20 rounded-full" /><View className="ml-4 flex-1"><Skeleton className="h-7 w-4/5 rounded-full" /><Skeleton className="mt-3 h-4 w-full rounded-full" /><Skeleton className="mt-3 h-7 w-28 rounded-full" /></View></View><Skeleton className="mt-6 h-5 w-1/2 rounded-full" /><Skeleton className="mt-3 h-4 w-full rounded-full" /><Skeleton className="mt-2 h-4 w-4/5 rounded-full" /><Skeleton className="mt-5 h-20 w-full rounded-2xl" /></View><View className="mt-6 overflow-hidden rounded-[24px] border border-slate-100 bg-white p-5">{[0, 1, 2, 3].map((item) => <View key={item} className={`flex-row items-center py-3 ${item ? 'border-t border-slate-100' : ''}`}><Skeleton className="h-10 w-10 rounded-full" /><Skeleton className="ml-4 h-5 flex-1 rounded-full" /><Skeleton className="ml-4 h-5 w-5 rounded-full" /></View>)}</View></View>;
+function ProfileSkeleton({ profile }) {
+  const cachedAvatar = profile?.avatar_url ?? profile?.foto_perfil;
+  return <View className="px-6"><View className="rounded-[28px] border border-slate-100 bg-white p-6"><View className="flex-row items-center"><UserAvatar uri={cachedAvatar} name={profile?.nombre} size={80} accessibilityLabel="Avatar del perfil" /><View className="ml-4 flex-1">{profile?.nombre ? <Text className="text-2xl font-black text-gray-900">{profile.nombre}</Text> : <Skeleton className="h-7 w-4/5 rounded-full" />}{profile?.email ? <Text className="mt-2 text-gray-500">{profile.email}</Text> : <Skeleton className="mt-3 h-4 w-full rounded-full" />}<Skeleton className="mt-3 h-7 w-28 rounded-full" /></View></View><Skeleton className="mt-6 h-5 w-1/2 rounded-full" /><Skeleton className="mt-3 h-4 w-full rounded-full" /><Skeleton className="mt-2 h-4 w-4/5 rounded-full" /><Skeleton className="mt-5 h-20 w-full rounded-2xl" /></View><View className="mt-6 overflow-hidden rounded-[24px] border border-slate-100 bg-white p-5">{[0, 1, 2, 3].map((item) => <View key={item} className={`flex-row items-center py-3 ${item ? 'border-t border-slate-100' : ''}`}><Skeleton className="h-10 w-10 rounded-full" /><Skeleton className="ml-4 h-5 flex-1 rounded-full" /><Skeleton className="ml-4 h-5 w-5 rounded-full" /></View>)}</View></View>;
 }
