@@ -10,6 +10,7 @@
       "supportsTablet": true
     },
     "android": {
+      "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
         "backgroundColor": "#F0FDF4",
         "foregroundImage": "./assets/branding/zerowaste-adaptive-icon.png"
@@ -80,6 +81,13 @@
           "icon": "./assets/android-icon-monochrome.png",
           "color": "#047857",
           "defaultChannel": "zerowaste-general"
+        }
+      ],
+      [
+        "expo-navigation-bar",
+        {
+          "style": "dark",
+          "enforceContrast": false
         }
       ],
       "@rnmapbox/maps"
