@@ -29,8 +29,7 @@ import { isValidCoordinate as validCoordinate } from '../utils/coordinates';
 const PROFILES = [
   { id: 'walking', label: 'Caminar' },
   { id: 'cycling', label: 'Bicicleta' },
-  { id: 'driving', label: 'Auto' },
-  { id: 'driving-traffic', label: 'Tráfico' },
+  { id: 'driving-traffic', label: 'Auto' },
 ];
 const OFF_ROUTE_MINIMUM_METERS = 45;
 const ARRIVAL_METERS = 30;
@@ -89,6 +88,18 @@ const nearestProgress = (metrics, location) => {
 };
 
 const formatDuration = (seconds) => Number.isFinite(seconds) && seconds > 0 ? `${Math.max(1, Math.round(seconds / 60))} min` : '—';
+
+const trafficSummary = (route) => {
+  if (route?.profile !== 'driving-traffic') return null;
+  const congestion = (route.legs || []).flatMap((leg) => leg?.annotation?.congestion || []);
+  const severe = congestion.filter((level) => level === 'severe' || level === 'heavy').length;
+  const moderate = congestion.filter((level) => level === 'moderate').length;
+  const delaySeconds = route.durationTypicalSeconds
+    ? Math.max(0, route.durationSeconds - route.durationTypicalSeconds)
+    : 0;
+  const condition = severe > 0 ? 'Tráfico intenso' : moderate > 0 ? 'Tráfico moderado' : congestion.length ? 'Tráfico fluido' : 'Tráfico incluido en el tiempo estimado';
+  return delaySeconds >= 60 ? `${condition} · +${Math.round(delaySeconds / 60)} min` : condition;
+};
 
 const primaryBanner = (step) => step?.bannerInstructions?.[0]?.primary?.text || step?.instruction || 'Sigue la ruta marcada.';
 
@@ -333,6 +344,7 @@ export default function RouteNavigationScreen() {
   };
 
   const eta = formatDuration(activeNavigation ? durationRemaining : routeData?.durationSeconds);
+  const currentTraffic = trafficSummary(routeData);
   const navigationPaused = activeNavigation && !following;
   const cameraCenter = validCoordinate(destination) ? destination : QUERETARO_CENTER;
   const instruction = arrived ? `Llegaste a ${point?.nombre || 'tu destino'}` : primaryBanner(currentStep);
@@ -387,7 +399,7 @@ export default function RouteNavigationScreen() {
           <View className="mb-2 w-full rounded-[26px] border border-slate-100 bg-white p-4 shadow-xl">
             <View className="flex-row items-center"><View className="h-10 w-10 items-center justify-center rounded-full bg-emerald-50"><Route color="#047857" size={20} /></View><View className="ml-3 flex-1"><Text className="text-xs font-bold uppercase tracking-wider text-slate-400">{activeNavigation ? `${Math.round(routeProgress * 100)}% de la ruta` : 'Ruta hacia'}</Text><Text className="font-black text-slate-950" numberOfLines={1}>{point?.nombre || 'Punto ZeroWaste'}</Text></View></View>
             {!activeNavigation ? <View className="mt-3 flex-row gap-2">{PROFILES.map((item) => <Pressable key={item.id} onPress={() => selectProfile(item.id)} className={`min-h-10 flex-1 items-center justify-center rounded-xl ${profile === item.id ? 'bg-emerald-700' : 'bg-slate-100'}`} accessibilityState={{ selected: profile === item.id }}><Text className={`text-[11px] font-black ${profile === item.id ? 'text-white' : 'text-slate-600'}`}>{item.label}</Text></Pressable>)}</View> : null}
-            {loading ? <View className="mt-4 flex-row items-center"><ActivityIndicator color="#059669" /><Text className="ml-3 font-bold text-slate-600">Calculando ruta…</Text></View> : error && !routeData ? <View className="mt-4"><Text className="font-bold leading-5 text-red-700">{error}</Text><Pressable onPress={() => loadRoute(origin, profile)} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">Reintentar</Text></Pressable></View> : <><View className="mt-4 flex-row"><Metric label="TIEMPO" value={eta} /><Metric label="LLEGADA" value={routeData ? new Date(Date.now() + (activeNavigation ? durationRemaining : routeData.durationSeconds) * 1000).toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit' }) : '—'} /></View><View className="mt-3 flex-row items-start rounded-2xl bg-emerald-50 p-3"><AudioLines color="#047857" size={18} /><Text className="ml-3 flex-1 font-semibold leading-5 text-emerald-950">{instruction}</Text></View>{error ? <Text className="mt-2 text-xs font-bold text-amber-800">{error} Se conserva la última ruta.</Text> : null}</>}
+            {loading ? <View className="mt-4 flex-row items-center"><ActivityIndicator color="#059669" /><Text className="ml-3 font-bold text-slate-600">Calculando ruta…</Text></View> : error && !routeData ? <View className="mt-4"><Text className="font-bold leading-5 text-red-700">{error}</Text><Pressable onPress={() => loadRoute(origin, profile)} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">Reintentar</Text></Pressable></View> : <><View className="mt-4 flex-row"><Metric label="TIEMPO" value={eta} /><Metric label="LLEGADA" value={routeData ? new Date(Date.now() + (activeNavigation ? durationRemaining : routeData.durationSeconds) * 1000).toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit' }) : '—'} /></View>{currentTraffic ? <View className="mt-3 flex-row items-center rounded-2xl bg-amber-50 px-3 py-2.5"><View className="h-2.5 w-2.5 rounded-full bg-amber-500" /><View className="ml-3 flex-1"><Text className="text-[10px] font-black uppercase tracking-wider text-amber-700">Auto · tráfico actual</Text><Text className="mt-0.5 text-sm font-extrabold text-amber-950">{currentTraffic}</Text></View></View> : null}<View className="mt-3 flex-row items-start rounded-2xl bg-emerald-50 p-3"><AudioLines color="#047857" size={18} /><Text className="ml-3 flex-1 font-semibold leading-5 text-emerald-950">{instruction}</Text></View>{error ? <Text className="mt-2 text-xs font-bold text-amber-800">{error} Se conserva la última ruta.</Text> : null}</>}
             {!activeNavigation && alternatives.length ? <Pressable onPress={useAlternative} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-slate-100"><Text className="font-black text-slate-700">Usar ruta alternativa ({alternatives.length})</Text></Pressable> : null}
             <View className="mt-3 flex-row gap-2">{activeNavigation ? <><Pressable onPress={() => setFollowing(true)} className="min-h-12 flex-1 flex-row items-center justify-center rounded-2xl border border-emerald-700"><LocateFixed color="#047857" size={18} /><Text className="ml-2 font-black text-emerald-800">Recentrar</Text></Pressable><Pressable onPress={() => navigation.goBack()} className="min-h-12 flex-1 items-center justify-center rounded-2xl bg-red-50"><Text className="font-black text-red-700">Salir</Text></Pressable></> : <><Pressable onPress={() => routeData && fitRoute(routeData, true)} disabled={!routeData} className="min-h-12 flex-1 flex-row items-center justify-center rounded-2xl border border-emerald-700 disabled:opacity-40"><MapIcon color="#047857" size={18} /><Text className="ml-2 font-black text-emerald-800">Vista previa</Text></Pressable><Pressable onPress={startNavigation} disabled={!routeData} className="min-h-12 flex-1 flex-row items-center justify-center rounded-2xl bg-emerald-700 disabled:opacity-40"><Play color="white" size={17} /><Text className="ml-2 font-black text-white">Iniciar</Text></Pressable></>}</View>
           </View>

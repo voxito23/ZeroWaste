@@ -16,6 +16,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 DEFAULT_PUBLIC_MEDIA_BASE = "https://www.zerowaste-qro.com/media"
 ZEROWASTE_PUBLIC_HOSTS = {"zerowaste-qro.com", "www.zerowaste-qro.com"}
 MAX_IMAGE_BYTES = 5 * 1024 * 1024
+MAX_PROFILE_IMAGE_BYTES = 15 * 1024 * 1024
 MAX_IMAGE_DIMENSION = 6000
 
 MEDIA_CATEGORIES = {
@@ -214,12 +215,15 @@ def media_directory(category: str) -> Path:
     return Path(override) if override else root / normalized
 
 
-def save_media_image(content: bytes, category: str) -> str:
+def save_media_image(content: bytes, category: str, *, maximum_bytes: int = MAX_IMAGE_BYTES) -> str:
     """Validate and normalize image bytes, then persist them under a UUID name."""
 
-    if not content or len(content) > MAX_IMAGE_BYTES:
+    if maximum_bytes < 1 or maximum_bytes > MAX_PROFILE_IMAGE_BYTES:
+        raise ValueError("El límite interno de imagen no es válido.")
+    if not content or len(content) > maximum_bytes:
+        maximum_mb = maximum_bytes // (1024 * 1024)
         raise MediaValidationError(
-            "La imagen debe pesar como máximo 5 MB.", status_code=413
+            f"La imagen debe pesar como máximo {maximum_mb} MB.", status_code=413
         )
 
     try:

@@ -29,8 +29,9 @@ const { fetchMapboxRoute } = directionsModule.exports;
       json: async () => ({ routes: [{
         distance: 24200,
         duration: walking ? 20820 : 1560,
+        duration_typical: walking ? null : 1380,
         geometry: { type: 'LineString', coordinates: [[-100.4, 20.5], [-100.3, 20.6]] },
-        legs: [{ steps: [{
+        legs: [{ annotation: { congestion: ['low', 'moderate', 'heavy'] }, steps: [{
           maneuver: { instruction: 'Continúa al norte.' },
           bannerInstructions: [{ primary: { text: 'Continúa' } }],
           voiceInstructions: [{ announcement: 'En 200 metros, continúa.' }],
@@ -50,6 +51,12 @@ const { fetchMapboxRoute } = directionsModule.exports;
   assert.match(requestedUrl, /alternatives=true/);
   assert.equal(route.steps[0].voiceInstructions[0].announcement, 'En 200 metros, continúa.');
   assert.equal(Math.round(route.durationSeconds / 60), 26);
+  const trafficRoute = await fetchMapboxRoute([-100.4, 20.5], [-100.3, 20.6], 'driving-traffic');
+  assert.equal(trafficRoute.profile, 'driving-traffic');
+  assert.equal(trafficRoute.durationTypicalSeconds, 1380);
+  assert.deepEqual(trafficRoute.legs[0].annotation.congestion, ['low', 'moderate', 'heavy']);
+  assert.match(requestedUrl, /\/driving-traffic\//);
+  assert.match(requestedUrl, /annotations=congestion,distance,duration/);
   const walkingRoute = await fetchMapboxRoute([-100.4, 20.5], [-100.3, 20.6], 'walking');
   assert.equal(Math.round(walkingRoute.durationSeconds / 60), 347);
 

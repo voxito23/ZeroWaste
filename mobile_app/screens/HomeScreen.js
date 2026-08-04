@@ -54,6 +54,7 @@ import {
 } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
+const CAMPAIGN_CARD_SNAP = 316;
 
 /* ─── ANIMATED PRIMITIVES ─────────────────────────────────────────── */
 const TouchableScale = ({ children, style, onPress, scaleVal = 0.97 }) => {
@@ -104,6 +105,7 @@ export default function HomeScreen() {
   const ringPulse = useRef(new Animated.Value(1)).current;
 
   const tendListRef = useRef(null);
+  const campaignListRef = useRef(null);
   const articlesRequestRef = useRef(0);
   const articlesAbortRef = useRef(null);
   const newsRequestRef = useRef(0);
@@ -111,6 +113,7 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const { handleScroll, reduceMotion } = useScrollContext();
   const [tendIndex, setTendIndex] = useState(0);
+  const [campaignIndex, setCampaignIndex] = useState(0);
   const [articles, setArticles] = useState([]);
   const [articlesLoading, setArticlesLoading] = useState(true);
   const [articlesRefreshing, setArticlesRefreshing] = useState(false);
@@ -319,6 +322,20 @@ export default function HomeScreen() {
     }, 5000);
     return () => clearInterval(tendTimer);
   }, [articles.length]);
+
+  useEffect(() => {
+    setCampaignIndex(0);
+    campaignListRef.current?.scrollTo({ x: 0, animated: false });
+    if (campaignsList.length < 2 || reduceMotion) return undefined;
+    const campaignTimer = setInterval(() => {
+      setCampaignIndex((current) => {
+        const next = (current + 1) % campaignsList.length;
+        campaignListRef.current?.scrollTo({ x: next * CAMPAIGN_CARD_SNAP, animated: true });
+        return next;
+      });
+    }, 5000);
+    return () => clearInterval(campaignTimer);
+  }, [campaignsList.length, reduceMotion]);
 
   const anim = (i) => ({ opacity: anims[i], transform: [{ translateY: slides[i] }] });
 
@@ -533,7 +550,7 @@ export default function HomeScreen() {
               <Text className="text-gray-400 text-xs text-center mt-1">Próximamente publicaremos nuevas iniciativas eco-amigables.</Text>
             </View>
           ) : (
-            <View className="bg-white"><ScrollView horizontal bounces={false} overScrollMode="never" showsHorizontalScrollIndicator={false} style={{ backgroundColor: '#FFFFFF' }} contentContainerStyle={{ paddingHorizontal: 20, gap: 16, backgroundColor: '#FFFFFF' }}>
+            <View className="bg-white"><ScrollView ref={campaignListRef} horizontal bounces={false} overScrollMode="never" showsHorizontalScrollIndicator={false} snapToInterval={CAMPAIGN_CARD_SNAP} decelerationRate="fast" onMomentumScrollEnd={(event) => setCampaignIndex(Math.max(0, Math.min(campaignsList.length - 1, Math.round(event.nativeEvent.contentOffset.x / CAMPAIGN_CARD_SNAP))))} style={{ backgroundColor: '#FFFFFF' }} contentContainerStyle={{ paddingHorizontal: 20, gap: 16, backgroundColor: '#FFFFFF' }}>
               {campaignsList.map((camp) => (
                 <TouchableScale key={camp.id} onPress={camp.link ? () => Linking.openURL(camp.link) : undefined}>
                   <View className="h-[438px] w-[300px] overflow-hidden rounded-[28px] border border-slate-100 bg-white">
@@ -576,7 +593,7 @@ export default function HomeScreen() {
                   </View>
                 </TouchableScale>
               ))}
-            </ScrollView></View>
+            </ScrollView><View className="mt-4 flex-row justify-center gap-1.5">{campaignsList.map((camp, index) => <View key={`campaign-dot:${camp.id}`} className={`h-1.5 rounded-full ${index === campaignIndex ? 'w-5 bg-emerald-600' : 'w-1.5 bg-slate-200'}`} />)}</View></View>
           )}
         </Animated.View>
 

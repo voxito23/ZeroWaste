@@ -16,7 +16,7 @@ from app.models.domain_models import Usuario, Notificacion
 from app.models.schemas import UsuarioResponse, UsuarioUpdate, MessageResponse
 from app.security.jwt_auth import get_current_user, get_current_admin_user
 from app.services.media import (
-    MAX_IMAGE_BYTES,
+    MAX_PROFILE_IMAGE_BYTES,
     MediaValidationError,
     remove_media_file,
     save_media_image,
@@ -85,9 +85,9 @@ def update_foto(
     current_user: Usuario = Depends(get_current_user)
 ):
     """Sube y actualiza únicamente la foto de perfil vía Fetch/AJAX."""
-    content = foto_perfil.file.read(MAX_IMAGE_BYTES + 1)
+    content = foto_perfil.file.read(MAX_PROFILE_IMAGE_BYTES + 1)
     try:
-        nombre_archivo_unico = save_media_image(content, "perfiles")
+        nombre_archivo_unico = save_media_image(content, "perfiles", maximum_bytes=MAX_PROFILE_IMAGE_BYTES)
     except MediaValidationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
 
@@ -151,9 +151,9 @@ def actualizar_perfil(
 
     new_image = None
     if foto_perfil is not None and foto_perfil.filename:
-        content = foto_perfil.file.read(MAX_IMAGE_BYTES + 1)
+        content = foto_perfil.file.read(MAX_PROFILE_IMAGE_BYTES + 1)
         try:
-            new_image = save_media_image(content, "perfiles")
+            new_image = save_media_image(content, "perfiles", maximum_bytes=MAX_PROFILE_IMAGE_BYTES)
         except MediaValidationError as exc:
             raise HTTPException(status_code=exc.status_code, detail=str(exc)) from exc
         current_user.foto_perfil = new_image  # type: ignore

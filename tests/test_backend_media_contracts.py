@@ -111,6 +111,21 @@ class BackendMediaContractTests(unittest.TestCase):
                 with self.assertRaises(self.fastapi_media.MediaValidationError):
                     self.fastapi_media.save_media_image(b"not-an-image", "foro")
 
+    def test_profile_image_limit_is_15mb_without_raising_forum_limit(self):
+        stream = io.BytesIO()
+        Image.new("RGB", (8, 8), (0, 128, 64)).save(stream, format="PNG")
+        content = stream.getvalue() + b"\0" * (self.fastapi_media.MAX_IMAGE_BYTES + 1)
+        with tempfile.TemporaryDirectory(dir=ROOT) as temp_dir:
+            with patch.dict(os.environ, {"MEDIA_ROOT": temp_dir}):
+                with self.assertRaises(self.fastapi_media.MediaValidationError):
+                    self.fastapi_media.save_media_image(content, "foro")
+                filename = self.fastapi_media.save_media_image(
+                    content,
+                    "perfiles",
+                    maximum_bytes=self.fastapi_media.MAX_PROFILE_IMAGE_BYTES,
+                )
+        self.assertTrue(filename.endswith(".png"))
+
     def test_backend_source_contracts_are_safe(self):
         domain_models = (ROOT / "fast_api/app/models/domain_models.py").read_text(encoding="utf-8")
         foro_block = domain_models.split("class Foro", 1)[1].split("class RespuestaForo", 1)[0]
@@ -147,7 +162,7 @@ class BackendMediaContractTests(unittest.TestCase):
         users_router = (ROOT / "fast_api/app/routers/usuarios.py").read_text(encoding="utf-8")
         profile_update = users_router.split('def actualizar_perfil(', 1)[1].split('@router.put("/perfil/password"', 1)[0]
         self.assertIn("foto_perfil: Optional[UploadFile] = File(None)", profile_update)
-        self.assertIn('save_media_image(content, "perfiles")', profile_update)
+        self.assertIn('save_media_image(content, "perfiles", maximum_bytes=MAX_PROFILE_IMAGE_BYTES)', profile_update)
         self.assertIn("UsuarioResponse.model_validate(current_user)", profile_update)
 
     def test_maintenance_scripts_do_not_embed_or_print_credentials(self):

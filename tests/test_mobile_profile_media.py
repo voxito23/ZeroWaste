@@ -8,6 +8,16 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class MobileProfileMediaTests(unittest.TestCase):
+    def test_mobile_and_fastapi_allow_15mb_only_for_profile_images(self):
+        mobile = (ROOT / "mobile_app/utils/imageUpload.js").read_text(encoding="utf-8")
+        media = (ROOT / "fast_api/app/services/media.py").read_text(encoding="utf-8")
+        users = (ROOT / "fast_api/app/routers/usuarios.py").read_text(encoding="utf-8")
+        forum = (ROOT / "fast_api/app/routers/foro.py").read_text(encoding="utf-8")
+        self.assertIn("MAX_PROFILE_IMAGE_BYTES = 15 * 1024 * 1024", mobile)
+        self.assertIn("MAX_PROFILE_IMAGE_BYTES = 15 * 1024 * 1024", media)
+        self.assertIn('maximum_bytes=MAX_PROFILE_IMAGE_BYTES', users)
+        self.assertIn("MAX_IMAGE_BYTES + 1", forum)
+
     def test_registration_picker_sends_selected_profile_photo(self):
         source = (ROOT / "mobile_app/screens/RegisterScreen.js").read_text(encoding="utf-8")
         self.assertIn("requestMediaLibraryPermissionsAsync", source)

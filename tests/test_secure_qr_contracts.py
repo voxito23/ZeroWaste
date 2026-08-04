@@ -54,6 +54,13 @@ class SecureQrContractsTest(unittest.TestCase):
         self.assertIn("uq_point_qr_one_active", migration)
         self.assertIn("WHERE active = TRUE", migration)
 
+    def test_laravel_qr_client_supports_safe_key_rotation(self):
+        service = (ROOT / "laravel_zerowaste" / "app" / "Services" / "FastApiQrService.php").read_text(encoding="utf-8")
+        self.assertIn("array_unique($keys)", service)
+        self.assertIn("foreach ($this->keys() as $key)", service)
+        self.assertIn("[401, 403]", service)
+        self.assertNotIn("Log::", service)
+
 
 if __name__ == "__main__":
     unittest.main()

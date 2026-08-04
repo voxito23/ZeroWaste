@@ -16,7 +16,7 @@ from app.models.schemas import Token, UsuarioResponse, MessageResponse
 from app.security.jwt_auth import create_access_token, get_admin_principal_email, hash_password, verify_password
 from app.security.login_throttle import INVALID_MESSAGE, get_client_ip, get_login_throttle
 from app.services.media import (
-    MAX_IMAGE_BYTES,
+    MAX_PROFILE_IMAGE_BYTES,
     MediaValidationError,
     build_public_avatar_url,
     remove_media_file,
@@ -163,9 +163,9 @@ def registro(
             detail="La contraseña debe tener al menos 6 caracteres.",
         )
 
-    contents = foto_perfil.file.read(MAX_IMAGE_BYTES + 1)
+    contents = foto_perfil.file.read(MAX_PROFILE_IMAGE_BYTES + 1)
     try:
-        nombre_archivo_unico = save_media_image(contents, "perfiles")
+        nombre_archivo_unico = save_media_image(contents, "perfiles", maximum_bytes=MAX_PROFILE_IMAGE_BYTES)
     except MediaValidationError as exc:
         raise HTTPException(
             status_code=exc.status_code,

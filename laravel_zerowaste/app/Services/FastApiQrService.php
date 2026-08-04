@@ -9,17 +9,22 @@ use Throwable;
 
 class FastApiQrService
 {
-    private function client(): PendingRequest
+    /** @return list<string> */
+    private function keys(): array
     {
         $keys = array_values(array_filter(array_map(
             static fn (string $key): string => trim($key),
             explode(',', (string) config('services.fastapi.system_api_key'))
         )));
-        $key = $keys[0] ?? '';
-        if ($key === '') {
+        if ($keys === []) {
             throw new RuntimeException('SYSTEM_API_KEY no está configurada para la comunicación interna.');
         }
 
+        return array_values(array_unique($keys));
+    }
+
+    private function client(string $key): PendingRequest
+    {
         return Http::baseUrl(rtrim((string) config('services.fastapi.url'), '/'))
             ->acceptJson()
             ->withHeaders(['X-API-Key' => $key])
@@ -29,32 +34,32 @@ class FastApiQrService
 
     public function point(int $pointId): array
     {
-        return $this->json($this->client()->get("/qr/puntos/{$pointId}"));
+        return $this->json($this->request('get', "/qr/puntos/{$pointId}"));
     }
 
     public function generatePoint(int $pointId): array
     {
-        return $this->json($this->client()->post("/qr/puntos/{$pointId}/generar"));
+        return $this->json($this->request('post', "/qr/puntos/{$pointId}/generar"));
     }
 
     public function regeneratePoint(int $pointId): array
     {
-        return $this->json($this->client()->post("/qr/puntos/{$pointId}/regenerar"));
+        return $this->json($this->request('post', "/qr/puntos/{$pointId}/regenerar"));
     }
 
     public function revokePoint(int $pointId): array
     {
-        return $this->json($this->client()->post("/qr/puntos/{$pointId}/revocar"));
+        return $this->json($this->request('post', "/qr/puntos/{$pointId}/revocar"));
     }
 
     public function history(int $pointId): array
     {
-        return $this->json($this->client()->get("/qr/puntos/{$pointId}/historial"));
+        return $this->json($this->request('get', "/qr/puntos/{$pointId}/historial"));
     }
 
     public function render(string $content, string $format): array
     {
-        $response = $this->client()->post('/qr/render?format='.$format, ['contenido' => $content]);
+        $response = $this->request('post', '/qr/render?format='.$format, ['contenido' => $content]);
         if (! $response->successful()) {
             throw new RuntimeException($response->json('detail') ?: 'No fue posible renderizar el código QR.');
         }
@@ -94,5 +99,21 @@ class FastApiQrService
         }
 
         return $response->json();
+    }
+
+    private function request(string $method, string $path, array $payload = [])
+    {
+        $response = null;
+        foreach ($this->keys() as $key) {
+            $client = $this->client($key);
+            $response = $method === 'get'
+                ? $client->get($path)
+                : $client->post($path, $payload);
+            if (! in_array($response->status(), [401, 403], true)) {
+                return $response;
+            }
+        }
+
+        return $response;
     }
 }

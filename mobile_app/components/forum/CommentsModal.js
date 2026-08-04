@@ -68,6 +68,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
       if (Platform.OS === 'ios' && !reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
       if (!keyboardVisibleRef.current) return;
       keyboardVisibleRef.current = false;
+      inputRef.current?.blur();
       dragY.setValue(0);
       composerPadding.stopAnimation();
       Animated.timing(composerPadding, {
