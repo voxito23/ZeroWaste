@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from app.data.database import get_db
 from app.models.domain_models import Usuario, Evento
 from app.models.schemas import EventoCreate, EventoUpdate, EventoResponse, MessageResponse
-from app.security.jwt_auth import get_current_user, get_current_admin_user
+from app.security.jwt_auth import get_current_admin_user
 
 router = APIRouter(prefix="/eventos", tags=["Eventos y Jornadas"])
 
@@ -64,9 +64,9 @@ def update_evento(
     evento_id: int,
     datos: EventoUpdate,
     db: Session = Depends(get_db),
-    _current_user: Usuario = Depends(get_current_user),
+    _current_admin: Usuario = Depends(get_current_admin_user),
 ):
-    """Actualiza los campos de un evento existente. Requiere JWT."""
+    """Actualiza los campos de un evento existente. Exclusivo del administrador principal."""
     evento = db.query(Evento).filter(Evento.id == evento_id).first()
     if not evento:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento no encontrado.")
@@ -84,9 +84,9 @@ def update_evento(
 def delete_evento(
     evento_id: int,
     db: Session = Depends(get_db),
-    _current_user: Usuario = Depends(get_current_user),
+    _current_admin: Usuario = Depends(get_current_admin_user),
 ):
-    """Elimina un evento por su ID. Requiere JWT."""
+    """Elimina un evento por su ID. Exclusivo del administrador principal."""
     evento = db.query(Evento).filter(Evento.id == evento_id).first()
     if not evento:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento no encontrado.")

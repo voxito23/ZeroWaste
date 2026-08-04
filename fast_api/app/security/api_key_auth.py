@@ -7,7 +7,7 @@ Permite restringir el acceso a la API exclusivamente a clientes autorizados
 import os
 from typing import List, Optional
 from fastapi import Request, HTTPException, status, Security
-from fastapi.security import APIKeyHeader, APIKeyQuery
+from fastapi.security import APIKeyHeader
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
@@ -16,8 +16,12 @@ from starlette.responses import Response
 API_KEY_NAME = "X-API-Key"
 
 # Esquemas para OpenAPI/Swagger en caso de usarse como dependencia
-api_key_header_scheme = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
-api_key_query_scheme = APIKeyQuery(name="api_key", auto_error=False)
+api_key_header_scheme = APIKeyHeader(
+    name=API_KEY_NAME,
+    scheme_name="IntegracionInterna",
+    description="Credencial exclusiva para comunicación interna entre servicios.",
+    auto_error=False,
+)
 
 def get_allowed_api_keys() -> List[str]:
     """
@@ -39,13 +43,12 @@ def verify_api_key(api_key: Optional[str]) -> bool:
 
 async def require_api_key(
     api_key_header: Optional[str] = Security(api_key_header_scheme),
-    api_key_query: Optional[str] = Security(api_key_query_scheme),
 ) -> str:
     """
-    Dependencia de FastAPI para validar la API Key por Header o Query Param.
+    Dependencia de FastAPI para validar la API Key únicamente por header.
     Lanza HTTPException 403 si es inválida o ausente.
     """
-    api_key = api_key_header or api_key_query
+    api_key = api_key_header
     if not verify_api_key(api_key):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

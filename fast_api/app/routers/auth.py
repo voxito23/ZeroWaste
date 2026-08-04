@@ -13,7 +13,7 @@ from slowapi.util import get_remote_address
 from app.data.database import get_db
 from app.models.domain_models import Usuario
 from app.models.schemas import Token, UsuarioResponse, MessageResponse
-from app.security.jwt_auth import verify_password, hash_password, create_access_token
+from app.security.jwt_auth import create_access_token, get_admin_principal_email, hash_password, verify_password
 from app.security.login_throttle import INVALID_MESSAGE, get_client_ip, get_login_throttle
 from app.services.media import (
     MAX_IMAGE_BYTES,
@@ -49,32 +49,35 @@ def login(
     """
     throttle = get_login_throttle()
     client_ip = get_client_ip(request)
-    throttle.assert_allowed(form_data.username, client_ip)
-    usuario = db.query(Usuario).filter(Usuario.email == form_data.username).first()
+    normalized_email = form_data.username.strip().casefold()
+    throttle.assert_allowed(normalized_email, client_ip)
+    usuario = db.query(Usuario).filter(Usuario.email == normalized_email).first()
 
     if not usuario or not verify_password(form_data.password, str(usuario.password)):
-        throttle.record_failure(form_data.username, client_ip)
+        throttle.record_failure(normalized_email, client_ip)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=INVALID_MESSAGE,
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    throttle.clear(form_data.username, client_ip)
     if usuario.bloqueado:
+        throttle.record_failure(normalized_email, client_ip)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Usuario bloqueado por subir contenido indebido."
         )
 
-    # --- Validación de rol inyectada ---
-    if not usuario.is_admin:
+    principal = get_admin_principal_email()
+    if not usuario.is_admin or not principal or normalized_email != principal:
+        throttle.record_failure(normalized_email, client_ip)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acceso denegado: Solo los administradores pueden generar tokens e iniciar sesión en esta API."
+            detail="Acceso denegado: solo el administrador principal puede autorizar Swagger y las operaciones administrativas de FastAPI."
         )
 
-    access_token = create_access_token(data={"sub": usuario.email})
+    throttle.clear(normalized_email, client_ip)
+    access_token = create_access_token(data={"sub": normalized_email, "scope": "api:superadmin"})
     return Token(access_token=access_token)
 
 

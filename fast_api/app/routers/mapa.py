@@ -17,7 +17,7 @@ from app.models.schemas import (
     PuntoMapaCreate, PuntoMapaUpdate, PuntoMapaResponse,
     CalificacionCreate, CalificacionResponse, MessageResponse,
 )
-from app.security.jwt_auth import get_current_user
+from app.security.jwt_auth import get_current_admin_user, get_current_user
 
 router = APIRouter(prefix="/mapa", tags=["Mapa"])
 logger = logging.getLogger(__name__)
@@ -142,9 +142,9 @@ def get_punto(punto_id: int, db: Session = Depends(get_db)):
 def create_punto(
     punto_in: PuntoMapaCreate,
     db: Session = Depends(get_db),
-    _current_user: Usuario = Depends(get_current_user),
+    _current_admin: Usuario = Depends(get_current_admin_user),
 ):
-    """Agrega un nuevo punto de reciclaje al mapa. Requiere JWT."""
+    """Agrega un nuevo punto de reciclaje al mapa. Exclusivo del administrador principal."""
     nuevo_punto = PuntoMapa(
         nombre=punto_in.nombre,
         direccion=punto_in.direccion,
@@ -169,9 +169,9 @@ def update_punto(
     punto_id: int,
     datos: PuntoMapaUpdate,
     db: Session = Depends(get_db),
-    _current_user: Usuario = Depends(get_current_user),
+    _current_admin: Usuario = Depends(get_current_admin_user),
 ):
-    """Actualiza un punto de reciclaje existente. Requiere JWT."""
+    """Actualiza un punto de reciclaje existente. Exclusivo del administrador principal."""
     punto = db.query(PuntoMapa).filter(PuntoMapa.id == punto_id).first()
     if not punto:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Punto no encontrado.")
@@ -197,9 +197,9 @@ def update_punto(
 def delete_punto(
     punto_id: int,
     db: Session = Depends(get_db),
-    _current_user: Usuario = Depends(get_current_user),
+    _current_admin: Usuario = Depends(get_current_admin_user),
 ):
-    """Elimina un punto de reciclaje y sus calificaciones. Requiere JWT."""
+    """Elimina un punto de reciclaje y sus calificaciones. Exclusivo del administrador principal."""
     punto = db.query(PuntoMapa).filter(PuntoMapa.id == punto_id).first()
     if not punto:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Punto no encontrado.")

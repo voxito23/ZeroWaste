@@ -11,7 +11,13 @@ import os
 from app.data.database import get_db
 from sqlalchemy.orm import Session
 from app.models.domain_models import Usuario
-from app.security.jwt_auth import verify_password, create_access_token, SECRET_KEY, ALGORITHM
+from app.security.jwt_auth import (
+    ALGORITHM,
+    SECRET_KEY,
+    create_access_token,
+    get_admin_principal_email,
+    verify_password,
+)
 from app.security.login_throttle import INVALID_MESSAGE, get_client_ip, get_login_throttle
 
 from jose import JWTError, jwt  # type: ignore
@@ -23,7 +29,7 @@ templates_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
 
 def _principal_email() -> str:
     """El correo autorizado siempre proviene de configuración operativa."""
-    return os.getenv("ADMIN_EMAIL", "").strip().casefold()
+    return get_admin_principal_email()
 
 
 def _verify_docs_cookie(request: Request) -> bool:

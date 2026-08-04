@@ -25,12 +25,24 @@ if not SECRET_KEY:
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "60"))
 
-# Esquema OAuth2 para autenticación en Swagger UI
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
-optional_oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login", auto_error=False)
+# Esquema OAuth2 para autenticación en Swagger UI. El endpoint indicado emite
+# tokens únicamente para el administrador principal configurado.
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/api/auth/login",
+    scheme_name="AdministradorPrincipal",
+)
+optional_oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/api/auth/login",
+    scheme_name="AdministradorPrincipal",
+    auto_error=False,
+)
 
 
 # Funciones auxiliares de autenticación
+
+def get_admin_principal_email() -> str:
+    """Devuelve el único correo autorizado para operaciones administrativas FastAPI."""
+    return os.getenv("ADMIN_EMAIL", "").strip().casefold()
 
 def hash_password(password: str) -> str:
     """Genera hash de contraseña con bcrypt, compatible con Flask y Laravel ($2y$)."""
@@ -125,9 +137,11 @@ def get_current_admin_user(
     Dependencia de FastAPI: verifica que el usuario autenticado
     sea administrador (is_admin == True). Lanza HTTP 403 en caso contrario.
     """
-    if not current_user.is_admin:
+    principal = get_admin_principal_email()
+    current_email = str(current_user.email or "").strip().casefold()
+    if not current_user.is_admin or not principal or current_email != principal:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Acceso denegado: Esta acción es exclusiva para administradores de ZeroWaste",
+            detail="Acceso denegado: esta acción es exclusiva del administrador principal de ZeroWaste.",
         )
     return current_user
