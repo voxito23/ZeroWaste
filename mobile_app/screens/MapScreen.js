@@ -25,6 +25,8 @@ import {
   HAS_VALID_MAPBOX_TOKEN,
   initializeMapbox,
   MAP_DEFAULT_CAMERA,
+  MAP_FALLBACK_STYLE_URL,
+  MAP_STYLE_URL,
   Mapbox,
 } from '../utils/mapbox';
 import { normalizeMediaUrl } from '../utils/media';
@@ -98,6 +100,17 @@ export default function MapScreen() {
   const { user } = useAuth();
   const { showDialog } = useZeroWasteDialog();
   const { lightPreset } = useMapAppearance();
+  const mapConfig = useMemo(() => ({
+    lightPreset,
+    show3dBuildings: false,
+    show3dObjects: false,
+    show3dFacades: false,
+    show3dLandmarks: false,
+    show3dTrees: false,
+    showRoadLabels: true,
+    showPlaceLabels: true,
+    showPointOfInterestLabels: true,
+  }), [lightPreset]);
   const cameraRef = useRef(null);
   const pointSourceRef = useRef(null);
   const cardListRef = useRef(null);
@@ -376,7 +389,7 @@ export default function MapScreen() {
         <Mapbox.MapView
           key={mapKey}
           style={styles.map}
-          styleURL={usingFallbackStyle ? Mapbox.StyleURL.Street : lightPreset === 'night' ? Mapbox.StyleURL.Dark : Mapbox.StyleURL.Street}
+          styleURL={usingFallbackStyle ? MAP_FALLBACK_STYLE_URL : MAP_STYLE_URL}
           compassEnabled={false}
           scaleBarEnabled={false}
           onLayout={() => setMapMounted(true)}
@@ -385,6 +398,7 @@ export default function MapScreen() {
           onDidFinishLoadingMap={handleMapReady}
           onMapLoadingError={handleMapLoadingError}
         >
+          {!usingFallbackStyle ? <Mapbox.StyleImport id="basemap" existing config={mapConfig} /> : null}
           <Mapbox.Camera ref={cameraRef} defaultSettings={MAP_OVERVIEW_CAMERA} />
           {permissionState === 'granted' ? <Mapbox.LocationPuck puckBearingEnabled puckBearing="heading" /> : null}
           <Mapbox.ShapeSource

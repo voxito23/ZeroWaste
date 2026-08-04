@@ -73,7 +73,7 @@ export default function ZeroWasteDialog({ visible, type = 'info', title, message
     AccessibilityInfo.isReduceMotionEnabled().then((reduced) => Animated.timing(progress, { toValue: 1, duration: reduced ? 0 : 200, useNativeDriver: true }).start());
   }, [progress, visible]);
 
-  return <Modal visible={visible} transparent animationType="none" statusBarTranslucent onRequestClose={busy ? undefined : (onSecondary || onPrimary)}>
+  return <Modal visible={visible} transparent animationType="none" statusBarTranslucent navigationBarTranslucent={false} onRequestClose={busy ? undefined : (onSecondary || onPrimary)}>
     <SafeAreaView className="flex-1 items-center justify-center bg-slate-950/45 px-6" edges={['top', 'bottom']}>
       <Animated.View
         accessibilityViewIsModal

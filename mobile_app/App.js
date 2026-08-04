@@ -1,6 +1,6 @@
 import './global.css';
 import { StatusBar } from 'expo-status-bar';
-import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
+import { initialWindowMetrics, SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AppNavigator from './navigation/AppNavigator';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
@@ -43,8 +43,21 @@ export default function App() {
         ) : (
           <View className="flex-1 bg-white"><AppNavigator /></View>
         )}
+        <SystemNavigationSurface />
         <StatusBar style="dark" />
       </ZeroWasteDialogProvider>
     </SafeAreaProvider>
+  );
+}
+
+function SystemNavigationSurface() {
+  const insets = useSafeAreaInsets();
+  if (insets.bottom <= 0) return null;
+  return (
+    <View
+      pointerEvents="none"
+      className="absolute bottom-0 left-0 right-0 bg-white"
+      style={{ height: insets.bottom, zIndex: 10000, elevation: 10000 }}
+    />
   );
 }
