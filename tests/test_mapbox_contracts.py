@@ -44,6 +44,8 @@ class MapboxContractTests(unittest.TestCase):
         self.assertIn("{tokenReady ? (", source)
         self.assertNotIn("tokenReady && mapboxConfigured", source)
         self.assertIn("pointerEvents={mapError ? 'auto' : 'none'}", source)
+        self.assertIn('<Mapbox.StyleImport id="basemap" existing config={MAP_2D_CONFIG}', source)
+        self.assertIn("show3dBuildings: false", source)
 
         config = (ROOT / "mobile_app/utils/mapbox.js").read_text(encoding="utf-8")
         self.assertIn("Promise.resolve(Mapbox.setAccessToken(MAPBOX_PUBLIC_TOKEN))", config)

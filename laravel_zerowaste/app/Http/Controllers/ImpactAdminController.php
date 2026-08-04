@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use App\Support\Media;
 use App\Services\AuditLogger;
@@ -135,9 +136,16 @@ class ImpactAdminController extends Controller
     public function updateRedemption(Request $request, int $id)
     {
         $data = $request->validate(['estado' => 'required|in:SOLICITADA,APROBADA,EN_PREPARACION,LISTA_PARA_ENTREGAR,ENTREGADA,RECHAZADA,CANCELADA', 'motivo' => 'nullable|string|max:255']);
-        DB::transaction(function () use ($data, $id, $request) {
+        $changed = DB::transaction(function () use ($data, $id, $request) {
             $row = DB::table('canjes')->where('id', $id)->lockForUpdate()->firstOrFail();
-            if (in_array($row->estado, ['ENTREGADA', 'RECHAZADA', 'CANCELADA'], true)) abort(409, 'El canje ya está cerrado.');
+            if ($row->estado === $data['estado']) {
+                return false;
+            }
+            if (in_array($row->estado, ['ENTREGADA', 'RECHAZADA', 'CANCELADA'], true)) {
+                throw ValidationException::withMessages([
+                    'estado' => 'Este canje ya tiene un estado final y no puede modificarse nuevamente.',
+                ]);
+            }
             if (in_array($data['estado'], ['RECHAZADA', 'CANCELADA'], true)) {
                 $balance = DB::table('saldos_puntos')->where('usuario_id', $row->usuario_id)->lockForUpdate()->firstOrFail();
                 DB::table('saldos_puntos')->where('usuario_id', $row->usuario_id)->update([
@@ -155,8 +163,14 @@ class ImpactAdminController extends Controller
             }
             DB::table('canjes')->where('id', $id)->update(['estado'=>$data['estado'], 'administrador_id'=>$request->user()->id, 'updated_at'=>now()]);
             DB::table('historial_canjes')->insert(['canje_id'=>$id, 'estado_anterior'=>$row->estado, 'estado_nuevo'=>$data['estado'], 'administrador_id'=>$request->user()->id, 'motivo'=>$data['motivo'] ?? null, 'created_at'=>now()]);
+            AuditLogger::record($request, 'redemption.status_updated', 'canje', $id, [
+                'estado_anterior' => $row->estado,
+                'estado_nuevo' => $data['estado'],
+            ]);
+
+            return true;
         });
-        return back()->with('success', 'Estado del canje actualizado.');
+        return back()->with('success', $changed ? 'El estado del canje fue actualizado.' : 'El canje ya se encontraba en ese estado.');
     }
 
     public function rules(Request $request)

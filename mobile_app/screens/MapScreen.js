@@ -39,6 +39,17 @@ const CARD_SNAP = CARD_WIDTH + 12;
 const MAP_CARDS_BOTTOM_CLEARANCE = 103;
 const SAFE_MAP_LOAD_ERROR = 'No fue posible cargar el mapa. Revisa tu conexión e inténtalo nuevamente.';
 const MAP_OVERVIEW_CAMERA = Object.freeze({ ...MAP_DEFAULT_CAMERA, pitch: 0, heading: 0 });
+const MAP_2D_CONFIG = Object.freeze({
+  lightPreset: 'day',
+  show3dBuildings: false,
+  show3dObjects: false,
+  show3dFacades: false,
+  show3dLandmarks: false,
+  show3dTrees: false,
+  showRoadLabels: true,
+  showPlaceLabels: true,
+  showPointOfInterestLabels: true,
+});
 
 const normalizePoint = (point) => {
   const latitude = Number(point?.latitud ?? point?.latitude);
@@ -409,6 +420,7 @@ export default function MapScreen() {
           onDidFinishLoadingMap={handleMapReady}
           onMapLoadingError={handleMapLoadingError}
         >
+          {!usingFallbackStyle ? <Mapbox.StyleImport id="basemap" existing config={MAP_2D_CONFIG} /> : null}
           <Mapbox.Camera ref={cameraRef} defaultSettings={MAP_OVERVIEW_CAMERA} />
           {permissionState === 'granted' ? <Mapbox.LocationPuck puckBearingEnabled puckBearing="heading" /> : null}
           <Mapbox.ShapeSource

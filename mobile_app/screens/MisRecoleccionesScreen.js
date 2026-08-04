@@ -111,7 +111,7 @@ export default function MisRecoleccionesScreen() {
               <Text className="text-subtext text-sm mb-1">Dirección: {item.direccion}</Text>
               <Text className="text-subtext text-sm mb-3">Materiales: {item.materiales}</Text>
               
-              {item.estado === 'pendiente' && (
+              {item.estado === 'pendiente' && String(item.usuario_id) === String(user?.id) && user?.rol !== 'recolector' && (
                 <CustomButton 
                   title="Generar QR de Seguridad" 
                   variant="outline"
@@ -121,7 +121,7 @@ export default function MisRecoleccionesScreen() {
                 />
               )}
 
-              {item.estado === 'completada' && !item.calificacion_recolector && (
+              {item.estado === 'completada' && !item.calificacion_recolector && String(item.usuario_id) === String(user?.id) && user?.rol !== 'recolector' && (
                 <CustomButton 
                   title="Calificar Recolector" 
                   onPress={() => {

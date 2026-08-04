@@ -129,6 +129,26 @@ export const notificationTarget = (data = {}) => {
     const articleId = safeSlug(data.entityId);
     return articleId ? { name: 'NewsDetail', params: { articleId } } : null;
   }
+  if (type === 'collection_created') {
+    const collectionId = integerId(data.entityId);
+    const latitude = Number(data.latitude ?? data.latitud);
+    const longitude = Number(data.longitude ?? data.longitud);
+    if (collectionId && Number.isFinite(latitude) && latitude >= -90 && latitude <= 90 && Number.isFinite(longitude) && longitude >= -180 && longitude <= 180) {
+      return {
+        name: 'RouteNavigation',
+        params: {
+          point: {
+            id: `collection-${collectionId}`,
+            nombre: data.requesterName ? `Recolección de ${String(data.requesterName).slice(0, 100)}` : `Recolección ${collectionId}`,
+            direccion: String(data.address || data.direccion || 'Domicilio de recolección').slice(0, 500),
+            materiales: String(data.materials || data.materiales || '').slice(0, 500),
+            latitud: latitude,
+            longitud: longitude,
+          },
+        },
+      };
+    }
+  }
   if (type.startsWith('collection_')) {
     const collectionId = integerId(data.entityId);
     return { name: 'MisRecolecciones', params: collectionId ? { collectionId } : undefined };

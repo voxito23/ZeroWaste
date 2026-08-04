@@ -10,8 +10,6 @@ import { resolveAvatar, resolveDisplayName } from '../../utils/user';
 import Skeleton from '../ui/Skeleton';
 import UserAvatar from '../ui/UserAvatar';
 
-const COMPOSER_BOTTOM_LIFT = 24;
-
 export default function CommentsModal({ visible, post, highlightCommentId, onClose, onCountChange }) {
   const PAGE_SIZE = 50;
   const insets = useSafeAreaInsets();
@@ -23,7 +21,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   const commentsRef = useRef([]);
   const draftPostIdRef = useRef(null);
   const dragY = useRef(new Animated.Value(0)).current;
-  const composerPadding = useRef(new Animated.Value(Math.max(insets.bottom, 8) + COMPOSER_BOTTOM_LIFT)).current;
+  const composerPadding = useRef(new Animated.Value(Math.max(insets.bottom, 8))).current;
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -47,7 +45,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   useEffect(() => {
     if (!visible) return;
     dragY.setValue(0);
-    composerPadding.setValue(Math.max(insets.bottom, 8) + COMPOSER_BOTTOM_LIFT);
+    composerPadding.setValue(Math.max(insets.bottom, 8));
   }, [composerPadding, dragY, insets.bottom, visible]);
 
   useEffect(() => {
@@ -72,7 +70,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
       dragY.setValue(0);
       composerPadding.stopAnimation();
       Animated.timing(composerPadding, {
-        toValue: Math.max(insets.bottom, 8) + COMPOSER_BOTTOM_LIFT,
+        toValue: Math.max(insets.bottom, 8),
         duration: reduceMotion ? 0 : Math.min(320, Math.max(200, Number(event?.duration) || 240)),
         easing: Easing.inOut(Easing.cubic),
         useNativeDriver: false,
@@ -99,7 +97,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
     Keyboard.dismiss();
     keyboardVisibleRef.current = false;
     composerPadding.stopAnimation();
-    composerPadding.setValue(Math.max(insets.bottom, 8) + COMPOSER_BOTTOM_LIFT);
+    composerPadding.setValue(Math.max(insets.bottom, 8));
     onClose();
   }, [composerPadding, insets.bottom, onClose]);
 

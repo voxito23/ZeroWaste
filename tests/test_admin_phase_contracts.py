@@ -25,6 +25,24 @@ class AdminPhaseContractsTest(unittest.TestCase):
         self.assertIn("DB::transaction(function () use ($data, $request)", controller)
         self.assertIn("Media::discard($newImage, 'recompensas')", controller)
 
+    def test_redemption_status_is_human_readable_and_never_returns_generic_conflict(self):
+        controller = (ROOT / "laravel_zerowaste" / "app" / "Http" / "Controllers" / "ImpactAdminController.php").read_text(encoding="utf-8")
+        view = (ROOT / "laravel_zerowaste" / "resources" / "views" / "admin" / "impacto" / "canjes.blade.php").read_text(encoding="utf-8")
+        update = controller[controller.index("function updateRedemption"):controller.index("public function rules")]
+        self.assertNotIn("abort(409", update)
+        self.assertIn("ValidationException::withMessages", update)
+        self.assertIn("$row->estado === $data['estado']", update)
+        self.assertIn("'EN_PREPARACION' => ['label' => 'En preparación'", view)
+        self.assertIn("'LISTA_PARA_ENTREGAR' => ['label' => 'Lista para entregar'", view)
+        self.assertIn("data-status-icon", view)
+
+    def test_reward_uses_professional_spanish_datetime_picker(self):
+        fields = (ROOT / "laravel_zerowaste" / "resources" / "views" / "admin" / "impacto" / "partials" / "reward-fields.blade.php").read_text(encoding="utf-8")
+        self.assertIn("data-reward-calendar", fields)
+        self.assertIn("enableTime: true", fields)
+        self.assertIn("locale: 'es'", fields)
+        self.assertIn("disableMobile: true", fields)
+
     def test_qr_failures_are_classified_without_logging_tokens(self):
         service = (ROOT / "laravel_zerowaste" / "app" / "Services" / "FastApiQrService.php").read_text(encoding="utf-8")
         controller = (ROOT / "laravel_zerowaste" / "app" / "Http" / "Controllers" / "PointQrController.php").read_text(encoding="utf-8")

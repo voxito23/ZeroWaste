@@ -119,6 +119,19 @@ class CollectionScheduleContractsTest(unittest.TestCase):
         self.assertIn('current_user.rol == "recolector"', contract)
         self.assertIn("status_code=403", contract)
 
+    def test_collectors_are_notified_and_cannot_rate_collectors(self):
+        source = (ROOT / "fast_api" / "app" / "routers" / "recoleccion.py").read_text(encoding="utf-8")
+        create_block = source[source.index("def solicitar_recoleccion"):source.index('@router.get("", response_model=List[SolicitudRecoleccionResponse]')]
+        rating_block = source[source.index("def calificar_recolector"):source.index('@router.post("/{solicitud_id}/qr"')]
+        self.assertIn('notification_type = "collection_created"', create_block)
+        self.assertIn('Usuario.rol == "recolector"', create_block)
+        self.assertIn('"requesterName": current_user.nombre', create_block)
+        self.assertIn('"latitude": float(nueva_solicitud.latitud)', create_block)
+        self.assertIn("background_tasks.add_task(send_expo_push", create_block)
+        self.assertIn('current_user.rol == "recolector"', rating_block)
+        self.assertIn("HTTP_403_FORBIDDEN", rating_block)
+        self.assertIn("calificacion_recolector is not None", rating_block)
+
 
 if __name__ == "__main__":
     unittest.main()

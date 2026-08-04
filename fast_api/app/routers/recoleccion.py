@@ -1,12 +1,13 @@
 from typing import List
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta, timezone
 from pydantic import BaseModel
 
 from app.data.database import get_db
-from app.models.domain_models import Usuario, SolicitudRecoleccion, TokenQrRecoleccion
+from app.models.domain_models import Notificacion, Usuario, SolicitudRecoleccion, TokenQrRecoleccion
 from app.models.schemas import (
     SolicitudRecoleccionCreate, 
     SolicitudRecoleccionResponse, 
@@ -17,6 +18,7 @@ from app.security.jwt_auth import get_current_user
 from app.services.collection_schedule import ScheduleValidationError, available_slots, lock_slot_capacity, validate_slot
 from app.services.collection_qr import CollectionQrError, complete_collection
 from app.services.qr_tokens import encrypt_token, new_token, public_content, token_hash
+from app.services.push_notifications import active_tokens, in_app_allowed, push_allowed, send_expo_push
 
 router = APIRouter(prefix="/recolecciones", tags=["Recolección a Domicilio"])
 
@@ -31,11 +33,12 @@ def disponibilidad(fecha: date, db: Session = Depends(get_db), _current_user: Us
 @router.post("", response_model=SolicitudRecoleccionResponse, status_code=status.HTTP_201_CREATED, summary="Solicitar recolección a domicilio")
 def solicitar_recoleccion(
     solicitud_in: SolicitudRecoleccionCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user),
 ):
     """Crea una nueva solicitud de recolección para el usuario actual."""
-    if current_user.rol == "recolector" and not current_user.is_admin:
+    if current_user.rol == "recolector":
         raise HTTPException(status_code=403, detail="Los recolectores no pueden crear solicitudes de recolección.")
     try:
         lock_slot_capacity(db, solicitud_in.scheduled_at)
@@ -55,8 +58,54 @@ def solicitar_recoleccion(
         estado="pendiente"
     )
     db.add(nueva_solicitud)
+    db.flush()
+
+    notification_type = "collection_created"
+    route = f"/collections/{nueva_solicitud.id}/navigate"
+    base_payload = {
+        "type": notification_type,
+        "entityId": str(nueva_solicitud.id),
+        "route": route,
+        "requesterName": current_user.nombre,
+        "latitude": float(nueva_solicitud.latitud),
+        "longitude": float(nueva_solicitud.longitud),
+        "address": nueva_solicitud.direccion,
+        "materials": nueva_solicitud.materiales or "",
+    }
+    title = f"Nueva recolección de {current_user.nombre}"
+    body = f"{nueva_solicitud.direccion} · {nueva_solicitud.materiales or 'Materiales por confirmar'}"
+    push_deliveries = []
+    collectors = db.query(Usuario).filter(
+        Usuario.rol == "recolector",
+        Usuario.id != current_user.id,
+        or_(Usuario.bloqueado.is_(False), Usuario.bloqueado.is_(None)),
+    ).all()
+    for collector in collectors:
+        payload = dict(base_payload)
+        if in_app_allowed(db, collector.id, notification_type):
+            notification = Notificacion(
+                user_id=collector.id,
+                titulo=title,
+                mensaje=body[:240],
+                url=f"zerowaste://collections/{nueva_solicitud.id}",
+                type=notification_type,
+                entity_id=str(nueva_solicitud.id),
+                route=route,
+                payload=payload,
+            )
+            db.add(notification)
+            db.flush()
+            payload = {**payload, "notificationId": str(notification.id)}
+            notification.payload = payload
+        if push_allowed(db, collector.id, notification_type):
+            tokens = active_tokens(db, collector.id)
+            if tokens:
+                push_deliveries.append((tokens, payload))
+
     db.commit()
     db.refresh(nueva_solicitud)
+    for tokens, payload in push_deliveries:
+        background_tasks.add_task(send_expo_push, tokens, title=title, body=body, data=payload)
     return nueva_solicitud
 
 @router.get("", response_model=List[SolicitudRecoleccionResponse], summary="Ver mis solicitudes de recolección")
@@ -79,6 +128,8 @@ def calificar_recolector(
     current_user: Usuario = Depends(get_current_user),
 ):
     """Permite al usuario calificar al recolector una vez completada la recolección."""
+    if current_user.rol == "recolector":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Un recolector no puede calificarse ni calificar a otro recolector.")
     solicitud = db.query(SolicitudRecoleccion).filter(
         SolicitudRecoleccion.id == solicitud_id,
         SolicitudRecoleccion.usuario_id == current_user.id
@@ -89,6 +140,9 @@ def calificar_recolector(
 
     if solicitud.estado != "completada":
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Solo puedes calificar recolecciones completadas.")
+
+    if solicitud.calificacion_recolector is not None:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Esta recolección ya fue calificada.")
     
     if calificacion_in.calificacion < 1 or calificacion_in.calificacion > 5:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="La calificación debe estar entre 1 y 5 estrellas.")

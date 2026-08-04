@@ -49,7 +49,7 @@ assert.match(map, /navigation\.navigate\('RouteNavigation'/);
 assert.match(map, /MAP_FALLBACK_STYLE_URL/);
 assert.match(map, /clusterRadius=\{48\}/);
 assert.match(map, /MAP_OVERVIEW_CAMERA[\s\S]*pitch:\s*0/);
-assert.doesNotMatch(map, /Mapbox\.StyleImport/);
+assert.match(map, /Mapbox\.StyleImport id="basemap" existing config=\{MAP_2D_CONFIG\}/);
 assert.match(map, /api\.get\('\/mobile\/config'\)/);
 assert.match(map, /MAP_CARDS_BOTTOM_CLEARANCE = 103/);
 assert.match(map, /bottomSafeArea \+ MAP_CARDS_BOTTOM_CLEARANCE/);
