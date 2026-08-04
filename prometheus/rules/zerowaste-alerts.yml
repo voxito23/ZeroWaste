@@ -65,4 +65,14 @@ groups:
         expr: histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m]))) > 2
         for: 5m
         labels: {severity: warning}
-        annotations: {summary: "HTTP p95 latency exceeds two seconds"}
+        annotations: {summary: "La latencia HTTP p95 supera dos segundos"}
+      - alert: ZeroWasteRateLimitSpike
+        expr: sum(increase(zerowaste_rate_limits_total[5m])) > 30
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: "Aumento sostenido de solicitudes limitadas por FastAPI"}
+      - alert: ZeroWasteFirewallBlockSpike
+        expr: sum(increase(zerowaste_firewall_blocks_total[5m])) > 20
+        for: 2m
+        labels: {severity: warning}
+        annotations: {summary: "El WAF está bloqueando un volumen inusual de solicitudes"}

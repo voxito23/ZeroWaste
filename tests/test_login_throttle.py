@@ -88,10 +88,10 @@ class LoginThrottleTests(unittest.TestCase):
         self.redis = FakeRedis()
         self.throttle = LoginThrottle(
             client=self.redis,
-            policy=ThrottlePolicy(account_limit=5, ip_limit=20, failure_window=300, lock_seconds=60),
+            policy=ThrottlePolicy(account_limit=5, ip_limit=5, failure_window=300, lock_seconds=60),
         )
 
-    def fail(self, count, email="user@example.test", ip="203.0.113.10"):
+    def record_failures(self, count, email="user@example.test", ip="203.0.113.10"):
         error = None
         for _ in range(count):
             try:
@@ -101,41 +101,41 @@ class LoginThrottleTests(unittest.TestCase):
         return error
 
     def test_first_four_failures_are_not_locked(self):
-        self.assertIsNone(self.fail(4))
+        self.assertIsNone(self.record_failures(4))
         self.throttle.assert_allowed("user@example.test", "203.0.113.10")
 
     def test_fifth_failure_locks_immediately_with_retry_after(self):
-        error = self.fail(5)
+        error = self.record_failures(5)
         self.assertIsNotNone(error)
         self.assertEqual(error.status_code, 429)
         self.assertEqual(error.headers["Retry-After"], "60")
         self.assertIn("Espera un minuto", error.detail)
 
     def test_correct_credentials_cannot_bypass_active_lock(self):
-        self.fail(5)
+        self.record_failures(5)
         with self.assertRaises(HTTPException) as raised:
             self.throttle.assert_allowed("user@example.test", "203.0.113.10")
         self.assertEqual(raised.exception.status_code, 429)
 
     def test_lock_expires_without_waiting_in_real_time(self):
-        self.fail(5)
+        self.record_failures(5)
         self.redis.advance(60)
         self.throttle.assert_allowed("user@example.test", "203.0.113.10")
 
     def test_success_clears_failures(self):
-        self.fail(4)
+        self.record_failures(4)
         self.throttle.clear("user@example.test", "203.0.113.10")
-        self.assertIsNone(self.fail(4))
+        self.assertIsNone(self.record_failures(4, ip="203.0.113.11"))
 
     def test_two_instances_share_the_same_redis_lock(self):
         other = LoginThrottle(client=self.redis, policy=self.throttle.policy)
-        self.fail(5)
+        self.record_failures(5)
         with self.assertRaises(HTTPException) as raised:
             other.assert_allowed("user@example.test", "203.0.113.10")
         self.assertEqual(raised.exception.status_code, 429)
 
     def test_identifier_is_not_stored_in_redis_key(self):
-        self.fail(1)
+        self.record_failures(1)
         self.assertFalse(any("user@example.test" in key for key in self.redis.values))
 
     def test_redis_outage_fails_closed_with_controlled_503(self):

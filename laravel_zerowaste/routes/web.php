@@ -114,12 +114,14 @@ Route::prefix($adminPrefix)->middleware(['auth', 'admin'])->group(function () {
     Route::get('/ranking', [ImpactAdminController::class, 'ranking'])->name('impacto.ranking');
     Route::get('/recompensas', [ImpactAdminController::class, 'rewards'])->name('impacto.recompensas');
     Route::post('/recompensas', [ImpactAdminController::class, 'storeReward'])->name('impacto.recompensas.store');
+    Route::get('/recompensas/{id}/edit', [ImpactAdminController::class, 'editReward'])->name('impacto.recompensas.edit');
     Route::put('/recompensas/{id}', [ImpactAdminController::class, 'updateReward'])->name('impacto.recompensas.update');
     Route::delete('/recompensas/{id}', [ImpactAdminController::class, 'destroyReward'])->name('impacto.recompensas.destroy');
     Route::get('/canjes', [ImpactAdminController::class, 'redemptions'])->name('impacto.canjes');
     Route::put('/canjes/{id}', [ImpactAdminController::class, 'updateRedemption'])->name('impacto.canjes.update');
     Route::get('/puntos/reglas', [ImpactAdminController::class, 'rules'])->name('impacto.reglas');
     Route::post('/puntos/reglas', [ImpactAdminController::class, 'storeRule'])->name('impacto.reglas.store');
+    Route::get('/puntos/reglas/{id}/edit', [ImpactAdminController::class, 'editRule'])->name('impacto.reglas.edit');
     Route::put('/puntos/reglas/{id}', [ImpactAdminController::class, 'updateRule'])->name('impacto.reglas.update');
     Route::get('/puntos/movimientos', [ImpactAdminController::class, 'movements'])->name('impacto.movimientos');
     Route::get('/puntos/movimientos/exportar', [ImpactAdminController::class, 'exportMovements'])->name('impacto.movimientos.export');

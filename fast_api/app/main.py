@@ -13,16 +13,17 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi.responses import FileResponse, JSONResponse
 
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.routers import articles, auth, auth_external, usuarios, foro, mapa, eventos, analisis, formularios, docs_auth, campanas, recoleccion, firewall_monitor, impacto, qr, notifications, news, mobile_links
 from app.security.firewall import FirewallMiddleware
 from app.data.database import engine
-from app.observability import READINESS
+from app.observability import RATE_LIMITS, READINESS
+from app.security.login_throttle import get_client_ip
 
 logger = logging.getLogger("zerowaste.api")
 
@@ -33,9 +34,10 @@ REDIS_URL = os.getenv("REDIS_URL")
 if not REDIS_URL:
     raise RuntimeError("Required environment variable is not configured: REDIS_URL")
 limiter = Limiter(
-    key_func=get_remote_address,
+    key_func=get_client_ip,
     default_limits=["60/minute"],
     storage_uri=REDIS_URL,
+    headers_enabled=True,
 )
 
 # ==========================================================================
@@ -61,7 +63,16 @@ app = FastAPI(
 
 # Registrar rate limiter
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore
+app.add_middleware(SlowAPIMiddleware)
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_exceeded(request: Request, _exc: RateLimitExceeded):
+    RATE_LIMITS.inc()
+    response = JSONResponse(status_code=429, content={
+        "detail": "Demasiadas solicitudes. Espera un momento antes de intentarlo nuevamente.",
+    })
+    return request.app.state.limiter._inject_headers(response, request.state.view_rate_limit)
 
 
 @app.exception_handler(HTTPException)

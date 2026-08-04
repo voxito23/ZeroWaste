@@ -27,6 +27,8 @@ import RouteNavigationScreen from '../screens/RouteNavigationScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import NewsDetailScreen from '../screens/NewsDetailScreen';
 import ContentUnavailableScreen from '../screens/ContentUnavailableScreen';
+import HelpSupportScreen from '../screens/HelpSupportScreen';
+import InfoDocumentScreen from '../screens/InfoDocumentScreen';
 import { api } from '../api/axios';
 import { deepLinkTarget } from './linking';
 import { getNotificationPermission, notificationTarget, Notifications, registerPushToken } from '../services/mobileNotifications';
@@ -176,6 +178,8 @@ export default function AppNavigator() {
             <Stack.Screen name="PointDetail" component={PointDetailScreen} />
             <Stack.Screen name="RouteNavigation" component={RouteNavigationScreen} options={{ animation: reduceMotion ? 'none' : 'fade', animationDuration: reduceMotion ? 0 : 180 }} />
             <Stack.Screen name="ContentUnavailable" component={ContentUnavailableScreen} />
+            <Stack.Screen name="HelpSupport" component={HelpSupportScreen} />
+            <Stack.Screen name="InfoDocument" component={InfoDocumentScreen} />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthNavigator} />

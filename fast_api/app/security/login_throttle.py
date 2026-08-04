@@ -36,7 +36,7 @@ return 0
 @dataclass(frozen=True)
 class ThrottlePolicy:
     account_limit: int = 5
-    ip_limit: int = 20
+    ip_limit: int = 5
     failure_window: int = 300
     lock_seconds: int = 60
 

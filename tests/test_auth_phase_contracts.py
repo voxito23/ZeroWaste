@@ -21,8 +21,10 @@ class AuthPhaseContractsTest(unittest.TestCase):
 
     def test_mobile_recovers_when_the_system_browser_is_cancelled(self):
         source = (ROOT / "mobile_app" / "screens" / "LoginScreen.js").read_text(encoding="utf-8")
-        self.assertIn("AppState.addEventListener", source)
         self.assertIn("googleBrowserPending", source)
+        self.assertIn("googleWaitingVisible", source)
+        self.assertIn("googleTimeoutRef", source)
+        self.assertIn("Cancelar acceso", source)
         self.assertIn("setGoogleLoading(false)", source)
         self.assertIn("Acceso cancelado", source)
 

@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Linking, ScrollView, Switch, Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Animated, Linking, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Accessibility,
@@ -161,10 +161,6 @@ export default function SettingsScreen() {
     await voiceNavigation.setVolume(next);
   };
 
-  const openExternal = async (url) => {
-    try { await Linking.openURL(url); } catch { showDialog({ type: 'error', title: 'No se pudo abrir', message: 'Inténtalo nuevamente cuando tengas conexión.' }); }
-  };
-
   const accountRows = useMemo(() => [
     { label: 'Editar perfil', description: 'Foto, nombre, biografía y ubicación', icon: UserRoundPen, onPress: () => navigation.navigate('EditProfile') },
     { label: 'Contraseña y seguridad', description: 'Actualiza tus credenciales de acceso', icon: KeyRound, onPress: () => navigation.navigate('ChangePassword') },
@@ -206,10 +202,10 @@ export default function SettingsScreen() {
         </View>
 
         <Text className="mb-2 px-1 text-xs font-black uppercase tracking-widest text-slate-500">PRIVACIDAD Y PERMISOS</Text>
-        <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white"><SettingRow icon={MapPin} label="Ubicación" description="Mapa, distancia y rutas internas" onPress={Linking.openSettings} /><SettingRow icon={Camera} label="Cámara y fotografías" description="Escáner QR, perfil y publicaciones" onPress={Linking.openSettings} divider /><SettingRow icon={ShieldCheck} label="Privacidad" description="Cómo protegemos tus datos" onPress={() => openExternal('https://www.zerowaste-qro.com/privacidad')} divider /></View>
+        <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white"><SettingRow icon={MapPin} label="Ubicación" description="Mapa, distancia y rutas internas" onPress={Linking.openSettings} /><SettingRow icon={Camera} label="Cámara y fotografías" description="Escáner QR, perfil y publicaciones" onPress={Linking.openSettings} divider /><SettingRow icon={ShieldCheck} label="Privacidad" description="Cómo protegemos tus datos" onPress={() => navigation.navigate('InfoDocument', { document: 'privacy' })} divider /></View>
 
         <Text className="mb-2 px-1 text-xs font-black uppercase tracking-widest text-slate-500">AYUDA</Text>
-        <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white"><SettingRow icon={HelpCircle} label="Ayuda y soporte" description="Preguntas frecuentes y contacto" onPress={() => openExternal('https://www.zerowaste-qro.com/contacto')} /><SettingRow icon={FileText} label="Términos" description="Condiciones de uso de ZeroWaste" onPress={() => openExternal('https://www.zerowaste-qro.com/terminos')} divider /></View>
+        <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white"><SettingRow icon={HelpCircle} label="Ayuda y soporte" description="Asistente de voz, preguntas frecuentes y contacto" onPress={() => navigation.navigate('HelpSupport')} /><SettingRow icon={FileText} label="Términos" description="Condiciones de uso dentro de la app" onPress={() => navigation.navigate('InfoDocument', { document: 'terms' })} divider /></View>
 
         <TouchableOpacity onPress={() => setLogoutVisible(true)} className="min-h-14 flex-row items-center justify-center rounded-2xl border border-red-100 bg-red-50"><LogOut color="#DC2626" size={20} /><Text className="ml-2 font-black text-red-600">Cerrar sesión</Text></TouchableOpacity>
       </ScrollView>
@@ -227,5 +223,11 @@ function SettingRow({ icon: Icon, label, description, value, onPress, divider })
 }
 
 function SettingSwitch({ icon: Icon, label, description, value, onChange, divider, disabled }) {
-  return <View className={`min-h-[72px] flex-row items-center px-4 py-3 ${divider ? 'border-t border-slate-100' : ''}`}><View className="h-10 w-10 items-center justify-center rounded-full bg-emerald-50"><Icon color="#059669" size={19} /></View><View className="ml-3 flex-1"><Text className="font-bold text-slate-900">{label}</Text><Text className="mt-0.5 text-xs leading-4 text-slate-500">{description}</Text></View><Switch value={value} disabled={disabled} onValueChange={onChange} trackColor={{ false: '#CBD5E1', true: '#6EE7B7' }} thumbColor={value ? '#047857' : '#F8FAFC'} accessibilityLabel={label} /></View>;
+  return <View className={`min-h-[72px] flex-row items-center px-4 py-3 ${divider ? 'border-t border-slate-100' : ''}`}><View className="h-10 w-10 items-center justify-center rounded-full bg-emerald-50"><Icon color="#059669" size={19} /></View><View className="ml-3 flex-1"><Text className="font-bold text-slate-900">{label}</Text><Text className="mt-0.5 text-xs leading-4 text-slate-500">{description}</Text></View><PremiumSwitch value={value} disabled={disabled} onChange={onChange} label={label} /></View>;
+}
+
+function PremiumSwitch({ value, disabled, onChange, label }) {
+  const progress = useRef(new Animated.Value(value ? 1 : 0)).current;
+  useEffect(() => { Animated.spring(progress, { toValue: value ? 1 : 0, damping: 18, stiffness: 240, mass: 0.7, useNativeDriver: true }).start(); }, [progress, value]);
+  return <Pressable accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: value, disabled }} disabled={disabled} onPress={() => onChange(!value)} className={`h-8 w-[54px] justify-center rounded-full px-1 ${value ? 'bg-emerald-600' : 'bg-slate-300'} ${disabled ? 'opacity-50' : ''}`} style={({pressed})=>({transform:[{scale:pressed?0.96:1}]})}><Animated.View className="h-6 w-6 rounded-full bg-white shadow-sm" style={{transform:[{translateX:progress.interpolate({inputRange:[0,1],outputRange:[0,22]})}]}} /></Pressable>;
 }

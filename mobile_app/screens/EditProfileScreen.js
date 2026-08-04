@@ -182,7 +182,7 @@ export default function EditProfileScreen() {
           </TouchableOpacity>
           <Text className="mt-4 text-lg font-black text-slate-950">{name.trim() || 'Tu nombre'}</Text>
           <Text className="mt-1 text-sm font-semibold text-emerald-700">Cambiar fotografía</Text>
-          <Text className="mt-2 text-center text-xs leading-5 text-slate-400">JPG, PNG o WebP · máximo 5 MB</Text>
+          <Text className="mt-2 text-center text-xs leading-5 text-slate-400">Elige una fotografía nítida que te represente en la comunidad.</Text>
         </View>
 
         <Text className="mt-3 px-1 text-xs font-black uppercase tracking-widest text-slate-500">Acerca de ti</Text>

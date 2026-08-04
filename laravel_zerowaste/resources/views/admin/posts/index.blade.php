@@ -87,7 +87,9 @@
                         <td class="text-right">
                             <div class="flex items-center justify-end gap-1">
                                 @if(!$post->aprobado)
-                                <form action="{{ route('posts.approve', $post->id) }}" method="POST">@csrf<button class="p-2 text-emerald-600 hover:bg-emerald-50 rounded-xl" title="Aprobar y otorgar puntos"><span class="material-symbols-outlined text-[20px]">verified</span></button></form>
+                                <form id="approve-post-{{ $post->id }}" action="{{ route('posts.approve', $post->id) }}" method="POST">@csrf<button type="button" onclick="confirmarAprobacion('approve-post-{{ $post->id }}')" class="inline-flex items-center gap-1 rounded-xl bg-emerald-50 px-3 py-2 font-bold text-emerald-700 hover:bg-emerald-100" title="Aprobar publicación"><span class="material-symbols-outlined text-[18px]">verified</span><span class="hidden xl:inline">Aprobar</span></button></form>
+                                @else
+                                <span class="inline-flex items-center gap-1 rounded-xl bg-slate-50 px-3 py-2 text-xs font-bold text-slate-500" title="Publicación ya aprobada"><span class="material-symbols-outlined text-[17px]">verified</span>Aprobada</span>
                                 @endif
                                 <button type="button" 
                                     data-title="{{ $post->titulo }}"
@@ -139,6 +141,23 @@
 
 @push('scripts')
 <script>
+async function confirmarAprobacion(formId) {
+    const result = await Swal.fire({
+        title: '¿Aprobar esta publicación?',
+        text: 'Quedará visible para la comunidad y la regla activa decidirá los puntos. La operación es idempotente.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, aprobar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#059669'
+    });
+    if (!result.isConfirmed) return;
+    const form = document.getElementById(formId);
+    const button = form?.querySelector('button');
+    if (button) { button.disabled = true; button.innerHTML = '<span class="animate-spin">◌</span><span>Aprobando…</span>'; }
+    form?.requestSubmit();
+}
+
 function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>'"]/g, char => ({
         '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'

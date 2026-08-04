@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { ArrowLeft, CalendarDays, Clock3, Share2 } from 'lucide-react-native';
+import { ArrowLeft, CalendarDays, Clock3, Heart, Share2 } from 'lucide-react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -31,6 +31,8 @@ export default function ArticleDetailScreen() {
   const [article, setArticle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [reactionPending, setReactionPending] = useState(false);
+  const [reactionError, setReactionError] = useState('');
   const entrance = useRef(new Animated.Value(0)).current;
 
   const loadArticle = useCallback(async () => {
@@ -80,6 +82,25 @@ export default function ArticleDetailScreen() {
     });
   };
 
+  const toggleReaction = async () => {
+    if (!article || reactionPending) return;
+    setReactionPending(true);
+    setReactionError('');
+    try {
+      const endpoint = `/${isNews ? 'news' : 'articles'}/${encodeURIComponent(article.id)}/like`;
+      const { data } = article.liked_by_me ? await api.delete(endpoint) : await api.put(endpoint);
+      setArticle((current) => ({
+        ...current,
+        liked_by_me: Boolean(data?.liked),
+        likes_count: Number(data?.likes_count) || 0,
+      }));
+    } catch (requestError) {
+      setReactionError(requestError.userMessage || 'No fue posible actualizar el corazón.');
+    } finally {
+      setReactionPending(false);
+    }
+  };
+
   const imageUrl = normalizeMediaUrl(article?.image_url);
   const published = article?.published_at
     ? new Date(`${article.published_at}T12:00:00`).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })
@@ -93,6 +114,10 @@ export default function ArticleDetailScreen() {
           <ArrowLeft color={colors.text} size={21} />
         </TouchableOpacity>
         <Text className="ml-4 flex-1 text-lg font-black text-slate-900" numberOfLines={1}>{isNews ? 'Noticia' : 'Artículo'}</Text>
+        <TouchableOpacity onPress={() => void toggleReaction()} disabled={!article || reactionPending} className={`mr-2 h-11 min-w-11 flex-row items-center justify-center gap-1 rounded-full px-3 ${article?.liked_by_me ? 'bg-rose-500' : 'bg-rose-50'}`} accessibilityLabel={article?.liked_by_me ? 'Quitar corazón' : 'Dar corazón'} accessibilityState={{ selected: Boolean(article?.liked_by_me), busy: reactionPending }}>
+          {reactionPending ? <ActivityIndicator color={article?.liked_by_me ? '#fff' : '#E11D48'} size="small" /> : <Heart color={article?.liked_by_me ? '#fff' : '#E11D48'} fill={article?.liked_by_me ? '#fff' : 'transparent'} size={19} />}
+          {article ? <Text className={`text-xs font-black ${article.liked_by_me ? 'text-white' : 'text-rose-600'}`}>{Number(article.likes_count) || 0}</Text> : null}
+        </TouchableOpacity>
         <TouchableOpacity onPress={shareArticle} disabled={!article} className="h-11 w-11 items-center justify-center rounded-full bg-emerald-50" accessibilityLabel="Compartir artículo">
           <Share2 color={article ? colors.green : '#94A3B8'} size={20} />
         </TouchableOpacity>
@@ -123,7 +148,8 @@ export default function ArticleDetailScreen() {
                 <View className="flex-row items-center gap-1.5"><Clock3 color={colors.textSecondary} size={15} /><Text className="text-xs font-semibold text-slate-500">{article.read_time}</Text></View>
               </View>
               {article.author ? <Text className="mt-3 text-sm font-bold text-slate-600">Por {article.author}</Text> : null}
-              <Text className="mt-6 border-l-4 border-emerald-500 pl-4 text-[17px] font-semibold leading-7 text-slate-700">{article.excerpt}</Text>
+              {reactionError ? <Text className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-center text-sm font-bold text-red-700">{reactionError}</Text> : null}
+              <Text className="mt-6 border-l-4 border-emerald-500 pl-4 text-[17px] font-semibold leading-7 text-slate-700" style={{ textAlign: 'justify' }}>{article.excerpt}</Text>
 
               {(article.blocks || []).map((block, index) => (
                 <View key={`${block.type}-${index}`} className="mt-7">
@@ -132,11 +158,21 @@ export default function ArticleDetailScreen() {
                   {block.items?.map((item, itemIndex) => (
                     <View key={`${index}-${itemIndex}`} className="mt-3 flex-row items-start pr-2">
                       <View className="mr-3 mt-2.5 h-2 w-2 rounded-full bg-emerald-500" />
-                      <Text className="flex-1 text-[16px] leading-7 text-slate-700">{item}</Text>
+                      <Text className="flex-1 text-[16px] leading-7 text-slate-700" style={{ textAlign: 'justify' }}>{item}</Text>
                     </View>
                   ))}
                 </View>
               ))}
+
+              {article.references?.length ? (
+                <View className="mt-9 rounded-3xl border border-emerald-100 bg-emerald-50/60 p-5">
+                  <Text className="text-[20px] font-black text-emerald-950">Referencias</Text>
+                  <Text className="mt-1 text-xs font-bold text-emerald-700">Formato APA 7 · consulta informativa dentro de la app</Text>
+                  {article.references.map((reference, index) => (
+                    <Text key={`${article.id}-reference-${index}`} selectable className="mt-4 text-[14px] leading-6 text-slate-700" style={{ textAlign: 'justify' }}>{reference}</Text>
+                  ))}
+                </View>
+              ) : null}
             </View>
           </ScrollView>
         </Animated.View>

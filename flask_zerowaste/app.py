@@ -199,7 +199,7 @@ def root():
     return render_template('login.html')
 
 @app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("10/minute")
+@limiter.limit("5/minute")
 def login():
     if request.method == 'POST':
         email = request.form.get('email', '').strip()

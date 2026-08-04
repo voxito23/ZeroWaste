@@ -17,19 +17,29 @@
             </fieldset>
         @endforeach
         </div>
-        <div class="mt-6 flex flex-wrap justify-end gap-3"><button type="button" class="btn-secondary" onclick="document.getElementById('restore-schedule').requestSubmit()">Restaurar valores iniciales</button><button type="submit" class="btn-primary"><span class="material-symbols-outlined">save</span> Guardar cambios</button></div>
+        <div class="mt-6 flex flex-wrap justify-end gap-3"><button type="button" class="btn-secondary" onclick="confirmRestoreSchedule()">Restaurar valores iniciales</button><button type="submit" class="btn-primary"><span class="material-symbols-outlined">save</span> Guardar cambios</button></div>
     </form>
     <form id="restore-schedule" method="POST" action="{{ route('admin.recolecciones.horarios.restore') }}" class="hidden">@csrf</form>
 
     <section class="glass-card p-6"><h3 class="text-lg font-black dark:text-white">Excepciones y fechas cerradas</h3>
-        <form method="POST" action="{{ route('admin.recolecciones.horarios.excepciones.store') }}" class="mt-5 grid gap-3 md:grid-cols-5">@csrf
-            <label class="text-xs font-bold text-slate-500">Fecha<input class="input-premium mt-1" type="date" name="exception_date" required></label>
+        <p class="mt-1 text-sm text-slate-500">Usa el calendario para cierres, días festivos o un horario especial.</p>
+        <form method="POST" action="{{ route('admin.recolecciones.horarios.excepciones.store') }}" class="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-6" data-loading-form>@csrf
+            <label class="text-xs font-bold text-slate-500">Fecha<input class="input-premium zw-date-picker mt-1 cursor-pointer" type="text" name="exception_date" placeholder="Seleccionar fecha" autocomplete="off" readonly required></label>
             <label class="text-xs font-bold text-slate-500">Tipo<select class="input-premium mt-1" name="kind"><option value="closed">Día cerrado</option><option value="holiday">Día festivo</option><option value="blocked">Bloqueo temporal</option><option value="override">Horario especial</option></select></label>
             <label class="text-xs font-bold text-slate-500">Desde<input class="input-premium mt-1" type="time" name="starts_at"></label><label class="text-xs font-bold text-slate-500">Hasta<input class="input-premium mt-1" type="time" name="ends_at"></label>
+            <label class="text-xs font-bold text-slate-500">Capacidad especial<input class="input-premium mt-1" type="number" min="1" max="500" name="capacity_per_interval" placeholder="Opcional"></label>
             <label class="text-xs font-bold text-slate-500">Motivo<input class="input-premium mt-1" name="reason" maxlength="255" required></label>
-            <button class="btn-primary md:col-start-5" type="submit">Agregar excepción</button>
+            <button class="btn-primary xl:col-start-6" type="submit"><span class="material-symbols-outlined text-lg">event_available</span> Agregar excepción</button>
         </form>
-        <div class="mt-6 overflow-x-auto"><table class="premium-table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Horario</th><th>Motivo</th><th></th></tr></thead><tbody>@forelse($exceptions as $item)<tr><td>{{ \Illuminate\Support\Carbon::parse($item->exception_date)->translatedFormat('j M Y') }}</td><td>{{ $item->kind }}</td><td>{{ $item->starts_at ? substr($item->starts_at,0,5).'–'.substr($item->ends_at,0,5) : 'Cerrado' }}</td><td>{{ $item->reason }}</td><td><form method="POST" action="{{ route('admin.recolecciones.horarios.excepciones.destroy', $item->id) }}">@csrf @method('DELETE')<button class="font-bold text-red-600">Retirar</button></form></td></tr>@empty<tr><td colspan="5" class="py-8 text-center">No hay excepciones activas.</td></tr>@endforelse</tbody></table></div>{{ $exceptions->links() }}
+        <div class="mt-6 overflow-x-auto"><table class="premium-table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Horario</th><th>Motivo</th><th></th></tr></thead><tbody>@forelse($exceptions as $item)<tr><td>{{ \Illuminate\Support\Carbon::parse($item->exception_date)->translatedFormat('j M Y') }}</td><td>{{ ['closed'=>'Día cerrado','holiday'=>'Día festivo','blocked'=>'Bloqueo temporal','override'=>'Horario especial'][$item->kind] ?? $item->kind }}</td><td>{{ $item->starts_at ? substr($item->starts_at,0,5).'–'.substr($item->ends_at,0,5) : 'Cerrado' }}</td><td>{{ $item->reason }}</td><td><form id="exception-{{ $item->id }}" method="POST" action="{{ route('admin.recolecciones.horarios.excepciones.destroy', $item->id) }}">@csrf @method('DELETE')<button type="button" onclick="confirmRemoveException('exception-{{ $item->id }}')" class="font-bold text-red-600">Retirar</button></form></td></tr>@empty<tr><td colspan="5" class="py-8 text-center">No hay excepciones activas.</td></tr>@endforelse</tbody></table></div>{{ $exceptions->links() }}
     </section>
 </div>
 @endsection
+@push('scripts')
+<script>
+document.querySelectorAll('.zw-date-picker').forEach((input) => flatpickr(input, { locale: 'es', dateFormat: 'Y-m-d', minDate: 'today', disableMobile: true }));
+async function confirmRestoreSchedule(){const result=await Swal.fire({title:'¿Restaurar el horario inicial?',text:'Se usarán lunes, miércoles y viernes de 10:00 a 14:00, con intervalos de 60 minutos.',icon:'warning',showCancelButton:true,confirmButtonText:'Sí, restaurar',cancelButtonText:'Cancelar',confirmButtonColor:'#059669'});if(result.isConfirmed)document.getElementById('restore-schedule').requestSubmit();}
+async function confirmRemoveException(formId){const result=await Swal.fire({title:'¿Retirar esta excepción?',text:'La fecha volverá a regirse por su horario semanal.',icon:'warning',showCancelButton:true,confirmButtonText:'Sí, retirar',cancelButtonText:'Cancelar',confirmButtonColor:'#dc2626'});if(result.isConfirmed)document.getElementById(formId).requestSubmit();}
+document.querySelectorAll('[data-loading-form]').forEach((form)=>form.addEventListener('submit',()=>{const button=form.querySelector('button[type="submit"]');if(button){button.disabled=true;button.innerHTML='<span class="animate-spin">◌</span> Guardando…';}}));
+</script>
+@endpush

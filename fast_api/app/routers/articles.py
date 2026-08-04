@@ -4,8 +4,12 @@ from __future__ import annotations
 
 from typing import Literal
 
-from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
+
+from app.models.domain_models import Usuario
+from app.security.jwt_auth import get_current_user, get_optional_current_user
+from app.services.content_reactions import ContentReactions, get_content_reactions
 
 
 router = APIRouter(prefix="/articles", tags=["Artículos"])
@@ -27,11 +31,19 @@ class ArticleSummary(BaseModel):
     published_at: str
     read_time: str
     image_url: str
+    likes_count: int = 0
+    liked_by_me: bool = False
 
 
 class ArticleDetail(ArticleSummary):
     author: str | None = None
     blocks: list[ArticleBlock]
+    references: list[str] = Field(default_factory=list)
+
+
+class ContentLikeResponse(BaseModel):
+    liked: bool
+    likes_count: int
 
 
 ARTICLES: tuple[ArticleDetail, ...] = (
@@ -54,6 +66,10 @@ ARTICLES: tuple[ArticleDetail, ...] = (
             ]),
             ArticleBlock(type="paragraph", text="La responsabilidad también consiste en ejercer el poder de consumo y exigir políticas públicas que impulsen una economía circular más vigorosa."),
         ],
+        references=[
+            "Geyer, R., Jambeck, J. R., & Law, K. L. (2017). Production, use, and fate of all plastics ever made. Science Advances, 3(7), e1700782. https://doi.org/10.1126/sciadv.1700782",
+            "Programa de las Naciones Unidas para el Medio Ambiente. (2023). Turning off the tap: How the world can end plastic pollution and create a circular economy.",
+        ],
     ),
     ArticleDetail(
         id="ahorro-agua",
@@ -73,6 +89,9 @@ ARTICLES: tuple[ArticleDetail, ...] = (
                 "Reutiliza agua gris de la lavadora para descargas sanitarias cuando la instalación lo permita.",
             ]),
             ArticleBlock(type="paragraph", text="La huella de agua virtual de alimentos y ropa también importa: reducir el desperdicio y evitar compras innecesarias disminuye miles de litros indirectos."),
+        ],
+        references=[
+            "Fondo de las Naciones Unidas para la Infancia & Organización Mundial de la Salud. (2023). Progress on household drinking water, sanitation and hygiene 2000–2022: Special focus on gender.",
         ],
     ),
     ArticleDetail(
@@ -94,6 +113,9 @@ ARTICLES: tuple[ArticleDetail, ...] = (
             ]),
             ArticleBlock(type="paragraph", text="Consolidar redes autónomas e interconectadas reduce emisiones, costos y vulnerabilidad ante fallas del sistema eléctrico."),
         ],
+        references=[
+            "International Renewable Energy Agency. (2023). World energy transitions outlook 2023: 1.5°C pathway (Vol. 1).",
+        ],
     ),
     ArticleDetail(
         id="compostaje-urbano",
@@ -104,7 +126,7 @@ ARTICLES: tuple[ArticleDetail, ...] = (
         read_time="7 min",
         image_url=f"{PUBLIC_STATIC}/composta.png",
         blocks=[
-            ArticleBlock(type="paragraph", text="Cerca del 45% de los residuos de hogares mexicanos son orgánicos. En vertederos anaeróbicos producen metano; separarlos permite convertir un problema en suelo fértil (SEMARNAT, 2023)."),
+            ArticleBlock(type="paragraph", text="Una parte importante de los residuos domésticos es orgánica. Cuando se dispone sin oxígeno puede producir metano; separarla permite convertir un problema en suelo fértil (PNUMA, 2023)."),
             ArticleBlock(type="section", heading="Abraza a las lombrices", text="Una compostera doméstica puede reducir de forma importante el volumen enviado al basurero. La base es equilibrar materiales ricos en nitrógeno y carbono y excluir productos que atraigan fauna nociva."),
             ArticleBlock(type="section", heading="Reglas de la biomasa doméstica", text="Para prevenir moscas y malos olores:", items=[
                 "Conserva temporalmente en frío las cáscaras y restos vegetales antes de llevarlos a la compostera.",
@@ -114,17 +136,20 @@ ARTICLES: tuple[ArticleDetail, ...] = (
             ]),
             ArticleBlock(type="paragraph", text="El abono resultante enriquece jardines y huertos y ayuda a cerrar el ciclo de los residuos alimentarios urbanos."),
         ],
+        references=[
+            "Programa de las Naciones Unidas para el Medio Ambiente. (2023). Turning off the tap: How the world can end plastic pollution and create a circular economy.",
+        ],
     ),
     ArticleDetail(
         id="queretaro-recicla",
         category="Noticia local",
-        title="Querétaro recicla 2.4 kg per cápita al día",
-        excerpt="La separación y la infraestructura regional impulsan un modelo de economía circular.",
+        title="Querétaro fortalece la gestión de sus residuos",
+        excerpt="La separación, la recolección municipal y la participación ciudadana sostienen una economía más circular.",
         published_at="2024-01-08",
         read_time="5 min",
         image_url=f"{PUBLIC_STATIC}/qrocapita.jpg",
         blocks=[
-            ArticleBlock(type="paragraph", text="Querétaro ha incrementado el porcentaje de reciclaje hasta llegar al 30% de los 2.4 kilos per cápita generados diariamente, de acuerdo con el informe ambiental citado por la publicación original (SEDESU, 2023)."),
+            ArticleBlock(type="paragraph", text="Los municipios de Querétaro reportan infraestructura y servicios para la recolección y el manejo de residuos sólidos urbanos. El panorama estatal del INEGI permite consultar estas capacidades sin atribuir cifras no verificadas (INEGI, 2024)."),
             ArticleBlock(type="section", heading="Un modelo de economía circular", text="Las plantas de separación permiten reincorporar materiales como PET, aluminio y cartón a la cadena productiva. La participación ciudadana y la separación desde el hogar son piezas centrales del proceso."),
             ArticleBlock(type="section", heading="Impacto en la comunidad", text="Además de reducir los residuos enviados a vertederos, la industria local de reciclaje genera empleos y evita parte de las emisiones asociadas con producir materiales vírgenes.", items=[
                 "Reducción de residuos en vertederos.",
@@ -133,20 +158,64 @@ ARTICLES: tuple[ArticleDetail, ...] = (
             ]),
             ArticleBlock(type="paragraph", text="El siguiente reto es ampliar la infraestructura de recolección, la educación ambiental y el monitoreo inteligente para sostener los avances de la región."),
         ],
+        references=[
+            "Instituto Nacional de Estadística y Geografía. (2024). Panorama de los gobiernos municipales de México 2022: Querétaro.",
+        ],
     ),
 )
 
 ARTICLE_BY_ID = {article.id: article for article in ARTICLES}
 
 
+def enrich_article(article: ArticleDetail, content_type: str, user_id: int | None, reactions: ContentReactions) -> ArticleDetail:
+    if not isinstance(reactions, ContentReactions):
+        return article
+    likes_count, liked_by_me = reactions.state(content_type, article.id, user_id)
+    return article.model_copy(update={"likes_count": likes_count, "liked_by_me": liked_by_me})
+
+
 @router.get("", response_model=list[ArticleSummary], summary="Listar contenido editorial móvil")
-def list_articles():
-    return [ArticleSummary(**article.model_dump()) for article in ARTICLES if article.category != "Noticia local"]
+def list_articles(
+    current_user: Usuario | None = Depends(get_optional_current_user),
+    reactions: ContentReactions = Depends(get_content_reactions),
+):
+    user_id = getattr(current_user, "id", None)
+    return [ArticleSummary(**enrich_article(article, "article", user_id, reactions).model_dump()) for article in ARTICLES if article.category != "Noticia local"]
 
 
-@router.get("/{article_id}", response_model=ArticleDetail, summary="Obtener artículo estructurado")
-def get_article(article_id: str):
+@router.put("/{article_id}/like", response_model=ContentLikeResponse, summary="Dar corazón a un artículo")
+def like_article(
+    article_id: str,
+    current_user: Usuario = Depends(get_current_user),
+    reactions: ContentReactions = Depends(get_content_reactions),
+):
     article = ARTICLE_BY_ID.get(article_id)
     if not article or article.category == "Noticia local":
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artículo no encontrado.")
-    return article
+    likes_count, liked = reactions.set_like("article", article_id, current_user.id, True)
+    return ContentLikeResponse(liked=liked, likes_count=likes_count)
+
+
+@router.delete("/{article_id}/like", response_model=ContentLikeResponse, summary="Quitar corazón de un artículo")
+def unlike_article(
+    article_id: str,
+    current_user: Usuario = Depends(get_current_user),
+    reactions: ContentReactions = Depends(get_content_reactions),
+):
+    article = ARTICLE_BY_ID.get(article_id)
+    if not article or article.category == "Noticia local":
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artículo no encontrado.")
+    likes_count, liked = reactions.set_like("article", article_id, current_user.id, False)
+    return ContentLikeResponse(liked=liked, likes_count=likes_count)
+
+
+@router.get("/{article_id}", response_model=ArticleDetail, summary="Obtener artículo estructurado")
+def get_article(
+    article_id: str,
+    current_user: Usuario | None = Depends(get_optional_current_user),
+    reactions: ContentReactions = Depends(get_content_reactions),
+):
+    article = ARTICLE_BY_ID.get(article_id)
+    if not article or article.category == "Noticia local":
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Artículo no encontrado.")
+    return enrich_article(article, "article", getattr(current_user, "id", None), reactions)

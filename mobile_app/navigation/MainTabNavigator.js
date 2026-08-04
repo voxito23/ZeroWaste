@@ -16,7 +16,11 @@ export default function MainTabNavigator() {
   return (
     <ScrollProvider>
       <Tab.Navigator
-        tabBar={(props) => <FloatingTabBar {...props} />}
+        tabBar={(props) => (
+          props.state.routes[props.state.index]?.name === 'Scanner'
+            ? null
+            : <FloatingTabBar {...props} />
+        )}
         screenOptions={{ headerShown: false, lazy: true }}
       >
         <Tab.Screen name="Home" component={HomeScreen} />

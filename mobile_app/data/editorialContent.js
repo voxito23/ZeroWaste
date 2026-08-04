@@ -18,6 +18,11 @@ export const MOBILE_ARTICLES = [
       { type: 'section', heading: 'Estrategias cotidianas', text: 'Para crear un impacto real y sostenible, aplica estos lineamientos al gestionar tu consumo:', items: ['Prioriza bolsas de tela orgánica en supermercados.', 'Compra granos, harinas y cereales a granel.', 'Evita envases PET cuando exista una alternativa reutilizable en vidrio.', 'Lleva empaques flexibles limpios y secos a programas que realmente los procesen.'] },
       { type: 'paragraph', text: 'La responsabilidad también consiste en ejercer el poder de consumo y exigir políticas públicas que impulsen una economía circular más vigorosa.' },
     ],
+    references: [
+      'Geyer, R., Jambeck, J. R., & Law, K. L. (2017). Production, use, and fate of all plastics ever made. Science Advances, 3(7), e1700782. https://doi.org/10.1126/sciadv.1700782',
+      'Programa de las Naciones Unidas para el Medio Ambiente. (2023). Turning off the tap: How the world can end plastic pollution and create a circular economy.',
+    ],
+    likes_count: 0, liked_by_me: false,
   },
   {
     id: 'ahorro-agua', category: 'Guía sostenible', title: 'Ahorro de agua: nuevas técnicas para el futuro',
@@ -28,6 +33,8 @@ export const MOBILE_ARTICLES = [
       { type: 'section', heading: 'Tácticas de máxima utilidad', text: 'Las entidades protectoras de cuencas recomiendan intervenciones de infraestructura y hábitos familiares:', items: ['Cosecha agua de lluvia con techos limpios dirigidos a una cisterna adecuada.', 'Cierra el grifo durante el lavado dental y el enjabonado de la ducha.', 'Instala aireadores que mantienen la sensación de presión usando menos volumen.', 'Reutiliza agua gris de la lavadora para descargas sanitarias cuando la instalación lo permita.'] },
       { type: 'paragraph', text: 'La huella de agua virtual de alimentos y ropa también importa: reducir el desperdicio y evitar compras innecesarias disminuye miles de litros indirectos.' },
     ],
+    references: ['Fondo de las Naciones Unidas para la Infancia & Organización Mundial de la Salud. (2023). Progress on household drinking water, sanitation and hygiene 2000–2022: Special focus on gender.'],
+    likes_count: 0, liked_by_me: false,
   },
   {
     id: 'energia-solar', category: 'Guía sostenible', title: 'Energía solar: fuentes limpias para renovar',
@@ -38,28 +45,34 @@ export const MOBILE_ARTICLES = [
       { type: 'section', heading: 'Microacciones eléctricas', text: 'Si una instalación completa aún está fuera de alcance, estos hábitos reducen el consumo:', items: ['Aprovecha iluminación y calefacción solar pasiva mediante ventanas bien orientadas.', 'Desconecta adaptadores y equipos en reposo que mantienen consumos fantasma.', 'Usa iluminación LED eficiente.', 'Considera cargadores solares portátiles para baterías y dispositivos pequeños.'] },
       { type: 'paragraph', text: 'Consolidar redes autónomas e interconectadas reduce emisiones, costos y vulnerabilidad ante fallas del sistema eléctrico.' },
     ],
+    references: ['International Renewable Energy Agency. (2023). World energy transitions outlook 2023: 1.5°C pathway (Vol. 1).'],
+    likes_count: 0, liked_by_me: false,
   },
   {
     id: 'compostaje-urbano', category: 'Guía sostenible', title: 'Compostaje urbano: nutrientes vivos para circular',
     excerpt: 'Convierte residuos orgánicos en suelo fértil incluso dentro de un entorno urbano.', published_at: '2026-03-18', read_time: '7 min', image_url: null,
     blocks: [
-      { type: 'paragraph', text: 'Cerca del 45% de los residuos de hogares mexicanos son orgánicos. En vertederos anaeróbicos producen metano; separarlos permite convertir un problema en suelo fértil (SEMARNAT, 2023).' },
+      { type: 'paragraph', text: 'Una parte importante de los residuos domésticos es orgánica. Cuando se dispone sin oxígeno puede producir metano; separarla permite convertir un problema en suelo fértil (PNUMA, 2023).' },
       { type: 'section', heading: 'Abraza a las lombrices', text: 'Una compostera doméstica puede reducir de forma importante el volumen enviado al basurero. La base es equilibrar materiales ricos en nitrógeno y carbono y excluir productos que atraigan fauna nociva.' },
       { type: 'section', heading: 'Reglas de la biomasa doméstica', text: 'Para prevenir moscas y malos olores:', items: ['Conserva temporalmente en frío las cáscaras y restos vegetales antes de llevarlos a la compostera.', 'Excluye carne, vísceras, lácteos y productos cárnicos.', 'Oxigena y controla periódicamente la humedad de la mezcla.', 'Usa lombriz roja californiana sólo con condiciones adecuadas para vermicomposta.'] },
       { type: 'paragraph', text: 'El abono resultante enriquece jardines y huertos y ayuda a cerrar el ciclo de los residuos alimentarios urbanos.' },
     ],
+    references: ['Programa de las Naciones Unidas para el Medio Ambiente. (2023). Turning off the tap: How the world can end plastic pollution and create a circular economy.'],
+    likes_count: 0, liked_by_me: false,
   },
 ];
 
 export const MOBILE_NEWS = [{
-  id: 'queretaro-recicla', category: 'Noticia local', title: 'Querétaro recicla: 2.4 kg per cápita al día',
-  excerpt: 'La separación y la infraestructura regional impulsan un modelo de economía circular.', published_at: '2024-01-08', read_time: '5 min', image_url: null,
+  id: 'queretaro-recicla', category: 'Noticia local', title: 'Querétaro fortalece la gestión de sus residuos',
+  excerpt: 'La separación, la recolección municipal y la participación ciudadana sostienen una economía más circular.', published_at: '2024-01-08', read_time: '5 min', image_url: null,
   blocks: [
-    { type: 'paragraph', text: 'Querétaro ha incrementado el porcentaje de reciclaje hasta llegar al 30% de los 2.4 kilos per cápita generados diariamente, de acuerdo con el informe ambiental citado por la publicación original (SEDESU, 2023).' },
+    { type: 'paragraph', text: 'Los municipios de Querétaro reportan infraestructura y servicios para la recolección y el manejo de residuos sólidos urbanos. El panorama estatal del INEGI permite consultar estas capacidades sin atribuir cifras no verificadas (INEGI, 2024).' },
     { type: 'section', heading: 'Un modelo de economía circular', text: 'Las plantas de separación permiten reincorporar materiales como PET, aluminio y cartón a la cadena productiva. La participación ciudadana y la separación desde el hogar son piezas centrales del proceso.' },
     { type: 'section', heading: 'Impacto en la comunidad', text: 'Además de reducir los residuos enviados a vertederos, la industria local de reciclaje genera empleos y evita parte de las emisiones asociadas con producir materiales vírgenes.', items: ['Reducción de residuos en vertederos.', 'Ahorro energético en la producción de materiales.', 'Fortalecimiento de una cultura de responsabilidad ambiental.'] },
     { type: 'paragraph', text: 'El siguiente reto es ampliar la infraestructura de recolección, la educación ambiental y el monitoreo inteligente para sostener los avances de la región.' },
   ],
+  references: ['Instituto Nacional de Estadística y Geografía. (2024). Panorama de los gobiernos municipales de México 2022: Querétaro.'],
+  likes_count: 0, liked_by_me: false,
 }];
 
 export const findEditorialContent = (id, type = 'article') => {

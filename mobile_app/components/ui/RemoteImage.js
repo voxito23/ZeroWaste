@@ -48,7 +48,7 @@ export default function RemoteImage({
   const [failed, setFailed] = useState(false);
   const [loading, setLoading] = useState(Boolean(uri));
   const [attempt, setAttempt] = useState(0);
-  const wrapperStyle = useMemo(() => [{ aspectRatio }, style], [aspectRatio, style]);
+  const wrapperStyle = useMemo(() => [aspectRatio ? { aspectRatio } : null, style], [aspectRatio, style]);
 
   useEffect(() => {
     setFailed(false);

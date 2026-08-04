@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, RefreshControl, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Trophy } from 'lucide-react-native';
+import { ArrowLeft, Gift, Trophy } from 'lucide-react-native';
 
 import { api } from '../api/axios';
 import UserAvatar from '../components/ui/UserAvatar';
@@ -79,7 +79,8 @@ export default function ImpactStatsScreen() {
     <SafeAreaView className="flex-1 bg-slate-50">
       <View className="flex-row items-center border-b border-slate-100 bg-white px-5 py-4">
         <TouchableOpacity onPress={() => navigation.goBack()} className="h-10 w-10 items-center justify-center rounded-full bg-slate-100" accessibilityLabel="Volver"><ArrowLeft color="#111827" size={20} /></TouchableOpacity>
-        <View className="ml-4"><Text className="text-xl font-black text-slate-950">Ranking de impacto</Text><Text className="text-xs font-semibold text-slate-500">Resultados reales de la comunidad</Text></View>
+        <View className="ml-4 flex-1"><Text className="text-xl font-black text-slate-950">Ranking de impacto</Text><Text className="text-xs font-semibold text-slate-500">Resultados reales de la comunidad</Text></View>
+        <TouchableOpacity onPress={() => navigation.navigate('RewardsStore')} className="h-11 w-11 items-center justify-center rounded-full bg-emerald-700" accessibilityLabel="Abrir tienda de recompensas"><Gift color="white" size={20} /></TouchableOpacity>
       </View>
       {summary ? <View className="m-5 mb-2 rounded-3xl bg-emerald-900 p-6">
         <Text className="font-bold text-emerald-300">Tu posición #{summary.posicion}</Text>

@@ -17,6 +17,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
+from app.observability import FIREWALL_BLOCKS
 
 # ── Configuración ──────────────────────────────────────────
 MAX_REQUESTS_PER_MINUTE = int(os.getenv("FIREWALL_RPM", "120"))
@@ -192,6 +193,7 @@ class FirewallMiddleware(BaseHTTPMiddleware):
         # 2. Verificar si la IP está bloqueada
         if _is_blocked(ip):
             _stats["blocked_requests"] += 1
+            FIREWALL_BLOCKS.labels(reason="temporary_block").inc()
             return JSONResponse(
                 status_code=403,
                 content={
@@ -205,6 +207,7 @@ class FirewallMiddleware(BaseHTTPMiddleware):
             block_ip(ip)
             _log_threat(ip, method, path, "RATE_LIMIT", f"Excedió {MAX_REQUESTS_PER_MINUTE} req/min")
             _stats["blocked_requests"] += 1
+            FIREWALL_BLOCKS.labels(reason="rate_limit").inc()
             return JSONResponse(
                 status_code=429,
                 content={
@@ -220,6 +223,7 @@ class FirewallMiddleware(BaseHTTPMiddleware):
             _log_threat(ip, method, path, "URL_ATTACK", f"Patrón detectado en URL: {threat[:100]}")
             block_ip(ip)
             _stats["blocked_requests"] += 1
+            FIREWALL_BLOCKS.labels(reason="url_attack").inc()
             return JSONResponse(
                 status_code=403,
                 content={"detail": "Solicitud bloqueada por el firewall: contenido malicioso detectado.", "firewall": True}
@@ -233,6 +237,7 @@ class FirewallMiddleware(BaseHTTPMiddleware):
             if threat:
                 _log_threat(ip, method, path, "HEADER_ATTACK", f"Header {header_name}: {threat[:80]}")
                 _stats["blocked_requests"] += 1
+                FIREWALL_BLOCKS.labels(reason="header_attack").inc()
                 return JSONResponse(
                     status_code=403,
                     content={"detail": "Solicitud bloqueada: header sospechoso detectado.", "firewall": True}

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { FlatList, Pressable, View, Text, ScrollView, TouchableOpacity, TextInput, RefreshControl, Share, useWindowDimensions } from 'react-native';
+import { Modal, Pressable, View, Text, ScrollView, TouchableOpacity, TextInput, RefreshControl, Share, useWindowDimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
 import {
@@ -15,7 +15,10 @@ import {
   Archive,
   Calendar,
   HelpCircle,
-  Folder
+  Check,
+  Folder,
+  SlidersHorizontal,
+  X
 } from 'lucide-react-native';
 import { api } from '../api/axios';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -55,6 +58,7 @@ export default function ForumScreen({ route }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [likePending, setLikePending] = useState({});
   const [commentsPost, setCommentsPost] = useState(null);
+  const [filtersVisible, setFiltersVisible] = useState(false);
   const pendingLikesRef = useRef(new Set());
   const postsRequestRef = useRef(0);
   const hasLoadedRef = useRef(false);
@@ -207,8 +211,12 @@ export default function ForumScreen({ route }) {
       >
 
         {/* ─── HEADER ──────────────────────────────── */}
-        <View className="px-5 mb-6 flex-row items-center justify-between">
-          <View className="flex-1 flex-row items-center bg-white h-12 rounded-full px-4 shadow-sm border border-gray-100 mr-4">
+        <View className="mb-4 flex-row items-center justify-between px-5">
+          <View><Text className="text-[27px] font-black tracking-tight text-slate-950">Comunidad</Text><Text className="mt-0.5 text-xs font-semibold text-slate-500">Comparte, aprende y participa</Text></View>
+          <View className="flex-row items-center gap-2"><TouchableOpacity onPress={() => navigation.navigate('Notifications')} className="h-11 w-11 items-center justify-center rounded-full border border-gray-100 bg-white shadow-sm" accessibilityLabel="Abrir notificaciones"><Bell color="#4B5563" size={19} /><View className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border border-white bg-red-500" /></TouchableOpacity><TouchableOpacity onPress={() => navigation.navigate('Profile')} className="h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-emerald-50 shadow-sm" accessibilityLabel="Abrir mi perfil"><UserAvatar uri={currentAvatarUrl} name={user?.nombre} size={38} accessibilityLabel="Avatar del usuario" /></TouchableOpacity></View>
+        </View>
+        <View className="mb-6 flex-row items-center px-5">
+          <View className="mr-3 h-12 flex-1 flex-row items-center rounded-full border border-gray-100 bg-white px-4 shadow-sm">
             <Search color="#9CA3AF" size={20} />
             <TextInput
               placeholder="Buscar..."
@@ -219,16 +227,7 @@ export default function ForumScreen({ route }) {
             />
           </View>
 
-          <View className="flex-row items-center gap-3">
-            <TouchableOpacity onPress={() => navigation.navigate('Notifications')} className="w-12 h-12 rounded-full bg-white items-center justify-center shadow-sm border border-gray-100">
-              <Bell color="#4B5563" size={20} />
-              <View className="absolute top-3 right-3 w-2 h-2 rounded-full bg-red-500 border border-white" />
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={() => navigation.navigate('Profile')} className="w-12 h-12 rounded-full bg-white shadow-sm border border-gray-100 p-0.5">
-              <UserAvatar uri={currentAvatarUrl} name={user?.nombre} size={44} accessibilityLabel="Avatar del usuario" />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity onPress={() => setFiltersVisible(true)} className={`h-12 w-12 items-center justify-center rounded-full border shadow-sm ${activeTab === 'Todo' ? 'border-gray-100 bg-white' : 'border-emerald-700 bg-emerald-700'}`} accessibilityLabel="Filtrar publicaciones"><SlidersHorizontal color={activeTab === 'Todo' ? '#047857' : 'white'} size={20} />{activeTab !== 'Todo' ? <View className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-white bg-amber-400" /> : null}</TouchableOpacity>
         </View>
 
         {/* ─── CREATE POST (Facebook style) ────────────────────── */}
@@ -244,33 +243,7 @@ export default function ForumScreen({ route }) {
           </View>
         </View>
 
-        {/* ─── TABS ───────────────────────────────── */}
-        <View className="pl-5 mb-8">
-          <FlatList
-            horizontal
-            data={tabs}
-            keyExtractor={(tab) => tab}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ paddingRight: 20 }}
-            ItemSeparatorComponent={() => <View className="w-3" />}
-            renderItem={({ item: tab }) => {
-              const isActive = activeTab === tab;
-              return (
-                <Pressable
-                  onPress={() => setActiveTab(tab)}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: isActive }}
-                  className={`min-h-11 justify-center rounded-full px-5 py-2.5 ${isActive ? 'bg-[#064E3B]' : 'border border-[#D1FAE5] bg-white shadow-sm'}`}
-                  style={({ pressed }) => ({ opacity: pressed ? 0.82 : 1, transform: [{ scale: pressed ? 0.97 : 1 }] })}
-                >
-                  <Text className={`font-black text-[14px] ${isActive ? 'text-white' : 'text-[#059669]'}`}>
-                    {tab}
-                  </Text>
-                </Pressable>
-              );
-            }}
-          />
-        </View>
+        {activeTab !== 'Todo' ? <View className="mx-5 mb-6 flex-row items-center justify-between rounded-2xl border border-emerald-100 bg-white px-4 py-3"><View><Text className="text-[10px] font-black uppercase tracking-widest text-emerald-600">Filtro activo</Text><Text className="mt-0.5 font-black text-slate-900">{activeTab}</Text></View><TouchableOpacity onPress={() => setActiveTab('Todo')} className="h-10 w-10 items-center justify-center rounded-full bg-slate-100" accessibilityLabel="Quitar filtro"><X color="#475569" size={18} /></TouchableOpacity></View> : null}
 
         {/* ─── FEED ───────────────────────────────── */}
         <View className="px-5">
@@ -469,6 +442,7 @@ export default function ForumScreen({ route }) {
           setCommentsPost((current) => current ? { ...current, total_respuestas: count, comments_count: count } : current);
         }}
       />
+      <Modal visible={filtersVisible} transparent animationType="slide" statusBarTranslucent onRequestClose={() => setFiltersVisible(false)}><Pressable className="flex-1 justify-end bg-slate-950/45" onPress={() => setFiltersVisible(false)}><Pressable className="rounded-t-[30px] bg-white px-5 pb-8 pt-5" onPress={(event) => event.stopPropagation()}><View className="flex-row items-center justify-between"><View><Text className="text-xl font-black text-slate-950">Filtrar publicaciones</Text><Text className="mt-1 text-sm text-slate-500">Elige qué contenido quieres ver.</Text></View><TouchableOpacity onPress={() => setFiltersVisible(false)} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100"><X color="#334155" size={20} /></TouchableOpacity></View><View className="mt-5 gap-2">{tabs.map((tab) => { const selected=activeTab===tab; return <TouchableOpacity key={tab} onPress={() => {setActiveTab(tab);setFiltersVisible(false);}} className={`min-h-14 flex-row items-center rounded-2xl border px-4 ${selected?'border-emerald-700 bg-emerald-50':'border-slate-100 bg-white'}`}><Text className={`flex-1 font-black ${selected?'text-emerald-800':'text-slate-800'}`}>{tab === 'Todo' ? 'Todas las publicaciones' : tab}</Text>{selected?<Check color="#047857" size={20}/>:null}</TouchableOpacity>; })}</View></Pressable></Pressable></Modal>
     </SafeAreaView>
   );
 }

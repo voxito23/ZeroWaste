@@ -98,7 +98,7 @@ class AuthController extends Controller
             RateLimiter::clear($accountKey);
             $locked = true;
         }
-        if (RateLimiter::attempts($ipKey) >= 20) {
+        if (RateLimiter::attempts($ipKey) >= 5) {
             Cache::put($ipLockKey, time() + 60, 60);
             RateLimiter::clear($ipKey);
             $locked = true;

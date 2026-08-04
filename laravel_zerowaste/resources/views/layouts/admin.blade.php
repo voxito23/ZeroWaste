@@ -440,6 +440,12 @@
                     
                     <!-- Menú Desplegable -->
                     <div class="absolute right-0 mt-2 w-48 bg-white/95 dark:bg-forest-card/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-200/50 dark:border-emerald-800/30 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top-right z-50 overflow-hidden">
+                        @if($isAuth && auth()->user()->email === config('app.admin_email'))
+                        <a href="/zw-docs" target="_blank" rel="noopener" class="flex items-center gap-2 px-4 py-3 text-sm font-bold text-secondary dark:text-emerald-100 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 transition-colors">
+                            <span class="material-symbols-outlined text-lg">api</span>
+                            Abrir FastAPI
+                        </a>
+                        @endif
                         <a href="{{ route('admin.perfil.edit') }}" class="flex items-center gap-2 px-4 py-3 text-sm font-bold text-secondary dark:text-emerald-100 hover:bg-emerald-50 dark:hover:bg-emerald-900/40 transition-colors">
                             <span class="material-symbols-outlined text-lg">manage_accounts</span>
                             Configuración

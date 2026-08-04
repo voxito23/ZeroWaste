@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\View\View;
 use App\Support\Media;
 use App\Services\AuditLogger;
 
@@ -30,6 +33,13 @@ class ImpactAdminController extends Controller
         return view('admin.impacto.recompensas', compact('rows'));
     }
 
+    public function editReward(int $id): View
+    {
+        $reward = DB::table('recompensas')->where('id', $id)->whereNull('deleted_at')->firstOrFail();
+
+        return view('admin.impacto.recompensas-edit', compact('reward'));
+    }
+
     public function storeReward(Request $request)
     {
         $data = $this->validateReward($request, true);
@@ -41,16 +51,29 @@ class ImpactAdminController extends Controller
         return back()->with('success', 'La recompensa fue creada correctamente.');
     }
 
-    public function updateReward(Request $request, int $id)
+    public function updateReward(Request $request, int $id): RedirectResponse
     {
         $data = $this->validateReward($request);
-        $old = DB::table('recompensas')->where('id', $id)->whereNull('deleted_at')->firstOrFail();
-        if ($request->hasFile('imagen_archivo')) $data['imagen'] = Media::store($request->file('imagen_archivo'), 'recompensas');
-        $data['activa'] = DB::raw($request->boolean('activa') ? 'TRUE' : 'FALSE');
-        $data['updated_at'] = now();
-        DB::table('recompensas')->where('id', $id)->update($data);
-        AuditLogger::record($request, 'reward.updated', 'recompensa', $id, ['fields' => array_keys($data)]);
-        return back()->with('success', 'Los cambios fueron guardados.');
+        $newImage = null;
+        try {
+            if ($request->hasFile('imagen_archivo')) {
+                $newImage = Media::store($request->file('imagen_archivo'), 'recompensas');
+                $data['imagen'] = $newImage;
+            }
+            $data['activa'] = DB::raw($request->boolean('activa') ? 'TRUE' : 'FALSE');
+            $data['updated_at'] = now();
+            DB::transaction(function () use ($data, $id, $request) {
+                DB::table('recompensas')->where('id', $id)->whereNull('deleted_at')->lockForUpdate()->firstOrFail();
+                DB::table('recompensas')->where('id', $id)->update($data);
+                AuditLogger::record($request, 'reward.updated', 'recompensa', $id, ['fields' => array_keys($data)]);
+            });
+        } catch (\Throwable $error) {
+            Media::discard($newImage, 'recompensas');
+            Log::error('No fue posible actualizar una recompensa.', ['exception' => get_class($error), 'reward_id' => $id]);
+            return back()->withInput()->with('error', 'No fue posible guardar la recompensa. Inténtalo nuevamente.');
+        }
+
+        return redirect()->route('impacto.recompensas')->with('success', 'Los cambios de la recompensa fueron guardados.');
     }
 
     public function destroyReward(Request $request, int $id)
@@ -118,6 +141,13 @@ class ImpactAdminController extends Controller
         return view('admin.impacto.reglas', compact('rows', 'history'));
     }
 
+    public function editRule(int $id): View
+    {
+        $rule = DB::table('reglas_puntos')->where('id', $id)->firstOrFail();
+
+        return view('admin.impacto.reglas-edit', compact('rule'));
+    }
+
     public function storeRule(Request $request)
     {
         $data = $request->validate(['codigo'=>['required','string','max:60','regex:/^[A-Z0-9_]+$/','unique:reglas_puntos,codigo'], 'puntos'=>'required|integer|min:0|max:100000', 'limite_diario'=>'nullable|integer|min:1|max:1000', 'descripcion'=>'required|string|max:255', 'activa'=>'nullable|boolean']);
@@ -127,19 +157,54 @@ class ImpactAdminController extends Controller
         return back()->with('success', 'La regla fue creada correctamente.');
     }
 
-    public function updateRule(Request $request, int $id)
+    public function updateRule(Request $request, int $id): RedirectResponse
     {
-        $data = $request->validate(['puntos'=>'required|integer|min:0|max:100000', 'limite_diario'=>'nullable|integer|min:1|max:1000', 'descripcion'=>'required|string|max:255', 'activa'=>'nullable|boolean']);
-        $before = DB::table('reglas_puntos')->where('id', $id)->firstOrFail();
+        $validated = $request->validate([
+            'puntos' => ['required', 'integer', 'min:0', 'max:100000'],
+            'limite_diario' => ['nullable', 'integer', 'min:1', 'max:1000'],
+            'descripcion' => ['required', 'string', 'max:255'],
+            'activa' => ['nullable', 'boolean'],
+        ], [
+            'puntos.required' => 'Indica cuántos puntos otorga la regla.',
+            'puntos.integer' => 'Los puntos deben ser un número entero.',
+            'limite_diario.min' => 'El límite diario debe ser de al menos una aplicación.',
+            'descripcion.required' => 'La descripción es obligatoria.',
+        ]);
         $active = $request->boolean('activa');
-        $data['activa'] = DB::raw($active ? 'TRUE' : 'FALSE'); $data['updated_by'] = $request->user()->id; $data['updated_at'] = now();
-        $historyData = array_merge($data, ['activa' => $active]);
-        DB::transaction(function () use ($data, $historyData, $before, $id, $request) {
-            DB::table('reglas_puntos')->where('id', $id)->update($data);
-            DB::table('point_rule_history')->insert(['rule_id'=>$id, 'before_values'=>json_encode($before), 'after_values'=>json_encode($historyData), 'administrator_id'=>$request->user()->id, 'created_at'=>now()]);
-        });
-        AuditLogger::record($request, 'point_rule.updated', 'regla_puntos', $id, ['codigo' => $before->codigo]);
-        return back()->with('success', 'Los cambios fueron guardados.');
+        $updateData = [
+            'puntos' => (int) $validated['puntos'],
+            'limite_diario' => isset($validated['limite_diario']) ? (int) $validated['limite_diario'] : null,
+            'descripcion' => trim($validated['descripcion']),
+            'activa' => DB::raw($active ? 'TRUE' : 'FALSE'),
+            'updated_by' => $request->user()->id,
+            'updated_at' => now(),
+        ];
+        $afterValues = [
+            'puntos' => $updateData['puntos'],
+            'limite_diario' => $updateData['limite_diario'],
+            'descripcion' => $updateData['descripcion'],
+            'activa' => $active,
+        ];
+
+        try {
+            DB::transaction(function () use ($updateData, $afterValues, $id, $request) {
+                $before = DB::table('reglas_puntos')->where('id', $id)->lockForUpdate()->firstOrFail();
+                DB::table('reglas_puntos')->where('id', $id)->update($updateData);
+                DB::table('point_rule_history')->insert([
+                    'rule_id' => $id,
+                    'before_values' => json_encode($before, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
+                    'after_values' => json_encode($afterValues, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE),
+                    'administrator_id' => $request->user()->id,
+                    'created_at' => now(),
+                ]);
+                AuditLogger::record($request, 'point_rule.updated', 'regla_puntos', $id, ['codigo' => $before->codigo]);
+            });
+        } catch (\Throwable $error) {
+            Log::error('No fue posible actualizar una regla de puntos.', ['exception' => get_class($error), 'rule_id' => $id]);
+            return back()->withInput()->with('error', 'No fue posible guardar la regla. Ningún cambio fue aplicado; inténtalo nuevamente.');
+        }
+
+        return redirect()->route('impacto.reglas')->with('success', 'La regla de puntos fue actualizada correctamente.');
     }
 
     public function movements(Request $request)

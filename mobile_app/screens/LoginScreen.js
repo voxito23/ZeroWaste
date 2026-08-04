@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Modal, ActivityIndicator, Linking, TextInput, AppState } from 'react-native';
+import { View, Text, KeyboardAvoidingView, Platform, ScrollView, Image, TouchableOpacity, TouchableWithoutFeedback, Keyboard, Modal, ActivityIndicator, Linking, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Mail, Lock, Eye, EyeOff, Check, ShieldCheck } from 'lucide-react-native';
@@ -19,13 +19,15 @@ export default function LoginScreen({ navigation }) {
   const [retryAfter, setRetryAfter] = useState(0);
   const [googleConfirmVisible, setGoogleConfirmVisible] = useState(false);
   const [googleLinkVisible, setGoogleLinkVisible] = useState(false);
+  const [googleWaitingVisible, setGoogleWaitingVisible] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [resetVisible, setResetVisible] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [googleHandoff, setGoogleHandoff] = useState('');
   const [linkPassword, setLinkPassword] = useState('');
   const googleBrowserPending = useRef(false);
-  const googleBrowserWasBackgrounded = useRef(false);
+  const googleAuthorizationUrl = useRef('');
+  const googleTimeoutRef = useRef(null);
   
   const { login } = useAuth();
   const { showDialog } = useZeroWasteDialog();
@@ -42,7 +44,8 @@ export default function LoginScreen({ navigation }) {
     const handleUrl = ({ url }) => {
       if (!url?.startsWith('zerowaste://auth/google')) return;
       googleBrowserPending.current = false;
-      googleBrowserWasBackgrounded.current = false;
+      clearTimeout(googleTimeoutRef.current);
+      setGoogleWaitingVisible(false);
       const code = decodeURIComponent((url.match(/[?&]code=([^&]+)/) || [])[1] || '');
       const oauthError = (url.match(/[?&]error=([^&]+)/) || [])[1];
       if (oauthError || !code) {
@@ -57,34 +60,12 @@ export default function LoginScreen({ navigation }) {
     return () => subscription.remove();
   }, []);
 
-  useEffect(() => {
-    let resumeTimer;
-    const subscription = AppState.addEventListener('change', (nextState) => {
-      if (!googleBrowserPending.current) return;
-      if (nextState === 'inactive' || nextState === 'background') {
-        googleBrowserWasBackgrounded.current = true;
-        return;
-      }
-      if (nextState === 'active' && googleBrowserWasBackgrounded.current) {
-        clearTimeout(resumeTimer);
-        resumeTimer = setTimeout(() => {
-          if (!googleBrowserPending.current) return;
-          googleBrowserPending.current = false;
-          googleBrowserWasBackgrounded.current = false;
-          setGoogleLoading(false);
-          showDialog({ type: 'info', title: 'Acceso cancelado', message: 'No se completó el inicio de sesión con Google.' });
-        }, 800);
-      }
-    });
-    return () => {
-      clearTimeout(resumeTimer);
-      subscription.remove();
-    };
-  }, []);
+  useEffect(() => () => clearTimeout(googleTimeoutRef.current), []);
 
   const completeGoogle = async (code) => {
     googleBrowserPending.current = false;
-    googleBrowserWasBackgrounded.current = false;
+    clearTimeout(googleTimeoutRef.current);
+    setGoogleWaitingVisible(false);
     setGoogleLoading(true);
     try {
       const { data } = await api.post('/auth/google/complete', { code });
@@ -108,11 +89,21 @@ export default function LoginScreen({ navigation }) {
       const { data } = await api.post('/auth/google/start');
       if (!data.authorization_url?.startsWith('https://accounts.google.com/')) throw new Error('invalid_auth_url');
       googleBrowserPending.current = true;
-      googleBrowserWasBackgrounded.current = false;
+      googleAuthorizationUrl.current = data.authorization_url;
+      setGoogleWaitingVisible(true);
+      clearTimeout(googleTimeoutRef.current);
+      googleTimeoutRef.current = setTimeout(() => {
+        if (!googleBrowserPending.current) return;
+        googleBrowserPending.current = false;
+        setGoogleWaitingVisible(false);
+        setGoogleLoading(false);
+        showDialog({ type: 'info', title: 'La autorización venció', message: 'Por seguridad, vuelve a iniciar el acceso con Google.' });
+      }, 180000);
       await Linking.openURL(data.authorization_url);
     } catch (error) {
       googleBrowserPending.current = false;
-      googleBrowserWasBackgrounded.current = false;
+      clearTimeout(googleTimeoutRef.current);
+      setGoogleWaitingVisible(false);
       setGoogleLoading(false);
       showDialog({ type: 'error', title: 'Google no está disponible', message: error.response?.data?.detail || 'No fue posible abrir el acceso seguro de Google.' });
     }
@@ -304,6 +295,8 @@ export default function LoginScreen({ navigation }) {
       </KeyboardAvoidingView>
 
       <Modal visible={googleConfirmVisible} transparent animationType="slide" onRequestClose={() => setGoogleConfirmVisible(false)}><View className="flex-1 justify-end bg-black/40"><View className="rounded-t-3xl bg-white px-6 pb-8 pt-6"><View className="items-center"><GoogleMark size={34} /><Text className="mt-4 text-xl font-black text-gray-900">Inicia sesión con tu cuenta de Google.</Text><Text className="mt-2 text-center leading-6 text-gray-500">Abriremos el selector seguro de Google en el navegador del sistema. ZeroWaste nunca verá tu contraseña de Google.</Text></View><TouchableOpacity onPress={startGoogle} className="mt-7 h-14 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">Continuar con Google</Text></TouchableOpacity><TouchableOpacity onPress={() => setGoogleConfirmVisible(false)} className="mt-3 h-12 items-center justify-center"><Text className="font-bold text-gray-600">Cancelar</Text></TouchableOpacity></View></View></Modal>
+
+      <Modal visible={googleWaitingVisible} transparent animationType="fade" statusBarTranslucent onRequestClose={() => {}}><View className="flex-1 items-center justify-center bg-slate-950/45 px-6"><View className="w-full max-w-sm rounded-[28px] bg-white p-6"><View className="h-14 w-14 items-center justify-center self-center rounded-full bg-slate-50"><GoogleMark size={30} /></View><Text className="mt-5 text-center text-xl font-black text-slate-950">Esperando a Google</Text><Text className="mt-2 text-center leading-6 text-slate-500">Termina la autorización en el navegador. Al finalizar volverás automáticamente a ZeroWaste.</Text><TouchableOpacity onPress={() => googleAuthorizationUrl.current && Linking.openURL(googleAuthorizationUrl.current)} className="mt-6 min-h-12 items-center justify-center rounded-2xl bg-emerald-700"><Text className="font-black text-white">Volver a Google</Text></TouchableOpacity><TouchableOpacity onPress={() => { googleBrowserPending.current=false;clearTimeout(googleTimeoutRef.current);setGoogleWaitingVisible(false);setGoogleLoading(false); }} className="mt-2 min-h-12 items-center justify-center"><Text className="font-black text-slate-600">Cancelar acceso</Text></TouchableOpacity></View></View></Modal>
 
       <Modal visible={googleLinkVisible} transparent animationType="slide" onRequestClose={() => setGoogleLinkVisible(false)}><View className="flex-1 justify-end bg-black/40"><View className="rounded-t-3xl bg-white px-6 pb-8 pt-6"><Text className="text-xl font-black text-gray-900">Enlazar cuenta existente</Text><Text className="mt-2 leading-6 text-gray-500">Ya existe una cuenta ZeroWaste con este correo. Confirma tu contraseña de ZeroWaste; no escribas aquí tu contraseña de Google.</Text><TextInput value={linkPassword} onChangeText={setLinkPassword} secureTextEntry placeholder="Contraseña de ZeroWaste" className="mt-5 h-14 rounded-xl border border-gray-200 px-4 text-gray-900" /><TouchableOpacity disabled={!linkPassword || googleLoading} onPress={linkGoogle} className="mt-5 h-14 items-center justify-center rounded-xl bg-emerald-700 disabled:opacity-50">{googleLoading ? <ActivityIndicator color="white" /> : <Text className="font-black text-white">Confirmar y enlazar</Text>}</TouchableOpacity><TouchableOpacity onPress={() => { setGoogleLinkVisible(false); setLinkPassword(''); }} className="mt-3 h-12 items-center justify-center"><Text className="font-bold text-gray-600">Cancelar</Text></TouchableOpacity></View></View></Modal>
       <Modal visible={resetVisible} transparent animationType="slide" onRequestClose={() => setResetVisible(false)}><TouchableWithoutFeedback onPress={Keyboard.dismiss}><View className="flex-1 justify-end bg-black/40"><View className="rounded-t-3xl bg-white px-6 pb-8 pt-6"><View className="h-12 w-12 items-center justify-center rounded-full bg-emerald-50"><ShieldCheck color="#047857" size={24} /></View><Text className="mt-4 text-2xl font-black text-gray-900">Recupera tu acceso</Text><Text className="mt-2 leading-6 text-gray-500">Te enviaremos un enlace seguro con el diseño de ZeroWaste. Por seguridad, no confirmaremos si la cuenta existe.</Text><TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="correo@ejemplo.com" className="mt-5 h-14 rounded-xl border border-gray-200 px-4 text-gray-900" /><TouchableOpacity disabled={resetLoading} onPress={requestPasswordReset} className="mt-5 h-14 items-center justify-center rounded-xl bg-emerald-700 disabled:opacity-50">{resetLoading ? <ActivityIndicator color="white" /> : <Text className="font-black text-white">Enviar enlace</Text>}</TouchableOpacity><TouchableOpacity onPress={() => setResetVisible(false)} className="mt-3 h-12 items-center justify-center"><Text className="font-bold text-gray-600">Cancelar</Text></TouchableOpacity></View></View></TouchableWithoutFeedback></Modal>

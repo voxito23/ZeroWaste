@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,28 +16,31 @@ export default function ProfileScreen() {
   const { handleScroll } = useScrollContext();
   const { user, logout, updateUser } = useAuth();
   const [profile, setProfile] = useState(user);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!user);
   const [error, setError] = useState('');
   const [logoutVisible, setLogoutVisible] = useState(false);
   const [impact, setImpact] = useState(null);
+  const hasProfileRef = useRef(Boolean(user));
 
-  const fetchProfile = useCallback(async () => {
-    setLoading(true);
+  const fetchProfile = useCallback(async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     setError('');
     try {
       const [{ data }, impactResult] = await Promise.all([api.get('/usuarios/me'), api.get('/impacto/me').catch(() => ({ data: null }))]);
-      setProfile(data); setImpact(impactResult.data);
+      setProfile(data); setImpact(impactResult.data); hasProfileRef.current = true;
       await updateUser(data);
     } catch (requestError) {
       setError(requestError.userMessage || 'No se pudo actualizar tu perfil.');
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [updateUser]);
 
   useFocusEffect(useCallback(() => {
-    fetchProfile();
+    fetchProfile({ silent: hasProfileRef.current });
   }, [fetchProfile]));
+
+  useEffect(() => { if (user) setProfile(user); }, [user]);
 
   const avatarUrl = profile?.avatar_url ?? profile?.foto_perfil;
 
@@ -71,7 +74,7 @@ export default function ProfileScreen() {
             </View>
           </View>
           {profile?.titulo_perfil ? <Text className="mt-5 text-base font-black text-emerald-900">{profile.titulo_perfil}</Text> : null}
-          {profile?.biografia ? <Text className="mt-2 text-[15px] leading-6 text-slate-600">{profile.biografia}</Text> : null}
+          {profile?.biografia ? <Text className="mt-2 text-[15px] leading-6 text-slate-600" style={{ textAlign: 'justify' }}>{profile.biografia}</Text> : null}
           {profile?.ubicacion ? <View className="mt-4 flex-row items-center"><MapPin color="#059669" size={16} /><Text className="ml-2 font-semibold text-slate-600">{profile.ubicacion}</Text></View> : null}
           {impact ? <View className="mt-5 flex-row rounded-2xl bg-emerald-50 p-4"><ProfileStat label="Impacto" value={impact.impacto_historico} /><ProfileStat label="Disponibles" value={impact.puntos_disponibles} /><ProfileStat label="Posición" value={impact.posicion ? `#${impact.posicion}` : '—'} /></View> : null}
           <View className="mt-5 border-t border-gray-100 pt-4">
@@ -109,7 +112,7 @@ export default function ProfileScreen() {
         </View>
 
         <View className="px-6 mt-6">
-          <Text className="text-gray-500 text-sm leading-5">Las estadísticas de impacto y el saldo de puntos aparecerán cuando exista un historial verificable en FastAPI. No se muestran valores simulados.</Text>
+          <Text className="text-gray-500 text-sm leading-5" style={{ textAlign: 'justify' }}>Las estadísticas de impacto y el saldo de puntos aparecen cuando existe un historial verificable en FastAPI. No se muestran valores simulados.</Text>
           <TouchableOpacity onPress={() => setLogoutVisible(true)} className="mt-6 items-center rounded-2xl border border-red-100 bg-red-50 py-4">
             <View className="flex-row items-center"><LogOut color="#EF4444" size={20} /><Text className="ml-2 text-red-600 font-black">Cerrar sesión</Text></View>
           </TouchableOpacity>

@@ -125,6 +125,26 @@ export default function HomeScreen() {
   const [impactSummary, setImpactSummary] = useState(null);
   const [impactLoading, setImpactLoading] = useState(true);
   const [impactError, setImpactError] = useState(false);
+  const [reactionPending, setReactionPending] = useState({});
+  const [reactionError, setReactionError] = useState('');
+
+  const toggleReaction = useCallback(async (contentType, content) => {
+    if (!content?.id || reactionPending[content.id]) return;
+    const nextLiked = !content.liked_by_me;
+    setReactionPending((current) => ({ ...current, [content.id]: true }));
+    setReactionError('');
+    try {
+      const endpoint = `/${contentType === 'news' ? 'news' : 'articles'}/${encodeURIComponent(content.id)}/like`;
+      const { data } = nextLiked ? await api.put(endpoint) : await api.delete(endpoint);
+      const updated = { ...content, liked_by_me: Boolean(data?.liked), likes_count: Number(data?.likes_count) || 0 };
+      if (contentType === 'news') setLocalNews(updated);
+      else setArticles((rows) => rows.map((row) => row.id === content.id ? updated : row));
+    } catch (requestError) {
+      setReactionError(requestError.userMessage || 'No fue posible actualizar el corazón. Inténtalo nuevamente.');
+    } finally {
+      setReactionPending((current) => ({ ...current, [content.id]: false }));
+    }
+  }, [reactionPending]);
 
   const fetchArticles = useCallback(async ({ manualRefresh = false } = {}) => {
     const requestId = ++articlesRequestRef.current;
@@ -461,6 +481,17 @@ export default function HomeScreen() {
                           <Text className="text-white font-black text-[14px]">Leer artículo</Text>
                           <ArrowRight color="#fff" size={16} strokeWidth={3} />
                         </View>
+                        <TouchableOpacity
+                          onPress={(event) => { event.stopPropagation?.(); void toggleReaction('article', item); }}
+                          disabled={reactionPending[item.id]}
+                          className={`min-h-11 min-w-11 flex-row items-center justify-center gap-1.5 rounded-full px-3 ${item.liked_by_me ? 'bg-rose-500' : 'bg-white/10'}`}
+                          accessibilityRole="button"
+                          accessibilityLabel={item.liked_by_me ? 'Quitar corazón' : 'Dar corazón'}
+                          accessibilityState={{ selected: Boolean(item.liked_by_me), busy: Boolean(reactionPending[item.id]) }}
+                        >
+                          {reactionPending[item.id] ? <ActivityIndicator color="#fff" size="small" /> : <Heart color="#fff" fill={item.liked_by_me ? '#fff' : 'transparent'} size={18} />}
+                          <Text className="text-xs font-black text-white">{Number(item.likes_count) || 0}</Text>
+                        </TouchableOpacity>
                       </View>
                     </View>
                   </View>
@@ -469,6 +500,7 @@ export default function HomeScreen() {
             )}
           />
           {articlesRefreshing ? <Text className="mt-2 text-center text-xs font-bold text-emerald-700">Actualizando tendencias…</Text> : null}
+          {reactionError ? <Text className="mx-5 mt-2 text-center text-xs font-bold text-red-600">{reactionError}</Text> : null}
           {articlesError ? <View className="mx-5 mt-3 flex-row items-center justify-between rounded-2xl border border-amber-200 bg-amber-50 p-3"><Text className="mr-3 flex-1 text-xs font-bold text-amber-900">No se pudo actualizar; se conservan los artículos visibles.</Text><TouchableOpacity onPress={() => fetchArticles({ manualRefresh: true })}><Text className="font-black text-amber-900">Reintentar</Text></TouchableOpacity></View> : null}
           </>}
         </Animated.View>
@@ -559,7 +591,20 @@ export default function HomeScreen() {
                 <View className="p-5 pt-4">
                   <Text className="mb-3 text-[24px] font-black leading-[29px] tracking-tight text-white">{localNews.title}</Text>
                   <Text className="mb-5 text-[14px] font-medium leading-6 text-gray-400" numberOfLines={3}>{localNews.excerpt}</Text>
-                  <View className="flex-row items-center justify-between border-t border-white/10 pt-4"><View className="flex-row items-center gap-2.5 rounded-2xl bg-emerald-500 px-5 py-3"><Text className="text-[14px] font-black text-white">Leer noticia</Text><ArrowRight color="#fff" size={16} strokeWidth={3} /></View></View>
+                  <View className="flex-row items-center justify-between border-t border-white/10 pt-4">
+                    <View className="flex-row items-center gap-2.5 rounded-2xl bg-emerald-500 px-5 py-3"><Text className="text-[14px] font-black text-white">Leer noticia</Text><ArrowRight color="#fff" size={16} strokeWidth={3} /></View>
+                    <TouchableOpacity
+                      onPress={(event) => { event.stopPropagation?.(); void toggleReaction('news', localNews); }}
+                      disabled={reactionPending[localNews.id]}
+                      className={`min-h-11 min-w-11 flex-row items-center justify-center gap-1.5 rounded-full px-3 ${localNews.liked_by_me ? 'bg-rose-500' : 'bg-white/10'}`}
+                      accessibilityRole="button"
+                      accessibilityLabel={localNews.liked_by_me ? 'Quitar corazón' : 'Dar corazón'}
+                      accessibilityState={{ selected: Boolean(localNews.liked_by_me), busy: Boolean(reactionPending[localNews.id]) }}
+                    >
+                      {reactionPending[localNews.id] ? <ActivityIndicator color="#fff" size="small" /> : <Heart color="#fff" fill={localNews.liked_by_me ? '#fff' : 'transparent'} size={18} />}
+                      <Text className="text-xs font-black text-white">{Number(localNews.likes_count) || 0}</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             </TouchableScale>

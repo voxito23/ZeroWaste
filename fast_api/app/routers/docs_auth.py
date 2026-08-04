@@ -12,12 +12,18 @@ from app.data.database import get_db
 from sqlalchemy.orm import Session
 from app.models.domain_models import Usuario
 from app.security.jwt_auth import verify_password, create_access_token, SECRET_KEY, ALGORITHM
+from app.security.login_throttle import INVALID_MESSAGE, get_client_ip, get_login_throttle
 
 from jose import JWTError, jwt  # type: ignore
 
 router = APIRouter(tags=["Docs Auth"])
 
 templates_dir = os.path.join(os.path.dirname(__file__), "..", "templates")
+
+
+def _principal_email() -> str:
+    """El correo autorizado siempre proviene de configuración operativa."""
+    return os.getenv("ADMIN_EMAIL", "").strip().casefold()
 
 
 def _verify_docs_cookie(request: Request) -> bool:
@@ -29,10 +35,12 @@ def _verify_docs_cookie(request: Request) -> bool:
     token = token_raw.replace("Bearer ", "", 1) if token_raw.startswith("Bearer ") else token_raw
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        email = payload.get("sub")
-        if not email:
+        email = str(payload.get("sub") or "").strip().casefold()
+        scope = payload.get("scope")
+        if not email or scope != "docs:superadmin":
             return False
-        return True
+        principal = _principal_email()
+        return bool(principal and email == principal)
     except JWTError:
         return False
 
@@ -50,27 +58,35 @@ async def login_for_docs(request: Request):
 
 @router.post("/zw-docs/auth", include_in_schema=False)
 async def authenticate_for_docs(
+    request: Request,
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
     """Verifica si el usuario es administrador autorizado para ver API."""
-    user = db.query(Usuario).filter(Usuario.email == form_data.username).first()
+    throttle = get_login_throttle()
+    client_ip = get_client_ip(request)
+    normalized_email = form_data.username.strip().casefold()
+    throttle.assert_allowed(normalized_email, client_ip)
+    user = db.query(Usuario).filter(Usuario.email == normalized_email).first()
     
     if not user or not verify_password(form_data.password, str(user.password)):
+        throttle.record_failure(normalized_email, client_ip)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales incorrectas."
+            detail=INVALID_MESSAGE,
         )
 
-    if not user.is_admin:
+    if not user.is_admin or not _principal_email() or normalized_email != _principal_email():
+        throttle.record_failure(normalized_email, client_ip)
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="No tienes permisos de administrador para acceder a la documentación."
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo el administrador principal puede acceder a la documentación de FastAPI.",
         )
 
+    throttle.clear(normalized_email, client_ip)
     # Crear token válido para acceso a los docs
-    access_token = create_access_token(data={"sub": user.email})
+    access_token = create_access_token(data={"sub": normalized_email, "scope": "docs:superadmin"})
     
     # Seteamos cookie httponly para la seguridad de Docs
     response.set_cookie(
@@ -79,7 +95,9 @@ async def authenticate_for_docs(
         httponly=True,
         max_age=1800,
         expires=1800,
-        samesite="lax"
+        samesite="lax",
+        secure=True,
+        path="/",
     )
     return {"message": "Login exitoso"}
 
@@ -88,7 +106,7 @@ async def authenticate_for_docs(
 async def logout_for_docs():
     """Cierra sesión de docs y redirige al panel Laravel Admin."""
     response = RedirectResponse(url="/zw-interno/dashboard", status_code=status.HTTP_303_SEE_OTHER)
-    response.delete_cookie("docs_access_token")
+    response.delete_cookie("docs_access_token", path="/", secure=True, httponly=True, samesite="lax")
     return response
 
 

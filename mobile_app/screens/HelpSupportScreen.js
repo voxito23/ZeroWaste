@@ -1,0 +1,23 @@
+import React, { useEffect, useState } from 'react';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { ArrowLeft, ChevronDown, ChevronUp, Mail, MessageCircleQuestion, Volume2, VolumeX } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StatusBar } from 'expo-status-bar';
+import * as Speech from 'expo-speech';
+
+const FAQS = [
+  ['¿Por qué no veo el mapa?', 'Comprueba tu conexión y que la ubicación esté permitida. Si el mapa visual no carga, la lista de puntos permanece disponible y puedes reintentar sin perder tu sesión.'],
+  ['¿Cómo funcionan los puntos?', 'FastAPI consulta la regla activa y calcula el monto. La aplicación móvil nunca decide cuántos puntos otorgar.'],
+  ['¿Qué significa una publicación pendiente?', 'La publicación es visible para ti mientras un administrador la revisa. Al aprobarse aparece para la comunidad y puede aplicar la regla de puntos vigente.'],
+  ['¿Cómo uso un QR de recolección?', 'Abre el escáner dentro de ZeroWaste. Los códigos de recolección expiran, se usan una sola vez y están ligados a la solicitud correspondiente.'],
+];
+
+export default function HelpSupportScreen(){
+  const navigation=useNavigation();
+  const [open,setOpen]=useState(0);
+  const [speaking,setSpeaking]=useState(false);
+  useEffect(()=>()=>Speech.stop(),[]);
+  const speak=async()=>{if(speaking){await Speech.stop();setSpeaking(false);return;}const [question,answer]=FAQS[open]||FAQS[0];setSpeaking(true);Speech.speak(`${question}. ${answer}`,{language:'es-MX',rate:0.94,onDone:()=>setSpeaking(false),onStopped:()=>setSpeaking(false),onError:()=>setSpeaking(false)});};
+  return <SafeAreaView className="flex-1 bg-slate-50" edges={['top','bottom']}><StatusBar style="dark"/><View className="flex-row items-center border-b border-slate-100 bg-white px-4 py-3"><TouchableOpacity onPress={()=>navigation.goBack()} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100" accessibilityLabel="Volver"><ArrowLeft color="#0F172A" size={20}/></TouchableOpacity><View className="ml-4 flex-1"><Text className="text-xl font-black text-slate-950">Ayuda y soporte</Text><Text className="text-xs font-semibold text-slate-500">Respuestas dentro de la aplicación</Text></View></View><ScrollView contentContainerStyle={{padding:20,paddingBottom:40}}><View className="rounded-[28px] bg-emerald-950 p-6"><View className="h-12 w-12 items-center justify-center rounded-full bg-white/10"><MessageCircleQuestion color="#6EE7B7" size={24}/></View><Text className="mt-5 text-2xl font-black text-white">Asistente de ayuda por voz</Text><Text className="mt-2 leading-6 text-emerald-100" style={{textAlign:'justify'}}>Selecciona una pregunta y escucha la respuesta en español. La voz funciona en el dispositivo y no envía tu conversación a un enlace externo.</Text><TouchableOpacity onPress={speak} className="mt-5 min-h-12 flex-row items-center justify-center rounded-2xl bg-emerald-500">{speaking?<VolumeX color="#052E2B" size={20}/>:<Volume2 color="#052E2B" size={20}/>}<Text className="ml-2 font-black text-emerald-950">{speaking?'Detener voz':'Escuchar respuesta'}</Text></TouchableOpacity></View><Text className="mb-2 mt-7 px-1 text-xs font-black uppercase tracking-widest text-slate-500">Preguntas frecuentes</Text><View className="overflow-hidden rounded-3xl border border-slate-100 bg-white">{FAQS.map(([question,answer],index)=>{const selected=open===index;return <TouchableOpacity key={question} onPress={()=>{Speech.stop();setSpeaking(false);setOpen(selected?-1:index);}} className={`px-5 py-4 ${index?'border-t border-slate-100':''}`}><View className="flex-row items-center"><Text className="flex-1 font-black leading-5 text-slate-900">{question}</Text>{selected?<ChevronUp color="#059669" size={19}/>:<ChevronDown color="#94A3B8" size={19}/>}</View>{selected?<Text className="mt-3 text-[15px] leading-6 text-slate-600" style={{textAlign:'justify'}}>{answer}</Text>:null}</TouchableOpacity>;})}</View><View className="mt-5 rounded-3xl border border-emerald-100 bg-emerald-50 p-5"><View className="flex-row items-center"><Mail color="#047857" size={20}/><Text className="ml-3 font-black text-emerald-950">Soporte ZeroWaste</Text></View><Text className="mt-2 leading-6 text-emerald-900" style={{textAlign:'justify'}}>Si la respuesta no resuelve tu caso, escribe a soporte@zerowaste-qro.com e incluye una descripción del problema. No envíes contraseñas, JWT ni códigos QR.</Text></View></ScrollView></SafeAreaView>;
+}

@@ -113,7 +113,7 @@ export default function MapScreen() {
   const [mapReady, setMapReady] = useState(false);
   const [mapKey, setMapKey] = useState(0);
   const [usingFallbackStyle, setUsingFallbackStyle] = useState(false);
-  const [mapError, setMapError] = useState(tokenReady ? '' : 'El token público de Mapbox no está configurado correctamente.');
+  const [mapError, setMapError] = useState(tokenReady ? '' : 'El mapa interactivo no está disponible en esta compilación. Puedes consultar todos los puntos en el modo listado.');
   const [points, setPoints] = useState([]);
   const [pointsLoading, setPointsLoading] = useState(true);
   const [pointsReady, setPointsReady] = useState(false);
@@ -393,7 +393,7 @@ export default function MapScreen() {
 
   return (
     <View className="flex-1 bg-emerald-50">
-      <StatusBar style={lightPreset === 'night' ? 'light' : 'dark'} translucent backgroundColor="transparent" />
+      <StatusBar style="dark" translucent={false} backgroundColor="#ECFDF5" />
       {tokenReady ? (
         <Mapbox.MapView
           key={mapKey}
@@ -456,17 +456,24 @@ export default function MapScreen() {
             <Mapbox.SymbolLayer id="zerowaste-selected-symbol" slot={usingFallbackStyle ? undefined : 'top'} style={{ textField: '♻', textColor: '#064E3B', textSize: 13, textAllowOverlap: true }} />
           </Mapbox.ShapeSource>
         </Mapbox.MapView>
-      ) : <View style={styles.map} />}
+      ) : (
+        <View style={styles.map} className="items-center justify-center bg-emerald-50 px-7">
+          <View className="absolute inset-0 opacity-30" style={styles.fallbackGrid} />
+          <View className="h-20 w-20 items-center justify-center rounded-full border-4 border-white bg-emerald-700 shadow-lg elevation-5"><MapPin color="white" size={34} /></View>
+          <Text className="mt-5 text-center text-2xl font-black text-emerald-950">Puntos ZeroWaste</Text>
+          <Text className="mt-2 text-center leading-6 text-emerald-900">Busca por nombre, colonia o material y consulta las tarjetas disponibles.</Text>
+        </View>
+      )}
 
       {(!mapReady && (styleLoading || !mapMounted)) || mapError ? (
         <View
           pointerEvents={mapError ? 'auto' : 'none'}
-          className={`absolute left-5 right-5 z-30 rounded-2xl border px-5 py-4 ${mapError ? 'border-red-200 bg-red-50' : 'border-emerald-100 bg-white/90'}`}
+          className={`absolute left-5 right-5 z-30 rounded-2xl border px-5 py-4 ${mapError ? 'border-emerald-200 bg-white' : 'border-emerald-100 bg-white/90'}`}
           style={{ top: topSafeArea + 68 }}
         >
           <View className="flex-row items-center justify-center">
             {!mapError ? <ActivityIndicator color="#047857" /> : null}
-            <Text className={`text-center font-black ${mapError ? 'text-red-800' : 'ml-3 text-slate-800'}`}>{mapError || 'Preparando mapa 3D…'}</Text>
+            <Text className={`text-center font-black ${mapError ? 'text-emerald-950' : 'ml-3 text-slate-800'}`}>{mapError || 'Preparando mapa 3D…'}</Text>
           </View>
           {mapError && tokenReady ? <TouchableOpacity onPress={retryMap} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">{usingFallbackStyle ? 'Reintentar mapa' : 'Usar mapa compatible'}</Text></TouchableOpacity> : null}
         </View>
@@ -589,5 +596,10 @@ function PointCard({ point, selected, distance, onSelect, onDetail, onRoute }) {
 
 const styles = StyleSheet.create({
   map: { ...StyleSheet.absoluteFillObject },
+  fallbackGrid: {
+    backgroundColor: '#D1FAE5',
+    borderColor: '#A7F3D0',
+    borderWidth: 1,
+  },
   cards: { position: 'absolute', left: 0, right: 0, zIndex: 15, flexGrow: 0 },
 });
