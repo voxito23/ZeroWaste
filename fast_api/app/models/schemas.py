@@ -329,6 +329,7 @@ class RespuestaResponse(BaseModel):
     id: int
     post_id: int
     autor_id: int
+    aprobado: bool = False
     parent_comment_id: Optional[int] = None
     contenido: str
     created_at: Optional[datetime] = None

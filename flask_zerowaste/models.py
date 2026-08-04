@@ -21,7 +21,7 @@ class Usuario(db.Model):
     bloqueado = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    posts = db.relationship('Foro', backref='autor_rel', lazy=True)
+    posts = db.relationship('Foro', backref='autor_rel', lazy=True, foreign_keys='Foro.autor_id')
     respuestas = db.relationship('RespuestaForo', backref='autor_rel', lazy=True)
 
 class Categoria(db.Model):
@@ -72,9 +72,13 @@ class Foro(db.Model):
     categoria_id = db.Column(db.Integer, db.ForeignKey('categorias.id'), nullable=False)
     autor_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
     imagen = db.Column(db.String(255), nullable=True)
+    aprobado = db.Column(db.Boolean, nullable=False, default=False)
+    aprobado_por = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=True)
+    aprobado_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     categoria_rel = db.relationship('Categoria', backref='posts')
+    aprobador_rel = db.relationship('Usuario', foreign_keys=[aprobado_por])
     respuestas = db.relationship('RespuestaForo', backref='post', lazy=True)
     likes = db.relationship('LikeForo', backref='post_rel', lazy=True)
 

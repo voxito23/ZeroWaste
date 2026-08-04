@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from html.parser import HTMLParser
 
 
 MIN_COMMENT_LENGTH = 11
@@ -15,6 +16,57 @@ _ACTIVE_HTML = re.compile(
     re.IGNORECASE,
 )
 _TAILWIND_DUMP = re.compile(r"--tw-|\.flex-grow\s*\{|var\(--tw-", re.IGNORECASE)
+_BLOCK_TAGS = {"article", "blockquote", "div", "h1", "h2", "h3", "h4", "h5", "h6", "ol", "p", "section", "table", "tr", "ul"}
+
+
+class _ForumPlainTextParser(HTMLParser):
+    """Turn historic editor markup into readable text without activating HTML."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: list[str] = []
+        self.ignored_depth = 0
+
+    def handle_starttag(self, tag: str, attrs) -> None:
+        tag = tag.lower()
+        if tag in {"script", "style"}:
+            self.ignored_depth += 1
+        elif not self.ignored_depth and tag == "br":
+            self.parts.append("\n")
+        elif not self.ignored_depth and tag == "li":
+            self.parts.append("\n• ")
+        elif not self.ignored_depth and tag in _BLOCK_TAGS:
+            self.parts.append("\n")
+
+    def handle_endtag(self, tag: str) -> None:
+        tag = tag.lower()
+        if tag in {"script", "style"} and self.ignored_depth:
+            self.ignored_depth -= 1
+        elif not self.ignored_depth and (tag == "li" or tag in _BLOCK_TAGS):
+            self.parts.append("\n")
+
+    def handle_data(self, data: str) -> None:
+        if not self.ignored_depth:
+            self.parts.append(data)
+
+
+def forum_text_for_output(value: object) -> str:
+    """Safely normalize plain text and legacy rich-editor HTML for API output."""
+    if not isinstance(value, str):
+        return ""
+    parser = _ForumPlainTextParser()
+    try:
+        parser.feed(_CONTROL_CHARACTERS.sub("", value))
+        parser.close()
+        text = "".join(parser.parts)
+    except Exception:
+        text = re.sub(r"<[^>]*>", "", value)
+    text = text.replace("\r", "")
+    text = re.sub(r"[ \t]+\n", "\n", text)
+    text = re.sub(r"\n[ \t]+", "\n", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    text = re.sub(r"[ \t]{2,}", " ", text)
+    return text.strip()
 
 
 def clean_plain_text(value: object) -> str:

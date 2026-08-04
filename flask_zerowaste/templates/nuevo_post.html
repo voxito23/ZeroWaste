@@ -358,7 +358,7 @@
         // Sincronizar editor a textarea primero
         const editor = document.getElementById('editor');
         const textarea = document.getElementById('post-content');
-        textarea.value = editor.innerHTML;
+        textarea.value = editor.innerText.trim();
 
         const title = document.getElementById('post-title').value.trim();
         const category = document.getElementById('categoria_id').value;
@@ -434,7 +434,7 @@
     function confirmarPublicacion() {
         const editor = document.getElementById('editor');
         const textarea = document.getElementById('post-content');
-        textarea.value = editor.innerHTML;
+        textarea.value = editor.innerText.trim();
         
         // Enviar form nativamente al servidor Flask
         const form = document.getElementById('new-post-form');

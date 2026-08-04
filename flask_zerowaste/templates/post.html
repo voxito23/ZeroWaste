@@ -154,8 +154,9 @@
             <h1 class="font-display text-3xl md:text-4xl font-black text-secondary dark:text-white mb-6 leading-tight">
                 {{ post.titulo }}
             </h1>
+            {% if not post.aprobado %}<div class="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900">Esta publicación está pendiente de revisión y solo es visible para ti.</div>{% endif %}
             <div class="prose prose-lg prose-emerald dark:prose-invert max-w-none text-gray-600 dark:text-gray-300 mb-8 no-hyphens contenido-post" style="white-space: pre-wrap;">
-            {{ post.contenido }}
+            {{ post.contenido | forum_text }}
             </div>
 {% set post_image_url = media_url(post.imagen, 'foro') %}
 {% if post_image_url %}

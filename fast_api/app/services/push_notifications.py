@@ -51,15 +51,28 @@ def active_tokens(db, user_id: int) -> list[str]:
     ]
 
 
-def _disable_invalid_tokens(tokens: list[str]) -> None:
+def _safe_delivery_error(value: object) -> str:
+    normalized = "".join(character for character in str(value or "ExpoPushError") if character.isalnum() or character in {"_", "-", ":"})
+    return normalized[:100] or "ExpoPushError"
+
+
+def _persist_delivery_results(successful: set[str], errors: dict[str, str]) -> None:
+    tokens = list(successful | set(errors))
     if not tokens:
         return
     db = SessionLocal()
     try:
-        db.query(DevicePushToken).filter(DevicePushToken.expo_push_token.in_(tokens)).update(
-            {"active": False, "last_error": "DeviceNotRegistered", "disabled_at": datetime.now(timezone.utc)},
-            synchronize_session=False,
-        )
+        now = datetime.now(timezone.utc)
+        rows = db.query(DevicePushToken).filter(DevicePushToken.expo_push_token.in_(tokens)).all()
+        for row in rows:
+            token = str(row.expo_push_token)
+            if token in errors:
+                row.last_error = _safe_delivery_error(errors[token])
+                if row.last_error == "DeviceNotRegistered":
+                    row.active = False
+                    row.disabled_at = now
+            elif token in successful:
+                row.last_error = None
         db.commit()
     except Exception:
         db.rollback()
@@ -67,9 +80,10 @@ def _disable_invalid_tokens(tokens: list[str]) -> None:
         db.close()
 
 
-def send_expo_push(tokens: list[str], *, title: str, body: str, data: dict) -> None:
+def send_expo_push(tokens: list[str], *, title: str, body: str, data: dict) -> dict[str, int]:
     messages = [{"to": token, "title": title[:100], "body": body[:240], "data": data, "sound": "default", "channelId": "zerowaste-general"} for token in tokens]
-    invalid: list[str] = []
+    successful: set[str] = set()
+    errors: dict[str, str] = {}
     receipt_tokens: dict[str, str] = {}
     for offset in range(0, len(messages), 100):
         batch = messages[offset:offset + 100]
@@ -80,12 +94,21 @@ def send_expo_push(tokens: list[str], *, title: str, body: str, data: dict) -> N
                 result = json.loads(response.read().decode("utf-8"))
             tickets = result.get("data", []) if isinstance(result, dict) else []
             for message, ticket in zip(batch, tickets):
-                if ticket.get("status") == "error" and ticket.get("details", {}).get("error") == "DeviceNotRegistered":
-                    invalid.append(message["to"])
-                elif ticket.get("status") == "ok" and ticket.get("id"):
-                    receipt_tokens[str(ticket["id"])] = message["to"]
-        except Exception:
+                token = message["to"]
+                if ticket.get("status") == "error":
+                    errors[token] = _safe_delivery_error(ticket.get("details", {}).get("error") or "ExpoTicketError")
+                elif ticket.get("status") == "ok":
+                    successful.add(token)
+                    if ticket.get("id"):
+                        receipt_tokens[str(ticket["id"])] = token
+            if len(tickets) < len(batch):
+                for message in batch[len(tickets):]:
+                    errors[message["to"]] = "ExpoTicketMissing"
+        except Exception as exc:
             # Delivery is best-effort. The persisted in-app notification remains authoritative.
+            code = f"TransportError:{type(exc).__name__}"
+            for message in batch:
+                errors[message["to"]] = code
             continue
     receipt_ids = list(receipt_tokens)
     for offset in range(0, len(receipt_ids), 300):
@@ -101,10 +124,11 @@ def send_expo_push(tokens: list[str], *, title: str, body: str, data: dict) -> N
                 result = json.loads(response.read().decode("utf-8"))
             receipts = result.get("data", {}) if isinstance(result, dict) else {}
             for receipt_id, receipt in receipts.items():
-                if receipt.get("status") == "error" and receipt.get("details", {}).get("error") == "DeviceNotRegistered":
-                    token = receipt_tokens.get(str(receipt_id))
-                    if token:
-                        invalid.append(token)
+                token = receipt_tokens.get(str(receipt_id))
+                if token and receipt.get("status") == "error":
+                    errors[token] = _safe_delivery_error(receipt.get("details", {}).get("error") or "ExpoReceiptError")
+                    successful.discard(token)
         except Exception:
             continue
-    _disable_invalid_tokens(invalid)
+    _persist_delivery_results(successful, errors)
+    return {"accepted": len(successful), "failed": len(errors)}

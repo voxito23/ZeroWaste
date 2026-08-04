@@ -13,6 +13,7 @@ class MobileNotificationContractsTests(unittest.TestCase):
         service = (ROOT / "fast_api/app/services/push_notifications.py").read_text(encoding="utf-8")
         models = (ROOT / "fast_api/app/models/domain_models.py").read_text(encoding="utf-8")
         self.assertIn('@router.post("/devices/push-token"', router)
+        self.assertIn('@router.get("/devices/push-status"', router)
         self.assertIn('@router.get("/notifications"', router)
         self.assertIn('@router.patch("/preferences/notifications"', router)
         self.assertIn("class DevicePushToken", models)
@@ -20,6 +21,8 @@ class MobileNotificationContractsTests(unittest.TestCase):
         self.assertIn("preference.push_enabled", service)
         self.assertIn("preference.in_app_enabled", service)
         self.assertIn("DeviceNotRegistered", service)
+        self.assertIn("_persist_delivery_results", service)
+        self.assertIn("TransportError:", service)
 
     def test_mobile_handles_foreground_background_and_cold_start_contracts(self):
         mobile = (ROOT / "mobile_app/services/mobileNotifications.js").read_text(encoding="utf-8")
@@ -29,6 +32,7 @@ class MobileNotificationContractsTests(unittest.TestCase):
         self.assertIn("addNotificationResponseReceivedListener", navigator)
         self.assertIn("getLastNotificationResponseAsync", navigator)
         self.assertIn("highlightCommentId", mobile)
+        self.assertIn("getPushRegistrationStatus", mobile)
         self.assertNotIn("Linking.openURL", mobile)
 
     def test_schema_change_is_prepared_but_not_applied_by_runtime(self):

@@ -79,6 +79,20 @@ export const registerPushToken = async () => {
   return { status: 'granted' };
 };
 
+export const getPushRegistrationStatus = async () => {
+  const permission = await getNotificationPermission();
+  if (!NativeNotifications) return { nativeAvailable: false, permission, registered: false, activeDevices: 0, lastError: null };
+  const { data } = await api.get('/devices/push-status');
+  return {
+    nativeAvailable: true,
+    permission,
+    registered: Boolean(data?.registered),
+    activeDevices: Math.max(0, Number(data?.active_devices) || 0),
+    lastError: typeof data?.last_error === 'string' ? data.last_error : null,
+    lastSeenAt: data?.last_seen_at || null,
+  };
+};
+
 export const unregisterPushToken = async () => {
   const expoPushToken = await SecureStore.getItemAsync(PUSH_TOKEN_KEY);
   if (!expoPushToken) return;

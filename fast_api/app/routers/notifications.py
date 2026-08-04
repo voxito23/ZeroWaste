@@ -123,6 +123,19 @@ def disable_push_token(payload: DeviceTokenRequest, db: Session = Depends(get_db
     return {"disabled": True}
 
 
+@router.get("/devices/push-status")
+def push_registration_status(db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
+    rows = db.query(DevicePushToken).filter_by(user_id=current_user.id).order_by(DevicePushToken.last_seen_at.desc()).all()
+    active_rows = [row for row in rows if row.active]
+    latest = active_rows[0] if active_rows else (rows[0] if rows else None)
+    return {
+        "registered": bool(active_rows),
+        "active_devices": len(active_rows),
+        "last_error": latest.last_error if latest else None,
+        "last_seen_at": latest.last_seen_at if latest else None,
+    }
+
+
 @router.get("/notifications")
 def list_notifications(limit: int = Query(30, ge=1, le=100), offset: int = Query(0, ge=0), db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
     query = db.query(Notificacion).filter_by(user_id=current_user.id).order_by(Notificacion.created_at.desc(), Notificacion.id.desc())

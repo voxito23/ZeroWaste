@@ -421,6 +421,8 @@ export default function ForumScreen({ route }) {
                       {post.titulo}
                     </Text>
 
+                    {post.aprobado === false ? <View className="mb-3 self-start rounded-full border border-amber-200 bg-amber-50 px-3 py-1"><Text className="text-[11px] font-black text-amber-800">Pendiente de revisión · solo tú la ves</Text></View> : null}
+
                     <View className="flex-row items-center gap-1.5 mb-6">
                       <ArrowUpRight color="#6B7280" size={14} />
                       <Text className="text-gray-500 text-[13px] font-medium flex-1" numberOfLines={3} ellipsizeMode="tail">

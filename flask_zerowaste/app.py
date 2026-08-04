@@ -26,7 +26,7 @@ from media import (
     remove_media_file,
     save_uploaded_image,
 )
-from forum_content import is_invalid_comment, normalize_comment
+from forum_content import forum_text_for_output, is_invalid_comment, normalize_comment, normalize_forum_post
 
 REWARD_IMAGES_DIR = str(media_directory('recompensas'))
 
@@ -182,6 +182,11 @@ def datetime_mx_filter(dt):
 def media_url_filter(value, category=None):
     """Resolve database media metadata to one public HTTPS URL."""
     return build_public_media_url(value, category)
+
+
+@app.template_filter('forum_text')
+def forum_text_filter(value):
+    return forum_text_for_output(value)
 
 # ==========================================================================
 #  Rutas de navegación básica
@@ -1092,11 +1097,12 @@ def foro():
 
     filtro = request.args.get('filtro', 'todos')
     
+    visibility = db.or_(Foro.aprobado.is_(True), Foro.autor_id == session['usuario_id'])
     if filtro == 'populares':
-        posts = Foro.query.outerjoin(LikeForo).outerjoin(RespuestaForo).group_by(Foro.id)\
+        posts = Foro.query.filter(visibility).outerjoin(LikeForo).outerjoin(RespuestaForo).group_by(Foro.id)\
             .order_by((db.func.count(db.distinct(LikeForo.id)) + db.func.count(db.distinct(RespuestaForo.id))).desc()).all()
     else:
-        posts = Foro.query.order_by(Foro.created_at.desc()).all()
+        posts = Foro.query.filter(visibility).order_by(Foro.created_at.desc()).all()
     
     categorias = Categoria.query.all()
     
@@ -1107,7 +1113,10 @@ def ver_post(post_id):
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
-    post = Foro.query.get(post_id)
+    post = Foro.query.filter(
+        Foro.id == post_id,
+        db.or_(Foro.aprobado.is_(True), Foro.autor_id == session['usuario_id']),
+    ).first()
     if not post:
         return redirect(url_for('foro'))
         
@@ -1115,7 +1124,11 @@ def ver_post(post_id):
     invalid_response_ids = {r.id for r in respuestas if is_invalid_comment(r.contenido)}
     likes_count = LikeForo.query.filter_by(post_id=post_id).count()
     liked = LikeForo.query.filter_by(post_id=post_id, usuario_id=session['usuario_id']).first() is not None
-    relacionados = Foro.query.filter(Foro.categoria_id == post.categoria_id, Foro.id != post.id).order_by(Foro.created_at.desc()).limit(2).all()
+    relacionados = Foro.query.filter(
+        Foro.categoria_id == post.categoria_id,
+        Foro.id != post.id,
+        db.or_(Foro.aprobado.is_(True), Foro.autor_id == session['usuario_id']),
+    ).order_by(Foro.created_at.desc()).limit(2).all()
         
     return render_template(
         'post.html', post=post, respuestas=respuestas,
@@ -1136,12 +1149,18 @@ def crear_post():
     if 'usuario_id' not in session:
         return redirect(url_for('login'))
 
-    titulo = request.form.get('titulo')
+    titulo = (request.form.get('titulo') or '').strip()
     categoria_id = request.form.get('categoria_id')
     contenido = request.form.get('contenido')
     imagen_file = request.files.get('imagen')
 
-    if not titulo or not titulo.strip() or not categoria_id or not contenido or not contenido.strip():
+    if not titulo or not categoria_id or not contenido:
+        return redirect(url_for('nuevo_post'))
+
+    try:
+        contenido = normalize_forum_post(contenido)
+    except ValueError:
+        app.logger.warning('Publicación de foro rechazada por formato o longitud inválidos.')
         return redirect(url_for('nuevo_post'))
 
     nombre_imagen = None
@@ -1153,11 +1172,12 @@ def crear_post():
             return redirect(url_for('nuevo_post'))
 
     nuevo_post = Foro(
-        titulo=titulo, 
+        titulo=titulo,
         contenido=contenido, 
         categoria_id=categoria_id, 
         autor_id=session['usuario_id'], 
-        imagen=nombre_imagen
+        imagen=nombre_imagen,
+        aprobado=False,
     )
     try:
         db.session.add(nuevo_post)

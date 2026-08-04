@@ -59,6 +59,30 @@ class ForumContentTests(unittest.TestCase):
         self.assertTrue(invalid)
         self.assertEqual("Contenido retirado por tener un formato inválido.", clean)
 
+    def test_historic_editor_html_becomes_readable_plain_text(self):
+        source = (
+            "Hola, quiero empezar a hacer compost en casa."
+            '<div><ul><li><span style="background-color: transparent; font-size: 1.125rem;">'
+            "¿Alguien podría orientarme?</span></li><li>¿Qué residuos puedo usar?</li></ul></div>"
+            "<script>alert('no')</script>"
+        )
+        for module in (self.fast, self.flask):
+            with self.subTest(module=module.__name__):
+                result = module.forum_text_for_output(source)
+                self.assertIn("Hola, quiero empezar", result)
+                self.assertIn("• ¿Alguien podría orientarme?", result)
+                self.assertIn("• ¿Qué residuos puedo usar?", result)
+                self.assertNotIn("<", result)
+                self.assertNotIn("alert", result)
+
+    def test_flask_post_normalizer_stores_plain_text(self):
+        source = "Inicio de una explicación suficientemente extensa para publicar y compartir con la comunidad." + (
+            "<div><ul><li>Primer consejo práctico para compostar.</li><li>Segundo consejo práctico.</li></ul></div>"
+        )
+        result = self.flask.normalize_forum_post(source)
+        self.assertIn("• Primer consejo", result)
+        self.assertNotIn("<div", result)
+
 
 class ForumSourceContractsTests(unittest.TestCase):
     def test_likes_are_authenticated_idempotent_and_unique(self):
@@ -82,6 +106,10 @@ class ForumSourceContractsTests(unittest.TestCase):
             "multiline",
             "maxLength={1000}",
             "submittingRef.current",
+            "presentationStyle=\"overFullScreen\"",
+            "Keyboard.addListener",
+            "useSafeAreaInsets",
+            "onContentSizeChange",
         ):
             self.assertIn(expected, comments_modal)
         for expected in (
@@ -97,6 +125,18 @@ class ForumSourceContractsTests(unittest.TestCase):
         self.assertIn("pendingLikesRef", forum_screen)
         self.assertIn("api.put(`/foro/posts/${post.id}/like`)", forum_screen)
         self.assertIn("api.delete(`/foro/posts/${post.id}/like`)", forum_screen)
+
+    def test_pending_posts_are_visible_only_to_their_author(self):
+        router = (ROOT / "fast_api/app/routers/foro.py").read_text(encoding="utf-8")
+        flask_app = (ROOT / "flask_zerowaste/app.py").read_text(encoding="utf-8")
+        flask_model = (ROOT / "flask_zerowaste/models.py").read_text(encoding="utf-8")
+        editor = (ROOT / "flask_zerowaste/templates/nuevo_post.html").read_text(encoding="utf-8")
+        self.assertIn("or_(visibility, Foro.autor_id == current_user.id)", router)
+        self.assertIn("db.or_(Foro.aprobado.is_(True), Foro.autor_id == session['usuario_id'])", flask_app)
+        self.assertIn("aprobado = db.Column", flask_model)
+        self.assertIn("foreign_keys='Foro.autor_id'", flask_model)
+        self.assertIn("textarea.value = editor.innerText.trim()", editor)
+        self.assertNotIn("textarea.value = editor.innerHTML", editor)
 
     def test_web_never_renders_comment_html_as_active_markup(self):
         flask_post = (ROOT / "flask_zerowaste/templates/post.html").read_text(encoding="utf-8")

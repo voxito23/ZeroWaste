@@ -28,7 +28,7 @@ import UserAvatar from '../components/ui/UserAvatar';
 import Skeleton from '../components/ui/Skeleton';
 import ZeroWasteDialog, { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
 import useMapAppearance from '../hooks/useMapAppearance';
-import { registerPushToken, unregisterPushToken } from '../services/mobileNotifications';
+import { getPushRegistrationStatus, registerPushToken, unregisterPushToken } from '../services/mobileNotifications';
 import { voiceNavigation } from '../services/voiceNavigation';
 import { useAuth } from '../store/useAuth';
 import { resolveAvatar } from '../utils/user';
@@ -57,6 +57,7 @@ export default function SettingsScreen() {
   const [savingPreference, setSavingPreference] = useState('');
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [voiceVolume, setVoiceVolume] = useState(1);
+  const [pushStatus, setPushStatus] = useState({ nativeAvailable: true, permission: 'undetermined', registered: false, activeDevices: 0, lastError: null });
   const voiceAvailable = voiceNavigation.isAvailable();
 
   const loadPreferences = useCallback(() => {
@@ -68,14 +69,19 @@ export default function SettingsScreen() {
       .finally(() => setPreferencesLoading(false));
   }, []);
 
+  const loadPushStatus = useCallback(() => getPushRegistrationStatus()
+    .then(setPushStatus)
+    .catch(() => setPushStatus((current) => ({ ...current, registered: false, lastError: 'StatusUnavailable' }))), []);
+
   useEffect(() => {
     void loadPreferences();
+    void loadPushStatus();
     voiceNavigation.hydrate().then(() => {
       const enabled = voiceAvailable && !voiceNavigation.isMuted();
       setVoiceEnabled(enabled);
       setVoiceVolume(voiceNavigation.getVolume());
     });
-  }, [loadPreferences, voiceAvailable]);
+  }, [loadPreferences, loadPushStatus, voiceAvailable]);
 
   const savePreference = async (key, value) => {
     const previous = preferences[key];
@@ -96,8 +102,12 @@ export default function SettingsScreen() {
   const enablePush = async () => {
     try {
       const result = await registerPushToken();
-      if (result.status === 'granted') await savePreference('push_enabled', true);
-      else showDialog({ type: result.status === 'denied' ? 'permission' : 'info', title: result.status === 'denied' ? 'Permiso no concedido' : 'Dispositivo no compatible', message: result.message || 'Puedes activar las notificaciones más adelante desde los ajustes del dispositivo.' });
+      if (result.status === 'granted') {
+        await savePreference('push_enabled', true);
+        await loadPushStatus();
+      }
+      else if (result.status === 'denied') showDialog({ type: 'permission', title: 'Permiso no concedido', message: 'Activa las notificaciones de ZeroWaste desde los ajustes del teléfono y vuelve a esta pantalla.', primaryLabel: 'Abrir ajustes', onPrimary: Linking.openSettings, secondaryLabel: 'Ahora no' });
+      else showDialog({ type: 'info', title: 'Dispositivo no compatible', message: result.message || 'Esta instalación todavía no puede registrar notificaciones push.' });
     } catch (error) {
       showDialog({ type: 'error', title: 'No se activaron las notificaciones', message: error.userMessage || 'Verifica tu conexión e inténtalo de nuevo.' });
     }
@@ -105,7 +115,10 @@ export default function SettingsScreen() {
 
   const togglePush = (value) => {
     if (!value) {
-      void unregisterPushToken().finally(() => savePreference('push_enabled', false));
+      void unregisterPushToken().finally(async () => {
+        await savePreference('push_enabled', false);
+        await loadPushStatus();
+      });
       return;
     }
     showDialog({
@@ -117,6 +130,19 @@ export default function SettingsScreen() {
       onPrimary: () => void enablePush(),
     });
   };
+
+  const pushActive = Boolean(preferences.push_enabled && pushStatus.nativeAvailable && pushStatus.permission === 'granted' && pushStatus.registered);
+  const pushDescription = !pushStatus.nativeAvailable
+    ? 'Requiere una Development Build con expo-notifications'
+    : pushStatus.permission === 'denied'
+      ? 'Permiso desactivado en el teléfono'
+      : pushStatus.lastError === 'StatusUnavailable'
+        ? 'No fue posible comprobar el registro'
+        : pushStatus.lastError
+        ? `Requiere revisión: ${pushStatus.lastError}`
+        : pushStatus.registered
+          ? `${pushStatus.activeDevices} dispositivo${pushStatus.activeDevices === 1 ? '' : 's'} registrado${pushStatus.activeDevices === 1 ? '' : 's'}`
+          : 'Toca para registrar este dispositivo';
 
   const cycleMapPreference = async () => {
     const next = MAP_SEQUENCE[(MAP_SEQUENCE.indexOf(mapPreference) + 1) % MAP_SEQUENCE.length];
@@ -145,7 +171,7 @@ export default function SettingsScreen() {
   ], [navigation]);
 
   const notificationRows = [
-    { key: 'push_enabled', label: 'Notificaciones push', description: 'Avisos en este dispositivo', icon: Bell, onChange: togglePush },
+    { key: 'push_enabled', label: 'Notificaciones push', description: pushDescription, icon: Bell, onChange: togglePush },
     { key: 'comments', label: 'Comentarios', description: 'Actividad en tus publicaciones', icon: MessageCircle },
     { key: 'replies', label: 'Respuestas', description: 'Respuestas a tus comentarios', icon: MessageCircle },
     { key: 'likes', label: 'Me gusta', description: 'Reacciones a tus publicaciones', icon: ThumbsUp },
@@ -169,7 +195,7 @@ export default function SettingsScreen() {
 
         <Text className="mb-2 mt-1 px-1 text-xs font-black uppercase tracking-widest text-slate-500">NOTIFICACIONES</Text>
         {preferencesError ? <TouchableOpacity onPress={loadPreferences} className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3"><Text className="font-bold text-amber-900">{preferencesError} Toca para reintentar.</Text></TouchableOpacity> : null}
-        {preferencesLoading ? <View className="mb-7 rounded-3xl bg-white p-4">{[0, 1, 2, 3].map((item) => <Skeleton key={item} className="mb-3 h-[58px] rounded-2xl" />)}</View> : <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">{notificationRows.map((row, index) => <SettingSwitch key={row.key} {...row} value={Boolean(preferences[row.key])} disabled={savingPreference === row.key} onChange={row.onChange || ((value) => savePreference(row.key, value))} divider={index > 0} />)}</View>}
+        {preferencesLoading ? <View className="mb-7 rounded-3xl bg-white p-4">{[0, 1, 2, 3].map((item) => <Skeleton key={item} className="mb-3 h-[58px] rounded-2xl" />)}</View> : <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">{notificationRows.map((row, index) => <SettingSwitch key={row.key} {...row} value={row.key === 'push_enabled' ? pushActive : Boolean(preferences[row.key])} disabled={savingPreference === row.key} onChange={row.onChange || ((value) => savePreference(row.key, value))} divider={index > 0} />)}</View>}
 
         <Text className="mb-2 px-1 text-xs font-black uppercase tracking-widest text-slate-500">PREFERENCIAS</Text>
         <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">

@@ -7,6 +7,7 @@ from typing import List
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import FileResponse
+from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.data.database import get_db
@@ -28,7 +29,7 @@ from app.services.media import (
     save_media_image,
 )
 from app.services.points import award_points
-from app.services.forum_content import validate_forum_text
+from app.services.forum_content import forum_text_for_output, validate_forum_text
 from app.services.push_notifications import active_tokens, in_app_allowed, push_allowed, send_expo_push
 
 router = APIRouter(prefix="/foro", tags=["Foro"])
@@ -38,11 +39,12 @@ def _serialize_post(post: Foro, current_user: Usuario | None = None) -> PostDeta
     response = PostDetailResponse(
         id=post.id,
         titulo=post.titulo,
-        contenido=post.contenido,
+        contenido=forum_text_for_output(post.contenido),
         categoria_id=post.categoria_id,
         autor_id=post.autor_id,
         imagen=post.imagen,
         created_at=post.created_at,
+        aprobado=bool(post.aprobado),
         autor_nombre=post.autor_rel.nombre if post.autor_rel else None,
         autor_foto=post.autor_rel.foto_perfil if post.autor_rel else None,
         categoria_nombre=post.categoria_rel.nombre if post.categoria_rel else None,
@@ -83,8 +85,11 @@ def _serialize_reply(reply: RespuestaForo) -> RespuestaResponse:
     return response
 
 
-def _get_post_or_404(db: Session, post_id: int) -> Foro:
-    post = db.query(Foro).filter(Foro.id == post_id, Foro.aprobado.is_(True)).first()
+def _get_post_or_404(db: Session, post_id: int, current_user: Usuario | None = None) -> Foro:
+    visibility = Foro.aprobado.is_(True)
+    if current_user:
+        visibility = or_(visibility, Foro.autor_id == current_user.id)
+    post = db.query(Foro).filter(Foro.id == post_id, visibility).first()
     if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post no encontrado.")
     return post
@@ -144,7 +149,10 @@ def list_posts(
     current_user: Usuario | None = Depends(get_optional_current_user),
 ):
     """Devuelve todos los posts del foro con información de autor, categoría, respuestas y likes."""
-    posts = db.query(Foro).filter(Foro.aprobado.is_(True)).order_by(Foro.created_at.desc()).all()
+    visibility = Foro.aprobado.is_(True)
+    if current_user:
+        visibility = or_(visibility, Foro.autor_id == current_user.id)
+    posts = db.query(Foro).filter(visibility).order_by(Foro.created_at.desc()).all()
 
     return [_serialize_post(post, current_user) for post in posts]
 
@@ -156,7 +164,7 @@ def get_post(
     current_user: Usuario | None = Depends(get_optional_current_user),
 ):
     """Devuelve un post específico con detalles completos."""
-    return _serialize_post(_get_post_or_404(db, post_id), current_user)
+    return _serialize_post(_get_post_or_404(db, post_id, current_user), current_user)
 
 
 @router.post(
