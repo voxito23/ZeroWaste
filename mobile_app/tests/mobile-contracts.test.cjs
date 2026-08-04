@@ -72,12 +72,15 @@ const imageUpload = loadModule('utils/imageUpload.js');
 
 assert.match(comments, /parent_comment_id/);
 assert.match(comments, /KeyboardAvoidingView/);
-assert.match(comments, /Platform\.OS === 'ios' \? 'padding' : 'height'/);
+assert.match(comments, /Platform\.OS === 'ios' \? 'padding' : undefined/);
 assert.match(comments, /Escribe un comentario/);
 assert.match(comments, /style=\{\{ flex: 1 \}\}/);
 assert.match(comments, /keyboardDidHide/);
 assert.match(comments, /Keyboard\.scheduleLayoutAnimation\(event\)/);
 assert.doesNotMatch(comments, /keyboardLayoutRevision|keyboardRestoreY|Animated\.add/);
+assert.match(comments, /navigationBarTranslucent=\{false\}/);
+assert.match(comments, /keyboardVisibleRef/);
+assert.match(comments, /Platform\.OS === 'android'\) inputRef\.current\?\.blur\(\)/);
 assert.match(comments, /highlightCommentId/);
 assert.match(notifications, /getExpoPushTokenAsync/);
 assert.match(notifications, /expoPushToken/);

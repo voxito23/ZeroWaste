@@ -49,6 +49,16 @@ class MapboxContractTests(unittest.TestCase):
         self.assertIn("Promise.resolve(Mapbox.setAccessToken(MAPBOX_PUBLIC_TOKEN))", config)
         self.assertNotIn("Mapbox.setAccessToken(MAPBOX_TOKEN);", source)
 
+    def test_docker_passes_one_public_mapbox_token_to_laravel_and_flask(self):
+        compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+        anchor = compose.split("x-app-environment:", 1)[1].split("services:", 1)[0]
+        self.assertIn("MAPBOX_PUBLIC_TOKEN: ${MAPBOX_PUBLIC_TOKEN:-}", anchor)
+
+        laravel = (ROOT / "laravel_zerowaste/config/services.php").read_text(encoding="utf-8")
+        flask = (ROOT / "flask_zerowaste/app.py").read_text(encoding="utf-8")
+        self.assertIn("env('MAPBOX_PUBLIC_TOKEN'", laravel)
+        self.assertIn("os.getenv('MAPBOX_PUBLIC_TOKEN')", flask)
+
     def test_points_contract_is_numeric_and_explicitly_active(self):
         schemas = (ROOT / "fast_api/app/models/schemas.py").read_text(encoding="utf-8")
         response = schemas.split("class PuntoMapaResponse", 1)[1].split(

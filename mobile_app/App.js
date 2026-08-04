@@ -42,7 +42,7 @@ export default function App() {
         ) : (
           <AppNavigator />
         )}
-        <StatusBar style="auto" />
+        <StatusBar style="dark" />
       </ZeroWasteDialogProvider>
     </SafeAreaProvider>
   );

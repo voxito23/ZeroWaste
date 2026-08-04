@@ -29,6 +29,7 @@ x-app-environment: &app-environment
   MEDIA_S3_SECRET_KEY: ${MEDIA_S3_SECRET_KEY:-}
   MEDIA_PUBLIC_URL: ${MEDIA_PUBLIC_URL:-https://www.zerowaste-qro.com/media}
   PUBLIC_MEDIA_BASE_URL: ${MEDIA_PUBLIC_URL:-https://www.zerowaste-qro.com/media}
+  MAPBOX_PUBLIC_TOKEN: ${MAPBOX_PUBLIC_TOKEN:-}
   RESEND_API_KEY: ${RESEND_API_KEY:-}
   RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-}
   RESEND_FROM_NAME: ${RESEND_FROM_NAME:-ZeroWaste}

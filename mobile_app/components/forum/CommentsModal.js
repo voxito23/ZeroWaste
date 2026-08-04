@@ -17,6 +17,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   const inputRef = useRef(null);
   const requestRef = useRef(0);
   const submittingRef = useRef(false);
+  const keyboardVisibleRef = useRef(false);
   const commentsRef = useRef([]);
   const draftPostIdRef = useRef(null);
   const dragY = useRef(new Animated.Value(0)).current;
@@ -45,13 +46,18 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = 'keyboardDidHide';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
     const showSubscription = Keyboard.addListener(showEvent, (event) => {
-      if (!reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
+      if (Platform.OS === 'ios' && !reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
+      if (keyboardVisibleRef.current) return;
+      keyboardVisibleRef.current = true;
       setKeyboardVisible(true);
     });
     const hideSubscription = Keyboard.addListener(hideEvent, (event) => {
-      if (!reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
+      if (Platform.OS === 'ios' && !reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
+      if (!keyboardVisibleRef.current) return;
+      keyboardVisibleRef.current = false;
+      if (Platform.OS === 'android') inputRef.current?.blur();
       setKeyboardVisible(false);
       dragY.setValue(0);
     });
@@ -72,6 +78,7 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
 
   const closeModal = useCallback(() => {
     Keyboard.dismiss();
+    keyboardVisibleRef.current = false;
     setKeyboardVisible(false);
     onClose();
   }, [onClose]);
@@ -170,8 +177,8 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   };
 
   return (
-    <Modal visible={visible} transparent animationType={reduceMotion ? 'none' : 'slide'} presentationStyle="overFullScreen" statusBarTranslucent onRequestClose={closeModal}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
+    <Modal visible={visible} transparent animationType={reduceMotion ? 'none' : 'slide'} presentationStyle="overFullScreen" statusBarTranslucent navigationBarTranslucent={false} onRequestClose={closeModal}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={0} style={{ flex: 1 }}>
         <View className="flex-1 justify-end bg-slate-950/45">
           <Pressable className="flex-1" onPress={closeModal} accessibilityLabel="Cerrar comentarios" />
           <Animated.View style={{ height: '92%', minHeight: '55%', transform: [{ translateY: dragY }] }}>
