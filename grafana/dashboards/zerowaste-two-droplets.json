@@ -11,7 +11,7 @@
     {"type":"timeseries","title":"CPU, RAM y load por nodo","targets":[{"expr":"100-(avg by(instance_name)(rate(node_cpu_seconds_total{mode=\"idle\",instance_name=~\"$instance_name\"}[5m]))*100)","legendFormat":"CPU {{instance_name}}"},{"expr":"100*(1-node_memory_MemAvailable_bytes/node_memory_MemTotal_bytes)","legendFormat":"RAM {{instance_name}}"},{"expr":"node_load1","legendFormat":"load {{instance_name}}"}],"gridPos":{"h":7,"w":12,"x":0,"y":7},"id":11},
     {"type":"timeseries","title":"Disco, red, reinicios y uptime","targets":[{"expr":"100*(1-node_filesystem_avail_bytes{mountpoint=\"/\"}/node_filesystem_size_bytes{mountpoint=\"/\"})","legendFormat":"disk {{instance_name}}"},{"expr":"rate(node_network_receive_bytes_total[5m])","legendFormat":"network {{instance_name}}"},{"expr":"changes(container_start_time_seconds{name!=\"\"}[10m])","legendFormat":"restarts {{name}}"},{"expr":"time()-node_boot_time_seconds","legendFormat":"uptime {{instance_name}}"}],"gridPos":{"h":7,"w":12,"x":12,"y":7},"id":12},
     {"type":"row","title":"FILA 3 — APLICACIONES","gridPos":{"h":1,"w":24,"x":0,"y":14},"id":20},
-    {"type":"stat","title":"Laravel, FastAPI, Flask, Caddy, Nginx, Redis, Supabase y Storage","targets":[{"expr":"up{service=~\"laravel|fastapi|flask|caddy|nginx|redis\"}","legendFormat":"{{service}} {{instance_name}}"},{"expr":"probe_success{job=\"blackbox-origins\",probe=\"ready\"}","legendFormat":"shared readiness {{instance_name}}"}],"gridPos":{"h":6,"w":24,"x":0,"y":15},"id":21},
+    {"type":"stat","title":"Servicios y readiness real por servidor","description":"La readiness integral comprueba Laravel, FastAPI, Flask, Supabase, Redis y almacenamiento en cada Droplet real.","targets":[{"expr":"up{service=~\"fastapi|flask|caddy|nginx|redis\"}","legendFormat":"{{service}} · {{instance_name}}"},{"expr":"probe_success{job=\"blackbox-origins\",probe=\"ready\"}","legendFormat":"Readiness integral · {{instance_name}}"}],"gridPos":{"h":6,"w":24,"x":0,"y":15},"id":21},
     {"type":"row","title":"FILA 4 — TRÁFICO","gridPos":{"h":1,"w":24,"x":0,"y":21},"id":30},
     {"type":"timeseries","title":"Peticiones, códigos, latencias y activas por nodo","targets":[{"expr":"sum by(instance_name,status)(rate(http_requests_total[5m]))","legendFormat":"{{instance_name}} {{status}}"},{"expr":"histogram_quantile(0.95,sum by(le,instance_name)(rate(http_request_duration_seconds_bucket[5m])))","legendFormat":"p95 {{instance_name}}"},{"expr":"sum by(instance_name)(http_requests_inprogress)","legendFormat":"active {{instance_name}}"}],"gridPos":{"h":7,"w":24,"x":0,"y":22},"id":31},
     {"type":"row","title":"FILA 5 — SEGURIDAD","gridPos":{"h":1,"w":24,"x":0,"y":29},"id":40},
@@ -30,7 +30,7 @@
   ]},
   "time": {"from":"now-6h","to":"now"},
   "timezone": "browser",
-  "title": "ZeroWaste — Two Droplet Failover",
+  "title": "ZeroWaste — Servidores 1 y 2",
   "uid": "zerowaste-two-droplets",
-  "version": 1
+  "version": 2
 }

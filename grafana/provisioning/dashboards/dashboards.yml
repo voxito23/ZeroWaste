@@ -4,7 +4,7 @@ providers:
     orgId: 1
     folder: ZeroWaste
     type: file
-    disableDeletion: true
+    disableDeletion: false
     editable: false
     options:
       path: /var/lib/grafana/dashboards

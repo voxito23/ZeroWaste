@@ -10,7 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { Compass, Layers3, LocateFixed, MapPin, Navigation, QrCode, Search, Truck, X } from 'lucide-react-native';
+import { LocateFixed, MapPin, Navigation, QrCode, Search, Truck, X } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
@@ -37,6 +37,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 const CARD_WIDTH = 304;
 const CARD_SNAP = CARD_WIDTH + 12;
 const SAFE_MAP_LOAD_ERROR = 'No fue posible cargar el mapa. Revisa tu conexión e inténtalo nuevamente.';
+const MAP_OVERVIEW_CAMERA = Object.freeze({ ...MAP_DEFAULT_CAMERA, pitch: 0, heading: 0 });
 
 const normalizePoint = (point) => {
   const latitude = Number(point?.latitud ?? point?.latitude);
@@ -128,7 +129,6 @@ export default function MapScreen() {
   const [selectedResult, setSelectedResult] = useState(null);
   const [searchError, setSearchError] = useState('');
   const [emptySearch, setEmptySearch] = useState(false);
-  const [threeDimensional, setThreeDimensional] = useState(true);
   const [reduceMotion, setReduceMotion] = useState(false);
 
   const isCollector = user?.rol === 'recolector' || user?.is_admin;
@@ -143,11 +143,11 @@ export default function MapScreen() {
   const animationDuration = reduceMotion ? 0 : 700;
   const mapStyleConfig = useMemo(() => ({
     lightPreset,
-    show3dBuildings: true,
-    show3dObjects: true,
-    show3dFacades: true,
-    show3dLandmarks: true,
-    show3dTrees: true,
+    show3dBuildings: false,
+    show3dObjects: false,
+    show3dFacades: false,
+    show3dLandmarks: false,
+    show3dTrees: false,
     showPointOfInterestLabels: true,
     showTransitLabels: true,
     showPlaceLabels: true,
@@ -162,7 +162,8 @@ export default function MapScreen() {
       cameraRef.current?.setCamera({
         centerCoordinate: coordinates[0],
         zoomLevel: 15.5,
-        pitch: threeDimensional ? 45 : 0,
+        pitch: 0,
+        heading: 0,
         animationDuration,
       });
       return;
@@ -173,7 +174,7 @@ export default function MapScreen() {
     const southWest = [Math.min(...longitudes), Math.min(...latitudes)];
     if (!validCoordinate(northEast) || !validCoordinate(southWest)) return;
     cameraRef.current?.fitBounds(northEast, southWest, [150, 48, 270, 48], animationDuration);
-  }, [animationDuration, threeDimensional]);
+  }, [animationDuration]);
 
   const selectPoint = useCallback((point, { moveCamera = true, scrollCard = true } = {}) => {
     if (!point) return;
@@ -269,19 +270,11 @@ export default function MapScreen() {
     cameraRef.current?.setCamera({
       centerCoordinate: coordinates,
       zoomLevel: 15.5,
-      pitch: threeDimensional ? 45 : 0,
+      pitch: 0,
       heading: 0,
       animationDuration,
     });
-  }, [animationDuration, requestLocation, threeDimensional, userLocation]);
-
-  const togglePerspective = useCallback(() => {
-    setThreeDimensional((current) => {
-      const next = !current;
-      cameraRef.current?.setCamera({ pitch: next ? 42 : 0, heading: 0, animationDuration });
-      return next;
-    });
-  }, [animationDuration]);
+  }, [animationDuration, requestLocation, userLocation]);
 
   const clearSearch = useCallback(() => {
     searchGenerationRef.current += 1;
@@ -377,7 +370,7 @@ export default function MapScreen() {
     if (feature.properties?.cluster) {
       try {
         const zoomLevel = await pointSourceRef.current?.getClusterExpansionZoom(feature);
-        if (validCoordinate(coordinates)) cameraRef.current?.setCamera({ centerCoordinate: coordinates, zoomLevel: Math.min(Number(zoomLevel) || 16, 18), pitch: threeDimensional ? 40 : 0, animationDuration });
+        if (validCoordinate(coordinates)) cameraRef.current?.setCamera({ centerCoordinate: coordinates, zoomLevel: Math.min(Number(zoomLevel) || 16, 18), pitch: 0, heading: 0, animationDuration });
       } catch {
         if (validCoordinate(coordinates)) cameraRef.current?.setCamera({ centerCoordinate: coordinates, zoomLevel: 16, animationDuration });
       }
@@ -385,7 +378,7 @@ export default function MapScreen() {
     }
     const point = pointById.get(String(feature.properties?.id ?? feature.id));
     if (point) selectPoint(point);
-  }, [animationDuration, pointById, selectPoint, threeDimensional]);
+  }, [animationDuration, pointById, selectPoint]);
 
   const topSafeArea = Math.max(insets.top + 14, 44);
   const bottomSafeArea = Math.max(insets.bottom + 14, 24);
@@ -408,7 +401,7 @@ export default function MapScreen() {
           onMapLoadingError={handleMapLoadingError}
         >
           {!usingFallbackStyle ? <Mapbox.StyleImport id="basemap" existing config={mapStyleConfig} /> : null}
-          <Mapbox.Camera ref={cameraRef} defaultSettings={MAP_DEFAULT_CAMERA} />
+          <Mapbox.Camera ref={cameraRef} defaultSettings={MAP_OVERVIEW_CAMERA} />
           {permissionState === 'granted' ? <Mapbox.LocationPuck puckBearingEnabled puckBearing="heading" /> : null}
           <Mapbox.ShapeSource
             ref={pointSourceRef}
@@ -473,7 +466,7 @@ export default function MapScreen() {
         >
           <View className="flex-row items-center justify-center">
             {!mapError ? <ActivityIndicator color="#047857" /> : null}
-            <Text className={`text-center font-black ${mapError ? 'text-emerald-950' : 'ml-3 text-slate-800'}`}>{mapError || 'Preparando mapa 3D…'}</Text>
+            <Text className={`text-center font-black ${mapError ? 'text-emerald-950' : 'ml-3 text-slate-800'}`}>{mapError || 'Preparando mapa…'}</Text>
           </View>
           {mapError && tokenReady ? <TouchableOpacity onPress={retryMap} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">{usingFallbackStyle ? 'Reintentar mapa' : 'Usar mapa compatible'}</Text></TouchableOpacity> : null}
         </View>
@@ -498,7 +491,6 @@ export default function MapScreen() {
 
       <View className="absolute right-4 z-20 gap-2" style={{ top: topSafeArea + 70 }}>
         <TouchableOpacity onPress={centerUser} className="h-12 w-12 items-center justify-center rounded-full border border-white bg-emerald-800 shadow-md elevation-4" accessibilityLabel="Recentrar en mi ubicación"><LocateFixed color="white" size={21} /></TouchableOpacity>
-        <TouchableOpacity onPress={togglePerspective} className="h-12 w-12 items-center justify-center rounded-full border border-white bg-white shadow-md elevation-4" accessibilityLabel={threeDimensional ? 'Cambiar a vista superior' : 'Cambiar a vista 3D'}>{threeDimensional ? <Compass color="#047857" size={21} /> : <Layers3 color="#047857" size={21} />}</TouchableOpacity>
       </View>
 
       {pointsError ? <Notice tone="error" top={topSafeArea + 132} message={pointsError} action="Reintentar" onPress={() => fetchPoints({ preserve: points.length > 0 })} /> : null}
