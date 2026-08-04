@@ -45,7 +45,7 @@ class User extends Authenticatable
         'nombre', 'email', 'password', 'is_admin', 'foto_perfil',
         'ubicacion', 'titulo_perfil', 'biografia', 'intereses',
         'firebase_uid', 'auth_provider', 'profile_completed', 'bloqueado',
-        'rol', 'edad', 'licencia_conducir'
+        'rol', 'edad', 'licencia_conducir', 'email_verified_at'
     ];
 
     protected $hidden = [
@@ -59,6 +59,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
+            'profile_completed' => 'boolean',
+            'bloqueado' => 'boolean',
         ];
     }
 

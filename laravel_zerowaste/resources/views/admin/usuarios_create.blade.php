@@ -20,6 +20,9 @@
 
     <form id="userForm" novalidate action="{{ route('usuarios.store') }}" method="POST" enctype="multipart/form-data" class="flex flex-col gap-6 relative z-10">
         @csrf
+        @error('usuario')
+            <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700" role="alert">{{ $message }}</div>
+        @enderror
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left col: Avatar -->
@@ -31,9 +34,10 @@
                         <span class="material-symbols-outlined text-white text-3xl mb-1">photo_camera</span>
                     </label>
                 </div>
-                <input type="file" name="foto_perfil" id="foto-input" accept="image/*" class="hidden" onchange="previewImage(this)">
+                <input type="file" name="foto_perfil" id="foto-input" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="previewImage(this)">
                 <label for="foto-input" id="foto-label" class="text-xs px-4 py-2 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-bold rounded-full cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-800/40 transition-colors border border-emerald-200 dark:border-emerald-700/50">Subir Fotografía</label>
-                <span id="err-foto" class="hidden text-red-500 text-xs mt-2 font-medium text-center"></span>
+                <span class="mt-2 text-center text-[11px] text-gray-400">Opcional · JPEG, PNG o WebP · Máx. 15 MB</span>
+                <span id="err-foto" class="{{ $errors->has('foto_perfil') ? '' : 'hidden' }} text-red-500 text-xs mt-2 font-medium text-center">{{ $errors->first('foto_perfil') }}</span>
             </div>
 
             <!-- Right col: Form -->
@@ -42,7 +46,7 @@
                     <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Nombre Completo</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">badge</span></div>
-                        <input type="text" name="nombre" id="input-nombre" required maxlength="30" placeholder="Ej. María Martínez" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                        <input type="text" name="nombre" id="input-nombre" value="{{ old('nombre') }}" required maxlength="30" placeholder="Ej. María Martínez" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
                     </div>
                     <div class="flex justify-between items-center mt-1">
                         <span id="err-nombre" class="hidden text-red-500 text-xs font-medium ml-1"></span>
@@ -54,7 +58,7 @@
                     <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Correo Electrónico</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">mail</span></div>
-                        <input type="email" name="email" required placeholder="correo@ejemplo.com" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                        <input type="email" name="email" value="{{ old('email') }}" required placeholder="correo@ejemplo.com" class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
                     </div>
                     <span id="err-email" class="hidden text-red-500 text-xs mt-1.5 font-medium ml-1"></span>
                 </div>
@@ -76,7 +80,7 @@
                         <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Ubicación</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">location_on</span></div>
-                            <input type="text" name="ubicacion" id="input-ubicacion" required maxlength="30" placeholder="Querétaro, Qro." class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
+                            <input type="text" name="ubicacion" id="input-ubicacion" value="{{ old('ubicacion') }}" required maxlength="30" placeholder="Querétaro, Qro." class="w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-900 dark:text-white text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pl-11 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20">
                         </div>
                         <div class="flex justify-between items-center mt-1">
                             <span id="err-ubicacion" class="hidden text-red-500 text-xs font-medium ml-1"></span>
@@ -87,7 +91,7 @@
                         <label class="block font-bold mb-1.5 text-sm text-gray-700 dark:text-emerald-200">Título del Perfil</label>
                         <div class="relative custom-dropdown" tabindex="0">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10"><span class="material-symbols-outlined text-gray-400 dark:text-emerald-500/50 text-lg">psychology</span></div>
-                            <input type="hidden" name="titulo_perfil" id="titulo_perfil" required>
+                            <input type="hidden" name="titulo_perfil" id="titulo_perfil" value="{{ old('titulo_perfil') }}" required>
                             
                             <div class="dropdown-selected w-full bg-gray-50/50 dark:bg-[#064E3B]/10 border border-gray-200 dark:border-emerald-800/30 text-gray-500 dark:text-gray-400 text-sm rounded-xl block pl-11 pr-10 p-3 transition-all duration-300 hover:bg-white dark:hover:bg-[#064E3B]/20 cursor-pointer flex justify-between items-center" onclick="this.nextElementSibling.classList.toggle('hidden')">
                                 <span class="selected-text flex items-center gap-2">Selecciona un título...</span>
@@ -130,7 +134,7 @@
                     </div>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" name="is_admin" id="is_admin" class="sr-only peer">
+                    <input type="checkbox" name="is_admin" id="is_admin" {{ old('is_admin') ? 'checked' : '' }} class="sr-only peer">
                     <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 dark:peer-focus:ring-emerald-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-500"></div>
                 </label>
             </div>
@@ -146,7 +150,7 @@
                     </div>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" name="is_recolector" id="is_recolector" class="sr-only peer">
+                    <input type="checkbox" name="is_recolector" id="is_recolector" {{ old('is_recolector') ? 'checked' : '' }} class="sr-only peer">
                     <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-amber-300 dark:peer-focus:ring-amber-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-amber-500"></div>
                 </label>
             </div>
@@ -175,13 +179,23 @@ function togglePass(id, btn) {
 
 function previewImage(input) {
     if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const errFoto = document.getElementById('err-foto');
+        const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowed.includes(file.type) || file.size > 15 * 1024 * 1024) {
+            errFoto.textContent = file.size > 15 * 1024 * 1024
+                ? 'La imagen no debe pesar más de 15 MB.'
+                : 'Selecciona una imagen JPEG, PNG o WebP.';
+            errFoto.classList.remove('hidden');
+            input.value = '';
+            return;
+        }
         const reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById('preview-foto').src = e.target.result;
         }
-        reader.readAsDataURL(input.files[0]);
+        reader.readAsDataURL(file);
         // Limpiar error de foto al subir
-        const errFoto = document.getElementById('err-foto');
         const fotoLabel = document.getElementById('foto-label');
         if (errFoto) errFoto.classList.add('hidden');
         if (fotoLabel) {
@@ -302,8 +316,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const password = form.querySelector('input[name="password"]');
         const ubicacion = form.querySelector('input[name="ubicacion"]');
         const titulo = form.querySelector('input[name="titulo_perfil"]');
-        const fotoInput = document.getElementById('foto-input');
-
         const errNombre = document.getElementById('err-nombre');
         const errEmail = document.getElementById('err-email');
         const errPass = document.getElementById('err-password');
@@ -323,17 +335,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         let isValid = true;
-
-        // ── Validar Fotografía (obligatoria) ──
-        if (!fotoInput.files || fotoInput.files.length === 0) {
-            errFoto.textContent = 'Debes subir una fotografía de perfil.';
-            errFoto.classList.remove('hidden');
-            if (fotoLabel) {
-                fotoLabel.classList.add('border-red-500', 'text-red-500', 'bg-red-50', 'dark:bg-red-900/20');
-                fotoLabel.classList.remove('border-emerald-200', 'dark:border-emerald-700/50', 'text-emerald-600', 'dark:text-emerald-400', 'bg-emerald-50', 'dark:bg-emerald-900/30');
-            }
-            isValid = false;
-        }
 
         // ── Validar Nombre (obligatorio, mín 2, máx 100) ──
         const nombreVal = nombre.value.trim();

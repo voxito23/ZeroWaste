@@ -132,12 +132,57 @@ final class Media
         if (! is_writable($directory)) {
             throw new RuntimeException('El directorio compartido de perfiles no permite escritura.');
         }
-        $filename = Str::uuid()->toString().'.'.$extension;
-        $file->move($directory, $filename);
+        $identifier = Str::uuid()->toString();
+        $filename = $identifier.'.'.$extension;
         $path = $directory.DIRECTORY_SEPARATOR.$filename;
-        if (! chmod($path, 0660)) {
-            File::delete($path);
-            throw new RuntimeException('No fue posible aplicar permisos seguros al archivo.');
+        $temporaryPath = $directory.DIRECTORY_SEPARATOR.'.upload-'.$identifier.'.tmp';
+        $sourcePath = $file->getRealPath();
+        if (! is_string($sourcePath) || $sourcePath === '' || ! is_readable($sourcePath)) {
+            throw new RuntimeException('No fue posible leer la imagen recibida.');
+        }
+
+        $input = null;
+        $output = null;
+        try {
+            $input = fopen($sourcePath, 'rb');
+            $output = fopen($temporaryPath, 'xb');
+            if ($input === false || $output === false) {
+                throw new RuntimeException('No fue posible abrir el almacenamiento de imágenes.');
+            }
+            $written = stream_copy_to_stream($input, $output, $maximumBytes + 1);
+            if (! is_int($written) || $written < 1 || $written > $maximumBytes) {
+                throw new RuntimeException('La imagen no es válida o supera el límite permitido.');
+            }
+            if (! fflush($output)) {
+                throw new RuntimeException('No fue posible completar la escritura de la imagen.');
+            }
+            fclose($input);
+            fclose($output);
+            $input = null;
+            $output = null;
+            if (! @chmod($temporaryPath, 0660)) {
+                throw new RuntimeException('No fue posible aplicar permisos seguros al archivo.');
+            }
+            if (! @rename($temporaryPath, $path)) {
+                throw new RuntimeException('No fue posible publicar la imagen guardada.');
+            }
+        } catch (\Throwable $error) {
+            File::delete([$temporaryPath, $path]);
+            if ($error instanceof RuntimeException) {
+                throw $error;
+            }
+            throw new RuntimeException(
+                'No fue posible escribir la imagen en el almacenamiento compartido.',
+                0,
+                $error
+            );
+        } finally {
+            if (is_resource($input)) {
+                fclose($input);
+            }
+            if (is_resource($output)) {
+                fclose($output);
+            }
         }
 
         return $filename;

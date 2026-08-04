@@ -103,6 +103,25 @@ class AdminPhaseContractsTest(unittest.TestCase):
         self.assertIn("file.size > 15 * 1024 * 1024", view)
         self.assertIn("@error('foto_perfil')", view)
 
+    def test_user_creation_is_not_blocked_by_optional_avatar_storage(self):
+        controller = (ROOT / "laravel_zerowaste" / "app" / "Http" / "Controllers" / "UserController.php").read_text(encoding="utf-8")
+        model = (ROOT / "laravel_zerowaste" / "app" / "Models" / "User.php").read_text(encoding="utf-8")
+        media = (ROOT / "laravel_zerowaste" / "app" / "Support" / "Media.php").read_text(encoding="utf-8")
+        view = (ROOT / "laravel_zerowaste" / "resources" / "views" / "admin" / "usuarios_create.blade.php").read_text(encoding="utf-8")
+        store = controller[controller.index("public function store(Request $request)"):controller.index("public function edit(User $user)")]
+        self.assertIn("'foto_perfil' => 'nullable|image", store)
+        self.assertIn("$data['foto_perfil'] = 'perfil_default.png'", store)
+        self.assertIn("$data['email_verified_at'] = now()", store)
+        self.assertIn("Log::error('No fue posible crear el usuario", store)
+        self.assertNotIn("throw $error", store)
+        self.assertIn("'email_verified_at'", model)
+        self.assertIn("stream_copy_to_stream", media)
+        self.assertIn("'.upload-'", media)
+        self.assertNotIn("$file->move", media)
+        self.assertIn("Opcional · JPEG, PNG o WebP · Máx. 15 MB", view)
+        self.assertNotIn("Debes subir una fotografía de perfil", view)
+        self.assertIn("value=\"{{ old('nombre') }}\"", view)
+
     def test_movements_have_filters_local_time_and_admin_csv(self):
         controller = (ROOT / "laravel_zerowaste" / "app" / "Http" / "Controllers" / "ImpactAdminController.php").read_text(encoding="utf-8")
         view = (ROOT / "laravel_zerowaste" / "resources" / "views" / "admin" / "impacto" / "movimientos.blade.php").read_text(encoding="utf-8")

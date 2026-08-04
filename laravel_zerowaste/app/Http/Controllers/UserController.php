@@ -72,7 +72,7 @@ class UserController extends Controller
             'ubicacion' => 'nullable|string|max:30',
             'titulo_perfil' => 'nullable|string|max:100',
             'biografia' => 'nullable|string|max:500',
-            'foto_perfil' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'foto_perfil' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:15360',
         ];
 
         $messages = [
@@ -89,29 +89,55 @@ class UserController extends Controller
             'biografia.max' => 'La biografía no puede exceder los 500 caracteres.',
             'foto_perfil.image' => 'El archivo debe ser una imagen.',
             'foto_perfil.mimes' => 'La imagen debe ser JPEG, PNG o WebP.',
-            'foto_perfil.max' => 'La imagen no debe pesar más de 5 MB.',
+            'foto_perfil.max' => 'La imagen no debe pesar más de 15 MB.',
             'foto_perfil.uploaded' => 'Error al subir la imagen. Intenta con una de menor tamaño.',
         ];
 
         $request->validate($rules, $messages);
 
-        $data = $request->only(['nombre', 'email', 'password', 'ubicacion', 'titulo_perfil', 'biografia']);
-        $data['is_admin'] = $request->has('is_admin') ? 'true' : 'false';
+        $data = $request->only(['nombre', 'password', 'ubicacion', 'titulo_perfil', 'biografia']);
+        $data['email'] = strtolower(trim((string) $request->input('email')));
+        $data['is_admin'] = $request->boolean('is_admin');
         $data['rol'] = $request->has('is_recolector') ? 'recolector' : ($request->has('is_admin') ? 'admin' : 'usuario');
         $data['auth_provider'] = 'local';
-        $data['profile_completed'] = 'true';
+        $data['profile_completed'] = true;
+        $data['bloqueado'] = false;
+        $data['email_verified_at'] = now();
+        $data['foto_perfil'] = 'perfil_default.png';
 
         $newImage = null;
         if ($request->hasFile('foto_perfil')) {
-            $newImage = Media::store($request->file('foto_perfil'), 'perfiles');
-            $data['foto_perfil'] = $newImage;
+            try {
+                $newImage = Media::store(
+                    $request->file('foto_perfil'),
+                    'perfiles',
+                    15 * 1024 * 1024
+                );
+                $data['foto_perfil'] = $newImage;
+            } catch (\Throwable $error) {
+                Log::error('No fue posible guardar la foto del nuevo usuario.', [
+                    'exception' => get_class($error),
+                ]);
+
+                return back()->withInput()->withErrors([
+                    'foto_perfil' => $error instanceof \RuntimeException
+                        ? $error->getMessage()
+                        : 'No fue posible guardar la fotografía. Puedes crear la cuenta sin imagen.',
+                ]);
+            }
         }
 
         try {
             User::create($data);
         } catch (\Throwable $error) {
             Media::discard($newImage, 'perfiles');
-            throw $error;
+            Log::error('No fue posible crear el usuario desde el panel.', [
+                'exception' => get_class($error),
+            ]);
+
+            return back()->withInput()->withErrors([
+                'usuario' => 'No fue posible crear la cuenta. Revisa los datos e inténtalo nuevamente.',
+            ]);
         }
         return redirect()->route('usuarios.index')->with('success', 'Usuario creado correctamente.');
     }
