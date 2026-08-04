@@ -112,7 +112,7 @@ export default function ProfileScreen() {
         </View>
 
         <View className="px-6 mt-6">
-          <Text className="text-gray-500 text-sm leading-5" style={{ textAlign: 'justify' }}>Las estadísticas de impacto y el saldo de puntos aparecen cuando existe un historial verificable en FastAPI. No se muestran valores simulados.</Text>
+          <Text className="text-gray-500 text-sm leading-5" style={{ textAlign: 'justify' }}>Tu impacto comenzará a crecer cuando completes recolecciones, participes en actividades y recibas puntos. Aquí verás tu avance real.</Text>
           <TouchableOpacity onPress={() => setLogoutVisible(true)} className="mt-6 items-center rounded-2xl border border-red-100 bg-red-50 py-4">
             <View className="flex-row items-center"><LogOut color="#EF4444" size={20} /><Text className="ml-2 text-red-600 font-black">Cerrar sesión</Text></View>
           </TouchableOpacity>

@@ -32,8 +32,11 @@
                     <h3 class="text-2xl font-black text-secondary dark:text-emerald-100">{{ $isAuth ? \Illuminate\Support\Facades\Auth::user()->nombre : 'Admin' }}</h3>
                     <p class="text-gray-500 dark:text-gray-400 font-medium">Administrador Principal</p>
                     <p class="text-xs text-primary font-bold mt-2">La foto seleccionada se recortará en formato redondo.</p>
+                    @error('foto_perfil')<p class="mt-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-bold text-red-700" role="alert">{{ $message }}</p>@enderror
                 </div>
             </div>
+
+            @error('perfil')<div class="rounded-2xl border border-red-200 bg-red-50 p-4 font-bold text-red-700" role="alert">{{ $message }}</div>@enderror
 
             <div>
                 <h4 class="font-bold text-lg text-secondary dark:text-emerald-100 mb-4 flex items-center gap-2">

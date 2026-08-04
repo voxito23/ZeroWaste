@@ -85,8 +85,8 @@ export default function RewardsStoreScreen() {
                 : { label: 'Disponible', classes: 'bg-emerald-50 text-emerald-700' };
           return (
             <TouchableOpacity onPress={() => navigation.navigate('RewardDetail', { reward: item })} className="flex-1 overflow-hidden rounded-[26px] border border-gray-100 bg-white">
-              <View className="m-2 overflow-hidden rounded-[20px] bg-slate-50">
-                <RemoteImage uri={image.uri} fallbackSource={image.fallbackSource} className="w-full bg-slate-50" style={{ height: 150 }} aspectRatio={null} resizeMode="contain" accessibilityLabel={`Imagen de ${item.nombre}`} />
+              <View className="m-2 overflow-hidden rounded-[20px] bg-white">
+                <RemoteImage uri={image.uri} fallbackSource={image.fallbackSource} className="w-full bg-white" imageClassName="h-full w-full" style={{ height: String(item.imagen || '').includes('compostera_domestica') ? 205 : 170 }} aspectRatio={null} resizeMode="contain" accessibilityLabel={`Imagen de ${item.nombre}`} />
               </View>
               <View className="p-4">
                 <Text className="font-black text-gray-900" numberOfLines={2}>{item.nombre}</Text>

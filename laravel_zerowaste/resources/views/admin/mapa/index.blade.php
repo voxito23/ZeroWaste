@@ -8,7 +8,7 @@
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 <script src="/static/js/mapbox-map.js"></script>
     <style>
-    .mapboxgl-popup-content { border-radius: 1rem !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important; transition: background-color 0.3s ease, border-color 0.3s ease; }
+    .mapboxgl-popup-content { border-radius: 1.5rem !important; padding: 10px !important; border: 1px solid #d1fae5 !important; box-shadow: 0 18px 50px rgba(6,78,59,0.2) !important; transition: background-color 0.3s ease, border-color 0.3s ease; }
     .mapboxgl-popup-close-button { font-size: 24px !important; width: 36px !important; height: 36px !important; line-height: 36px !important; right: 4px !important; top: 4px !important; color: #064E3B !important; font-weight: 900 !important; background: rgba(255,255,255,0.9) !important; border-radius: 50% !important; display: flex !important; align-items: center !important; justify-content: center !important; box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important; z-index: 50 !important; }
     .mapboxgl-popup-close-button:hover { background: #064E3B !important; color: white !important; }
     html.dark .mapboxgl-popup-close-button { color: #00E096 !important; background: rgba(2,32,24,0.9) !important; }
@@ -59,6 +59,7 @@
         }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
         const fallbackLocations = window.ZeroWasteMapbox.normalizePoints(@json($mapLocations ?? []));
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#039;', '"':'&quot;' })[character]);
 
         window.ZeroWasteMapbox.fetchPoints('/api/mapa/puntos')
             .catch(() => fallbackLocations)
@@ -68,18 +69,23 @@
                 const el = document.createElement('div');
                 el.innerHTML = '<div style="background:#064E3B; width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.3); border:3px solid #00E096; cursor:pointer;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#00E096"><path d="M17 8C8 10 5.9 16.17 3.82 21.34l1.89.66.95-2.3c.48.17.98.3 1.34.3C19 20 22 3 22 3c-1 2-8 2.25-13 3.25S2 11.5 2 13.5s1.75 3.75 1.75 3.75C7 8 17 8 17 8z"/></svg></div>';
 
-                let imgHtml = loc.image_url ? `<img src="${loc.image_url}" class="w-full h-32 object-cover rounded-xl mb-3 shadow-md" onerror="this.style.display='none'">` : '';
+                const safeName = escapeHtml(loc.nombre || 'Punto de acopio');
+                const safeType = escapeHtml(loc.tipo || 'Centro de acopio');
+                const safeAddress = escapeHtml(loc.direccion || 'Dirección no disponible');
+                const safeMaterials = escapeHtml(loc.materiales || 'Múltiples materiales');
+                const safeImage = /^https:\/\/[A-Za-z0-9.-]+(?:[:][0-9]+)?\/[A-Za-z0-9_~!$&'()*+,;=:@%\/.?-]+$/.test(String(loc.image_url || '')) ? escapeHtml(loc.image_url) : '';
+                let imgHtml = safeImage ? `<img src="${safeImage}" alt="Imagen de ${safeName}" class="h-36 w-full rounded-2xl object-cover" onerror="this.style.display='none'">` : '<div class="flex h-24 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600"><span class="material-symbols-outlined text-3xl">recycling</span></div>';
                 
-                const popup = new mapboxgl.Popup({ offset: 25, maxWidth: '220px' })
+                const popup = new mapboxgl.Popup({ offset: 28, maxWidth: '310px' })
                     .setHTML(`
-                        <div class="font-sans text-left min-w-[200px] p-1">
+                        <div class="min-w-[260px] p-1 text-left font-sans">
                             ${imgHtml}
-                            <b class="text-emerald-800 dark:text-emerald-300 text-base block mb-2 leading-tight">${loc.nombre}</b>
-                            <span class="text-xs font-bold text-gray-600 dark:text-emerald-100 bg-emerald-100 dark:bg-emerald-900 px-2 py-1 rounded-full inline-block shadow-sm">${loc.tipo}</span>
-                            <div class="mt-3 bg-gray-50 dark:bg-emerald-900/40 p-2 rounded-lg border border-gray-100 dark:border-emerald-800">
-                                <p class="text-[11px] text-gray-700 dark:text-gray-300 leading-snug"><b class="block text-emerald-700 dark:text-primary mb-0.5">Dirección:</b> ${loc.direccion}</p>
+                            <div class="mt-4 flex items-start justify-between gap-3"><b class="block text-lg font-black leading-tight text-emerald-950 dark:text-emerald-200">${safeName}</b><span class="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-emerald-800"><span class="material-symbols-outlined text-sm text-emerald-600">check_circle</span>Activo</span></div>
+                            <span class="mt-2 inline-block rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600 dark:bg-emerald-900 dark:text-emerald-100">${safeType}</span>
+                            <div class="mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3 dark:border-emerald-800 dark:bg-emerald-900/40">
+                                <p class="text-xs leading-5 text-slate-700 dark:text-gray-300"><b class="mb-1 flex items-center gap-1 text-emerald-800 dark:text-primary"><span class="material-symbols-outlined text-base">location_on</span>Dirección</b>${safeAddress}</p>
                             </div>
-                            <p class="text-[10px] mt-2 text-gray-500 dark:text-gray-400 uppercase tracking-wide font-bold"><b>Materiales:</b> ${loc.materiales || 'N/A'}</p>
+                            <p class="mt-3 text-xs leading-5 text-gray-500 dark:text-gray-300"><b class="text-slate-700 dark:text-white">Materiales:</b> ${safeMaterials}</p>
                         </div>
                     `);
 
@@ -189,7 +195,7 @@
                 </div>
                 {{-- Badge + materiales (debajo, separados) --}}
                 <div class="flex items-center gap-2 mt-2.5 pt-2 border-t border-gray-100/60 dark:border-emerald-800/15">
-                    <span class="px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-lg text-[9px] font-bold uppercase tracking-wide whitespace-nowrap shrink-0">{{ $loc->tipo }}</span>
+                    <span class="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"><span class="material-symbols-outlined text-[12px]">{{ $loc->trashed() ? 'pause_circle' : 'check_circle' }}</span>{{ $loc->trashed() ? 'Inactivo' : 'Activo' }}</span><span class="px-2 py-0.5 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-300 rounded-lg text-[9px] font-bold uppercase tracking-wide whitespace-nowrap shrink-0">{{ $loc->tipo }}</span>
                     <span class="text-[9px] text-gray-400 dark:text-gray-500 truncate" title="{{ $loc->materiales }}">{{ $loc->materiales ?? 'Múltiples materiales' }}</span>
                 </div>
             </div>

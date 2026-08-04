@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Support\Media;
 
 class AdminProfileController extends Controller
@@ -42,8 +43,19 @@ class AdminProfileController extends Controller
         // Actualización de foto de perfil
         $newImage = null;
         if ($request->hasFile('foto_perfil')) {
-            $newImage = Media::store($request->file('foto_perfil'), 'perfiles');
-            $user->foto_perfil = $newImage;
+            try {
+                $newImage = Media::store($request->file('foto_perfil'), 'perfiles');
+                $user->foto_perfil = $newImage;
+            } catch (\Throwable $error) {
+                Log::error('No fue posible guardar la foto del perfil administrativo.', [
+                    'exception' => get_class($error),
+                    'user_id' => $user->id,
+                ]);
+
+                return back()->withInput()->withErrors([
+                    'foto_perfil' => 'No fue posible guardar la fotografía. Intenta de nuevo o elige otra imagen.',
+                ]);
+            }
         }
 
         // Actualización de contraseña
@@ -57,7 +69,14 @@ class AdminProfileController extends Controller
             $user->save();
         } catch (\Throwable $error) {
             Media::discard($newImage, 'perfiles');
-            throw $error;
+            Log::error('No fue posible actualizar el perfil administrativo.', [
+                'exception' => get_class($error),
+                'user_id' => $user->id,
+            ]);
+
+            return back()->withInput()->withErrors([
+                'perfil' => 'No fue posible guardar los cambios del perfil. Inténtalo nuevamente.',
+            ]);
         }
 
         return redirect()->route('admin.perfil.edit')->with('success', 'Perfil actualizado correctamente.');

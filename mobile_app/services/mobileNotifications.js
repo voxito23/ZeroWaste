@@ -47,7 +47,6 @@ export const configureNotificationChannel = async () => {
     importance: Notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 180, 120, 180],
     lightColor: '#10B981',
-    sound: 'default',
   });
 };
 

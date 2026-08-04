@@ -2,6 +2,7 @@
 
 import base64
 import hashlib
+import html
 import json
 import os
 import secrets
@@ -10,7 +11,7 @@ from urllib.parse import urlencode
 from urllib.request import Request as UrlRequest, urlopen
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.orm import Session
 
@@ -111,14 +112,29 @@ def _verified_claims(raw_id_token: str, expected_nonce_hash: str) -> dict:
     return claims
 
 
+def _mobile_callback_page(params: dict[str, str]) -> HTMLResponse:
+    deep_link = MOBILE_CALLBACK + "?" + urlencode(params)
+    safe_link = html.escape(deep_link, quote=True)
+    script_link = json.dumps(deep_link)
+    return HTMLResponse(
+        f"""<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Volver a ZeroWaste</title><style>body{{margin:0;background:#ecfdf5;color:#0f172a;font-family:system-ui,sans-serif;display:grid;min-height:100vh;place-items:center}}main{{max-width:420px;margin:24px;padding:32px;border:1px solid #a7f3d0;border-radius:28px;background:#fff;box-shadow:0 20px 50px #064e3b20;text-align:center}}h1{{color:#064e3b}}a{{display:block;margin-top:24px;padding:15px;border-radius:16px;background:#047857;color:#fff;font-weight:800;text-decoration:none}}p{{line-height:1.55;color:#475569}}</style></head><body><main><h1>Autorización completada</h1><p>Regresa a ZeroWaste para terminar tu inicio de sesión de forma segura.</p><a href="{safe_link}">Volver a ZeroWaste</a><p>Si la aplicación no se abre automáticamente, toca el botón.</p></main><script>window.setTimeout(function(){{window.location.href={script_link};}},150);</script></body></html>""",
+        headers={
+            "Cache-Control": "no-store",
+            "Referrer-Policy": "no-referrer",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'",
+        },
+    )
+
+
 @router.get("/google/callback", include_in_schema=False)
 def google_callback(code: str = Query(default=""), state: str = Query(default=""), error: str = Query(default=""), db: Session = Depends(get_db)):
     if error or not code or not state:
-        return RedirectResponse(MOBILE_CALLBACK + "?error=cancelled", status_code=302)
+        return _mobile_callback_page({"error": "cancelled"})
     login_state = db.query(OauthLoginState).filter_by(state_hash=digest(state)).with_for_update().first()
     now = datetime.now(timezone.utc)
     if not login_state or login_state.status != "pending" or _utc(login_state.expires_at) <= now:
-        return RedirectResponse(MOBILE_CALLBACK + "?error=invalid_state", status_code=302)
+        return _mobile_callback_page({"error": "invalid_state"})
     token_data = _exchange_code(code, decrypt(login_state.verifier_ciphertext))
     claims = _verified_claims(str(token_data.get("id_token") or ""), login_state.nonce_hash)
     provider_sub = str(claims["sub"])
@@ -144,7 +160,7 @@ def google_callback(code: str = Query(default=""), state: str = Query(default=""
     if login_state.status == "pending":
         login_state.status = "callback_complete"
     db.commit()
-    return RedirectResponse(MOBILE_CALLBACK + "?" + urlencode({"code": handoff}), status_code=302)
+    return _mobile_callback_page({"code": handoff})
 
 
 def _handoff(db: Session, code: str) -> OauthLoginState:

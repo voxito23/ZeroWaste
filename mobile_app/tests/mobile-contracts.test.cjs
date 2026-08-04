@@ -60,12 +60,16 @@ const postDetail = read('screens/PostScreen.js');
 const notificationsScreen = read('screens/NotificationsScreen.js');
 const editorial = read('data/editorialContent.js');
 const editProfile = read('screens/EditProfileScreen.js');
+const settings = read('screens/SettingsScreen.js');
+const collection = read('screens/CreateCollectionScreen.js');
 
 assert.match(comments, /parent_comment_id/);
 assert.match(comments, /KeyboardAvoidingView/);
+assert.match(comments, /Platform\.OS === 'ios' \? 'padding' : undefined/);
 assert.match(comments, /highlightCommentId/);
 assert.match(notifications, /getExpoPushTokenAsync/);
 assert.match(notifications, /expoPushToken/);
+assert.doesNotMatch(notifications, /sound:\s*'default'/);
 assert.match(navigator, /getLastNotificationResponseAsync/);
 assert.match(navigator, /addNotificationResponseReceivedListener/);
 assert.match(navigator, /addPushTokenListener/);
@@ -82,5 +86,8 @@ assert.doesNotMatch(editorial, /<\/?[a-z][^>]*>/i);
 assert.match(editProfile, /PROFILE_TITLE_OPTIONS\.map/);
 assert.match(editProfile, /showDialog\(\{ type: 'error'/);
 assert.match(editProfile, /maxLength=\{100\}/);
+assert.match(settings, /notificationRows\.map\(\(\{ key, \.\.\.row \}/);
+assert.match(collection, /searchAddresses/);
+assert.match(collection, /setCoordinates\(suggestion\.coordinates\)/);
 
 console.log('mobile-contracts.test.cjs: mapa, contenido, enlaces, comentarios y push correctos');

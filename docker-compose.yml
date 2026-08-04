@@ -117,6 +117,7 @@ services:
       - type: bind
         source: ${MEDIA_ROOT:-./shared/media}
         target: /data/media
+    group_add: ["${MEDIA_GID:-2000}"]
     networks: [app_network, data_network, backend_egress]
     healthcheck:
       test: [CMD, curl, --fail, --silent, --show-error, http://127.0.0.1/up]
@@ -171,6 +172,7 @@ services:
       - type: bind
         source: ${MEDIA_ROOT:-./shared/media}
         target: /data/media
+    group_add: ["${MEDIA_GID:-2000}"]
     networks: [app_network, data_network, backend_egress, monitoring_network]
     healthcheck:
       test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:6000/health', timeout=3)"]
@@ -198,6 +200,7 @@ services:
       - type: bind
         source: ${MEDIA_ROOT:-./shared/media}
         target: /data/media
+    group_add: ["${MEDIA_GID:-2000}"]
     networks: [app_network, data_network, backend_egress, monitoring_network]
     healthcheck:
       test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/health', timeout=3)"]

@@ -59,12 +59,15 @@ export default function ForumScreen({ route }) {
   const [likePending, setLikePending] = useState({});
   const [commentsPost, setCommentsPost] = useState(null);
   const [filtersVisible, setFiltersVisible] = useState(false);
+  const [newPostCount, setNewPostCount] = useState(0);
   const pendingLikesRef = useRef(new Set());
   const postsRequestRef = useRef(0);
   const hasLoadedRef = useRef(false);
   const navigationPendingRef = useRef(false);
+  const firstPostIdRef = useRef(null);
+  const feedRef = useRef(null);
 
-  const fetchPosts = useCallback(async ({ manualRefresh = false } = {}) => {
+  const fetchPosts = useCallback(async ({ manualRefresh = false, announceNew = false } = {}) => {
     const requestId = ++postsRequestRef.current;
     if (!hasLoadedRef.current) setIsLoading(true);
     if (manualRefresh) setRefreshing(true);
@@ -87,6 +90,12 @@ export default function ForumScreen({ route }) {
       const response = await api.get('/foro/posts');
       if (requestId !== postsRequestRef.current) return;
       const rows = Array.isArray(response.data) ? response.data : [];
+      const previousFirstId = firstPostIdRef.current;
+      if (announceNew && previousFirstId && rows[0] && String(rows[0].id) !== String(previousFirstId)) {
+        const previousIndex = rows.findIndex((post) => String(post.id) === String(previousFirstId));
+        setNewPostCount(previousIndex > 0 ? previousIndex : 1);
+      }
+      firstPostIdRef.current = rows[0]?.id || previousFirstId;
       setPosts(rows.map((post) => ({ ...post, type: post.type || 'forum_post' })));
     } catch (e) {
       if (requestId !== postsRequestRef.current) return;
@@ -103,6 +112,8 @@ export default function ForumScreen({ route }) {
   useFocusEffect(useCallback(() => {
     // Sincroniza en segundo plano sin vaciar el feed ni activar el indicador del encabezado.
     void fetchPosts();
+    const timer = setInterval(() => void fetchPosts({ announceNew: true }), 20000);
+    return () => clearInterval(timer);
   }, [fetchPosts]));
 
   useEffect(() => {
@@ -112,6 +123,8 @@ export default function ForumScreen({ route }) {
       { ...createdPost, type: createdPost.type || 'forum_post' },
       ...current.filter((post) => String(post.id) !== String(createdPost.id)),
     ]);
+    firstPostIdRef.current = createdPost.id;
+    setNewPostCount(1);
     navigation.setParams({ createdPost: undefined });
   }, [navigation, route?.params?.updateKey]);
 
@@ -203,6 +216,7 @@ export default function ForumScreen({ route }) {
       />
 
       <ScrollView 
+        ref={feedRef}
         showsVerticalScrollIndicator={false} 
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 130 }}
         onScroll={handleScroll}
@@ -215,6 +229,7 @@ export default function ForumScreen({ route }) {
           <View><Text className="text-[27px] font-black tracking-tight text-slate-950">Comunidad</Text><Text className="mt-0.5 text-xs font-semibold text-slate-500">Comparte, aprende y participa</Text></View>
           <View className="flex-row items-center gap-2"><TouchableOpacity onPress={() => navigation.navigate('Notifications')} className="h-11 w-11 items-center justify-center rounded-full border border-gray-100 bg-white shadow-sm" accessibilityLabel="Abrir notificaciones"><Bell color="#4B5563" size={19} /><View className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full border border-white bg-red-500" /></TouchableOpacity><TouchableOpacity onPress={() => navigation.navigate('Profile')} className="h-11 w-11 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-emerald-50 shadow-sm" accessibilityLabel="Abrir mi perfil"><UserAvatar uri={currentAvatarUrl} name={user?.nombre} size={38} accessibilityLabel="Avatar del usuario" /></TouchableOpacity></View>
         </View>
+        {newPostCount ? <TouchableOpacity onPress={() => { feedRef.current?.scrollTo({ y: 0, animated: true }); setNewPostCount(0); }} className="mx-5 mb-4 min-h-12 flex-row items-center justify-center rounded-full border border-emerald-200 bg-emerald-700 px-5 shadow-sm" accessibilityLiveRegion="polite"><Plus color="white" size={17} /><Text className="ml-2 font-black text-white">{newPostCount === 1 ? 'Hay una publicación nueva' : `Hay ${newPostCount} publicaciones nuevas`}</Text></TouchableOpacity> : null}
         <View className="mb-6 flex-row items-center px-5">
           <View className="mr-3 h-12 flex-1 flex-row items-center rounded-full border border-gray-100 bg-white px-4 shadow-sm">
             <Search color="#9CA3AF" size={20} />

@@ -13,11 +13,12 @@ import {
   Dimensions,
   Linking,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useScrollContext } from '../context/ScrollContext';
 import { useAuth } from '../store/useAuth';
 import { api } from '../api/axios';
@@ -127,6 +128,9 @@ export default function HomeScreen() {
   const [impactError, setImpactError] = useState(false);
   const [reactionPending, setReactionPending] = useState({});
   const [reactionError, setReactionError] = useState('');
+  const [homeRefreshKey, setHomeRefreshKey] = useState(0);
+  const [homeRefreshing, setHomeRefreshing] = useState(false);
+  const homeFocusedOnceRef = useRef(false);
 
   const toggleReaction = useCallback(async (contentType, content) => {
     if (!content?.id || reactionPending[content.id]) return;
@@ -231,6 +235,7 @@ export default function HomeScreen() {
           const dbCampaigns = (campRes.data || []).map(c => ({
             id: `camp-${c.id}`,
             title: c.nombre || 'Campaña Eco',
+            summary: c.descripcion || 'Participa en una iniciativa ambiental activa en Querétaro.',
             date: c.fecha_inicio ? new Date(c.fecha_inicio).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : 'Próximamente',
             location: c.lugar || 'Querétaro',
             tag: (c.tipo_etiqueta || 'CAMPAÑA').toUpperCase(),
@@ -241,6 +246,7 @@ export default function HomeScreen() {
           const dbEvents = (evRes.data || []).map(e => ({
             id: `ev-${e.id}`,
             title: e.titulo || 'Evento Eco',
+            summary: e.descripcion || 'Súmate a una actividad ambiental de la comunidad.',
             date: e.fecha_inicio ? new Date(e.fecha_inicio).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : 'Próximamente',
             location: e.lugar || 'Querétaro',
             tag: (e.tipo_etiqueta || 'EVENTO').toUpperCase(),
@@ -255,6 +261,7 @@ export default function HomeScreen() {
         setContentError(e.userMessage || 'No se pudieron cargar las campañas y eventos.');
       } finally {
         setContentLoading(false);
+        setHomeRefreshing(false);
       }
     };
     fetchActiveCampaignsAndEvents();
@@ -264,7 +271,14 @@ export default function HomeScreen() {
       newsRequestRef.current += 1;
       newsAbortRef.current?.abort();
     };
-  }, [fetchArticles, fetchNews]);
+  }, [fetchArticles, fetchNews, homeRefreshKey]);
+
+  useFocusEffect(useCallback(() => {
+    if (homeFocusedOnceRef.current) setHomeRefreshKey((value) => value + 1);
+    else homeFocusedOnceRef.current = true;
+    const timer = setInterval(() => setHomeRefreshKey((value) => value + 1), 30000);
+    return () => clearInterval(timer);
+  }, []));
 
   useEffect(() => {
     if (reduceMotion) {
@@ -334,6 +348,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false} 
         contentContainerStyle={{ paddingTop: 16, paddingBottom: 130 }}
         onScroll={handleScroll}
+        refreshControl={<RefreshControl refreshing={homeRefreshing} onRefresh={() => { setHomeRefreshing(true); setHomeRefreshKey((value) => value + 1); }} tintColor="#047857" colors={['#047857']} progressBackgroundColor="#FFFFFF" />}
         scrollEventThrottle={16}
       >
         {/* ── HEADER (Logo only, no location) ──────────────── */}
@@ -550,6 +565,7 @@ export default function HomeScreen() {
 
                     <View className="p-5 pt-4">
                       <Text className="text-gray-900 font-extrabold text-[18px] leading-tight mb-2" numberOfLines={2}>{camp.title}</Text>
+                      <Text className="mb-4 text-[13px] font-medium leading-5 text-slate-500" numberOfLines={3}>{camp.summary}</Text>
                       
                       {camp.link ? <TouchableScale onPress={() => Linking.openURL(camp.link)}>
                         <View className="bg-[#064E3B] rounded-2xl py-3.5 items-center flex-row justify-center gap-2">

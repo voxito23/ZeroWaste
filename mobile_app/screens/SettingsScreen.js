@@ -191,7 +191,7 @@ export default function SettingsScreen() {
 
         <Text className="mb-2 mt-1 px-1 text-xs font-black uppercase tracking-widest text-slate-500">NOTIFICACIONES</Text>
         {preferencesError ? <TouchableOpacity onPress={loadPreferences} className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3"><Text className="font-bold text-amber-900">{preferencesError} Toca para reintentar.</Text></TouchableOpacity> : null}
-        {preferencesLoading ? <View className="mb-7 rounded-3xl bg-white p-4">{[0, 1, 2, 3].map((item) => <Skeleton key={item} className="mb-3 h-[58px] rounded-2xl" />)}</View> : <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">{notificationRows.map((row, index) => <SettingSwitch key={row.key} {...row} value={row.key === 'push_enabled' ? pushActive : Boolean(preferences[row.key])} disabled={savingPreference === row.key} onChange={row.onChange || ((value) => savePreference(row.key, value))} divider={index > 0} />)}</View>}
+        {preferencesLoading ? <View className="mb-7 rounded-3xl bg-white p-4">{[0, 1, 2, 3].map((item) => <Skeleton key={item} className="mb-3 h-[58px] rounded-2xl" />)}</View> : <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">{notificationRows.map(({ key, ...row }, index) => <SettingSwitch key={key} {...row} value={key === 'push_enabled' ? pushActive : Boolean(preferences[key])} disabled={savingPreference === key} onChange={row.onChange || ((value) => savePreference(key, value))} divider={index > 0} />)}</View>}
 
         <Text className="mb-2 px-1 text-xs font-black uppercase tracking-widest text-slate-500">PREFERENCIAS</Text>
         <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">
@@ -228,6 +228,11 @@ function SettingSwitch({ icon: Icon, label, description, value, onChange, divide
 
 function PremiumSwitch({ value, disabled, onChange, label }) {
   const progress = useRef(new Animated.Value(value ? 1 : 0)).current;
-  useEffect(() => { Animated.spring(progress, { toValue: value ? 1 : 0, damping: 18, stiffness: 240, mass: 0.7, useNativeDriver: true }).start(); }, [progress, value]);
-  return <Pressable accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: value, disabled }} disabled={disabled} onPress={() => onChange(!value)} className={`h-8 w-[54px] justify-center rounded-full px-1 ${value ? 'bg-emerald-600' : 'bg-slate-300'} ${disabled ? 'opacity-50' : ''}`} style={({pressed})=>({transform:[{scale:pressed?0.96:1}]})}><Animated.View className="h-6 w-6 rounded-full bg-white shadow-sm" style={{transform:[{translateX:progress.interpolate({inputRange:[0,1],outputRange:[0,22]})}]}} /></Pressable>;
+  useEffect(() => {
+    const animation = Animated.timing(progress, { toValue: value ? 1 : 0, duration: 190, useNativeDriver: false });
+    animation.start();
+    return () => animation.stop();
+  }, [progress, value]);
+  const trackColor = progress.interpolate({ inputRange: [0, 1], outputRange: ['#CBD5E1', '#059669'] });
+  return <Pressable accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: value, disabled }} disabled={disabled} onPress={() => onChange(!value)} className={disabled ? 'opacity-50' : ''} style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.97 : 1 }] })}><Animated.View className="h-8 w-[54px] justify-center rounded-full p-1" style={{ backgroundColor: trackColor }}><Animated.View className="h-6 w-6 rounded-full bg-white shadow-sm" style={{ transform: [{ translateX: progress.interpolate({ inputRange: [0, 1], outputRange: [0, 22] }) }, { scale: progress.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 0.92, 1] }) }] }} /></Animated.View></Pressable>;
 }

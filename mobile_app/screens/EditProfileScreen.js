@@ -114,11 +114,15 @@ export default function EditProfileScreen() {
       showDialog({ type: 'permission', title: 'Permiso requerido', message: 'Permite el acceso a tus fotografías para cambiar tu perfil.' });
       return;
     }
-    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.85 });
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.85 });
     if (result.canceled || !result.assets?.[0]) return;
     const asset = result.assets[0];
     if (asset.fileSize && asset.fileSize > 5 * 1024 * 1024) {
       showDialog({ type: 'warning', title: 'Imagen demasiado grande', message: 'La imagen debe pesar como máximo 5 MB.' });
+      return;
+    }
+    if (asset.mimeType && !['image/jpeg', 'image/png', 'image/webp'].includes(asset.mimeType)) {
+      showDialog({ type: 'warning', title: 'Formato no compatible', message: 'Selecciona una fotografía JPEG, PNG o WebP.' });
       return;
     }
     setSelectedImage(asset);
@@ -152,7 +156,7 @@ export default function EditProfileScreen() {
       await updateUser(data.perfil);
       showDialog({ type: 'success', title: 'Perfil actualizado', message: 'Tu información y fotografía quedaron sincronizadas.', primaryLabel: 'Continuar', onPrimary: () => navigation.goBack() });
     } catch (error) {
-      const message = error.userMessage || 'Intenta nuevamente.';
+      const message = error.response?.data?.detail || error.userMessage || 'Intenta nuevamente.';
       setFormError(message);
       showDialog({ type: 'error', title: 'No se pudo guardar', message });
     } finally {
