@@ -18,9 +18,10 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
 from app.observability import FIREWALL_BLOCKS
+from app.security.login_throttle import get_rate_limit_key
 
 # ── Configuración ──────────────────────────────────────────
-MAX_REQUESTS_PER_MINUTE = int(os.getenv("FIREWALL_RPM", "120"))
+MAX_REQUESTS_PER_MINUTE = int(os.getenv("FIREWALL_RPM", "300"))
 BLOCK_DURATION_SECONDS = int(os.getenv("FIREWALL_BLOCK_SECS", "300"))  # 5 min
 MAX_BODY_SIZE = 10 * 1024 * 1024  # 10MB
 
@@ -71,7 +72,7 @@ for pattern_list in [SQL_INJECTION_PATTERNS, XSS_PATTERNS, PATH_TRAVERSAL_PATTER
             pass
 
 # ── Almacenamiento en memoria ──────────────────────────────
-# Estructura: {ip: [timestamp1, timestamp2, ...]}
+# Estructura: {opaque_identity: [timestamp1, timestamp2, ...]}
 _request_log: Dict[str, List[float]] = defaultdict(list)
 _blocked_ips: Dict[str, float] = {}  # {ip: blocked_until_timestamp}
 _threat_log: List[dict] = []  # Últimos N eventos de amenaza
@@ -115,17 +116,17 @@ def block_ip(ip: str, duration: int = BLOCK_DURATION_SECONDS) -> None:
     firewall_logger.warning(f"IP bloqueada: {ip} por {duration}s")
 
 
-def _clean_old_requests(ip: str, window: float = 60.0):
+def _clean_old_requests(identity: str, window: float = 60.0):
     """Limpia requests antiguos fuera de la ventana de tiempo."""
     now = time.time()
-    _request_log[ip] = [t for t in _request_log[ip] if now - t < window]
+    _request_log[identity] = [t for t in _request_log[identity] if now - t < window]
 
 
-def _is_rate_limited(ip: str) -> bool:
-    """Verifica si una IP excede el rate limit."""
-    _clean_old_requests(ip)
-    _request_log[ip].append(time.time())
-    return len(_request_log[ip]) > MAX_REQUESTS_PER_MINUTE
+def _is_rate_limited(identity: str) -> bool:
+    """Verifica si una identidad opaca excede el rate limit."""
+    _clean_old_requests(identity)
+    _request_log[identity].append(time.time())
+    return len(_request_log[identity]) > MAX_REQUESTS_PER_MINUTE
 
 
 def _is_blocked(ip: str) -> bool:
@@ -203,15 +204,15 @@ class FirewallMiddleware(BaseHTTPMiddleware):
             )
 
         # 3. Rate limiting
-        if _is_rate_limited(ip):
-            block_ip(ip)
+        if _is_rate_limited(get_rate_limit_key(request)):
             _log_threat(ip, method, path, "RATE_LIMIT", f"Excedió {MAX_REQUESTS_PER_MINUTE} req/min")
             _stats["blocked_requests"] += 1
             FIREWALL_BLOCKS.labels(reason="rate_limit").inc()
             return JSONResponse(
                 status_code=429,
+                headers={"Retry-After": "60"},
                 content={
-                    "detail": f"Demasiadas solicitudes. Límite: {MAX_REQUESTS_PER_MINUTE}/min. IP bloqueada temporalmente.",
+                    "detail": f"Demasiadas solicitudes. Límite: {MAX_REQUESTS_PER_MINUTE}/min. Espera un momento antes de reintentar.",
                     "firewall": True,
                 }
             )

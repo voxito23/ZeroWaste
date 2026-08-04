@@ -25,7 +25,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuth } from '../store/useAuth';
 import { ArrowRight } from 'lucide-react-native';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useScrollContext } from '../context/ScrollContext';
 import { normalizeMediaUrl } from '../utils/media';
 import { mobileShareUrl } from '../navigation/linking';
@@ -38,6 +38,8 @@ import { resolveAvatar, resolveDisplayName } from '../utils/user';
 import { PostCardSkeleton } from '../components/ui/Skeleton';
 import CommentsModal from '../components/forum/CommentsModal';
 
+const FORUM_REFRESH_INTERVAL_MS = 60_000;
+
 // ─── TYPES ─────────────────────────────────────────────────────────
 
 // Strip HTML tags from content
@@ -45,7 +47,8 @@ const stripHtml = htmlToPlainText;
 
 export default function ForumScreen({ route }) {
   const navigation = useNavigation();
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const compactLayout = screenWidth < 350;
   const { handleScroll } = useScrollContext();
   const { user } = useAuth();
@@ -66,6 +69,31 @@ export default function ForumScreen({ route }) {
   const navigationPendingRef = useRef(false);
   const firstPostIdRef = useRef(null);
   const feedRef = useRef(null);
+  const categoriesLoadedRef = useRef(false);
+  const categoriesRequestRef = useRef(null);
+
+  const loadCategories = useCallback(({ force = false } = {}) => {
+    if (categoriesRequestRef.current) return categoriesRequestRef.current;
+    if (categoriesLoadedRef.current && !force) return Promise.resolve();
+    const request = api.get('/foro/categorias')
+      .then((catRes) => {
+        if (catRes.data && catRes.data.length > 0) {
+          const categoryNames = catRes.data
+            .map((category) => String(category.nombre || '').trim())
+            .filter((name) => name && name !== 'Todo' && name !== 'Todos');
+          setTabs(['Todo', ...new Set(categoryNames)]);
+        }
+        categoriesLoadedRef.current = true;
+      })
+      .catch(() => {
+        categoriesLoadedRef.current = false;
+      })
+      .finally(() => {
+        if (categoriesRequestRef.current === request) categoriesRequestRef.current = null;
+      });
+    categoriesRequestRef.current = request;
+    return request;
+  }, []);
 
   const fetchPosts = useCallback(async ({ manualRefresh = false, announceNew = false } = {}) => {
     const requestId = ++postsRequestRef.current;
@@ -73,19 +101,8 @@ export default function ForumScreen({ route }) {
     if (manualRefresh) setRefreshing(true);
     setError('');
     try {
-      // Las categorías y publicaciones siempre provienen de FastAPI.
-      try {
-        const catRes = await api.get('/foro/categorias');
-        if (catRes.data && catRes.data.length > 0) {
-          const categoryNames = catRes.data
-            .map((category) => String(category.nombre || '').trim())
-            .filter((name) => name && name !== 'Todo' && name !== 'Todos');
-          setTabs(['Todo', ...new Set(categoryNames)]);
-        }
-      } catch {
-        // Conserva categorías visibles mientras la sección se sincroniza.
-      }
-
+      // Las categorías se sincronizan sin bloquear la primera pintura del feed.
+      void loadCategories({ force: manualRefresh });
       // RN -> FastAPI -> Supabase
       const response = await api.get('/foro/posts');
       if (requestId !== postsRequestRef.current) return;
@@ -107,12 +124,12 @@ export default function ForumScreen({ route }) {
         setRefreshing(false);
       }
     }
-  }, []);
+  }, [loadCategories]);
 
   useFocusEffect(useCallback(() => {
     // Sincroniza en segundo plano sin vaciar el feed ni activar el indicador del encabezado.
     void fetchPosts();
-    const timer = setInterval(() => void fetchPosts({ announceNew: true }), 20000);
+    const timer = setInterval(() => void fetchPosts({ announceNew: true }), FORUM_REFRESH_INTERVAL_MS);
     return () => clearInterval(timer);
   }, [fetchPosts]));
 
@@ -457,7 +474,54 @@ export default function ForumScreen({ route }) {
           setCommentsPost((current) => current ? { ...current, total_respuestas: count, comments_count: count } : current);
         }}
       />
-      <Modal visible={filtersVisible} transparent animationType="slide" statusBarTranslucent onRequestClose={() => setFiltersVisible(false)}><Pressable className="flex-1 justify-end bg-slate-950/45" onPress={() => setFiltersVisible(false)}><Pressable className="rounded-t-[30px] bg-white px-5 pb-8 pt-5" onPress={(event) => event.stopPropagation()}><View className="flex-row items-center justify-between"><View><Text className="text-xl font-black text-slate-950">Filtrar publicaciones</Text><Text className="mt-1 text-sm text-slate-500">Elige qué contenido quieres ver.</Text></View><TouchableOpacity onPress={() => setFiltersVisible(false)} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100"><X color="#334155" size={20} /></TouchableOpacity></View><View className="mt-5 gap-2">{tabs.map((tab) => { const selected=activeTab===tab; return <TouchableOpacity key={tab} onPress={() => {setActiveTab(tab);setFiltersVisible(false);}} className={`min-h-14 flex-row items-center rounded-2xl border px-4 ${selected?'border-emerald-700 bg-emerald-50':'border-slate-100 bg-white'}`}><Text className={`flex-1 font-black ${selected?'text-emerald-800':'text-slate-800'}`}>{tab === 'Todo' ? 'Todas las publicaciones' : tab}</Text>{selected?<Check color="#047857" size={20}/>:null}</TouchableOpacity>; })}</View></Pressable></Pressable></Modal>
+      <Modal
+        visible={filtersVisible}
+        transparent
+        animationType="slide"
+        statusBarTranslucent
+        navigationBarTranslucent={false}
+        onRequestClose={() => setFiltersVisible(false)}
+      >
+        <Pressable className="flex-1 justify-end bg-slate-950/45" onPress={() => setFiltersVisible(false)}>
+          <Pressable
+            className="rounded-t-[30px] bg-white px-5 pt-5"
+            style={{ paddingBottom: Math.max(insets.bottom, 24) }}
+            onPress={(event) => event.stopPropagation()}
+          >
+            <View className="flex-row items-center justify-between">
+              <View className="mr-3 flex-1">
+                <Text className="text-xl font-black text-slate-950">Filtrar publicaciones</Text>
+                <Text className="mt-1 text-sm text-slate-500">Elige qué contenido quieres ver.</Text>
+              </View>
+              <TouchableOpacity onPress={() => setFiltersVisible(false)} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100" accessibilityLabel="Cerrar filtros">
+                <X color="#334155" size={20} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView
+              className="mt-5"
+              style={{ maxHeight: Math.max(180, screenHeight * 0.55) }}
+              contentContainerStyle={{ gap: 8 }}
+              showsVerticalScrollIndicator={false}
+            >
+              {tabs.map((tab) => {
+                const selected = activeTab === tab;
+                return (
+                  <TouchableOpacity
+                    key={tab}
+                    onPress={() => { setActiveTab(tab); setFiltersVisible(false); }}
+                    className={`min-h-14 flex-row items-center rounded-2xl border px-4 ${selected ? 'border-emerald-700 bg-emerald-50' : 'border-slate-100 bg-white'}`}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected }}
+                  >
+                    <Text className={`flex-1 font-black ${selected ? 'text-emerald-800' : 'text-slate-800'}`}>{tab === 'Todo' ? 'Todas las publicaciones' : tab}</Text>
+                    {selected ? <Check color="#047857" size={20} /> : null}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }

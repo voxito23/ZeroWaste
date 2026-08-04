@@ -216,7 +216,7 @@ export default function SettingsScreen() {
 
         <TouchableOpacity onPress={() => setLogoutVisible(true)} className="min-h-14 flex-row items-center justify-center rounded-2xl border border-red-100 bg-red-50"><LogOut color="#DC2626" size={20} /><Text className="ml-2 font-black text-red-600">Cerrar sesión</Text></TouchableOpacity>
       </ScrollView>
-      <ZeroWasteDialog visible={logoutVisible} type="warning" title="Cerrar sesión" message="¿Deseas salir de tu cuenta ZeroWaste en este dispositivo? El token push se desactivará." primaryLabel="Cerrar sesión" onPrimary={() => { setLogoutVisible(false); void unregisterPushToken().finally(logout); }} secondaryLabel="Cancelar" onSecondary={() => setLogoutVisible(false)} />
+      <ZeroWasteDialog visible={logoutVisible} type="warning" title="Cerrar sesión" message="¿Deseas salir de tu cuenta ZeroWaste en este dispositivo?" primaryLabel="Cerrar sesión" onPrimary={() => { setLogoutVisible(false); void unregisterPushToken().finally(logout); }} secondaryLabel="Cancelar" onSecondary={() => setLogoutVisible(false)} />
     </SafeAreaView>
   );
 }

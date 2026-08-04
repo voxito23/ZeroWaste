@@ -5,6 +5,7 @@ import types
 import unittest
 
 from fastapi import HTTPException
+from starlette.requests import Request
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "fast_api"))
@@ -38,6 +39,22 @@ sys.modules[spec.name] = login_throttle_module
 spec.loader.exec_module(login_throttle_module)
 LoginThrottle = login_throttle_module.LoginThrottle
 ThrottlePolicy = login_throttle_module.ThrottlePolicy
+get_rate_limit_key = login_throttle_module.get_rate_limit_key
+
+
+def make_request(*, ip="203.0.113.10", authorization=None):
+    headers = []
+    if authorization is not None:
+        headers.append((b"authorization", authorization.encode("utf-8")))
+    return Request({
+        "type": "http",
+        "method": "GET",
+        "scheme": "https",
+        "path": "/foro/posts",
+        "headers": headers,
+        "client": (ip, 443),
+        "server": ("example.test", 443),
+    })
 
 
 class FakeRedis:
@@ -143,6 +160,18 @@ class LoginThrottleTests(unittest.TestCase):
         with self.assertRaises(HTTPException) as raised:
             throttle.assert_allowed("user@example.test", "203.0.113.10")
         self.assertEqual(raised.exception.status_code, 503)
+
+    def test_rate_limit_key_separates_bearer_sessions_behind_one_ip(self):
+        first = get_rate_limit_key(make_request(authorization="Bearer token-one"))
+        second = get_rate_limit_key(make_request(authorization="Bearer token-two"))
+        self.assertNotEqual(first, second)
+        self.assertTrue(first.startswith("auth:"))
+        self.assertNotIn("token-one", first)
+
+    def test_rate_limit_key_hashes_unauthenticated_ip(self):
+        key = get_rate_limit_key(make_request())
+        self.assertTrue(key.startswith("ip:"))
+        self.assertNotIn("203.0.113.10", key)
 
 
 if __name__ == "__main__":

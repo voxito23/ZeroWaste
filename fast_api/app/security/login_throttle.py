@@ -140,6 +140,15 @@ def get_client_ip(request: Request) -> str:
     return chain[0] if chain else peer
 
 
+def get_rate_limit_key(request: Request) -> str:
+    """Return an opaque key that does not group signed-in users by carrier NAT."""
+    authorization = request.headers.get("authorization", "").strip()
+    scheme, _, credential = authorization.partition(" ")
+    if scheme.casefold() == "bearer" and credential.strip():
+        return f"auth:{LoginThrottle._digest(credential.strip())}"
+    return f"ip:{LoginThrottle._digest(get_client_ip(request))}"
+
+
 _throttle: LoginThrottle | None = None
 
 

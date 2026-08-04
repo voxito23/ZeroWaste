@@ -110,6 +110,7 @@ export default function MapScreen() {
   const locationRequestRef = useRef(null);
   const searchTimerRef = useRef(null);
   const searchGenerationRef = useRef(0);
+  const hasFittedPointsRef = useRef(false);
 
   const [tokenReady, setTokenReady] = useState(false);
   const [mapMounted, setMapMounted] = useState(false);
@@ -159,6 +160,7 @@ export default function MapScreen() {
     usingFallbackRef.current = useFallbackStyle;
     setUsingFallbackStyle(useFallbackStyle);
     mapReadyRef.current = false;
+    hasFittedPointsRef.current = false;
     setMapMounted(false);
     setMapReady(false);
     setMapError('');
@@ -327,6 +329,12 @@ export default function MapScreen() {
     void fetchPoints();
     void requestLocation();
   }, []);
+
+  useEffect(() => {
+    if (!mapReady || !points.length || hasFittedPointsRef.current) return;
+    hasFittedPointsRef.current = true;
+    fitPoints(points);
+  }, [fitPoints, mapReady, points]);
 
   useEffect(() => {
     if (!tokenReady || mapReadyRef.current) return undefined;

@@ -154,6 +154,16 @@ class ForumSourceContractsTests(unittest.TestCase):
         self.assertIn("textarea.value = editor.innerText.trim()", editor)
         self.assertNotIn("textarea.value = editor.innerHTML", editor)
 
+    def test_forum_feed_eager_loads_relations_and_mobile_does_not_wait_for_categories(self):
+        router = (ROOT / "fast_api/app/routers/foro.py").read_text(encoding="utf-8")
+        screen = (ROOT / "mobile_app/screens/ForumScreen.js").read_text(encoding="utf-8")
+        self.assertIn("joinedload(Foro.autor_rel)", router)
+        self.assertIn("selectinload(Foro.respuestas)", router)
+        self.assertIn("selectinload(Foro.likes)", router)
+        self.assertIn("void loadCategories({ force: manualRefresh })", screen)
+        self.assertNotIn("const catRes = await api.get('/foro/categorias')", screen)
+        self.assertIn("FORUM_REFRESH_INTERVAL_MS = 60_000", screen)
+
     def test_web_never_renders_comment_html_as_active_markup(self):
         flask_post = (ROOT / "flask_zerowaste/templates/post.html").read_text(encoding="utf-8")
         flask_app = (ROOT / "flask_zerowaste/app.py").read_text(encoding="utf-8")

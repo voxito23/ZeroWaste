@@ -59,6 +59,8 @@ class MapboxContractTests(unittest.TestCase):
         self.assertIn("Promise.resolve(Mapbox.setAccessToken(MAPBOX_PUBLIC_TOKEN))", config)
         self.assertIn("configureMapbox", config)
         self.assertNotIn("Mapbox.setAccessToken(MAPBOX_TOKEN);", source)
+        self.assertIn("const hasFittedPointsRef = useRef(false)", source)
+        self.assertIn("fitPoints(points);", source)
 
     def test_mobile_can_load_only_the_public_mapbox_token_at_runtime(self):
         router = (ROOT / "fast_api/app/routers/mobile_links.py").read_text(encoding="utf-8")

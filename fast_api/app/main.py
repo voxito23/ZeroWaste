@@ -23,7 +23,7 @@ from app.routers import articles, auth, auth_external, usuarios, foro, mapa, eve
 from app.security.firewall import FirewallMiddleware
 from app.data.database import engine
 from app.observability import RATE_LIMITS, READINESS
-from app.security.login_throttle import get_client_ip
+from app.security.login_throttle import get_rate_limit_key
 
 logger = logging.getLogger("zerowaste.api")
 
@@ -34,8 +34,8 @@ REDIS_URL = os.getenv("REDIS_URL")
 if not REDIS_URL:
     raise RuntimeError("Required environment variable is not configured: REDIS_URL")
 limiter = Limiter(
-    key_func=get_client_ip,
-    default_limits=["60/minute"],
+    key_func=get_rate_limit_key,
+    default_limits=["300/minute"],
     storage_uri=REDIS_URL,
     headers_enabled=True,
 )

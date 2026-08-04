@@ -75,6 +75,9 @@ export function getApiErrorMessage(error) {
   const loginRequest = requestUrl.startsWith('/auth/mobile/login') || requestUrl.startsWith('/auth/google/link');
   if (status === 401 && loginRequest) return typeof detail === 'string' ? detail : 'Usuario o contraseña incorrectos.';
   if (status === 401) return 'Tu sesión expiró. Inicia sesión nuevamente.';
+  if (status === 403 && error.response.data?.firewall === true) {
+    return typeof detail === 'string' ? detail : 'La conexión fue bloqueada temporalmente. Intenta nuevamente.';
+  }
   if (status === 403) return 'No tienes permiso para realizar esta acción.';
   if (status === 404) return 'No se encontró la información solicitada.';
   if (status === 409) return detail || 'La operación entra en conflicto con información existente.';

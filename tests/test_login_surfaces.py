@@ -18,7 +18,8 @@ class LoginSurfaceTests(unittest.TestCase):
         source = (ROOT / "fast_api" / "app" / "main.py").read_text(encoding="utf-8")
         self.assertIn("storage_uri=REDIS_URL", source)
         self.assertIn("app.add_middleware(SlowAPIMiddleware)", source)
-        self.assertIn('default_limits=["60/minute"]', source)
+        self.assertIn("key_func=get_rate_limit_key", source)
+        self.assertIn('default_limits=["300/minute"]', source)
         self.assertNotIn('storage_uri="memory://"', source)
 
     def test_docs_are_restricted_to_configured_superadmin(self):

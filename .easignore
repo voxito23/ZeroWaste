@@ -204,9 +204,25 @@ CLAUDE.md
 AGENTS.md
 .claude/
 
-# EAS monorepo exclusions for the Expo application
+# EAS archives from the Git repository root for this monorepo. Keep generated
+# native folders, dependencies, backend applications and local state out of the
+# Android archive while preserving the complete mobile application.
 /.git/
 /.local-staging/
+/.vscode/
+/blackbox/
+/docs/
+/fast_api/
+/flask_zerowaste/
+/grafana/
+/infra/
+/laravel_zerowaste/
+/nginx/
+/prometheus/
+/scratch/
+/scripts/
+/shared/
+/tests/
 /mobile_app/.expo/
 /mobile_app/node_modules/
 /mobile_app/android/
