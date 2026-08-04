@@ -205,8 +205,12 @@ AGENTS.md
 .claude/
 
 # EAS monorepo exclusions for the Expo application
+/.git/
+/.local-staging/
 /mobile_app/.expo/
 /mobile_app/node_modules/
+/mobile_app/android/
+/mobile_app/ios/
 /mobile_app/.env
 /mobile_app/.env.*
 !/mobile_app/.env.example

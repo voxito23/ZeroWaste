@@ -31,6 +31,10 @@ yarn-error.*
 *.pem
 
 # local env files
+.env
+.env.*
+*.env
+*.env.*
 .env*.local
 
 # typescript
@@ -39,3 +43,12 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# EAS archives this app from the repository root (monorepo).
+/.git/
+/mobile_app/.expo/
+/mobile_app/node_modules/
+/mobile_app/android/
+/mobile_app/ios/
+/mobile_app/.env
+/mobile_app/.env.*
