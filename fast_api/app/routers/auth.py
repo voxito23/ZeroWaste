@@ -225,8 +225,8 @@ def mobile_registro(
     delivery = {"sent": False, "code": "EMAIL_DELIVERY_FAILED"}
     try:
         delivery = send_verification(db, nuevo_usuario)
-    except EmailDeliveryError:
-        pass
+    except EmailDeliveryError as error:
+        delivery = {"sent": False, "code": error.code}
     return {
         "success": True,
         "message": "Cuenta creada. Revisa tu correo para verificarla.",

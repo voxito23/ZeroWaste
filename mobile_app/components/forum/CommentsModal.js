@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, Animated, FlatList, Keyboard, KeyboardAvoidingView, Modal, PanResponder, Platform, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { AccessibilityInfo, ActivityIndicator, Animated, Dimensions, FlatList, Keyboard, Modal, PanResponder, Platform, Pressable, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { MessageCircle, Reply, Send, X } from 'lucide-react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -20,7 +20,13 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   const keyboardVisibleRef = useRef(false);
   const commentsRef = useRef([]);
   const draftPostIdRef = useRef(null);
+  const initialWindowHeight = Dimensions.get('window').height;
+  const rootHeightRef = useRef(initialWindowHeight);
+  const baselineHeightRef = useRef(initialWindowHeight);
+  const keyboardHeightRef = useRef(0);
   const dragY = useRef(new Animated.Value(0)).current;
+  const keyboardLift = useRef(new Animated.Value(0)).current;
+  const sheetHeight = useRef(new Animated.Value(Math.max(360, initialWindowHeight * 0.92))).current;
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -44,32 +50,74 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
 
   useEffect(() => {
     if (!visible) return;
+    const baseHeight = baselineHeightRef.current || Dimensions.get('window').height;
     dragY.setValue(0);
+    keyboardLift.setValue(0);
+    sheetHeight.setValue(Math.max(360, baseHeight * 0.92));
+    keyboardHeightRef.current = 0;
     keyboardVisibleRef.current = false;
     setKeyboardVisible(false);
-  }, [dragY, visible]);
+  }, [dragY, keyboardLift, sheetHeight, visible]);
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const animateKeyboard = (height, event) => {
+      const baselineHeight = baselineHeightRef.current || Dimensions.get('window').height;
+      const currentRootHeight = rootHeightRef.current || baselineHeight;
+      const systemResize = Math.max(0, baselineHeight - currentRootHeight);
+      const requiredLift = Math.max(0, height - systemResize);
+      const targetHeight = Math.max(300, baselineHeight * 0.92 - height);
+      if (reduceMotion) {
+        keyboardLift.setValue(requiredLift);
+        sheetHeight.setValue(targetHeight);
+        return;
+      }
+      Animated.parallel([
+        Animated.timing(keyboardLift, {
+          toValue: requiredLift,
+          duration: Math.max(160, Math.min(Number(event?.duration) || 220, 320)),
+          useNativeDriver: false,
+        }),
+        Animated.timing(sheetHeight, {
+          toValue: targetHeight,
+          duration: Math.max(160, Math.min(Number(event?.duration) || 220, 320)),
+          useNativeDriver: false,
+        }),
+      ]).start();
+    };
     const showSubscription = Keyboard.addListener(showEvent, (event) => {
-      if (Platform.OS === 'ios' && !reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
-      if (keyboardVisibleRef.current) return;
       keyboardVisibleRef.current = true;
       setKeyboardVisible(true);
+      const baselineHeight = baselineHeightRef.current || Dimensions.get('window').height;
+      const screenY = Number(event?.endCoordinates?.screenY);
+      const reportedHeight = Number(event?.endCoordinates?.height) || 0;
+      const measuredHeight = Number.isFinite(screenY) ? Math.max(0, baselineHeight - screenY) : 0;
+      keyboardHeightRef.current = Math.min(baselineHeight * 0.7, Math.max(reportedHeight, measuredHeight));
+      animateKeyboard(keyboardHeightRef.current, event);
+      requestAnimationFrame(() => animateKeyboard(keyboardHeightRef.current, event));
     });
     const hideSubscription = Keyboard.addListener(hideEvent, (event) => {
-      if (Platform.OS === 'ios' && !reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
-      if (!keyboardVisibleRef.current) return;
       keyboardVisibleRef.current = false;
       setKeyboardVisible(false);
+      keyboardHeightRef.current = 0;
       dragY.setValue(0);
+      const targetHeight = Math.max(360, (baselineHeightRef.current || Dimensions.get('window').height) * 0.92);
+      if (reduceMotion) {
+        keyboardLift.setValue(0);
+        sheetHeight.setValue(targetHeight);
+      } else {
+        Animated.parallel([
+          Animated.timing(keyboardLift, { toValue: 0, duration: Math.max(160, Math.min(Number(event?.duration) || 220, 320)), useNativeDriver: false }),
+          Animated.timing(sheetHeight, { toValue: targetHeight, duration: Math.max(160, Math.min(Number(event?.duration) || 220, 320)), useNativeDriver: false }),
+        ]).start();
+      }
     });
     return () => {
       showSubscription.remove();
       hideSubscription.remove();
     };
-  }, [dragY, reduceMotion]);
+  }, [dragY, keyboardLift, reduceMotion, sheetHeight]);
 
   useEffect(() => {
     if (!visible || !post?.id || String(draftPostIdRef.current) === String(post.id)) return;
@@ -82,13 +130,29 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
 
   const closeModal = useCallback(() => {
     Keyboard.dismiss();
+    keyboardHeightRef.current = 0;
     keyboardVisibleRef.current = false;
     setKeyboardVisible(false);
+    keyboardLift.setValue(0);
     onClose();
-  }, [onClose]);
+  }, [keyboardLift, onClose]);
+
+  const handleRootLayout = useCallback(({ nativeEvent }) => {
+    const nextHeight = Number(nativeEvent?.layout?.height) || 0;
+    if (!nextHeight) return;
+    rootHeightRef.current = nextHeight;
+    if (!keyboardVisibleRef.current) {
+      baselineHeightRef.current = nextHeight;
+      sheetHeight.setValue(Math.max(360, nextHeight * 0.92));
+      return;
+    }
+    const baselineHeight = baselineHeightRef.current || nextHeight;
+    const systemResize = Math.max(0, baselineHeight - nextHeight);
+    keyboardLift.setValue(Math.max(0, keyboardHeightRef.current - systemResize));
+  }, [keyboardLift, sheetHeight]);
 
   const dragResponder = useMemo(() => PanResponder.create({
-    onMoveShouldSetPanResponder: (_event, gesture) => gesture.dy > 6 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
+    onMoveShouldSetPanResponder: (_event, gesture) => !keyboardVisibleRef.current && gesture.dy > 6 && Math.abs(gesture.dy) > Math.abs(gesture.dx),
     onPanResponderMove: (_event, gesture) => dragY.setValue(Math.max(0, gesture.dy)),
     onPanResponderRelease: (_event, gesture) => {
       if (gesture.dy > 85 || gesture.vy > 0.85) {
@@ -182,10 +246,9 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
 
   return (
     <Modal visible={visible} transparent animationType={reduceMotion ? 'none' : 'slide'} presentationStyle="overFullScreen" statusBarTranslucent navigationBarTranslucent={false} onRequestClose={closeModal}>
-      <View className="flex-1 justify-end bg-slate-950/45">
+      <View className="flex-1 justify-end bg-slate-950/45" onLayout={handleRootLayout}>
         <Pressable className="flex-1" onPress={closeModal} accessibilityLabel="Cerrar comentarios" />
-        <Animated.View style={{ height: '92%', minHeight: '55%', transform: [{ translateY: dragY }] }}>
-          <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
+        <Animated.View style={{ height: sheetHeight, marginBottom: keyboardLift, transform: [{ translateY: dragY }] }}>
           <SafeAreaView className="flex-1 overflow-hidden rounded-t-[30px] bg-slate-50" edges={[]}>
             <View {...dragResponder.panHandlers} className="items-center bg-white pt-2"><TouchableOpacity onPress={closeModal} className="h-7 w-20 items-center justify-center" accessibilityLabel="Cerrar comentarios"><View className="h-1.5 w-12 rounded-full bg-slate-300" /></TouchableOpacity></View>
             <View className="flex-row items-center border-b border-slate-100 bg-white px-5 pb-4 pt-1"><View className="flex-1"><Text className="text-xl font-black text-slate-950">Comentarios</Text><Text className="mt-0.5 text-xs font-semibold text-slate-500" numberOfLines={1}>{post?.titulo || 'Publicación ZeroWaste'}</Text></View><TouchableOpacity onPress={closeModal} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100" accessibilityLabel="Cerrar"><X color="#334155" size={20} /></TouchableOpacity></View>
@@ -219,7 +282,6 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
               <View className="flex-row items-end"><TextInput ref={inputRef} value={draft} onChangeText={(value) => { setDraft(value); if (composerError) setComposerError(''); }} onFocus={handleInputFocus} onContentSizeChange={({ nativeEvent }) => setInputHeight(Math.min(112, Math.max(48, nativeEvent.contentSize.height + 20)))} multiline blurOnSubmit={false} scrollEnabled={inputHeight >= 112} maxLength={1000} placeholder={replyingTo ? `Responde a ${resolveDisplayName(replyingTo)}…` : 'Escribe un comentario…'} placeholderTextColor="#94A3B8" className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900" style={{ height: inputHeight }} textAlignVertical="top" accessibilityLabel={replyingTo ? `Respuesta para ${resolveDisplayName(replyingTo)}` : 'Nuevo comentario'} /><TouchableOpacity disabled={submitting || draft.trim().length < 11} onPress={submit} className="ml-2 h-12 w-12 items-center justify-center rounded-full bg-emerald-700 disabled:opacity-40" accessibilityLabel={replyingTo ? 'Enviar respuesta' : 'Enviar comentario'}>{submitting ? <ActivityIndicator color="white" /> : <Send color="white" size={19} strokeWidth={2.5} />}</TouchableOpacity></View>
             </View>
           </SafeAreaView>
-          </KeyboardAvoidingView>
         </Animated.View>
       </View>
     </Modal>

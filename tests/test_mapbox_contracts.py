@@ -44,8 +44,10 @@ class MapboxContractTests(unittest.TestCase):
         self.assertIn("{tokenReady ? (", source)
         self.assertNotIn("tokenReady && mapboxConfigured", source)
         self.assertIn("pointerEvents={mapError ? 'auto' : 'none'}", source)
-        self.assertIn("styleURL={MAP_2D_STYLE_URL}", source)
-        self.assertNotIn("Mapbox.StyleImport", source)
+        self.assertIn("styleURL={usingFallbackStyle ? MAP_FALLBACK_STYLE_URL : MAP_STYLE_URL}", source)
+        self.assertIn("Mapbox.StyleImport", source)
+        self.assertIn("show3dBuildings: true", source)
+        self.assertIn("show3dLandmarks: true", source)
 
         config = (ROOT / "mobile_app/utils/mapbox.js").read_text(encoding="utf-8")
         self.assertIn("MAP_2D_STYLE_URL = 'mapbox://styles/mapbox/streets-v12'", config)

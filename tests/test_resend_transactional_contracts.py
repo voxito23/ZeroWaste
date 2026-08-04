@@ -1,7 +1,31 @@
+import io
+import json
+import os
+import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
+from urllib.error import HTTPError
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "fast_api"))
+
+from app.services.email_templates import EmailContent, render  # noqa: E402
+from app.services.transactional_email import EmailDeliveryError, send_resend  # noqa: E402
+
+
+class _Response:
+    def __init__(self, payload):
+        self.payload = payload
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_args):
+        return False
+
+    def read(self):
+        return json.dumps(self.payload).encode("utf-8")
 
 
 class ResendTransactionalContracts(unittest.TestCase):
@@ -17,6 +41,34 @@ class ResendTransactionalContracts(unittest.TestCase):
             self.assertIn(f'"{kind}"', templates)
         self.assertIn("html=html_body", templates)
         self.assertIn("text=text_body", templates)
+
+    def test_verification_template_highlights_six_digit_otp(self):
+        content = render("verification", name="Usuario", action_url="https://www.zerowaste-qro.com/api/auth/email/verificar?token=opaque", otp_code="123456")
+        self.assertIn("Código de verificación", content.html)
+        self.assertIn("123456", content.html)
+        self.assertIn("Código de verificación: 123456", content.text)
+
+    def test_resend_requires_a_provider_message_id(self):
+        content = EmailContent(subject="Prueba", html="<p>Prueba</p>", text="Prueba")
+        environment = {"RESEND_API_KEY": "test-key", "RESEND_FROM_EMAIL": "correo@zerowaste-qro.com", "RESEND_FROM_NAME": "ZeroWaste"}
+        with patch.dict(os.environ, environment), patch("app.services.transactional_email.urlopen", return_value=_Response({})):
+            with self.assertRaises(EmailDeliveryError) as raised:
+                send_resend("persona@example.com", content, idempotency_key="test/id")
+        self.assertEqual("EMAIL_PROVIDER_INVALID_RESPONSE", raised.exception.code)
+
+    def test_resend_maps_unverified_sender_without_exposing_provider_body(self):
+        content = EmailContent(subject="Prueba", html="<p>Prueba</p>", text="Prueba")
+        body = io.BytesIO(json.dumps({"name": "validation_error", "message": "The example.com domain is not verified."}).encode("utf-8"))
+        provider_error = HTTPError("https://api.resend.com/emails", 403, "Forbidden", hdrs=None, fp=body)
+        environment = {"RESEND_API_KEY": "test-key", "RESEND_FROM_EMAIL": "correo@example.com", "RESEND_FROM_NAME": "ZeroWaste"}
+        try:
+            with patch.dict(os.environ, environment), patch("app.services.transactional_email.urlopen", side_effect=provider_error):
+                with self.assertRaises(EmailDeliveryError) as raised:
+                    send_resend("persona@example.com", content, idempotency_key="test/id")
+        finally:
+            provider_error.close()
+        self.assertEqual("EMAIL_SENDER_NOT_VERIFIED", raised.exception.code)
+        self.assertNotIn("example.com", str(raised.exception))
 
     def test_password_reset_is_single_use_and_fastapi_owned(self):
         router = (ROOT / "fast_api/app/routers/formularios.py").read_text(encoding="utf-8")

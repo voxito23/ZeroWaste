@@ -19,13 +19,15 @@ import { StatusBar } from 'expo-status-bar';
 import { api } from '../api/axios';
 import RemoteImage from '../components/ui/RemoteImage';
 import { useZeroWasteDialog } from '../components/ui/ZeroWasteDialog';
+import useMapAppearance from '../hooks/useMapAppearance';
 import { useAuth } from '../store/useAuth';
 import {
   HAS_VALID_MAPBOX_TOKEN,
   configureMapbox,
   initializeMapbox,
   MAP_DEFAULT_CAMERA,
-  MAP_2D_STYLE_URL,
+  MAP_FALLBACK_STYLE_URL,
+  MAP_STYLE_URL,
   Mapbox,
 } from '../utils/mapbox';
 import { normalizeMediaUrl } from '../utils/media';
@@ -37,7 +39,7 @@ const CARD_WIDTH = 304;
 const CARD_SNAP = CARD_WIDTH + 12;
 const MAP_CARDS_BOTTOM_CLEARANCE = 103;
 const SAFE_MAP_LOAD_ERROR = 'No fue posible cargar el mapa. Revisa tu conexión e inténtalo nuevamente.';
-const MAP_OVERVIEW_CAMERA = Object.freeze({ ...MAP_DEFAULT_CAMERA, pitch: 0, heading: 0 });
+const MAP_OVERVIEW_CAMERA = Object.freeze({ ...MAP_DEFAULT_CAMERA, pitch: 42, heading: 0 });
 
 const normalizePoint = (point) => {
   const latitude = Number(point?.latitud ?? point?.latitude);
@@ -97,6 +99,7 @@ const pointCollection = (points) => ({
 export default function MapScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { lightPreset } = useMapAppearance();
   const { user } = useAuth();
   const { showDialog } = useZeroWasteDialog();
   const cameraRef = useRef(null);
@@ -113,6 +116,7 @@ export default function MapScreen() {
   const [mapReady, setMapReady] = useState(false);
   const [mapKey, setMapKey] = useState(0);
   const [mapError, setMapError] = useState('');
+  const [usingFallbackStyle, setUsingFallbackStyle] = useState(false);
   const [points, setPoints] = useState([]);
   const [pointsLoading, setPointsLoading] = useState(true);
   const [pointsReady, setPointsReady] = useState(false);
@@ -138,6 +142,17 @@ export default function MapScreen() {
     () => selectedResult ? pointCollection([selectedResult]) : pointCollection([]),
     [selectedResult],
   );
+  const mapConfig = useMemo(() => ({
+    lightPreset,
+    show3dBuildings: true,
+    show3dObjects: true,
+    show3dFacades: true,
+    show3dLandmarks: true,
+    show3dTrees: true,
+    showRoadLabels: true,
+    showPlaceLabels: true,
+    showPointOfInterestLabels: false,
+  }), [lightPreset]);
 
   const animationDuration = reduceMotion ? 0 : 700;
   const fitPoints = useCallback((items) => {
@@ -147,7 +162,7 @@ export default function MapScreen() {
       cameraRef.current?.setCamera({
         centerCoordinate: coordinates[0],
         zoomLevel: 15.5,
-        pitch: 0,
+        pitch: 48,
         heading: 0,
         animationDuration,
       });
@@ -190,13 +205,14 @@ export default function MapScreen() {
 
   const retryMap = useCallback(() => {
     if (!tokenReady) return;
+    if (!usingFallbackStyle) setUsingFallbackStyle(true);
     mapReadyRef.current = false;
     setMapMounted(false);
     setMapReady(false);
     setMapError('');
     setStyleLoading(true);
     setMapKey((value) => value + 1);
-  }, [tokenReady]);
+  }, [tokenReady, usingFallbackStyle]);
 
   useEffect(() => {
     let active = true;
@@ -214,7 +230,7 @@ export default function MapScreen() {
         setStyleLoading(true);
         setMapError('');
       } catch {
-        if (active) setMapError('No fue posible preparar el mapa 2D. Revisa la configuración pública de Mapbox.');
+        if (active) setMapError('No fue posible preparar el mapa 3D. Revisa la configuración pública de Mapbox.');
       }
     };
     void prepareMapbox();
@@ -278,7 +294,7 @@ export default function MapScreen() {
     cameraRef.current?.setCamera({
       centerCoordinate: coordinates,
       zoomLevel: 15.5,
-      pitch: 0,
+      pitch: 52,
       heading: 0,
       animationDuration,
     });
@@ -365,7 +381,7 @@ export default function MapScreen() {
     if (feature.properties?.cluster) {
       try {
         const zoomLevel = await pointSourceRef.current?.getClusterExpansionZoom(feature);
-        if (validCoordinate(coordinates)) cameraRef.current?.setCamera({ centerCoordinate: coordinates, zoomLevel: Math.min(Number(zoomLevel) || 16, 18), pitch: 0, heading: 0, animationDuration });
+        if (validCoordinate(coordinates)) cameraRef.current?.setCamera({ centerCoordinate: coordinates, zoomLevel: Math.min(Number(zoomLevel) || 16, 18), pitch: 42, heading: 0, animationDuration });
       } catch {
         if (validCoordinate(coordinates)) cameraRef.current?.setCamera({ centerCoordinate: coordinates, zoomLevel: 16, animationDuration });
       }
@@ -386,7 +402,7 @@ export default function MapScreen() {
         <Mapbox.MapView
           key={mapKey}
           style={styles.map}
-          styleURL={MAP_2D_STYLE_URL}
+          styleURL={usingFallbackStyle ? MAP_FALLBACK_STYLE_URL : MAP_STYLE_URL}
           compassEnabled={false}
           scaleBarEnabled={false}
           onLayout={() => setMapMounted(true)}
@@ -395,6 +411,7 @@ export default function MapScreen() {
           onDidFinishLoadingMap={handleMapReady}
           onMapLoadingError={handleMapLoadingError}
         >
+          {!usingFallbackStyle ? <Mapbox.StyleImport id="basemap" existing config={mapConfig} /> : null}
           <Mapbox.Camera ref={cameraRef} defaultSettings={MAP_OVERVIEW_CAMERA} />
           {permissionState === 'granted' ? <Mapbox.LocationPuck puckBearingEnabled puckBearing="heading" /> : null}
           <Mapbox.ShapeSource
@@ -408,34 +425,39 @@ export default function MapScreen() {
           >
             <Mapbox.CircleLayer
               id="zerowaste-clusters"
+              slot={usingFallbackStyle ? undefined : 'top'}
               filter={['has', 'point_count']}
               style={{ circleColor: '#047857', circleRadius: ['step', ['get', 'point_count'], 19, 10, 23, 40, 28], circleStrokeColor: '#ECFDF5', circleStrokeWidth: 4, circleOpacity: 0.96 }}
             />
             <Mapbox.SymbolLayer
               id="zerowaste-cluster-count"
+              slot={usingFallbackStyle ? undefined : 'top'}
               filter={['has', 'point_count']}
               style={{ textField: ['get', 'point_count_abbreviated'], textColor: '#FFFFFF', textSize: 13, textFont: ['DIN Offc Pro Bold', 'Arial Unicode MS Bold'] }}
             />
             <Mapbox.CircleLayer
               id="zerowaste-point-halo"
+              slot={usingFallbackStyle ? undefined : 'top'}
               filter={['!', ['has', 'point_count']]}
               style={{ circleColor: 'rgba(52,211,153,0.22)', circleRadius: 23, circleStrokeWidth: 0 }}
             />
             <Mapbox.CircleLayer
               id="zerowaste-points-visible"
+              slot={usingFallbackStyle ? undefined : 'top'}
               filter={['!', ['has', 'point_count']]}
               style={{ circleColor: '#064E3B', circleRadius: 18, circleStrokeColor: '#10B981', circleStrokeWidth: 3 }}
             />
             <Mapbox.SymbolLayer
               id="zerowaste-point-symbol"
+              slot={usingFallbackStyle ? undefined : 'top'}
               filter={['!', ['has', 'point_count']]}
               style={{ textField: '♻', textColor: '#FFFFFF', textSize: 17, textAllowOverlap: true }}
             />
           </Mapbox.ShapeSource>
           <Mapbox.ShapeSource id="zerowaste-selected-point" shape={selectedFeature}>
-            <Mapbox.CircleLayer id="zerowaste-selected-halo" style={{ circleColor: 'rgba(16,185,129,0.28)', circleRadius: 24 }} />
-            <Mapbox.CircleLayer id="zerowaste-selected-dot" style={{ circleColor: '#10B981', circleRadius: 12, circleStrokeColor: '#FFFFFF', circleStrokeWidth: 4 }} />
-            <Mapbox.SymbolLayer id="zerowaste-selected-symbol" style={{ textField: '♻', textColor: '#064E3B', textSize: 13, textAllowOverlap: true }} />
+            <Mapbox.CircleLayer id="zerowaste-selected-halo" slot={usingFallbackStyle ? undefined : 'top'} style={{ circleColor: 'rgba(16,185,129,0.28)', circleRadius: 24 }} />
+            <Mapbox.CircleLayer id="zerowaste-selected-dot" slot={usingFallbackStyle ? undefined : 'top'} style={{ circleColor: '#10B981', circleRadius: 12, circleStrokeColor: '#FFFFFF', circleStrokeWidth: 4 }} />
+            <Mapbox.SymbolLayer id="zerowaste-selected-symbol" slot={usingFallbackStyle ? undefined : 'top'} style={{ textField: '♻', textColor: '#064E3B', textSize: 13, textAllowOverlap: true }} />
           </Mapbox.ShapeSource>
         </Mapbox.MapView>
       ) : (
@@ -457,7 +479,7 @@ export default function MapScreen() {
             {!mapError ? <ActivityIndicator color="#047857" /> : null}
             <Text className={`text-center font-black ${mapError ? 'text-emerald-950' : 'ml-3 text-slate-800'}`}>{mapError || 'Preparando mapa…'}</Text>
           </View>
-          {mapError && tokenReady ? <TouchableOpacity onPress={retryMap} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">Reintentar mapa</Text></TouchableOpacity> : null}
+          {mapError && tokenReady ? <TouchableOpacity onPress={retryMap} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">{usingFallbackStyle ? 'Reintentar mapa' : 'Usar mapa compatible'}</Text></TouchableOpacity> : null}
         </View>
       ) : null}
 

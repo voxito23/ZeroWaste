@@ -79,13 +79,14 @@ const appConfig = JSON.parse(read('app.json'));
 const imageUpload = loadModule('utils/imageUpload.js');
 
 assert.match(comments, /parent_comment_id/);
-assert.match(comments, /KeyboardAvoidingView/);
-assert.match(comments, /Platform\.OS === 'ios' \? 'padding' : 'height'/);
+assert.doesNotMatch(comments, /KeyboardAvoidingView/);
+assert.match(comments, /keyboardHeightRef/);
+assert.match(comments, /baselineHeightRef/);
+assert.match(comments, /const systemResize = Math\.max\(0, baselineHeight - currentRootHeight\)/);
 assert.match(comments, /Escribe un comentario/);
-assert.match(comments, /style=\{\{ flex: 1 \}\}/);
 assert.match(comments, /keyboardDidHide/);
-assert.match(comments, /Platform\.OS === 'ios'[\s\S]*Keyboard\.scheduleLayoutAnimation\(event\)/);
-assert.doesNotMatch(comments, /Easing|composerPadding|Animated\.timing/);
+assert.match(comments, /Animated\.timing/);
+assert.match(comments, /height: sheetHeight, marginBottom: keyboardLift/);
 assert.doesNotMatch(comments, /keyboardLayoutRevision|keyboardRestoreY|Animated\.add/);
 assert.match(comments, /statusBarTranslucent navigationBarTranslucent=\{false\} onRequestClose/);
 assert.match(comments, /keyboardVisibleRef/);
@@ -94,10 +95,6 @@ assert.match(comments, /paddingBottom: keyboardVisible \? 8 : Math\.max\(insets\
 assert.doesNotMatch(comments, /COMPOSER_BOTTOM_LIFT/);
 assert.doesNotMatch(comments, /keyboardSession|keyboardResetTimerRef/);
 assert.doesNotMatch(comments, /requestAnimationFrame\(\(\) => inputRef\.current\?\.blur\(\)\)/);
-assert.ok(
-  comments.indexOf("<Animated.View style={{ height: '92%'") < comments.indexOf('<KeyboardAvoidingView behavior='),
-  'el ajuste de teclado debe permanecer dentro de la hoja de comentarios',
-);
 assert.match(comments, /highlightCommentId/);
 assert.match(notifications, /getExpoPushTokenAsync/);
 assert.match(notifications, /expoPushToken/);
@@ -163,10 +160,11 @@ assert.match(routeNavigation, /paddingTop: topSafeInset \+ 12/);
 assert.match(routeNavigation, /paddingBottom: bottomSafeInset \+ 12/);
 assert.match(routeNavigation, /height: bottomSafeInset/);
 assert.doesNotMatch(routeNavigation, /label="DISTANCIA"/);
-assert.match(mapScreen, /styleURL=\{MAP_2D_STYLE_URL\}/);
+assert.match(mapScreen, /styleURL=\{usingFallbackStyle \? MAP_FALLBACK_STYLE_URL : MAP_STYLE_URL\}/);
 assert.match(mapScreen, /api\.get\('\/mobile\/config'\)/);
 assert.match(mapScreen, /configureMapbox/);
-assert.doesNotMatch(mapScreen, /Mapbox\.StyleImport/);
+assert.match(mapScreen, /Mapbox\.StyleImport/);
+assert.match(mapScreen, /show3dBuildings:\s*true/);
 assert.match(homeScreen, /loadingClassName="bg-white"/);
 assert.doesNotMatch(homeScreen, /setInterval\(\(\) => setHomeRefreshKey/);
 assert.match(homeScreen, /h-\[438px\] w-\[300px\]/);

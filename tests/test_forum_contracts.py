@@ -108,7 +108,6 @@ class ForumSourceContractsTests(unittest.TestCase):
         comments_modal = (ROOT / "mobile_app/components/forum/CommentsModal.js").read_text(encoding="utf-8")
         forum_screen = (ROOT / "mobile_app/screens/ForumScreen.js").read_text(encoding="utf-8")
         for expected in (
-            "KeyboardAvoidingView",
             "FlatList",
             "SafeAreaView",
             "multiline",
@@ -118,14 +117,14 @@ class ForumSourceContractsTests(unittest.TestCase):
             "Keyboard.addListener",
             "useSafeAreaInsets",
             "onContentSizeChange",
-            "<Animated.View style={{ height: '92%'",
-            "<KeyboardAvoidingView behavior=",
+            "keyboardHeightRef",
+            "baselineHeightRef",
+            "systemResize",
+            "height: sheetHeight, marginBottom: keyboardLift",
+            "Animated.timing",
         ):
             self.assertIn(expected, comments_modal)
-        self.assertLess(
-            comments_modal.index("<Animated.View style={{ height: '92%'"),
-            comments_modal.index("<KeyboardAvoidingView behavior="),
-        )
+        self.assertNotIn("KeyboardAvoidingView", comments_modal)
         self.assertIn('<Skeleton className="absolute inset-0 rounded-full"', (
             ROOT / "mobile_app/components/ui/UserAvatar.js"
         ).read_text(encoding="utf-8"))
