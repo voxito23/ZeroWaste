@@ -20,7 +20,6 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   const commentsRef = useRef([]);
   const draftPostIdRef = useRef(null);
   const dragY = useRef(new Animated.Value(0)).current;
-  const keyboardRestoreY = useRef(new Animated.Value(0)).current;
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -35,7 +34,6 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   const [reduceMotion, setReduceMotion] = useState(false);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
   const [inputHeight, setInputHeight] = useState(48);
-  const [keyboardLayoutRevision, setKeyboardLayoutRevision] = useState(0);
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -48,21 +46,20 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = 'keyboardDidHide';
-    const showSubscription = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
-    const hideSubscription = Keyboard.addListener(hideEvent, () => {
+    const showSubscription = Keyboard.addListener(showEvent, (event) => {
+      if (!reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
+      setKeyboardVisible(true);
+    });
+    const hideSubscription = Keyboard.addListener(hideEvent, (event) => {
+      if (!reduceMotion && event) Keyboard.scheduleLayoutAnimation(event);
       setKeyboardVisible(false);
       dragY.setValue(0);
-      keyboardRestoreY.setValue(reduceMotion ? 0 : 12);
-      requestAnimationFrame(() => {
-        setKeyboardLayoutRevision((value) => value + 1);
-        if (!reduceMotion) Animated.spring(keyboardRestoreY, { toValue: 0, damping: 22, stiffness: 210, mass: 0.75, overshootClamping: true, useNativeDriver: true }).start();
-      });
     });
     return () => {
       showSubscription.remove();
       hideSubscription.remove();
     };
-  }, [dragY, keyboardRestoreY, reduceMotion]);
+  }, [dragY, reduceMotion]);
 
   useEffect(() => {
     if (!visible || !post?.id || String(draftPostIdRef.current) === String(post.id)) return;
@@ -174,10 +171,10 @@ export default function CommentsModal({ visible, post, highlightCommentId, onClo
 
   return (
     <Modal visible={visible} transparent animationType={reduceMotion ? 'none' : 'slide'} presentationStyle="overFullScreen" statusBarTranslucent onRequestClose={closeModal}>
-      <KeyboardAvoidingView key={`comments-layout-${keyboardLayoutRevision}`} behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={0} style={{ flex: 1 }}>
         <View className="flex-1 justify-end bg-slate-950/45">
           <Pressable className="flex-1" onPress={closeModal} accessibilityLabel="Cerrar comentarios" />
-          <Animated.View style={{ height: '92%', minHeight: '55%', transform: [{ translateY: Animated.add(dragY, keyboardRestoreY) }] }}>
+          <Animated.View style={{ height: '92%', minHeight: '55%', transform: [{ translateY: dragY }] }}>
           <SafeAreaView className="flex-1 overflow-hidden rounded-t-[30px] bg-slate-50" edges={[]}>
             <View {...dragResponder.panHandlers} className="items-center bg-white pt-2"><TouchableOpacity onPress={closeModal} className="h-7 w-20 items-center justify-center" accessibilityLabel="Cerrar comentarios"><View className="h-1.5 w-12 rounded-full bg-slate-300" /></TouchableOpacity></View>
             <View className="flex-row items-center border-b border-slate-100 bg-white px-5 pb-4 pt-1"><View className="flex-1"><Text className="text-xl font-black text-slate-950">Comentarios</Text><Text className="mt-0.5 text-xs font-semibold text-slate-500" numberOfLines={1}>{post?.titulo || 'Publicación ZeroWaste'}</Text></View><TouchableOpacity onPress={closeModal} className="h-11 w-11 items-center justify-center rounded-full bg-slate-100" accessibilityLabel="Cerrar"><X color="#334155" size={20} /></TouchableOpacity></View>

@@ -1,6 +1,6 @@
 import './global.css';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './navigation/AppNavigator';
 import { useEffect, useState } from 'react';
 import * as NavigationBar from 'expo-navigation-bar';
@@ -20,7 +20,7 @@ export default function App() {
   });
 
   useEffect(() => {
-    NavigationBar.setStyle('dark');
+    NavigationBar.setStyle('light');
     if (HAS_VALID_MAPBOX_TOKEN) {
       void initializeMapbox().catch(() => {
         if (typeof __DEV__ !== 'undefined' && __DEV__) {
@@ -35,7 +35,7 @@ export default function App() {
   }
 
   return (
-    <SafeAreaProvider>
+    <SafeAreaProvider initialMetrics={initialWindowMetrics}>
       <ZeroWasteDialogProvider>
         {showSplash ? (
           <AnimatedSplashScreen onFinish={() => setShowSplash(false)} />

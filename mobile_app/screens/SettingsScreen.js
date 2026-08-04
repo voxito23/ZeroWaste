@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, Linking, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Linking, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   Accessibility,
@@ -57,6 +57,7 @@ export default function SettingsScreen() {
   const [savingPreference, setSavingPreference] = useState('');
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [voiceVolume, setVoiceVolume] = useState(1);
+  const [reduceMotion, setReduceMotion] = useState(false);
   const [pushStatus, setPushStatus] = useState({ nativeAvailable: true, permission: 'undetermined', registered: false, activeDevices: 0, lastError: null });
   const voiceAvailable = voiceNavigation.isAvailable();
 
@@ -82,6 +83,12 @@ export default function SettingsScreen() {
       setVoiceVolume(voiceNavigation.getVolume());
     });
   }, [loadPreferences, loadPushStatus, voiceAvailable]);
+
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+    const subscription = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
+    return () => subscription.remove();
+  }, []);
 
   const savePreference = async (key, value) => {
     const previous = preferences[key];
@@ -191,12 +198,12 @@ export default function SettingsScreen() {
 
         <Text className="mb-2 mt-1 px-1 text-xs font-black uppercase tracking-widest text-slate-500">NOTIFICACIONES</Text>
         {preferencesError ? <TouchableOpacity onPress={loadPreferences} className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-3"><Text className="font-bold text-amber-900">{preferencesError} Toca para reintentar.</Text></TouchableOpacity> : null}
-        {preferencesLoading ? <View className="mb-7 rounded-3xl bg-white p-4">{[0, 1, 2, 3].map((item) => <Skeleton key={item} className="mb-3 h-[58px] rounded-2xl" />)}</View> : <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">{notificationRows.map(({ key, ...row }, index) => <SettingSwitch key={key} {...row} value={key === 'push_enabled' ? pushActive : Boolean(preferences[key])} disabled={savingPreference === key} onChange={row.onChange || ((value) => savePreference(key, value))} divider={index > 0} />)}</View>}
+        {preferencesLoading ? <View className="mb-7 rounded-3xl bg-white p-4">{[0, 1, 2, 3].map((item) => <Skeleton key={item} className="mb-3 h-[58px] rounded-2xl" />)}</View> : <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">{notificationRows.map(({ key, ...row }, index) => <SettingSwitch key={key} {...row} value={key === 'push_enabled' ? pushActive : Boolean(preferences[key])} disabled={savingPreference === key} onChange={row.onChange || ((value) => savePreference(key, value))} divider={index > 0} reduceMotion={reduceMotion} />)}</View>}
 
         <Text className="mb-2 px-1 text-xs font-black uppercase tracking-widest text-slate-500">PREFERENCIAS</Text>
         <View className="mb-7 overflow-hidden rounded-3xl border border-slate-100 bg-white">
           <SettingRow icon={Map} label="Apariencia del mapa" description="Amanecer, día, atardecer y noche" value={MAP_LABELS[mapPreference]} onPress={cycleMapPreference} />
-          <SettingSwitch icon={Volume2} label="Asistente de voz" description={voiceAvailable ? 'Instrucciones de navegación en español' : 'Disponible después de la nueva Development Build'} value={voiceEnabled} onChange={toggleVoice} disabled={!voiceAvailable} divider />
+          <SettingSwitch icon={Volume2} label="Asistente de voz" description={voiceAvailable ? 'Instrucciones de navegación en español' : 'Disponible después de la nueva Development Build'} value={voiceEnabled} onChange={toggleVoice} disabled={!voiceAvailable} divider reduceMotion={reduceMotion} />
           {voiceAvailable ? <SettingRow icon={Volume2} label="Volumen de voz" description="Nivel del asistente durante la ruta" value={volumeLabel(voiceVolume)} onPress={cycleVoiceVolume} divider /> : null}
           <SettingRow icon={Accessibility} label="Accesibilidad del dispositivo" description="Movimiento reducido, texto y permisos" onPress={Linking.openSettings} divider />
         </View>
@@ -222,16 +229,30 @@ function SettingRow({ icon: Icon, label, description, value, onPress, divider })
   return <TouchableOpacity onPress={onPress} className={`min-h-[72px] flex-row items-center px-4 py-3 ${divider ? 'border-t border-slate-100' : ''}`} accessibilityRole="button"><View className="h-10 w-10 items-center justify-center rounded-full bg-emerald-50"><Icon color="#059669" size={19} /></View><View className="ml-3 flex-1"><Text className="font-bold text-slate-900">{label}</Text><Text className="mt-0.5 text-xs leading-4 text-slate-500">{description}</Text></View>{value ? <Text className="mr-2 max-w-24 text-right text-xs font-bold text-slate-500">{value}</Text> : null}<ChevronRight color="#94A3B8" size={18} /></TouchableOpacity>;
 }
 
-function SettingSwitch({ icon: Icon, label, description, value, onChange, divider, disabled }) {
-  return <View className={`min-h-[72px] flex-row items-center px-4 py-3 ${divider ? 'border-t border-slate-100' : ''}`}><View className="h-10 w-10 items-center justify-center rounded-full bg-emerald-50"><Icon color="#059669" size={19} /></View><View className="ml-3 flex-1"><Text className="font-bold text-slate-900">{label}</Text><Text className="mt-0.5 text-xs leading-4 text-slate-500">{description}</Text></View><PremiumSwitch value={value} disabled={disabled} onChange={onChange} label={label} /></View>;
+function SettingSwitch({ icon: Icon, label, description, value, onChange, divider, disabled, reduceMotion }) {
+  return <View className={`min-h-[72px] flex-row items-center px-4 py-3 ${divider ? 'border-t border-slate-100' : ''}`}><View className="h-10 w-10 items-center justify-center rounded-full bg-emerald-50"><Icon color="#059669" size={19} /></View><View className="ml-3 flex-1"><Text className="font-bold text-slate-900">{label}</Text><Text className="mt-0.5 text-xs leading-4 text-slate-500">{description}</Text></View><PremiumSwitch value={value} disabled={disabled} onChange={onChange} label={label} reduceMotion={reduceMotion} /></View>;
 }
 
-function PremiumSwitch({ value, disabled, onChange, label }) {
+function PremiumSwitch({ value, disabled, onChange, label, reduceMotion }) {
   const thumbX = useRef(new Animated.Value(value ? 22 : 0)).current;
+  const trackOpacity = useRef(new Animated.Value(value ? 1 : 0)).current;
+  const pressScale = useRef(new Animated.Value(1)).current;
   useEffect(() => {
-    const animation = Animated.spring(thumbX, { toValue: value ? 22 : 0, damping: 19, stiffness: 260, mass: 0.72, overshootClamping: true, useNativeDriver: true });
+    if (reduceMotion) {
+      thumbX.setValue(value ? 22 : 0);
+      trackOpacity.setValue(value ? 1 : 0);
+      return undefined;
+    }
+    const animation = Animated.parallel([
+      Animated.spring(thumbX, { toValue: value ? 22 : 0, damping: 20, stiffness: 245, mass: 0.7, overshootClamping: true, useNativeDriver: true }),
+      Animated.timing(trackOpacity, { toValue: value ? 1 : 0, duration: 180, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+    ]);
     animation.start();
     return () => animation.stop();
-  }, [thumbX, value]);
-  return <Pressable accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: value, disabled }} disabled={disabled} onPress={() => onChange(!value)} className={disabled ? 'opacity-50' : ''} hitSlop={8}><View className={`h-8 w-[54px] justify-center rounded-full p-1 ${value ? 'bg-emerald-600' : 'bg-slate-300'}`}><Animated.View className="h-6 w-6 rounded-full bg-white shadow-sm" style={{ transform: [{ translateX: thumbX }] }} /></View></Pressable>;
+  }, [reduceMotion, thumbX, trackOpacity, value]);
+  const animatePress = (toValue) => {
+    if (reduceMotion) return;
+    Animated.spring(pressScale, { toValue, damping: 20, stiffness: 330, mass: 0.55, useNativeDriver: true }).start();
+  };
+  return <Pressable accessibilityRole="switch" accessibilityLabel={label} accessibilityState={{ checked: value, disabled }} disabled={disabled} onPress={() => onChange(!value)} onPressIn={() => animatePress(0.96)} onPressOut={() => animatePress(1)} className={disabled ? 'opacity-50' : ''} hitSlop={8}><Animated.View className="h-8 w-[54px] justify-center overflow-hidden rounded-full bg-slate-300 p-1" style={{ transform: [{ scale: pressScale }] }}><Animated.View pointerEvents="none" className="absolute inset-0 rounded-full bg-emerald-600" style={{ opacity: trackOpacity }} /><Animated.View className="h-6 w-6 items-center justify-center rounded-full border border-white bg-white shadow-sm" style={{ transform: [{ translateX: thumbX }] }}><Animated.View className="h-2 w-2 rounded-full bg-emerald-600" style={{ opacity: trackOpacity }} /></Animated.View></Animated.View></Pressable>;
 }
