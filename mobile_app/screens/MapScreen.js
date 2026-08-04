@@ -106,6 +106,7 @@ export default function MapScreen() {
   const pointSourceRef = useRef(null);
   const cardListRef = useRef(null);
   const mapReadyRef = useRef(false);
+  const usingFallbackRef = useRef(false);
   const locationRequestRef = useRef(null);
   const searchTimerRef = useRef(null);
   const searchGenerationRef = useRef(0);
@@ -154,6 +155,17 @@ export default function MapScreen() {
     showPointOfInterestLabels: false,
   }), [lightPreset]);
 
+  const remountMap = useCallback((useFallbackStyle) => {
+    usingFallbackRef.current = useFallbackStyle;
+    setUsingFallbackStyle(useFallbackStyle);
+    mapReadyRef.current = false;
+    setMapMounted(false);
+    setMapReady(false);
+    setMapError('');
+    setStyleLoading(true);
+    setMapKey((value) => value + 1);
+  }, []);
+
   const animationDuration = reduceMotion ? 0 : 700;
   const fitPoints = useCallback((items) => {
     const coordinates = items.map((point) => [point.longitud, point.latitud]).filter(validCoordinate);
@@ -199,20 +211,18 @@ export default function MapScreen() {
       console.warn(`[map] Mapbox reportó un error de carga${status ? ` (HTTP ${status})` : ''}.`);
     }
     if (mapReadyRef.current) return;
+    if (!usingFallbackRef.current) {
+      remountMap(true);
+      return;
+    }
     setStyleLoading(false);
     setMapError(SAFE_MAP_LOAD_ERROR);
-  }, []);
+  }, [remountMap]);
 
   const retryMap = useCallback(() => {
     if (!tokenReady) return;
-    if (!usingFallbackStyle) setUsingFallbackStyle(true);
-    mapReadyRef.current = false;
-    setMapMounted(false);
-    setMapReady(false);
-    setMapError('');
-    setStyleLoading(true);
-    setMapKey((value) => value + 1);
-  }, [tokenReady, usingFallbackStyle]);
+    remountMap(false);
+  }, [remountMap, tokenReady]);
 
   useEffect(() => {
     let active = true;
@@ -322,12 +332,16 @@ export default function MapScreen() {
     if (!tokenReady || mapReadyRef.current) return undefined;
     const timeout = setTimeout(() => {
       if (!mapReadyRef.current) {
+        if (!usingFallbackRef.current) {
+          remountMap(true);
+          return;
+        }
         setStyleLoading(false);
         setMapError(SAFE_MAP_LOAD_ERROR);
       }
     }, MAP_LOAD_TIMEOUT_MS);
     return () => clearTimeout(timeout);
-  }, [mapKey, tokenReady]);
+  }, [mapKey, remountMap, tokenReady]);
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -479,7 +493,7 @@ export default function MapScreen() {
             {!mapError ? <ActivityIndicator color="#047857" /> : null}
             <Text className={`text-center font-black ${mapError ? 'text-emerald-950' : 'ml-3 text-slate-800'}`}>{mapError || 'Preparando mapa…'}</Text>
           </View>
-          {mapError && tokenReady ? <TouchableOpacity onPress={retryMap} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">{usingFallbackStyle ? 'Reintentar mapa' : 'Usar mapa compatible'}</Text></TouchableOpacity> : null}
+          {mapError && tokenReady ? <TouchableOpacity onPress={retryMap} className="mt-3 min-h-11 items-center justify-center rounded-xl bg-emerald-700"><Text className="font-black text-white">Reintentar mapa 3D</Text></TouchableOpacity> : null}
         </View>
       ) : null}
 
@@ -598,7 +612,7 @@ function PointCard({ point, selected, distance, onSelect, onDetail, onRoute }) {
 }
 
 const styles = StyleSheet.create({
-  map: { ...StyleSheet.absoluteFillObject },
+  map: { flex: 1 },
   fallbackGrid: {
     backgroundColor: '#D1FAE5',
     borderColor: '#A7F3D0',

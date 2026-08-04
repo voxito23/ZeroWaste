@@ -75,6 +75,10 @@ class ResendTransactionalContracts(unittest.TestCase):
         flask = (ROOT / "flask_zerowaste/app.py").read_text(encoding="utf-8")
         for marker in ("secrets.token_urlsafe", "digest(token)", "with_for_update()", 'record.usado = True', 'record.estado = "completado"', "PASSWORD_RESET_TTL_MINUTES"):
             self.assertIn(marker, router)
+        self.assertIn('href="zerowaste://auth/login"', router)
+        self.assertIn("Regresa a la aplicación de ZeroWaste e inicia sesión con tu contraseña nueva.", router)
+        confirmation = router.split('content = render("password_changed"', 1)[1].split("send_resend", 1)[0]
+        self.assertNotIn("PUBLIC_BASE_URL", confirmation)
         self.assertIn("FASTAPI_INTERNAL_URL", flask)
         self.assertNotIn("[RECOVERY] PASSWORD TEMP", flask)
         self.assertNotIn("[RECOVERY] EMAIL", flask)

@@ -48,6 +48,10 @@ class MapboxContractTests(unittest.TestCase):
         self.assertIn("Mapbox.StyleImport", source)
         self.assertIn("show3dBuildings: true", source)
         self.assertIn("show3dLandmarks: true", source)
+        self.assertIn("const usingFallbackRef = useRef(false)", source)
+        self.assertGreaterEqual(source.count("remountMap(true)"), 2)
+        self.assertIn("map: { flex: 1 }", source)
+        self.assertNotIn("map: { ...StyleSheet.absoluteFillObject }", source)
 
         config = (ROOT / "mobile_app/utils/mapbox.js").read_text(encoding="utf-8")
         self.assertIn("MAP_2D_STYLE_URL = 'mapbox://styles/mapbox/streets-v12'", config)

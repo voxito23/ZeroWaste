@@ -368,7 +368,19 @@ export default function LoginScreen({ navigation }) {
           </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
       </Modal>
-      <Modal visible={resetVisible} transparent animationType="slide" statusBarTranslucent navigationBarTranslucent={false} onRequestClose={() => setResetVisible(false)}><TouchableWithoutFeedback onPress={Keyboard.dismiss}><View className="flex-1 justify-end bg-black/40"><View className="rounded-t-3xl bg-white px-6 pt-6" style={{ paddingBottom: Math.max(insets.bottom, 24) }}><View className="h-12 w-12 items-center justify-center rounded-full bg-emerald-50"><ShieldCheck color="#047857" size={24} /></View><Text className="mt-4 text-2xl font-black text-gray-900">Recupera tu acceso</Text><Text className="mt-2 leading-6 text-gray-500">Te enviaremos un enlace seguro con el diseño de ZeroWaste. Por seguridad, no confirmaremos si la cuenta existe.</Text><TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="correo@ejemplo.com" className="mt-5 h-14 rounded-xl border border-gray-200 px-4 text-gray-900" /><TouchableOpacity disabled={resetLoading} onPress={requestPasswordReset} className="mt-5 h-14 items-center justify-center rounded-xl bg-emerald-700 disabled:opacity-50">{resetLoading ? <ActivityIndicator color="white" /> : <Text className="font-black text-white">Enviar enlace</Text>}</TouchableOpacity><TouchableOpacity onPress={() => setResetVisible(false)} className="mt-3 h-12 items-center justify-center"><Text className="font-bold text-gray-600">Cancelar</Text></TouchableOpacity></View></View></TouchableWithoutFeedback></Modal>
+      <Modal visible={resetVisible} transparent animationType="slide" statusBarTranslucent navigationBarTranslucent={false} onRequestClose={() => { Keyboard.dismiss(); setResetVisible(false); }}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+            <View className="flex-1 justify-end bg-black/40">
+              <View className="max-h-[88%] rounded-t-3xl bg-white">
+                <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 24, paddingBottom: Math.max(insets.bottom, 24) }}>
+                  <View className="h-12 w-12 items-center justify-center rounded-full bg-emerald-50"><ShieldCheck color="#047857" size={24} /></View><Text className="mt-4 text-2xl font-black text-gray-900">Recupera tu acceso</Text><Text className="mt-2 leading-6 text-gray-500">Te enviaremos un enlace seguro con el diseño de ZeroWaste. Por seguridad, no confirmaremos si la cuenta existe.</Text><TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" autoComplete="email" textContentType="emailAddress" placeholder="correo@ejemplo.com" placeholderTextColor="#94A3B8" className="mt-5 h-14 rounded-xl border border-gray-200 px-4" style={{ color: '#0F172A', fontSize: 16 }} /><TouchableOpacity disabled={resetLoading} onPress={requestPasswordReset} className="mt-5 h-14 items-center justify-center rounded-xl bg-emerald-700 disabled:opacity-50">{resetLoading ? <ActivityIndicator color="white" /> : <Text className="font-black text-white">Enviar enlace</Text>}</TouchableOpacity><TouchableOpacity onPress={() => { Keyboard.dismiss(); setResetVisible(false); }} className="mt-3 h-12 items-center justify-center"><Text className="font-bold text-gray-600">Cancelar</Text></TouchableOpacity>
+                </ScrollView>
+              </View>
+            </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+      </Modal>
     </SafeAreaView>
   );
 }
